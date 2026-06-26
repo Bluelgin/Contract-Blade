@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "maid_weapon:sacred_fruit", "weight": 1 }
+      ]
+    }
+  ]
+}

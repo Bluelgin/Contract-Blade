@@ -1,0 +1,20 @@
+{
+  "display": {
+    "icon": {"item": "maid_weapon:maid_sword"},
+    "title": "契约之刃",
+    "description": "获得一把女仆之刃",
+    "background": "minecraft:textures/block/cherry_planks.png",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["maid_weapon:maid_sword"]}]
+      }
+    }
+  }
+}

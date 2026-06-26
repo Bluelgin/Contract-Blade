@@ -1,0 +1,93 @@
+{
+  "item.maid_weapon.maid_sword": "契约之刃",
+  "item.maid_weapon.maid_sword_empty": "空 | 契约之刃",
+  "item.maid_weapon.test_slashblade": "§d试·斩",
+  "item.maid_weapon.iron": "§7鉄刀",
+  "item.maid_weapon.heavy": "§e剛刀",
+  "item.maid_weapon.fast": "§b迅刀",
+  "item.maid_weapon.tough": "§a堅刀",
+  "item.maid_weapon.sin_pride": "紫御守·孤高",
+  "item.maid_weapon.sin_wrath": "红之刻印·崩坏",
+  "item.maid_weapon.sin_sloth": "苍蓝结界·停滞",
+  "item.maid_weapon.sin_greed": "漆黑契约·索求",
+  "item.maid_weapon.sin_gluttony": "白骨之匣·无尽",
+  "item.maid_weapon.sin_lust": "桃色桃符·倾心",
+  "item.maid_weapon.sin_envy": "蛇纹书页·怨叹",
+  "item.maid_weapon.tear_of_repentance": "忏悔之泪",
+  "item.maid_weapon.broken_blade": "折断的剑刃",
+  "item.maid_weapon.spirit_crystal": "灵结晶",
+  "item.maid_weapon.hair_ribbon": "一式的发绳",
+  "item.maid_weapon.isshiki_necklace": "一式的吊坠",
+
+  "item.maid_weapon.sacred_fruit": "神树之实",
+  "item.maid_weapon.potion_vial": "药房试剂",
+
+  "itemGroup.maid_weapon": "女仆武器",
+
+  "maid_weapon.tooltip.title": "§d§l═══ 女仆武器 ═══",
+  "maid_weapon.tooltip.maid_name": "§e女仆: §f%s",
+  "maid_weapon.tooltip.level": "§e等级: §aLv.%d",
+  "maid_weapon.tooltip.next_upgrade": "§e下一阶段: §7%s",
+  "maid_weapon.tooltip.favorability": "§e好感度: §f%d/384 %s",
+  "maid_weapon.tooltip.kills": "§e击杀数: §f%d",
+  "maid_weapon.tooltip.unlocked_tier": "§e已解锁Tier: %s",
+  "maid_weapon.tooltip.boss_kills": "§eBoss击杀: §c末影龙×%d §7| §4凋灵×%d",
+  "maid_weapon.tooltip.soul_slab_hint": "§7这个物品似乎可以发挥魂符的作用",
+  "maid_weapon.tooltip.empty": "§7(空武器 - 需要捕获女仆)",
+  "maid_weapon.tooltip.bind_hint": "§7右键女仆 → 捕获到武器中",
+  "maid_weapon.tooltip.attack_hint": "§7左键攻击女仆 → 也可捕获",
+  "maid_weapon.tooltip.recapture_hint": "§7左键/右键已释放的女仆 → 重新捕获",
+  "maid_weapon.tooltip.release_hint": "§7潜行+右键空气 → 释放女仆",
+  "maid_weapon.tooltip.release_hint_sb": "§7潜行+Q → 释放女仆",
+  "maid_weapon.tooltip.low_favorability": "§c⚠ 好感度过低，伤害大幅降低！请给女仆喂食或让她休息",
+  "maid_weapon.tooltip.sin_slot": "§7罪恶槽位: §8空 §7(铁砧嵌入罪恶物品)",
+  "maid_weapon.tooltip.sin_slot_used": "§7罪恶槽位: %d/%d",
+
+  "maid_weapon.message.level_up": "§e✦ 女仆武器突破！现在是 Lv.%d ✦",
+  "maid_weapon.message.challenge_failed": "§c✗ 挑战失败！女仆武器未能升级...",
+  "maid_weapon.message.sin_embedded": "§5✦ 罪恶已嵌入：§d%s",
+  "maid_weapon.message.sin_removed": "§b✦ 罪恶已取出",
+  "maid_weapon.message.maid_bound": "§a已将 %s 捕获为女仆武器！",
+  "maid_weapon.message.maid_released": "§a女仆 %s 已释放！",
+  "maid_weapon.message.already_bound": "§e该武器已捕获女仆，不可重复捕获",
+  "maid_weapon.message.maid_not_yours": "§c这只女仆不属于你",
+  "maid_weapon.message.no_maid_data": "§7此武器中没有已捕获的女仆",
+  "maid_weapon.message.wrong_maid": "§c此武器已绑定另一位女仆，不可更改",
+  "maid_weapon.message.not_owner": "§c这把武器似乎拒绝了你",
+
+  "maid_weapon.memory.capture": "§7她看着你，歪了歪头。\n§7你突然觉得这个动作很眼熟。\n§7但你记不起是在哪里见过。",
+  "maid_weapon.memory.level_3": "§7你感受到刀刃传来一阵温热。\n§7像是有人隔着遥远的时光，对你点了点头。",
+  "maid_weapon.memory.level_5": "§7有什么东西在记忆深处松动了。\n§7你曾经站在一扇门前，没有推开它。\n§7现在你回来了。",
+  "maid_weapon.memory.level_7": "§7模糊的画面——你坐在篝火旁，身边有人在说话。\n§7但你听不清她在说什么。\n§7只记得她的声音很好听。",
+  "maid_weapon.memory.level_10": "§7锁开了。\n§7你想起来了——那扇门你曾经站在它前面，没有推开。\n§7现在你回来了。",
+
+  "maid_weapon.memory.sacred_tree": "§7「种在这里吧。」\n§7「为什么是雪山？」\n§7「因为最高的地方，离天最近。这样我说的话——」\n§7「……你说的话？」\n§7「我说的话，他一定能听见。」\n§7\n§7记忆消散了。你低头，发现树干上刻着两个歪歪扭扭的字——「信」与「等」。",
+
+  "maid_weapon.memory.level_8": "§7一段不属于你的记忆涌了上来——\n§7一间昏暗的屋子，桌上摊着写了一半的日记。\n§7笔搁在纸上，墨迹已经干了。\n§7\n§7日记上只有一行字：\n§7「我不知道还能撑多久。」",
+
+  "maid_weapon.memory.max_favorability": "§7你听见一个声音——很轻，像是从很远的地方传来。\n§7\n§7「谢谢你愿意留在我身边。」\n§7\n§7这句话你没有对任何人说过。\n§7但你记得，你在心里对所有人都说过。",
+
+  "maid_weapon.memory.sin_acquire": "§7指尖触到碎片的瞬间，你听见了——\n§7\n§7那是[宵]的声音。\n§7\n§7声音很模糊，像是隔着水面传上来的。\n§7但你认得出。你从来没有忘记过这个声音。",
+
+  "maid_weapon.memory.broken_blade": "§7手握住剑柄的瞬间，一阵刺痛从掌心蔓延到胸口。\n§7你看见一片模糊的雪景，和一个背对你站着的身影。\n§7她的声音很轻，像是怕被风带走——\n§7\n§7「……你回来啦。」\n§7\n§7你没有回答。她也没有回头。\n§7记忆到此为止。",
+
+  "maid_weapon.memory.potion_room": "§7药房很安静。你听到捣药的声音，一下，一下，很有节奏。\n§7有人在你身后轻声说：\n§7\n§7「……你受伤了。」\n§7\n§7你回过头。没有人。\n§7捣药声停了。\n§7然后你听到她笑了一下，像是自言自语——\n§7\n§7「也是。他已经很久没有受过伤了。」",
+
+  "maid_weapon.structure.yakkyoku": "废弃药房",
+
+  "maid_weapon.tooltip.owner": "§7主人: §f%s",
+
+  "maid_weapon.tier.none": "§7无",
+  "maid_weapon.tier.1": "§a普通",
+  "maid_weapon.tier.2": "§e较强",
+  "maid_weapon.tier.3": "§6精英",
+  "maid_weapon.tier.4": "§c准Boss",
+  "maid_weapon.tier.5": "§4Boss",
+
+  "maid_weapon.favorability.inseparable": "§a生死相依",
+  "maid_weapon.favorability.loyal": "§a忠心耿耿",
+  "maid_weapon.favorability.friendly": "§e相处融洽",
+  "maid_weapon.favorability.displeased": "§6略有不满",
+  "maid_weapon.favorability.resentful": "§c心生怨怼",
+  "maid_weapon.favorability.defecting": "§4濒临叛逃"
+}

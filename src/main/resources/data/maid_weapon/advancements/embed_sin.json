@@ -1,0 +1,27 @@
+{
+  "display": {
+    "icon": {"item": "maid_weapon:sin_pride"},
+    "title": "罪之始",
+    "description": "在铁砧上嵌入第一个七宗罪物品",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:capture_maid",
+  "criteria": {
+    "embed_sin": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {"items": ["maid_weapon:sin_pride"]},
+          {"items": ["maid_weapon:sin_wrath"]},
+          {"items": ["maid_weapon:sin_sloth"]},
+          {"items": ["maid_weapon:sin_greed"]},
+          {"items": ["maid_weapon:sin_gluttony"]},
+          {"items": ["maid_weapon:sin_lust"]},
+          {"items": ["maid_weapon:sin_envy"]}
+        ]
+      }
+    }
+  }
+}

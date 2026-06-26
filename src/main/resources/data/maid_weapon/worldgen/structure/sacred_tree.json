@@ -1,0 +1,10 @@
+{
+  "type": "maid_weapon:sacred_tree",
+  "biomes": [
+    "minecraft:snowy_plains",
+    "minecraft:snowy_taiga"
+  ],
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin"
+}

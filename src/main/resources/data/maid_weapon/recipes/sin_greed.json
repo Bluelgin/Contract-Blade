@@ -1,0 +1,16 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {
+    "type": "minecraft:item",
+    "nbt": { "Item": { "id": "maid_weapon:sin_greed", "Count": 1 } }
+  },
+  "power": 0.3,
+  "ingredients": [
+    { "item": "minecraft:emerald" },
+    { "item": "minecraft:gold_ingot" },
+    { "item": "minecraft:diamond" },
+    { "item": "minecraft:ender_pearl" },
+    { "item": "minecraft:obsidian" },
+    { "item": "minecraft:iron_ingot" }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {"item": "maid_weapon:sacred_fruit"},
+    "title": "雪中的声音",
+    "description": "从神树处获得一枚神树之实",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:explorer",
+  "criteria": {
+    "sacred_fruit": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["maid_weapon:sacred_fruit"]}]
+      }
+    }
+  }
+}

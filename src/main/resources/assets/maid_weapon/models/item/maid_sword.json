@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "maid_weapon:item/maid_sword"
+  }
+}

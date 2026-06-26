@@ -1,0 +1,15 @@
+{
+  "structures": [
+    {
+      "structure": "maid_weapon:yakkyoku",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 12,
+    "separation": 4,
+    "frequency": 0.5,
+    "salt": 837249162
+  }
+}

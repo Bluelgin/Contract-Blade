@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "minecraft:amethyst_shard"},
+    {"item": "maid_weapon:maid_sword"}
+  ],
+  "result": {"item": "maid_weapon:maid_fast"}
+}

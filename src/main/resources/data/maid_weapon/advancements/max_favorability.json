@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:golden_apple"},
+    "title": "生死相依",
+    "description": "好感度达到 384（满值）",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:capture_maid",
+  "criteria": {
+    "max_favorability": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["maid_weapon:maid_sword","maid_weapon:maid_heavy","maid_weapon:maid_fast"],"nbt": "{MaidData:{Favorability:384}}"}]
+      }
+    }
+  }
+}

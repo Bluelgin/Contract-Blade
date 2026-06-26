@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {"item": "touhou_little_maid:smart_slab_empty"},
+    "title": "初次契约",
+    "description": "捕获一只女仆到女仆之刃中",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:root",
+  "criteria": {
+    "capture_maid": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["maid_weapon:maid_sword"],"nbt": "{MaidData:{}}"}]}
+    }
+  }
+}

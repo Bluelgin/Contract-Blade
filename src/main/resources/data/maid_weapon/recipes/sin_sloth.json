@@ -1,0 +1,16 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {
+    "type": "minecraft:item",
+    "nbt": { "Item": { "id": "maid_weapon:sin_sloth", "Count": 1 } }
+  },
+  "power": 0.3,
+  "ingredients": [
+    { "item": "minecraft:ice" },
+    { "item": "minecraft:snowball" },
+    { "item": "minecraft:blue_ice" },
+    { "item": "minecraft:phantom_membrane" },
+    { "item": "minecraft:soul_sand" },
+    { "item": "minecraft:clock" }
+  ]
+}

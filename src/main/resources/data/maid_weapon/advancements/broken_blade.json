@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {"item": "maid_weapon:broken_blade"},
+    "title": "石台上的刻字",
+    "description": "拔起折断的剑刃",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:explorer",
+  "criteria": {
+    "broken_blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["maid_weapon:broken_blade"]}]
+      }
+    }
+  }
+}

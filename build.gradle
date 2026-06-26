@@ -1,0 +1,144 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+}
+
+
+version = mod_version
+group = mod_group_id
+
+repositories {
+    // 国内镜像（加速依赖下载）
+    maven { url = "https://maven.aliyun.com/repository/public" }
+    maven { url = "https://maven.aliyun.com/repository/central" }
+    maven { url = "https://maven.aliyun.com/repository/minecraft" }
+    maven { url = "https://libraries.minecraft.net" }
+    // BMCLAPI Forge 镜像（国内可用）
+    maven { url = "https://bmclapi2.bangbang93.com/maven" }
+
+    // 本地库
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+base {
+    archivesName = mod_id
+}
+
+// Java 编译版本设置为 17（MC 1.20.1 要求）
+// ForgeGradle 需要 toolchain 来正确处理映射
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+// 关键：设置编译和资源处理的UTF-8编码，防止中文乱码
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+tasks.withType(ProcessResources).configureEach {
+    filteringCharset = 'UTF-8'
+}
+
+minecraft {
+    // 映射通道和版本（使用官方映射）
+    mappings channel: 'official', version: minecraft_version
+
+    // 运行配置
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        client {
+            property 'forge.enabledGameTestNamespaces', mod_id
+        }
+
+        server {
+            property 'forge.enabledGameTestNamespaces', mod_id
+            args '--nogui'
+        }
+
+        data {
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+        }
+    }
+}
+
+// 将生成的资源目录加入资源集
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// 依赖配置
+dependencies {
+    // Minecraft Forge
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // ========================================
+    // Touhou Little Maid（车万女仆）依赖
+    // TLM 使用反射，不需要编译期依赖
+    // ========================================
+
+    // 拔刀剑（SlashBlade）— 集成时取消注释
+    // implementation fg.deobf(files("libs/slashblade.jar"))
+
+    // JEI（Just Enough Items）- 可选，用于配方查看
+    // implementation fg.deobf("mezz.jei:jei-1.20.1-forge:15.x.x.x")
+}
+
+// 资源处理 - 替换 mods.toml 和 pack.mcmeta 中的占位符
+// 关键：设置 UTF-8 编码，防止中文变乱码
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version   : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            forge_version       : forge_version,
+            forge_version_range : forge_version_range,
+            loader_version_range: loader_version_range,
+            mod_id              : mod_id,
+            mod_name            : mod_name,
+            mod_license         : mod_license,
+            mod_version         : mod_version,
+            mod_authors         : mod_authors,
+            mod_description     : mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+// Jar 配置
+jar {
+    manifest {
+        attributes([
+                'Specification-Title'   : mod_id,
+                'Specification-Vendor'  : mod_authors,
+                'Specification-Version' : '1',
+                'Implementation-Title'  : project.name,
+                'Implementation-Version': project.jar.archiveVersion,
+                'Implementation-Vendor' : mod_authors,
+        ])
+    }
+    finalizedBy 'reobfJar'
+}
+
+// 发布配置
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}

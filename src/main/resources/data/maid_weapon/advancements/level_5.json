@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {"item": "maid_weapon:maid_sword"},
+    "title": "初露锋芒",
+    "description": "将女仆之刃升至 Lv.5",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:capture_maid",
+  "criteria": {
+    "level_5": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["maid_weapon:maid_sword","maid_weapon:maid_heavy","maid_weapon:maid_fast"],"nbt": "{MaidData:{Level:5}}"}]
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "display": {
+    "icon": {"item": "minecraft:enchanted_book"},
+    "title": "七宗罪",
+    "description": "集齐全部七宗罪物品（傲慢、暴怒、懒惰、贪婪、暴食、色欲、嫉妒）",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "parent": "maid_weapon:embed_sin",
+  "criteria": {
+    "pride": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_pride"]}]}},
+    "wrath": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_wrath"]}]}},
+    "sloth": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_sloth"]}]}},
+    "greed": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_greed"]}]}},
+    "gluttony": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_gluttony"]}]}},
+    "lust": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_lust"]}]}},
+    "envy": {"trigger": "minecraft:inventory_changed","conditions":{"items":[{"items":["maid_weapon:sin_envy"]}]}}
+  }
+}

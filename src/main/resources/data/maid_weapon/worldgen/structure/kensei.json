@@ -1,0 +1,12 @@
+{
+  "type": "maid_weapon:kensei",
+  "biomes": [
+    "minecraft:snowy_plains",
+    "minecraft:snowy_taiga",
+    "minecraft:ice_spikes",
+    "minecraft:grove",
+    "minecraft:snowy_slopes"
+  ],
+  "step": "surface_structures",
+  "spawn_overrides": {}
+}

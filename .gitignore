@@ -1,0 +1,35 @@
+# Gradle
+.gradle/
+build/
+*.class
+*.jar
+*.log
+*.zip
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Minecraft
+run/
+
+# Temp / large files
+tmp/
+gradle-8.14.5-all.zip
+*SlashBlade*.jar
+*.icon/
+libs/
+build/downloadMcpConfig/
+
+# Reasonix
+.reasonix/
+
+# Backup
+src_backup*/

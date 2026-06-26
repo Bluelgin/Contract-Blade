@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:wooden_sword"
+    },
+    {
+      "item": "touhou_little_maid:smart_slab_empty"
+    }
+  ],
+  "result": {
+    "item": "maid_weapon:maid_sword"
+  }
+}
