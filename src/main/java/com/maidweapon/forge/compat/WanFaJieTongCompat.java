@@ -1,5 +1,7 @@
 package com.maidweapon.forge.compat;
 
+import net.minecraftforge.fml.ModList;
+
 /**
  * ========================================
  * 万法皆通（WanFaJieTong / TLM 扩展）兼容层
@@ -12,8 +14,6 @@ package com.maidweapon.forge.compat;
  *   2. 法杖女仆物品的魔法加成
  *   3. 与铁魔法+Goety的三联动特殊物品
  *
- * ⚠️ 当前为桩代码，安装万法皆通后替换为实际实现
- *
  * 万法皆通 Mod 需要与以下 Mod 配合：
  *   - Touhou Little Maid（车万女仆）
  *   - Iron's Spells 'n Spellbooks（铁魔法）
@@ -22,23 +22,11 @@ package com.maidweapon.forge.compat;
  * 三者同时安装时解锁「法杖女仆」特殊物品
  */
 public final class WanFaJieTongCompat {
-
-    private static boolean loaded = false;
-
-    static {
-        try {
-            // 万法皆通的主类（待确认实际包名）
-            // 可能是 com.github.tartaric_acid.wanfa... 或类似
-            Class.forName("com.github.tartaric_acid.wanfajietong.WanFaJieTong");
-            loaded = true;
-        } catch (ClassNotFoundException e) {
-            loaded = false;
-        }
-    }
+    private static final String MOD_ID = "touhou_little_maid_spell";
 
     /** 检查万法皆通是否已安装 */
     public static boolean isLoaded() {
-        return loaded;
+        return ModList.get().isLoaded(MOD_ID);
     }
 
     /**
@@ -46,7 +34,7 @@ public final class WanFaJieTongCompat {
      * 满足时解锁「法杖女仆」特殊物品
      */
     public static boolean isTripleComboAvailable() {
-        return isLoaded() && IronsSpellsCompat.isLoaded() && GoetyCompat.isLoaded();
+        return TripleMagicCompat.active();
     }
 
     /**
@@ -97,7 +85,7 @@ public final class WanFaJieTongCompat {
      *   ModCompatManager.registerMonsterTier("wanfa:magic_maid_boss", 4);
      */
     public static void registerMonsters() {
-        if (!loaded) return;
+        if (!isLoaded()) return;
         // TODO: 注册万法皆通怪物
     }
 

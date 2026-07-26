@@ -1,7 +1,7 @@
 package com.maidweapon.forge.event;
 
 import com.maidweapon.common.data.MaidWeaponData;
-import com.maidweapon.common.data.MaidWeaponDataSerializer;
+import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -15,8 +15,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 调试指令：/maidweapon level/setlevel/favorability/setfav
- * 用于测试女仆之刃的不同等级/好感度状态
+ * 调试指令：/maidweapon level/favorability/resonance
+ * 用于测试契约的等级、TLM 好感度与短期共鸣状态。
  */
 @Mod.EventBusSubscriber
 public class MaidWeaponCommand {
@@ -39,6 +39,15 @@ public class MaidWeaponCommand {
                 .then(Commands.literal("favorability")
                         .then(Commands.argument("value", IntegerArgumentType.integer(0, 384))
                                 .executes(ctx -> setFavorability(
+                                        ctx.getSource(),
+                                        IntegerArgumentType.getInteger(ctx, "value")))))
+
+                // /maidweapon resonance <0-200>
+                .then(Commands.literal("resonance")
+                        .then(Commands.argument("value", IntegerArgumentType.integer(
+                                        MaidWeaponData.MIN_RESONANCE,
+                                        MaidWeaponData.MAX_RESONANCE))
+                                .executes(ctx -> setResonance(
                                         ctx.getSource(),
                                         IntegerArgumentType.getInteger(ctx, "value")))))
         );
@@ -97,6 +106,29 @@ public class MaidWeaponCommand {
             data.setFavorability(value);
             MaidWeaponItem.setMaidData(stack, data);
             source.sendSuccess(() -> Component.literal("§a已将女仆之刃好感度设为 " + value + "/384"), true);
+            return 1;
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int setResonance(CommandSourceStack source, int value) {
+        try {
+            ItemStack stack = source.getPlayerOrException().getMainHandItem();
+            if (!MaidInfusion.isInfused(stack)) {
+                source.sendFailure(Component.literal("§c请手持已有契约的武器"));
+                return 0;
+            }
+            if (!MaidWeaponItem.isOwner(stack, source.getPlayerOrException())) {
+                source.sendFailure(Component.literal("§c只有契约原主人可以修改共鸣"));
+                return 0;
+            }
+            MaidWeaponData data = MaidInfusion.data(stack);
+            data.setResonance(value);
+            MaidWeaponItem.setMaidData(stack, data);
+            source.sendSuccess(() -> Component.literal(
+                    "§b已将契约共鸣设为 " + value + "/" + MaidWeaponData.MAX_RESONANCE), true);
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));

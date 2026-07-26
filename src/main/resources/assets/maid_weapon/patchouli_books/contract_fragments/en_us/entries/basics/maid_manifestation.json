@@ -1,0 +1,37 @@
+{
+  "sortnum": 3,
+  "name": "patchouli.maid_weapon.entry.maid_manifestation.name",
+  "icon": "maid_weapon:contract_fragments",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.maid_manifestation.page.0"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_manifestation.page.1.title",
+      "text": "patchouli.maid_weapon.entry.maid_manifestation.page.1"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_manifestation.page.2.title",
+      "text": "patchouli.maid_weapon.entry.maid_manifestation.page.2"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_manifestation.page.3.title",
+      "text": "patchouli.maid_weapon.entry.maid_manifestation.page.3"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_manifestation.page.4.title",
+      "text": "patchouli.maid_weapon.entry.maid_manifestation.page.4"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_manifestation.page.5.title",
+      "text": "patchouli.maid_weapon.entry.maid_manifestation.page.5"
+    }
+  ]
+}

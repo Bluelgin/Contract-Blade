@@ -7,6 +7,7 @@ import com.maidweapon.common.sin.SinSlotManager;
 import com.maidweapon.common.sin.SinType;
 import com.maidweapon.common.system.LoyaltySystem;
 import com.maidweapon.common.system.MonsterTierRegistry;
+import com.maidweapon.forge.system.SinFragmentSystem;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -40,6 +41,7 @@ import java.util.function.Consumer;
  *     MaidName:           String  - 女仆名称
  *     Level:              int     - 等级 (1~10)
  *     Favorability:       int     - 好感度 (0~384)
+ *     ContractResonance:  int     - 契约共鸣 (0~200)
  *     TotalKills:         int     - 总击杀数
  *     UnlockedTier:       int     - 已解锁最高Tier
  *     EnderDragonKills:   int     - 末影龙击杀数（无死亡）
@@ -51,6 +53,8 @@ public class MaidWeaponItem extends SwordItem {
     private static final String NBT_MAID_DATA = "MaidData";
     private static final String NBT_MAID_ENTITY = "MaidEntityData";
     private static final String NBT_MAID_UUID = "MaidUUID";
+    private static final String NBT_BINDING_ID = "MaidBindingId";
+    private static final String NBT_SUPERSEDED = "MaidContractSuperseded";
     private static final String NBT_OWNER_UUID = "OwnerUUID";
     private static final String NBT_OWNER_NAME = "OwnerName";
 
@@ -76,6 +80,9 @@ public class MaidWeaponItem extends SwordItem {
                 maidTag.getString(MaidWeaponDataSerializer.KEY_MAID_NAME),
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_LEVEL),
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_FAVORABILITY),
+                maidTag.contains(MaidWeaponDataSerializer.KEY_RESONANCE)
+                        ? maidTag.getInt(MaidWeaponDataSerializer.KEY_RESONANCE)
+                        : MaidWeaponData.MAX_RESONANCE,
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_TOTAL_KILLS),
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_UNLOCKED_TIER),
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_ENDER_DRAGON_KILLS),
@@ -89,6 +96,7 @@ public class MaidWeaponItem extends SwordItem {
         maidTag.putString(MaidWeaponDataSerializer.KEY_MAID_NAME, data.getMaidName());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_LEVEL, data.getLevel());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_FAVORABILITY, data.getFavorability());
+        maidTag.putInt(MaidWeaponDataSerializer.KEY_RESONANCE, data.getResonance());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_TOTAL_KILLS, data.getTotalKills());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_UNLOCKED_TIER, data.getUnlockedTier());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_ENDER_DRAGON_KILLS, data.getEnderDragonKills());
@@ -112,6 +120,23 @@ public class MaidWeaponItem extends SwordItem {
         return tag != null && tag.contains(NBT_MAID_ENTITY);
     }
 
+    /** Removes all maid-contract data while preserving the original weapon and its own NBT. */
+    public static void clearMaidContract(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag == null) return;
+        tag.remove(NBT_MAID_DATA);
+        tag.remove(NBT_MAID_ENTITY);
+        tag.remove(NBT_MAID_UUID);
+        tag.remove(NBT_BINDING_ID);
+        tag.remove(NBT_SUPERSEDED);
+        tag.remove(NBT_OWNER_UUID);
+        tag.remove(NBT_OWNER_NAME);
+        tag.remove("MaidInfusionOriginalTask");
+        tag.remove("MaidDeploymentLocation");
+        tag.remove("MaidDeploymentRecoveryFailed");
+        if (tag.isEmpty()) stack.setTag(null);
+    }
+
     // ==================== 女仆绑定（一武器一女仆） ====================
 
     /**
@@ -132,6 +157,30 @@ public class MaidWeaponItem extends SwordItem {
         CompoundTag tag = stack.getTag();
         if (tag == null || !tag.contains(NBT_MAID_UUID)) return null;
         return tag.getString(NBT_MAID_UUID);
+    }
+
+    /** Unique identity for this concrete weapon/maid contract, separate from the maid UUID. */
+    public static String ensureBindingId(ItemStack stack) {
+        CompoundTag tag = stack.getOrCreateTag();
+        if (!tag.contains(NBT_BINDING_ID)) {
+            tag.putString(NBT_BINDING_ID, java.util.UUID.randomUUID().toString());
+        }
+        return tag.getString(NBT_BINDING_ID);
+    }
+
+    @Nullable
+    public static String getBindingId(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        if (tag == null || !tag.contains(NBT_BINDING_ID)) return null;
+        return tag.getString(NBT_BINDING_ID);
+    }
+
+    public static void setContractSuperseded(ItemStack stack, boolean superseded) {
+        stack.getOrCreateTag().putBoolean(NBT_SUPERSEDED, superseded);
+    }
+
+    public static boolean isContractSuperseded(ItemStack stack) {
+        return stack.getTag() != null && stack.getTag().getBoolean(NBT_SUPERSEDED);
     }
 
     /** 检查实体 UUID 是否匹配武器绑定的女仆 */
@@ -197,6 +246,9 @@ public class MaidWeaponItem extends SwordItem {
         if (hasMaidData(stack)) {
             MaidWeaponData data = getMaidData(stack);
             boolean hasEntity = hasMaidEntityData(stack);
+            if (isContractSuperseded(stack)) {
+                tooltip.add(Component.translatable("maid_weapon.tooltip.superseded_contract"));
+            }
 
             // 女仆名称 + 状态标记
             String statusColor = hasEntity ? "§a" : "§7";
@@ -215,6 +267,10 @@ public class MaidWeaponItem extends SwordItem {
             // 好感度
             tooltip.add(Component.translatable("maid_weapon.tooltip.favorability",
                     data.getFavorability(), LoyaltySystem.getFavorabilityTitle(data.getFavorability())));
+            tooltip.add(Component.translatable("maid_weapon.tooltip.favorability_bonus",
+                    String.format("%.1f", (data.getFavorabilityDamageMultiplier() - 1.0f) * 100.0f)));
+            tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
+                    data.getResonance(), MaidWeaponData.MAX_RESONANCE));
 
             // 战斗统计
             tooltip.add(Component.translatable("maid_weapon.tooltip.kills", data.getTotalKills()));
@@ -235,7 +291,9 @@ public class MaidWeaponItem extends SwordItem {
                 tooltip.add(Component.empty());
                 tooltip.add(Component.literal("§8§l─── 七宗罪 ───"));
                 for (SinType sin : sins) {
-                    tooltip.add(Component.literal(sin.getColor() + "✦ " + sin.getChineseName()));
+                    tooltip.add(Component.literal(sin.getColor() + "✦ " + sin.getChineseName()
+                            + " §7[" + SinFragmentSystem.getPower(stack, sin) + "/"
+                            + SinFragmentSystem.MAX_POWER + "]"));
                 }
                 tooltip.add(Component.translatable("maid_weapon.tooltip.sin_slot_used",
                         sins.size(), SinSlotManager.getMaxSlots(sins)));
@@ -267,7 +325,8 @@ public class MaidWeaponItem extends SwordItem {
                         String.format("§7等级加成: §a+%.1f 攻击力", data.getAttackDamageBonus())
                 ));
                 tooltip.add(Component.literal(
-                        String.format("§7好感倍率: §ax%.2f", data.getFavorabilityDamageMultiplier())
+                        String.format("§7好感伤害奖励: §a+%.1f%%",
+                                (data.getFavorabilityDamageMultiplier() - 1.0f) * 100.0f)
                 ));
                 float totalDmg = (3.0f + data.getAttackDamageBonus()) * data.getFavorabilityDamageMultiplier();
                 tooltip.add(Component.literal(
@@ -280,11 +339,6 @@ public class MaidWeaponItem extends SwordItem {
                 tooltip.add(Component.literal("§7即可根据怪物Tier提升等级。"));
             }
 
-            // 低好感度警告
-            if (LoyaltySystem.shouldWarnLowFavorability(data)) {
-                tooltip.add(Component.empty());
-                tooltip.add(Component.translatable("maid_weapon.tooltip.low_favorability"));
-            }
         } else {
             tooltip.add(Component.translatable("maid_weapon.tooltip.soul_slab_hint"));
         }
@@ -311,6 +365,11 @@ public class MaidWeaponItem extends SwordItem {
         if (!TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()) return InteractionResult.PASS;
         if (!TouhouLittleMaidCompat.isMaidEntity(target)) return InteractionResult.PASS;
 
+        // A normal right-click on a manifested contract maid belongs to TLM so
+        // its inventory and management screen remain accessible. Sneaking is
+        // the explicit gesture for recalling an already-bound maid.
+        if (hasMaidData(stack) && !player.isShiftKeyDown()) return InteractionResult.PASS;
+
         // 检查武器主人权限（已绑定的武器只有主人才能操作）
         if (hasMaidData(stack) && !isOwner(stack, player)) {
             player.displayClientMessage(
@@ -321,7 +380,7 @@ public class MaidWeaponItem extends SwordItem {
         boolean success = TouhouLittleMaidCompat.convertMaidToWeapon(player, target, stack);
         // SUCCESS → TLM 视作 consumesAction=true → 跳过 GUI
         // FAIL → TLM 继续执行 → 打开 GUI（但我们的消息已显示）
-        return success ? InteractionResult.SUCCESS : InteractionResult.FAIL;
+        return success ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 
     // ==================== 右键使用（空气/方块） ====================
@@ -371,12 +430,6 @@ public class MaidWeaponItem extends SwordItem {
     }
 
     // ==================== 工具属性 ====================
-
-    /** 防止攻击消耗耐久（耐久条只用于显示好感度） */
-    @Override
-    public <T extends LivingEntity> int damageItem(ItemStack stack, int amount, T entity, Consumer<T> onBroken) {
-        return 0;
-    }
 
     @Override
     public boolean isValidRepairItem(ItemStack stack, ItemStack repairStack) {

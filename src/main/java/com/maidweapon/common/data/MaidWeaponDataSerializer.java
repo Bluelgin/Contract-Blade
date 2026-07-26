@@ -14,6 +14,7 @@ public final class MaidWeaponDataSerializer {
     public static final String KEY_MAID_NAME = "MaidName";
     public static final String KEY_LEVEL = "Level";
     public static final String KEY_FAVORABILITY = "Favorability";
+    public static final String KEY_RESONANCE = "ContractResonance";
     public static final String KEY_TOTAL_KILLS = "TotalKills";
     public static final String KEY_UNLOCKED_TIER = "UnlockedTier";
     public static final String KEY_ENDER_DRAGON_KILLS = "EnderDragonKills";
@@ -25,13 +26,14 @@ public final class MaidWeaponDataSerializer {
     /**
      * 从平面数据恢复 MaidWeaponData
      */
-    public static MaidWeaponData fromValues(String name, int level, int favorability,
+    public static MaidWeaponData fromValues(String name, int level, int favorability, int resonance,
                                              int totalKills, int unlockedTier,
                                              int enderDragonKills, int witherKills,
                                              String embeddedSins) {
         MaidWeaponData data = new MaidWeaponData(name);
         data.setLevel(level);
         data.setFavorability(favorability);
+        data.setResonance(resonance);
         data.setTotalKills(totalKills);
         data.setUnlockedTier(unlockedTier);
         data.setEnderDragonKills(enderDragonKills);

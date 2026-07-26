@@ -25,7 +25,49 @@ side = "BOTH"
 
 [[dependencies.${mod_id}]]
 modId = "touhou_little_maid"
+mandatory = true
+versionRange = "[1.1.7,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "goety"
 mandatory = false
-versionRange = "[1.5.0,)"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "irons_spellbooks"
+mandatory = false
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "patchouli"
+mandatory = false
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "slashblade"
+mandatory = false
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "true_power_of_maid"
+mandatory = false
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.${mod_id}]]
+modId = "touhou_little_maid_spell"
+mandatory = false
+versionRange = "[0,)"
 ordering = "AFTER"
 side = "BOTH"

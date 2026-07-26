@@ -1,0 +1,14 @@
+{
+  "name": "patchouli.maid_weapon.contract.name",
+  "landing_text": "patchouli.maid_weapon.contract.landing",
+  "subtitle": "patchouli.maid_weapon.contract.subtitle",
+  "model": "maid_weapon:contract_fragments",
+  "book_texture": "patchouli:textures/gui/book_purple.png",
+  "creative_tab": "maid_weapon.main",
+  "show_progress": true,
+  "show_toasts": true,
+  "use_resource_pack": true,
+  "i18n": true,
+  "text_overflow_mode": "resize",
+  "version": "1"
+}

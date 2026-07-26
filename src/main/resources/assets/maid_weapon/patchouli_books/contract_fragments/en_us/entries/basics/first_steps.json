@@ -1,0 +1,19 @@
+{
+  "sortnum": 0,
+  "priority": true,
+  "name": "patchouli.maid_weapon.entry.first_steps.name",
+  "icon": "maid_weapon:textures/item/contract_fragments.png",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.first_steps.page.0"
+    },
+    {
+      "type": "patchouli:spotlight",
+      "item": "maid_weapon:maid_injector",
+      "title": "patchouli.maid_weapon.entry.first_steps.page.1.title",
+      "text": "patchouli.maid_weapon.entry.first_steps.page.1"
+    }
+  ]
+}

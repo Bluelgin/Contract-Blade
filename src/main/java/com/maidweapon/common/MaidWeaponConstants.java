@@ -22,7 +22,7 @@ public final class MaidWeaponConstants {
     public static final String MOD_NAME = "车万女仆：契约之刃";
 
     /** Mod 版本 */
-    public static final String MOD_VERSION = "1.0.0";
+    public static final String MOD_VERSION = "0.1.0-beta.1";
 
     /** 拔刀剑模式 NBT 标签 */
     public static final String TAG_SLASHBLADE_MODE = "SlashBladeMode";

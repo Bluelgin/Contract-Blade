@@ -9,6 +9,11 @@ plugins {
 version = mod_version
 group = mod_group_id
 
+def compatTestMode = providers.gradleProperty('compatTest').orElse('vanilla').get()
+def compatWorld = providers.gradleProperty('compatWorld').orNull
+def tlmTestMode = providers.gradleProperty('tlmTest').orElse('latest').get()
+def compatRunDir = providers.gradleProperty('compatRunDir').orNull
+
 repositories {
     // 国内镜像（加速依赖下载）
     maven { url = "https://maven.aliyun.com/repository/public" }
@@ -17,15 +22,21 @@ repositories {
     maven { url = "https://libraries.minecraft.net" }
     // BMCLAPI Forge 镜像（国内可用）
     maven { url = "https://bmclapi2.bangbang93.com/maven" }
-
     // 本地库
     flatDir {
-        dirs 'libs'
+        dirs 'libs', 'tmp/compat-test', 'tmp/compat-old'
     }
 }
 
 base {
-    archivesName = mod_id
+    archivesName = "${mod_id}-forge-${minecraft_version}"
+}
+
+tasks.named('jar', Jar).configure {
+    from('LICENSE') {
+        rename { "LICENSE_${mod_id}" }
+    }
+    from('ASSET_SOURCES.md')
 }
 
 // Java 编译版本设置为 17（MC 1.20.1 要求）
@@ -47,9 +58,12 @@ minecraft {
     // 运行配置
     runs {
         configureEach {
-            workingDirectory project.file('run')
+            workingDirectory project.file(compatRunDir ?: 'run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -59,11 +73,16 @@ minecraft {
 
         client {
             property 'forge.enabledGameTestNamespaces', mod_id
+            jvmArgs '-Xms384m', '-Xmx1280m'
         }
 
         server {
             property 'forge.enabledGameTestNamespaces', mod_id
+            jvmArgs '-Xms256m', '-Xmx1024m'
             args '--nogui'
+            if (compatWorld) {
+                args '--world', compatWorld
+            }
         }
 
         data {
@@ -75,18 +94,65 @@ minecraft {
 // 将生成的资源目录加入资源集
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+
 // 依赖配置
 dependencies {
     // Minecraft Forge
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
+    // Mandatory Touhou Little Maid runtime; all integration is version-tolerant and not bundled.
+    if (tlmTestMode == 'old') {
+        runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
+    } else if (tlmTestMode == 'pack') {
+        runtimeOnly fg.deobf("compat:touhoulittlemaid:1.5.2-forge+mc1.20.1")
+    } else {
+        runtimeOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
+    }
+
+    // Optional local launch matrix. These are runtime-only and never bundled.
+    if (compatTestMode in ['goety', 'both', 'maidspell-goety', 'maidspell-both']) {
+        runtimeOnly fg.deobf("compat:goety:2.5.55.4")
+        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
+    }
+    if (compatTestMode in ['irons', 'both', 'maidspell-irons', 'maidspell-both']) {
+        runtimeOnly fg.deobf("compat:irons_spellbooks:1.20.1-3.16.2")
+        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
+        runtimeOnly fg.deobf("compat:geckolib-forge-1.20.1:4.8.4")
+        runtimeOnly fg.deobf("compat:player-animation-lib-forge:1.0.2-rc1+1.20")
+        runtimeOnly fg.deobf("compat:irons_lib:1.20.1-2.1.0")
+    }
+    if (compatTestMode in ['maidspell-goety', 'maidspell-irons', 'maidspell-both']) {
+        runtimeOnly fg.deobf("compat:touhou_little_maid_spell:1.8.0.1-forge+mc1.20.1")
+    }
+    if (compatTestMode in ['old-goety', 'old-both']) {
+        runtimeOnly fg.deobf("compat:goety:2.5.1.2")
+        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
+    }
+    if (compatTestMode in ['old-irons', 'old-both']) {
+        runtimeOnly fg.deobf("compat:irons_spellbooks:1.20.1-1.2.1")
+        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
+        runtimeOnly fg.deobf("compat:geckolib-forge-1.20.1:4.8.4")
+        runtimeOnly fg.deobf("compat:player-animation-lib-forge:1.0.2-rc1+1.20")
+        runtimeOnly fg.deobf("compat:caelus-forge:3.2.0+1.20.1")
+    }
+    if (compatTestMode == 'patchouli') {
+        // Development-only validation profile. Patchouli remains optional for shipped builds.
+        runtimeOnly fg.deobf("compat:Patchouli:1.20.1-85-FORGE")
+    }
+    if (compatTestMode in ['slashblade', 'true-power']) {
+        // Development-only validation profile. SlashBlade remains optional for shipped builds.
+        runtimeOnly fg.deobf("compat:SlashBladeResharped:1.20.1-1.9.65")
+    }
+    if (compatTestMode == 'true-power') {
+        // Full optional stack used to validate the dedicated maid task and soul baubles.
+        runtimeOnly fg.deobf("compat:mrqxs_Slashblade_Core:1.20.1-1.4.1")
+        runtimeOnly fg.deobf("compat:True_POWER:1.20.1-1.2.1-hotfix1")
+        runtimeOnly fg.deobf("compat:True_POWER_of_Maid:1.20.1-1.2.3")
+    }
     // ========================================
     // Touhou Little Maid（车万女仆）依赖
     // TLM 使用反射，不需要编译期依赖
     // ========================================
-
-    // 拔刀剑（SlashBlade）— 集成时取消注释
-    // implementation fg.deobf(files("libs/slashblade.jar"))
 
     // JEI（Just Enough Items）- 可选，用于配方查看
     // implementation fg.deobf("mezz.jei:jei-1.20.1-forge:15.x.x.x")
@@ -133,6 +199,9 @@ jar {
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
+            groupId = mod_group_id
+            artifactId = mod_id
+            version = mod_version
             artifact jar
         }
     }

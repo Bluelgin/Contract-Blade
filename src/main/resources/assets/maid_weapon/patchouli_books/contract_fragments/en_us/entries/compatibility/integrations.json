@@ -1,0 +1,17 @@
+{
+  "sortnum": 0,
+  "name": "patchouli.maid_weapon.entry.integrations.name",
+  "icon": "minecraft:ender_eye",
+  "category": "maid_weapon:compatibility",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.integrations.page.0"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.integrations.page.1.title",
+      "text": "patchouli.maid_weapon.entry.integrations.page.1"
+    }
+  ]
+}

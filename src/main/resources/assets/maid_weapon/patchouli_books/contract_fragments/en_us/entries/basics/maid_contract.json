@@ -1,0 +1,22 @@
+{
+  "sortnum": 2,
+  "name": "patchouli.maid_weapon.entry.maid_contract.name",
+  "icon": "touhou_little_maid:film",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.maid_contract.page.0"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_contract.page.1.title",
+      "text": "patchouli.maid_weapon.entry.maid_contract.page.1"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.maid_contract.page.2.title",
+      "text": "patchouli.maid_weapon.entry.maid_contract.page.2"
+    }
+  ]
+}

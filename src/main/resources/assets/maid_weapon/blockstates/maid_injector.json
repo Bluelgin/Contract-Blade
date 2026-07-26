@@ -1,0 +1,5 @@
+{
+  "multipart": [
+    { "apply": { "model": "maid_weapon:block/maid_injector" } }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "sortnum": 9,
+  "name": "patchouli.maid_weapon.entry.troubleshooting.name",
+  "icon": "minecraft:compass",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.troubleshooting.page.0"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.troubleshooting.page.1.title",
+      "text": "patchouli.maid_weapon.entry.troubleshooting.page.1"
+    }
+  ]
+}

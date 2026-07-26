@@ -1,0 +1,32 @@
+{
+  "sortnum": 4,
+  "name": "patchouli.maid_weapon.entry.growth_values.name",
+  "icon": "maid_weapon:spirit_crystal",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.growth_values.page.0"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.growth_values.page.1.title",
+      "text": "patchouli.maid_weapon.entry.growth_values.page.1"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.growth_values.page.2.title",
+      "text": "patchouli.maid_weapon.entry.growth_values.page.2"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.growth_values.page.3.title",
+      "text": "patchouli.maid_weapon.entry.growth_values.page.3"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.growth_values.page.4.title",
+      "text": "patchouli.maid_weapon.entry.growth_values.page.4"
+    }
+  ]
+}
