@@ -1,0 +1,21 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "patchouli"
+        }
+      ],
+      "recipe": {
+        "type": "patchouli:shapeless_book_recipe",
+        "ingredients": [
+          { "item": "minecraft:book" },
+          { "item": "minecraft:amethyst_shard" }
+        ],
+        "book": "maid_weapon:contract_fragments"
+      }
+    }
+  ]
+}

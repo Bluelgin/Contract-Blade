@@ -3,10 +3,15 @@ package com.maidweapon.forge;
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
+import com.maidweapon.forge.compat.TlmReflection;
+import com.maidweapon.forge.compat.SlashBladeCompat;
+import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.init.ModCreativeTab;
 import com.maidweapon.forge.init.ModItems;
-import com.maidweapon.forge.world.structure.ModStructures;
 import com.maidweapon.forge.item.MaidWeaponItem;
+import com.maidweapon.forge.init.ModBlocks;
+import com.maidweapon.forge.init.ModMenus;
+import com.maidweapon.forge.init.ModRecipeSerializers;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -54,11 +59,12 @@ public class MaidWeaponMod {
         // 注册配置文件
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
                 net.minecraftforge.fml.config.ModConfig.Type.COMMON, MaidWeaponConfig.SPEC);
-
         ModItems.ITEMS.register(modBus);
+        ModBlocks.BLOCKS.register(modBus);
+        ModMenus.MENUS.register(modBus);
+        ModRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
         ModCreativeTab.TABS.register(modBus);
-        ModStructures.STRUCTURE_TYPES.register(modBus);
-        ModStructures.STRUCTURE_PIECES.register(modBus);
+        TaczCompat.bootstrap(modBus);
 
         modBus.addListener(this::commonSetup);
 
@@ -70,6 +76,10 @@ public class MaidWeaponMod {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
+            LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
+            LOGGER.info("[MaidWeapon] SlashBlade compatibility: {}", SlashBladeCompat.diagnostics());
+            LOGGER.info("[MaidWeapon] TACZ compatibility: {}",
+                    TaczCompat.isLoaded() ? "enabled" : "not installed");
             // ============================================================
             // 动态订阅 TLM 的 InteractMaidEvent
             // ============================================================
@@ -108,12 +118,16 @@ public class MaidWeaponMod {
                         Entity maid = (Entity) getMaid.invoke(evt);
                         ItemStack stack = (ItemStack) getStack.invoke(evt);
 
-                        // 只处理手持 MaidWeaponItem 的情况
                         if (!(stack.getItem() instanceof MaidWeaponItem)) return;
+                        ItemStack targetStack = stack;
+
+                        // Preserve TLM's normal maid GUI after manifestation.
+                        // Sneak-right-click explicitly requests contract recall.
+                        if (MaidWeaponItem.hasMaidData(targetStack) && !player.isShiftKeyDown()) return;
 
                         // 检查武器主人权限（已绑定的武器只有主人才能操作）
-                        if (MaidWeaponItem.hasMaidData(stack)
-                                && !MaidWeaponItem.isOwner(stack, player)) {
+                        if (MaidWeaponItem.hasMaidData(targetStack)
+                                && !MaidWeaponItem.isOwner(targetStack, player)) {
                             player.displayClientMessage(
                                     net.minecraft.network.chat.Component
                                             .translatable("maid_weapon.message.not_owner"), true);
@@ -122,7 +136,7 @@ public class MaidWeaponMod {
                         }
 
                         // 捕获女仆
-                        boolean success = TouhouLittleMaidHelper.convertMaidToWeapon(player, maid, stack);
+                        boolean success = TouhouLittleMaidHelper.convertMaidToWeapon(player, maid, targetStack);
                         if (success) {
                             // 取消事件 → TLM 不打开 GUI
                             ((Event) evt).setCanceled(true);

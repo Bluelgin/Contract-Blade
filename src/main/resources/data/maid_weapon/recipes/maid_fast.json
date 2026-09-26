@@ -1,5 +1,5 @@
 {
-  "type": "minecraft:crafting_shapeless",
+  "type": "maid_weapon:weapon_upgrade",
   "ingredients": [
     {"item": "minecraft:amethyst_shard"},
     {"item": "maid_weapon:maid_sword"}

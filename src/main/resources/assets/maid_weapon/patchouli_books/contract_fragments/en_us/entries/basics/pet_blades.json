@@ -1,0 +1,17 @@
+{
+  "name": "patchouli.maid_weapon.entry.pet_blades.name",
+  "category": "maid_weapon:basics",
+  "icon": "maid_weapon:cat_blade",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.pet_blades.page.0"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "maid_weapon:dog_blade",
+      "recipe2": "maid_weapon:cat_blade",
+      "text": "patchouli.maid_weapon.entry.pet_blades.page.1"
+    }
+  ]
+}

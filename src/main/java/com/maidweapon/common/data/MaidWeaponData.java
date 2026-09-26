@@ -50,6 +50,9 @@ public class MaidWeaponData {
     /** 好感度（0 ~ 384，对应 TLM 好感度） */
     private int favorability = 0;
 
+    /** 契约共鸣（0 ~ 200，负责显现、施法与战斗维持） */
+    private int resonance = MAX_RESONANCE;
+
     // ==================== 战斗统计 ====================
 
     /** 总击杀数 */
@@ -79,6 +82,12 @@ public class MaidWeaponData {
 
     /** 最小好感度 */
     public static final int MIN_FAVORABILITY = 0;
+
+    /** 契约共鸣上限 */
+    public static final int MAX_RESONANCE = 200;
+
+    /** 契约共鸣下限 */
+    public static final int MIN_RESONANCE = 0;
 
     // ==================== 怪物强度分级 ====================
 
@@ -179,8 +188,8 @@ public class MaidWeaponData {
         if (level == 5) return "需要无死亡击杀末影龙";
         if (level == 6) return "需要无死亡击杀凋灵";
         if (level == 7) return "需要无死亡击杀末影龙和凋灵各3次";
-        if (level == 8) return "§7(未开放)";
-        if (level == 9) return "§7(未开放)";
+        if (level == 8) return "需要累计无死亡击杀末影龙与凋灵共5次";
+        if (level == 9) return "需要累计无死亡击杀末影龙与凋灵共10次";
 
         int requiredTier = TIER_REQUIREMENT[level - 1];
         return "需要无死亡击杀 TIER " + requiredTier + " 级怪物";
@@ -202,6 +211,24 @@ public class MaidWeaponData {
 
     public void reduceFavorability(int amount) {
         setFavorability(this.favorability - amount);
+    }
+
+    // ==================== 契约共鸣 ====================
+
+    public int getResonance() {
+        return resonance;
+    }
+
+    public void setResonance(int resonance) {
+        this.resonance = Math.max(MIN_RESONANCE, Math.min(resonance, MAX_RESONANCE));
+    }
+
+    public void addResonance(int amount) {
+        setResonance(this.resonance + amount);
+    }
+
+    public void reduceResonance(int amount) {
+        setResonance(this.resonance - amount);
     }
 
     // ==================== 战斗统计 ====================
@@ -335,8 +362,8 @@ public class MaidWeaponData {
      */
     @Override
     public String toString() {
-        return String.format("MaidWeaponData{name='%s', Lv.%d, Favorability=%d, Kills=%d, Tier=%d, Dragon=%d, Wither=%d, Sins=%s}",
-                maidName, level, favorability, totalKills, unlockedTier, enderDragonKills, witherKills,
+        return String.format("MaidWeaponData{name='%s', Lv.%d, Favorability=%d, Resonance=%d, Kills=%d, Tier=%d, Dragon=%d, Wither=%d, Sins=%s}",
+                maidName, level, favorability, resonance, totalKills, unlockedTier, enderDragonKills, witherKills,
                 SinSlotManager.sinsToString(embeddedSins));
     }
 }

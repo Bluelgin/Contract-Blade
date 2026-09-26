@@ -1,8 +1,0 @@
-{
-  "type": "maid_weapon:yakkyoku",
-  "biomes": "#maid_weapon:has_structure/yakkyoku",
-  "adapt_noise": true,
-  "spawn_overrides": {},
-  "step": "surface_structures",
-  "terrain_adaptation": "beard_thin"
-}

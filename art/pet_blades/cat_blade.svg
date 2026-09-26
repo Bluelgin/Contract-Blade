@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <!-- Slim moonlit blade with cat-ear guard and amethyst accent. -->
+  <path fill="#1e1c2a" d="M3 27h3v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2V9h2V7h2V5h2V3h2v4h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2H8v2H6v2H3z"/>
+  <path fill="#8b85a7" d="M13 18h2v-2h2v-2h2v-2h2v-2h2V8h2V6h2V4h1v3h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2z"/>
+  <path fill="#dbd4ec" d="M16 16h2v-2h2v-2h2v-2h2V8h2V6h2V4h1v1h-1v2h-2v2h-2v2h-2v2h-2v2h-2z"/>
+  <path fill="#faf0ff" d="M22 10h2V8h2V6h2V5h1v1h-1v2h-2v2h-2v2h-2z"/>
+  <!-- Two dark ears bracket a violet gem at the guard. -->
+  <path fill="#34304a" d="M7 18h2v1h2v2H8v-1H7zm8-5h2v2h2v2h-2v-1h-2z"/>
+  <path fill="#bd92cd" d="M8 19h2v1h2v2h-2v-1H8zm7-4h2v1h2v1h-2v-1h-2z"/>
+  <path fill="#7b55a8" d="M12 18h2v2h-2z"/>
+  <path fill="#e3bef0" d="M12 18h1v1h-1z"/>
+  <path fill="#4d394e" d="M8 22h2v2H8v2H6v2H4v-2h2v-2h2z"/>
+  <path fill="#9970a4" d="M8 22h1v2H7v2H5v1H4v-2h2v-2h2z"/>
+  <path fill="#242130" d="M3 27h3v2H3z"/>
+  <path fill="#c8a9d8" d="M4 27h2v1H4z"/>
+</svg>

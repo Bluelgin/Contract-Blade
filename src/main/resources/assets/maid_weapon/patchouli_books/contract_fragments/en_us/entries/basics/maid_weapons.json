@@ -1,0 +1,24 @@
+{
+  "sortnum": 1,
+  "name": "patchouli.maid_weapon.entry.maid_weapons.name",
+  "icon": "maid_weapon:maid_sword",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.maid_weapons.page.0"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "maid_weapon:maid_sword",
+      "recipe2": "maid_weapon:maid_fast",
+      "text": "patchouli.maid_weapon.entry.maid_weapons.page.1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "maid_weapon:maid_heavy",
+      "recipe2": "maid_weapon:maid_injector",
+      "text": "patchouli.maid_weapon.entry.maid_weapons.page.2"
+    }
+  ]
+}
