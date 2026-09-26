@@ -18,6 +18,7 @@ weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
 config = read("src/main/java/com/maidweapon/common/MaidWeaponConfig.java")
 intrinsic = read("src/main/java/com/maidweapon/forge/api/IntrinsicSpiritApi.java")
 deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
+transfer = read("src/main/java/com/maidweapon/forge/system/deployment/ContractTransferSafetyService.java")
 command = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
 
 # Recall is fail-safe: encode and verify a candidate before mutating the stack,
@@ -125,7 +126,7 @@ if "CONTRACT_NBT_MAX_INTRINSIC_SPIRITS" not in intrinsic or "spiritId.length() <
 if deployment.count("rescueSelfStoredContract(player);") < 3:
     raise SystemExit("Self-stored contract rescue is no longer applied to all required paths")
 for needle in ["boolean exactBinding", "boolean legacyBinding", "if (!exactBinding && !legacyBinding) continue"]:
-    if needle not in deployment:
+    if needle not in transfer:
         raise SystemExit(f"Self-contract physical identity check is missing: {needle}")
 
 for language in ["en_us", "zh_cn"]:
