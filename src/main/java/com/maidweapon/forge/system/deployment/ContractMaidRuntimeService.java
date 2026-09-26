@@ -17,6 +17,11 @@ import net.minecraft.world.item.ItemStack;
  * she is active.</p>
  */
 public final class ContractMaidRuntimeService {
+    public static void purgeLeakedProjections(Player player) {
+        TripleMagicCompat.purgeLeakedCopies(player);
+        TaczCompat.purgeLeakedLinks(player);
+    }
+
     public static void maintain(Player player, ItemStack weapon, Entity maid) {
         if (player.tickCount % 20 == 0) {
             TouhouLittleMaidHelper.syncFavorabilityFromMaid(maid, weapon);
