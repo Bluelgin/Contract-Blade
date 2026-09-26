@@ -22,6 +22,11 @@ import java.util.List;
  *   remove(weaponSins, sinToRemove) → 移除罪恶
  *   hasPride(weaponSins) → 是否嵌入了傲慢
  */
+/**
+ * @deprecated Compatibility codec/rules for archived Part data. Core gameplay
+ * must not call these mutation helpers.
+ */
+@Deprecated
 public final class SinSlotManager {
 
     /** 默认最大槽位数（没有傲慢时） */
