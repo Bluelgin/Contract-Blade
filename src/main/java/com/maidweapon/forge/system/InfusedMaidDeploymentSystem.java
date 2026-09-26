@@ -11,22 +11,14 @@ import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractCombatTaskRouter;
 import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
+import com.maidweapon.forge.system.deployment.ContractRecoveryService;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.TicketType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -37,26 +29,17 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.lang.reflect.Method;
 
 /** Automatically deploys maids from generic infused weapons while they are held. */
 @Mod.EventBusSubscriber
 public final class InfusedMaidDeploymentSystem {
-    private static final String DEPLOYMENT_LOCATION = "MaidDeploymentLocation";
-    private static final String RECOVERY_FAILED = "MaidDeploymentRecoveryFailed";
     private static final double MAX_DEPLOYMENT_DISTANCE_SQR = 64.0 * 64.0;
-    private static final int RECOVERY_NEIGHBOR_DELAY = 20;
-    private static final int RECOVERY_TIMEOUT = 40;
-    private static final TicketType<UUID> RECOVERY_TICKET = TicketType.create(
-            "maid_weapon_recovery", UUID::compareTo, RECOVERY_TIMEOUT + 20);
     private record ActiveDeployment(String maidId, String bindingId) {}
     private record DesiredDeployment(String maidId, String bindingId) {}
-    private record DeploymentLocation(ResourceKey<Level> dimension, BlockPos pos) {}
     private static final class PendingDeployment {
         private final DesiredDeployment desired;
         private int ticksRemaining;
@@ -77,27 +60,12 @@ public final class InfusedMaidDeploymentSystem {
             this.ticksRemaining = ticksRemaining;
         }
     }
-    private static final class RecoveryAttempt {
-        private final ActiveDeployment deployment;
-        private final DeploymentLocation location;
-        private final long startedAt;
-        private final Set<ChunkPos> tickets = new HashSet<>();
-        private boolean neighborsRequested;
-
-        private RecoveryAttempt(ActiveDeployment deployment, DeploymentLocation location,
-                                long startedAt) {
-            this.deployment = deployment;
-            this.location = location;
-            this.startedAt = startedAt;
-        }
-    }
     private static final Map<UUID, ActiveDeployment> ACTIVE_WEAPONS = new HashMap<>();
     /** Last known carrier snapshot; used only if a third-party item deletes itself. */
     private static final Map<UUID, ItemStack> ACTIVE_CARRIERS = new HashMap<>();
     private static final Map<UUID, PendingDeployment> PENDING_DEPLOYMENTS = new HashMap<>();
     private static final Map<UUID, PendingRecall> PENDING_RECALLS = new HashMap<>();
     private static final Map<String, Long> DEPLOY_COOLDOWNS = new HashMap<>();
-    private static final Map<UUID, RecoveryAttempt> RECOVERIES = new HashMap<>();
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -112,7 +80,7 @@ public final class InfusedMaidDeploymentSystem {
             TaczCompat.purgeLeakedLinks(player);
             rescueSelfStoredContract(player);
         }
-        if (RECOVERIES.containsKey(playerId)) {
+        if (ContractRecoveryService.hasRecovery(player)) {
             if (maintenanceTick) processRecovery(player);
             return;
         }
@@ -424,7 +392,7 @@ public final class InfusedMaidDeploymentSystem {
                 clearTransitions(player);
                 return false;
             }
-            if (!weapon.isEmpty() && !weapon.getOrCreateTag().getBoolean(RECOVERY_FAILED)) {
+            if (!weapon.isEmpty() && !ContractRecoveryService.failed(weapon)) {
                 startRecovery(player, active, weapon);
             }
             return false;
@@ -470,13 +438,13 @@ public final class InfusedMaidDeploymentSystem {
 
     private static void maintainManifestedMaid(Player player, ItemStack weapon, Entity maid) {
         ACTIVE_CARRIERS.put(player.getUUID(), weapon.copy());
-        if (player.tickCount % 20 == 0 || readDeploymentLocation(weapon) == null) {
+        if (player.tickCount % 20 == 0 || !ContractRecoveryService.hasLocation(weapon)) {
             rememberDeploymentLocation(weapon, maid);
         }
         if (player.tickCount % 20 == 0) {
             TouhouLittleMaidHelper.syncFavorabilityFromMaid(maid, weapon);
         }
-        weapon.getOrCreateTag().remove(RECOVERY_FAILED);
+        ContractRecoveryService.clearFailure(weapon);
         TouhouLittleMaidHelper.setAllDaySchedule(maid);
         if (maid instanceof LivingEntity living) {
             TripleMagicCompat.equipPhantoms(player, living, weapon);
@@ -537,7 +505,7 @@ public final class InfusedMaidDeploymentSystem {
             return true;
         }
         if (!MaidInfusion.containsMaid(weapon)) {
-            if (!weapon.getOrCreateTag().getBoolean(RECOVERY_FAILED)) {
+            if (!ContractRecoveryService.failed(weapon)) {
                 startRecovery(player,
                         new ActiveDeployment(desired.maidId(), desired.bindingId()), weapon);
             }
@@ -556,7 +524,7 @@ public final class InfusedMaidDeploymentSystem {
             }
         }
         rememberDeploymentLocation(weapon, maid);
-        weapon.getOrCreateTag().remove(RECOVERY_FAILED);
+        ContractRecoveryService.clearFailure(weapon);
         ACTIVE_WEAPONS.put(player.getUUID(),
                 new ActiveDeployment(desired.maidId(), desired.bindingId()));
         ContractDeploymentEffects.deployFinish(maid);
@@ -631,129 +599,56 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     private static void rememberDeploymentLocation(ItemStack weapon, Entity maid) {
-        CompoundTag location = new CompoundTag();
-        location.putString("Dimension", maid.level().dimension().location().toString());
-        location.putInt("X", maid.blockPosition().getX());
-        location.putInt("Y", maid.blockPosition().getY());
-        location.putInt("Z", maid.blockPosition().getZ());
-        weapon.getOrCreateTag().put(DEPLOYMENT_LOCATION, location);
-    }
-
-    private static DeploymentLocation readDeploymentLocation(ItemStack weapon) {
-        CompoundTag root = weapon.getTag();
-        if (root == null || !root.contains(DEPLOYMENT_LOCATION)) return null;
-        CompoundTag location = root.getCompound(DEPLOYMENT_LOCATION);
-        try {
-            ResourceLocation id = new ResourceLocation(location.getString("Dimension"));
-            ResourceKey<Level> dimension = ResourceKey.create(Registries.DIMENSION, id);
-            return new DeploymentLocation(dimension, new BlockPos(
-                    location.getInt("X"), location.getInt("Y"), location.getInt("Z")));
-        } catch (RuntimeException ignored) {
-            return null;
-        }
+        ContractRecoveryService.rememberLocation(weapon, maid);
     }
 
     private static void clearDeploymentLocation(ItemStack weapon) {
-        CompoundTag tag = weapon.getTag();
-        if (tag == null) return;
-        tag.remove(DEPLOYMENT_LOCATION);
-        tag.remove(RECOVERY_FAILED);
+        ContractRecoveryService.clearLocation(weapon);
     }
 
     private static boolean startRecovery(Player player, ActiveDeployment deployment,
                                          ItemStack weapon) {
-        if (weapon.isEmpty() || RECOVERIES.containsKey(player.getUUID())) return false;
-        DeploymentLocation location = readDeploymentLocation(weapon);
-        if (location == null || player.getServer() == null) return false;
-        ServerLevel source = player.getServer().getLevel(location.dimension());
-        if (source == null) {
-            notifyRecoveryFailure(player, weapon, location);
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+        ContractRecoveryService.StartResult result = ContractRecoveryService.start(
+                player, deployment.maidId(), deployment.bindingId(), weapon);
+        if (result == ContractRecoveryService.StartResult.STARTED) {
+            clearTransitions(player);
             return true;
         }
-        RecoveryAttempt attempt = new RecoveryAttempt(deployment, location,
-                player.getServer().overworld().getGameTime());
-        clearTransitions(player);
-        RECOVERIES.put(player.getUUID(), attempt);
-        addRecoveryTicket(source, attempt, new ChunkPos(location.pos()));
-        return true;
+        if (result == ContractRecoveryService.StartResult.TERMINAL_FAILURE) {
+            ACTIVE_WEAPONS.remove(player.getUUID());
+            ACTIVE_CARRIERS.remove(player.getUUID());
+            clearTransitions(player);
+            return true;
+        }
+        return false;
     }
 
     /** Returns true while recovery owns this player's deployment processing for this tick. */
+    /** Returns true while recovery owns this player's deployment processing for this tick. */
     private static boolean processRecovery(Player player) {
-        RecoveryAttempt attempt = RECOVERIES.get(player.getUUID());
-        if (attempt == null || player.getServer() == null) return false;
-        Entity maid = findManifestedMaid(player, attempt.deployment.maidId());
-        if (maid != null && recall(player, attempt.deployment.maidId())) {
-            finishRecovery(player, attempt);
+        ContractRecoveryService.TickResult result = ContractRecoveryService.tick(player);
+        if (result == ContractRecoveryService.TickResult.IDLE) return false;
+        if (result == ContractRecoveryService.TickResult.MAID_AVAILABLE) {
+            String maidId = ContractRecoveryService.currentMaidId(player);
+            if (maidId != null && recall(player, maidId)) {
+                ContractRecoveryService.finish(player);
+                ACTIVE_WEAPONS.remove(player.getUUID());
+                ACTIVE_CARRIERS.remove(player.getUUID());
+                clearTransitions(player);
+            }
             return true;
         }
-
-        long elapsed = player.getServer().overworld().getGameTime() - attempt.startedAt;
-        ServerLevel source = player.getServer().getLevel(attempt.location.dimension());
-        if (source != null && elapsed >= RECOVERY_NEIGHBOR_DELAY && !attempt.neighborsRequested) {
-            attempt.neighborsRequested = true;
-            ChunkPos center = new ChunkPos(attempt.location.pos());
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    if (x != 0 || z != 0) {
-                        addRecoveryTicket(source, attempt,
-                                new ChunkPos(center.x + x, center.z + z));
-                    }
-                }
-            }
+        if (result == ContractRecoveryService.TickResult.TIMED_OUT) {
+            ContractRecoveryService.finish(player);
+            ACTIVE_WEAPONS.remove(player.getUUID());
+            ACTIVE_CARRIERS.remove(player.getUUID());
+            clearTransitions(player);
         }
-        if (elapsed < RECOVERY_TIMEOUT) return true;
-
-        ItemStack weapon = findBoundWeapon(player, attempt.deployment.maidId());
-        notifyRecoveryFailure(player, weapon, attempt.location);
-        finishRecovery(player, attempt);
         return true;
     }
 
-    private static void addRecoveryTicket(ServerLevel level, RecoveryAttempt attempt,
-                                          ChunkPos chunk) {
-        if (attempt.tickets.add(chunk)) {
-            level.getChunkSource().addRegionTicket(
-                    RECOVERY_TICKET, chunk, 0, attemptOwner(attempt));
-        }
-    }
-
-    private static UUID attemptOwner(RecoveryAttempt attempt) {
-        return UUID.nameUUIDFromBytes((attempt.deployment.bindingId() + ":"
-                + attempt.deployment.maidId()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
-    }
-
-    private static void finishRecovery(Player player, RecoveryAttempt attempt) {
-        if (player.getServer() != null) {
-            ServerLevel source = player.getServer().getLevel(attempt.location.dimension());
-            if (source != null) {
-                UUID owner = attemptOwner(attempt);
-                for (ChunkPos chunk : attempt.tickets) {
-                    source.getChunkSource().removeRegionTicket(
-                            RECOVERY_TICKET, chunk, 0, owner);
-                }
-            }
-        }
-        RECOVERIES.remove(player.getUUID());
-        ACTIVE_WEAPONS.remove(player.getUUID());
-        ACTIVE_CARRIERS.remove(player.getUUID());
-        clearTransitions(player);
-    }
-
     private static void cancelRecovery(Player player) {
-        RecoveryAttempt attempt = RECOVERIES.get(player.getUUID());
-        if (attempt != null) finishRecovery(player, attempt);
-    }
-
-    private static void notifyRecoveryFailure(Player player, ItemStack weapon,
-                                              DeploymentLocation location) {
-        if (!weapon.isEmpty()) weapon.getOrCreateTag().putBoolean(RECOVERY_FAILED, true);
-        player.displayClientMessage(Component.translatable(
-                "maid_weapon.message.teleport_recovery_failed",
-                location.dimension().location().toString(), location.pos().getX(),
-                location.pos().getY(), location.pos().getZ()), false);
+        ContractRecoveryService.cancel(player);
     }
 
     private static boolean isCoolingDown(Player player, String maidId) {
