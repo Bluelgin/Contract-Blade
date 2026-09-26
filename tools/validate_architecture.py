@@ -50,6 +50,9 @@ if len(helper.splitlines()) > 220:
     raise SystemExit("TouhouLittleMaidHelper stopped being a thin facade")
 if len(deployment.splitlines()) > 650:
     raise SystemExit("InfusedMaidDeploymentSystem is growing back into a god class")
+for optional_facade in ("TaczCompat", "TripleMagicCompat", "ContractCombatTaskRouter"):
+    if optional_facade in deployment:
+        raise SystemExit(f"deployment state machine regained optional-mod knowledge: {optional_facade}")
 
 # Development-only registry aliases may remain for old worlds, but not in the UI.
 creative = read(JAVA / "com/maidweapon/forge/init/ModCreativeTab.java")
