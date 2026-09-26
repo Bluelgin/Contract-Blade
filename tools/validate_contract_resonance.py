@@ -15,7 +15,7 @@ config = read("src/main/java/com/maidweapon/common/MaidWeaponConfig.java")
 bond = read("src/main/java/com/maidweapon/forge/event/MaidBondCombatHandler.java")
 combat = read("src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java")
 magic = read("src/main/java/com/maidweapon/forge/compat/TripleMagicCompat.java")
-helper = read("src/main/java/com/maidweapon/forge/compat/TouhouLittleMaidHelper.java")
+lifecycle = read("src/main/java/com/maidweapon/forge/compat/tlm/ContractMaidLifecycleService.java")
 overlay = read("src/main/java/com/maidweapon/forge/client/MaidFavorabilityOverlay.java")
 
 if "MAX_RESONANCE = 200" not in data or 'KEY_RESONANCE = "ContractResonance"' not in serializer:
@@ -39,14 +39,13 @@ if 'defineInRange("favorabilityMaxBonusV2", 0.25' not in config:
     raise SystemExit("Full-favorability reward is not the agreed +25%")
 if "getResonance()" not in overlay or "SHOW_RESONANCE_HUD" not in overlay:
     raise SystemExit("HUD still displays favorability instead of contract resonance")
-if "syncFavorabilityFromMaid" not in helper:
+if "syncFavorabilityFromMaid" not in lifecycle:
     raise SystemExit("Manifested TLM favorability is not mirrored back to the weapon")
 
-recall = helper.split(
-    "public static boolean convertMaidToWeapon(Player player, Entity entity, ItemStack weaponStack,",
-    1,
-)[1].split("public static boolean convertWeaponToMaid", 1)[0]
-if "setMaidFavorability(entity" in recall:
+recall = lifecycle.split(
+    "public static boolean capture(", 1
+)[1].split("public static boolean manifest(", 1)[0]
+if "TlmEntityAdapter.setFavorability(entity" in recall:
     raise SystemExit("Weapon data still overwrites TLM favorability before recall")
 
 print("Validated resonance migration, recovery/combat rules, favorability isolation, and HUD")
