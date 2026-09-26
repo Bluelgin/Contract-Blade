@@ -22,6 +22,10 @@ import java.lang.reflect.Method;
  * manifested.</p>
  */
 public final class ContractTransferSafetyService {
+    public static boolean isProjectionPhantom(ItemStack stack) {
+        return TripleMagicCompat.isPhantom(stack);
+    }
+
     public static boolean rescueSelfStoredContract(Player player) {
         Entity menuMaid = openedMaid(player.containerMenu);
         if (!TouhouLittleMaidHelper.isOwnedMaid(menuMaid, player)) return false;
