@@ -51,4 +51,4 @@ jobs:
           python tools/validate_patchouli.py
 
       - name: Build
-        run: gradle --no-daemon clean build
+        run: gradle --no-daemon clean build -Pci=true
