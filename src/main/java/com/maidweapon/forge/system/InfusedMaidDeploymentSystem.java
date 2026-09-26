@@ -548,20 +548,19 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     /** Returns true while recovery owns this player's deployment processing for this tick. */
-    /** Returns true while recovery owns this player's deployment processing for this tick. */
     private static boolean processRecovery(Player player) {
-        ContractRecoveryService.TickResult result = ContractRecoveryService.tick(player);
-        if (result == ContractRecoveryService.TickResult.IDLE) return false;
-        if (result == ContractRecoveryService.TickResult.MAID_AVAILABLE) {
-            String maidId = ContractRecoveryService.currentMaidId(player);
-            if (maidId != null && recall(player, maidId)) {
-                ContractRecoveryService.finish(player);
-                ACTIVE_WEAPONS.remove(player.getUUID());
-                ACTIVE_CARRIERS.remove(player.getUUID());
-                clearTransitions(player);
-            }
+        String maidId = ContractRecoveryService.currentMaidId(player);
+        if (maidId != null && findManifestedMaid(player, maidId) != null
+                && recall(player, maidId)) {
+            ContractRecoveryService.finish(player);
+            ACTIVE_WEAPONS.remove(player.getUUID());
+            ACTIVE_CARRIERS.remove(player.getUUID());
+            clearTransitions(player);
             return true;
         }
+
+        ContractRecoveryService.TickResult result = ContractRecoveryService.tick(player);
+        if (result == ContractRecoveryService.TickResult.IDLE) return false;
         if (result == ContractRecoveryService.TickResult.TIMED_OUT) {
             ContractRecoveryService.finish(player);
             ACTIVE_WEAPONS.remove(player.getUUID());
