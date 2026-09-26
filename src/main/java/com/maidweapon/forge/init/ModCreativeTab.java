@@ -24,7 +24,6 @@ public final class ModCreativeTab {
                         output.accept(ModItems.MAID_FAST.get());
                         output.accept(ModItems.DOG_BLADE.get());
                         output.accept(ModItems.CAT_BLADE.get());
-                        output.accept(ModItems.TEST_SLASHBLADE.get());
                     })
                     .build());
 
