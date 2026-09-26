@@ -83,6 +83,15 @@ if 'getMethod("getMaid")' not in transfer or "returnToPlayer" not in transfer:
 recall_body = deployment.split("private static boolean recall(Player player, String maidId)", 1)[1]
 if "ContractTransferSafetyService.rescueSelfStoredContract(player);" not in recall_body.split("private static", 1)[0]:
     raise SystemExit("Recall can still discard a maid before rescuing her own contract stack")
+
+recovery_body = deployment.split("private static boolean processRecovery(Player player)", 1)[1].split(
+    "private static", 1
+)[0]
+if recovery_body.index("recall(player, maidId)") > recovery_body.index("ContractRecoveryService.tick(player)"):
+    raise SystemExit("Recovery must attempt recall before advancing timeout state")
+recovery = read("src/main/java/com/maidweapon/forge/system/deployment/ContractRecoveryService.java")
+if "MAID_AVAILABLE" in recovery:
+    raise SystemExit("A loaded-but-unrecallable maid can bypass recovery timeout")
 task_router = read("src/main/java/com/maidweapon/forge/system/deployment/ContractCombatTaskRouter.java")
 if "TripleMagicCompat.usesMaidSpellTask(weapon)" not in task_router:
     raise SystemExit("Magic contract weapons must select Wan Fa Jie Tong's ranged task")
