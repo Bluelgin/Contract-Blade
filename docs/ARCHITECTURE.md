@@ -50,7 +50,9 @@ services own independent responsibilities:
 - `ContractWeaponLocator`: resolve the real contract and live maid;
 - `ContractCombatTaskRouter`: optional-mod combat task selection/fallback;
 - `ContractDeploymentEffects`: presentation only;
-- `ContractRecoveryService`: cross-chunk/dimension recovery and region tickets.
+- `ContractRecoveryService`: cross-chunk/dimension recovery and region tickets;
+- `ContractTransferSafetyService`: inventory/self-storage transfer invariants;
+- `ContractMaidRuntimeService`: manifested-maid task and optional-mod projection maintenance.
 
 Future systems such as a weapon interior/home dimension should depend on
 contract identity/storage APIs, not on the hotbar deployment state machine.
