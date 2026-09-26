@@ -40,6 +40,13 @@ jobs:
         with:
           gradle-version: "8.7"
 
+      - name: Prepare optional compile APIs
+        run: |
+          mkdir -p libs
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
+            -o libs/tacz-1.20.1-1.1.8-release.jar
+
       - name: Architecture and data validators
         run: |
           python tools/validate_architecture.py
