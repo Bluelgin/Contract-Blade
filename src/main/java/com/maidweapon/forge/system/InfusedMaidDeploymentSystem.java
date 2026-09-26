@@ -1,5 +1,6 @@
 package com.maidweapon.forge.system;
 
+import com.mojang.logging.LogUtils;
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
@@ -33,10 +34,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.lang.reflect.Method;
+import org.slf4j.Logger;
 
 /** Automatically deploys maids from generic infused weapons while they are held. */
 @Mod.EventBusSubscriber
 public final class InfusedMaidDeploymentSystem {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final double MAX_DEPLOYMENT_DISTANCE_SQR = 64.0 * 64.0;
     private record ActiveDeployment(String maidId, String bindingId) {}
     private record DesiredDeployment(String maidId, String bindingId) {}
