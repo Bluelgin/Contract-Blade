@@ -13,11 +13,11 @@ import com.maidweapon.forge.system.deployment.ContractCombatTaskRouter;
 import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractRecoveryService;
+import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.lang.reflect.Method;
 import org.slf4j.Logger;
 
 /** Automatically deploys maids from generic infused weapons while they are held. */
@@ -81,7 +80,7 @@ public final class InfusedMaidDeploymentSystem {
         if (maintenanceTick) {
             TripleMagicCompat.purgeLeakedCopies(player);
             TaczCompat.purgeLeakedLinks(player);
-            rescueSelfStoredContract(player);
+            ContractTransferSafetyService.rescueSelfStoredContract(player);
         }
         if (ContractRecoveryService.hasRecovery(player)) {
             if (maintenanceTick) processRecovery(player);
@@ -277,7 +276,7 @@ public final class InfusedMaidDeploymentSystem {
         // A manifested maid must never serialize a contract weapon that is still
         // inside her own inventory. Move it back to the player's selected slot
         // before any recall can discard the inventory-owning entity.
-        rescueSelfStoredContract(player);
+        ContractTransferSafetyService.rescueSelfStoredContract(player);
         // A contract blade can also be placed into a container while its maid is manually
         // manifested. Recall into the stack while the menu slots are still addressable.
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
@@ -307,58 +306,6 @@ public final class InfusedMaidDeploymentSystem {
      * Removing the stack before maid serialization makes the operation atomic: either
      * the weapon is back with the player, or any remainder is dropped beside the owner.</p>
      */
-    private static boolean rescueSelfStoredContract(Player player) {
-        Entity menuMaid = getOpenedMaid(player.containerMenu);
-        if (!TouhouLittleMaidHelper.isOwnedMaid(menuMaid, player)) return false;
-
-        String maidId = menuMaid.getStringUUID();
-        String entityBinding = menuMaid.getPersistentData().getString(
-                TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
-        for (Slot slot : player.containerMenu.slots) {
-            if (slot.container == player.getInventory()) continue;
-            ItemStack stack = slot.getItem();
-            if (TripleMagicCompat.isPhantom(stack)) continue;
-            if (!MaidInfusion.isInfused(stack) || !MaidWeaponItem.isOwner(stack, player)) continue;
-
-            String weaponBinding = MaidWeaponItem.getBindingId(stack);
-            boolean exactBinding = !entityBinding.isEmpty() && entityBinding.equals(weaponBinding);
-            boolean legacyBinding = maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack));
-            if (!exactBinding && !legacyBinding) continue;
-
-            ItemStack rescued = stack.copy();
-            slot.set(ItemStack.EMPTY);
-            slot.setChanged();
-            returnContractToPlayer(player, rescued);
-            player.containerMenu.broadcastChanges();
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.self_contract_inventory_blocked"),
-                    true);
-            return true;
-        }
-        return false;
-    }
-
-    private static Entity getOpenedMaid(AbstractContainerMenu menu) {
-        if (menu == null) return null;
-        try {
-            Method getter = menu.getClass().getMethod("getMaid");
-            Object value = getter.invoke(menu);
-            return value instanceof Entity entity ? entity : null;
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            return null;
-        }
-    }
-
-    private static void returnContractToPlayer(Player player, ItemStack stack) {
-        int selected = player.getInventory().selected;
-        if (player.getInventory().getItem(selected).isEmpty()) {
-            player.getInventory().setItem(selected, stack);
-            return;
-        }
-        player.getInventory().add(stack);
-        if (!stack.isEmpty()) player.drop(stack, false);
-    }
-
     private static boolean deliverEmergencyFilm(Player player, ItemStack film) {
         if (film.isEmpty()) return false;
         ItemStack remainder = film.copy();
@@ -566,7 +513,7 @@ public final class InfusedMaidDeploymentSystem {
     private static boolean recall(Player player, String maidId) {
         // Final invariant: never serialize and discard a maid while her own
         // contract stack is still held by the currently open maid container.
-        rescueSelfStoredContract(player);
+        ContractTransferSafetyService.rescueSelfStoredContract(player);
         ItemStack weapon = findBoundWeapon(player, maidId);
         return recallIntoStack(player, maidId, weapon);
     }
