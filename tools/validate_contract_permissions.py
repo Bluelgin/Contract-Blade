@@ -69,18 +69,19 @@ if "compatTestMode == 'native-power'" not in build_gradle or "tlm-native-power-1
     raise SystemExit("TLM: Native POWER development runtime profile is missing")
 
 deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
+transfer = read("src/main/java/com/maidweapon/forge/system/deployment/ContractTransferSafetyService.java")
 if "if (slot.container == player.getInventory()) continue;" not in deployment:
     raise SystemExit("Container-close recall must ignore the player's own inventory slots")
 if "if (TripleMagicCompat.isPhantom(stack)) continue;" not in deployment:
     raise SystemExit("TLM accessory page changes can still recall the phantom contract weapon")
-if deployment.count("if (TripleMagicCompat.isPhantom(stack)) continue;") < 2:
+if "if (TripleMagicCompat.isPhantom(stack)) continue;" not in transfer:
     raise SystemExit("Phantom contracts must also be ignored by self-storage rescue")
-if "rescueSelfStoredContract(player)" not in deployment:
+if "ContractTransferSafetyService.rescueSelfStoredContract(player)" not in deployment:
     raise SystemExit("A manifested maid can still consume a contract stored in her own inventory")
-if 'getMethod("getMaid")' not in deployment or "returnContractToPlayer" not in deployment:
+if 'getMethod("getMaid")' not in transfer or "returnToPlayer" not in transfer:
     raise SystemExit("Self-contract inventory rescue is not tied to the opened TLM maid")
 recall_body = deployment.split("private static boolean recall(Player player, String maidId)", 1)[1]
-if "rescueSelfStoredContract(player);" not in recall_body.split("private static", 1)[0]:
+if "ContractTransferSafetyService.rescueSelfStoredContract(player);" not in recall_body.split("private static", 1)[0]:
     raise SystemExit("Recall can still discard a maid before rescuing her own contract stack")
 task_router = read("src/main/java/com/maidweapon/forge/system/deployment/ContractCombatTaskRouter.java")
 if "TripleMagicCompat.usesMaidSpellTask(weapon)" not in task_router:
