@@ -1,8 +1,6 @@
 package com.maidweapon.forge.system;
 
-import com.mojang.logging.LogUtils;
 import com.maidweapon.common.MaidWeaponConfig;
-import com.maidweapon.forge.compat.SlashBladeCompat;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
@@ -10,8 +8,10 @@ import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
 import com.maidweapon.forge.item.MaidWeaponItem;
+import com.maidweapon.forge.system.deployment.ContractCombatTaskRouter;
+import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
+import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -19,8 +19,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.TicketType;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -45,16 +43,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.lang.reflect.Method;
-import org.slf4j.Logger;
 
 /** Automatically deploys maids from generic infused weapons while they are held. */
 @Mod.EventBusSubscriber
 public final class InfusedMaidDeploymentSystem {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final String ATTACK_TASK = MaidCareTaskSystem.ATTACK_TASK;
-    private static final String MAGIC_TASK_FAILURE = "MaidInfusionMagicTaskFailure";
-    private static final String SLASHBLADE_TASK_FAILURE = "MaidInfusionSlashBladeTaskFailure";
-    private static final String TACZ_TASK_FAILURE = "MaidInfusionTaczTaskFailure";
     private static final String DEPLOYMENT_LOCATION = "MaidDeploymentLocation";
     private static final String RECOVERY_FAILED = "MaidDeploymentRecoveryFailed";
     private static final double MAX_DEPLOYMENT_DISTANCE_SQR = 64.0 * 64.0;
@@ -176,18 +168,18 @@ public final class InfusedMaidDeploymentSystem {
                 pending = new PendingRecall(active, desired, delay);
                 PENDING_RECALLS.put(playerId, pending);
                 PENDING_DEPLOYMENTS.remove(playerId);
-                emitRecallBuildup(player, active);
+                ContractDeploymentEffects.recallBuildup(findManifestedMaid(player, active.maidId()));
             }
 
             if (pending.ticksRemaining > 0) pending.ticksRemaining--;
             if (pending.ticksRemaining > 0) {
-                if (pending.ticksRemaining % 5 == 0) emitRecallBuildup(player, active);
+                if (pending.ticksRemaining % 5 == 0) ContractDeploymentEffects.recallBuildup(findManifestedMaid(player, active.maidId()));
                 return;
             }
 
             PENDING_RECALLS.remove(playerId);
             Entity oldMaid = findManifestedMaid(player, active.maidId());
-            if (oldMaid != null) emitRecallFinish(oldMaid);
+            if (oldMaid != null) ContractDeploymentEffects.recallFinish(oldMaid);
             if (!recall(player, active.maidId())) {
                 ItemStack activeWeapon = findBoundWeapon(player, active.maidId());
                 startRecovery(player, active, activeWeapon);
@@ -217,11 +209,11 @@ public final class InfusedMaidDeploymentSystem {
             pending = new PendingDeployment(desired,
                     MaidWeaponConfig.MANIFEST_DEPLOY_DELAY.get());
             PENDING_DEPLOYMENTS.put(playerId, pending);
-            emitDeployBuildup(player);
+            ContractDeploymentEffects.deployBuildup(player);
         }
         if (pending.ticksRemaining > 0) pending.ticksRemaining--;
         if (pending.ticksRemaining > 0) {
-            if (pending.ticksRemaining % 4 == 0) emitDeployBuildup(player);
+            if (pending.ticksRemaining % 4 == 0) ContractDeploymentEffects.deployBuildup(player);
             return;
         }
 
@@ -294,7 +286,7 @@ public final class InfusedMaidDeploymentSystem {
 
         clearTransitions(player);
         Entity maid = findManifestedMaid(player, maidId);
-        if (maid != null) emitRecallFinish(maid);
+        if (maid != null) ContractDeploymentEffects.recallFinish(maid);
         if (recallIntoStack(player, maidId, weapon)) {
             ACTIVE_WEAPONS.remove(player.getUUID());
             ACTIVE_CARRIERS.remove(player.getUUID());
@@ -494,7 +486,7 @@ public final class InfusedMaidDeploymentSystem {
             }
             boolean safeTask = MaidCareTaskSystem.applySafeTask(player, weapon, maid);
             if (!safeTask) {
-                configureCombatTask(player, weapon, maid);
+                ContractCombatTaskRouter.configure(player, weapon, maid);
                 TripleMagicCompat.castFallbackSpell(player, living, weapon);
             }
         }
@@ -560,56 +552,16 @@ public final class InfusedMaidDeploymentSystem {
         // TACZ 投影）已在 convertWeaponToMaid 内完成，这里只处理任务切换。
         if (maid instanceof LivingEntity living) {
             if (!MaidCareTaskSystem.applySafeTask(player, weapon, maid)) {
-                configureCombatTask(player, weapon, maid);
+                ContractCombatTaskRouter.configure(player, weapon, maid);
             }
         }
         rememberDeploymentLocation(weapon, maid);
         weapon.getOrCreateTag().remove(RECOVERY_FAILED);
         ACTIVE_WEAPONS.put(player.getUUID(),
                 new ActiveDeployment(desired.maidId(), desired.bindingId()));
-        emitDeployFinish(maid);
+        ContractDeploymentEffects.deployFinish(maid);
         return true;
     }
-
-    private static void emitDeployBuildup(Player player) {
-        if (!(player.level() instanceof ServerLevel level)) return;
-        level.sendParticles(ParticleTypes.SNOWFLAKE,
-                player.getX(), player.getY() + 0.15, player.getZ(),
-                6, 0.45, 0.08, 0.45, 0.015);
-    }
-
-    private static void emitDeployFinish(Entity maid) {
-        if (!(maid.level() instanceof ServerLevel level)) return;
-        level.sendParticles(ParticleTypes.SNOWFLAKE,
-                maid.getX(), maid.getY() + maid.getBbHeight() * 0.55, maid.getZ(),
-                24, 0.55, maid.getBbHeight() * 0.45, 0.55, 0.035);
-        level.sendParticles(ParticleTypes.END_ROD,
-                maid.getX(), maid.getY() + 0.2, maid.getZ(),
-                8, 0.35, 0.08, 0.35, 0.015);
-        level.playSound(null, maid.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
-                SoundSource.PLAYERS, 0.7f, 1.35f);
-    }
-
-    private static void emitRecallBuildup(Player player, ActiveDeployment active) {
-        Entity maid = findManifestedMaid(player, active.maidId());
-        if (!(maid != null && maid.level() instanceof ServerLevel level)) return;
-        level.sendParticles(ParticleTypes.SNOWFLAKE,
-                maid.getX(), maid.getY() + maid.getBbHeight() * 0.5, maid.getZ(),
-                5, 0.5, maid.getBbHeight() * 0.4, 0.5, 0.01);
-    }
-
-    private static void emitRecallFinish(Entity maid) {
-        if (!(maid.level() instanceof ServerLevel level)) return;
-        level.sendParticles(ParticleTypes.POOF,
-                maid.getX(), maid.getY() + maid.getBbHeight() * 0.5, maid.getZ(),
-                16, 0.5, maid.getBbHeight() * 0.4, 0.5, 0.025);
-        level.sendParticles(ParticleTypes.SNOWFLAKE,
-                maid.getX(), maid.getY() + maid.getBbHeight() * 0.5, maid.getZ(),
-                14, 0.45, maid.getBbHeight() * 0.35, 0.45, 0.02);
-        level.playSound(null, maid.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE,
-                SoundSource.PLAYERS, 0.65f, 0.8f);
-    }
-
     private static void clearTransitions(Player player) {
         PENDING_DEPLOYMENTS.remove(player.getUUID());
         PENDING_RECALLS.remove(player.getUUID());
@@ -623,72 +575,6 @@ public final class InfusedMaidDeploymentSystem {
                 && MaidInfusion.data(stack).getResonance() > 0
                 && !isCoolingDown(player, MaidWeaponItem.getBoundMaidUUID(stack));
     }
-
-    private static void configureCombatTask(Player owner, ItemStack weapon, Entity maid) {
-        boolean slashBladeMode = SlashBladeCompat.usesMaidSlashBladeTask(weapon);
-        boolean magicMode = !slashBladeMode && TripleMagicCompat.usesMaidSpellTask(weapon);
-        boolean taczMode = !slashBladeMode && !magicMode && TaczCompat.isGun(weapon);
-        String desired = slashBladeMode
-                ? SlashBladeCompat.getMaidSlashBladeTaskId()
-                : magicMode ? TripleMagicCompat.getMaidSpellRangedTaskId()
-                : taczMode ? TaczCompat.GUN_TASK : ATTACK_TASK;
-        String current = TouhouLittleMaidHelper.getMaidTaskId(maid);
-        if (!desired.equals(current)) {
-            TouhouLittleMaidHelper.switchMaidTask(maid, desired);
-            current = TouhouLittleMaidHelper.getMaidTaskId(maid);
-        }
-
-        if (slashBladeMode && !desired.equals(current)) {
-            reportTaskFailure(owner, weapon, SLASHBLADE_TASK_FAILURE,
-                    SlashBladeCompat.getMaidSlashBladeProviderName(), desired, current,
-                    "maid_weapon.message.slashblade_task_unavailable",
-                    SlashBladeCompat.getMaidSlashBladeProviderName());
-            if (!ATTACK_TASK.equals(current)) {
-                TouhouLittleMaidHelper.switchMaidTask(maid, ATTACK_TASK);
-            }
-        } else if (magicMode && !desired.equals(current)) {
-            reportTaskFailure(owner, weapon, MAGIC_TASK_FAILURE,
-                    "magic", desired, current,
-                    "maid_weapon.message.magic_task_unavailable");
-            if (!ATTACK_TASK.equals(current)) {
-                TouhouLittleMaidHelper.switchMaidTask(maid, ATTACK_TASK);
-            }
-        } else if (taczMode && !desired.equals(current)) {
-            reportTaskFailure(owner, weapon, TACZ_TASK_FAILURE,
-                    "TACZ", desired, current,
-                    "maid_weapon.message.tacz_task_unavailable");
-            if (!ATTACK_TASK.equals(current)) {
-                TouhouLittleMaidHelper.switchMaidTask(maid, ATTACK_TASK);
-            }
-        } else if (slashBladeMode) {
-            weapon.getOrCreateTag().remove(SLASHBLADE_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(MAGIC_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(TACZ_TASK_FAILURE);
-        } else if (magicMode) {
-            weapon.getOrCreateTag().remove(MAGIC_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(SLASHBLADE_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(TACZ_TASK_FAILURE);
-        } else if (taczMode) {
-            weapon.getOrCreateTag().remove(TACZ_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(MAGIC_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(SLASHBLADE_TASK_FAILURE);
-        } else {
-            weapon.getOrCreateTag().remove(MAGIC_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(SLASHBLADE_TASK_FAILURE);
-            weapon.getOrCreateTag().remove(TACZ_TASK_FAILURE);
-        }
-    }
-
-    private static void reportTaskFailure(Player owner, ItemStack weapon, String failureTag,
-                                          String mode, String desired, String current,
-                                          String messageKey, Object... messageArguments) {
-        if (weapon.getOrCreateTag().getBoolean(failureTag)) return;
-        weapon.getOrCreateTag().putBoolean(failureTag, true);
-        LOGGER.warn("[MaidWeapon] Failed to select {} task for {}: item={}, desired={}, actual={}",
-                mode, owner.getScoreboardName(), weapon.getItem(), desired, current);
-        owner.displayClientMessage(Component.translatable(messageKey, messageArguments), true);
-    }
-
     public static boolean forceRecall(Player player, String maidId, int cooldownTicks) {
         clearTransitions(player);
         Entity deployed = findManifestedMaid(player, maidId);
@@ -732,68 +618,16 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     public static ItemStack findBoundWeapon(Player player, String maidId) {
-        Entity deployed = findManifestedMaid(player, maidId);
-        String deployedBinding = deployed == null ? ""
-                : deployed.getPersistentData().getString(
-                        TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
-        ItemStack uuidCandidate = ItemStack.EMPTY;
-        int uuidMatches = 0;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (!deployedBinding.isEmpty()
-                    && deployedBinding.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-            if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack))) {
-                uuidCandidate = stack;
-                uuidMatches++;
-            }
-        }
-        ItemStack offhand = player.getOffhandItem();
-        if (!deployedBinding.isEmpty()
-                && deployedBinding.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
-        if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(offhand)) && offhand != uuidCandidate) {
-            uuidCandidate = offhand;
-            uuidMatches++;
-        }
-        ItemStack carried = player.containerMenu.getCarried();
-        if (!deployedBinding.isEmpty()
-                && deployedBinding.equals(MaidWeaponItem.getBindingId(carried))) return carried;
-        if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(carried)) && carried != uuidCandidate) {
-            uuidCandidate = carried;
-            uuidMatches++;
-        }
-        for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
-            ItemStack stack = slot.getItem();
-            if (!deployedBinding.isEmpty()
-                    && deployedBinding.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-            if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack)) && stack != uuidCandidate) {
-                uuidCandidate = stack;
-                uuidMatches++;
-            }
-        }
-        // Legacy fallback is allowed only when the maid UUID identifies exactly one item.
-        return uuidMatches == 1 ? uuidCandidate : ItemStack.EMPTY;
+        return ContractWeaponLocator.findBoundWeapon(player, maidId);
     }
 
     public static Entity findManifestedMaid(Player player, String maidId) {
-        try {
-            UUID uuid = UUID.fromString(maidId);
-            if (player.getServer() == null) return null;
-            for (ServerLevel level : player.getServer().getAllLevels()) {
-                Entity entity = level.getEntity(uuid);
-                if (TouhouLittleMaidHelper.isOwnedMaid(entity, player)) return entity;
-            }
-            return null;
-        } catch (IllegalArgumentException ignored) {
-            return null;
-        }
+        return ContractWeaponLocator.findManifestedMaid(player, maidId);
     }
 
     /** True only while this exact contract's maid is currently present in a loaded level. */
     public static boolean hasDeployedMaid(Player player, ItemStack weapon) {
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return false;
-        String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
-        return maidId != null && !maidId.isEmpty()
-                && findManifestedMaid(player, maidId) != null;
+        return ContractWeaponLocator.hasDeployedMaid(player, weapon);
     }
 
     private static void rememberDeploymentLocation(ItemStack weapon, Entity maid) {
