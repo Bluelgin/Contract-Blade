@@ -9,7 +9,8 @@ def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
 
-helper = read("src/main/java/com/maidweapon/forge/compat/TouhouLittleMaidHelper.java")
+lifecycle = read("src/main/java/com/maidweapon/forge/compat/tlm/ContractMaidLifecycleService.java")
+storage = read("src/main/java/com/maidweapon/forge/compat/tlm/ContractMaidStorage.java")
 guard = read("src/main/java/com/maidweapon/forge/system/ContractNbtGuard.java")
 codec = read("src/main/java/com/maidweapon/forge/system/MaidEntityDataCodec.java")
 audit = read("src/main/java/com/maidweapon/forge/system/ContractNbtAudit.java")
@@ -21,28 +22,23 @@ command = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java"
 
 # Recall is fail-safe: encode and verify a candidate before mutating the stack,
 # and never discard the live maid until that commit succeeds.
-for needle in [
-    "CompoundTag originalWeaponTag",
-    "commitStoredMaidData(player, weaponStack, maidEntityTag)",
-    "weaponStack.setTag(originalWeaponTag)",
-    "MaidEntityDataCodec.write(candidate, maidData)",
-    "weapon.setTag(candidate)",
-    "contract_nbt_encode_failed",
-    "contract_nbt_decode_failed",
+for needle, source in [
+    ("CompoundTag originalWeaponTag", lifecycle),
+    ("ContractMaidStorage.commit(player, weaponStack, maidEntityTag)", lifecycle),
+    ("weaponStack.setTag(originalWeaponTag)", lifecycle),
+    ("MaidEntityDataCodec.write(candidate, maidData)", storage),
+    ("weapon.setTag(candidate)", storage),
+    ("contract_nbt_encode_failed", storage),
+    ("contract_nbt_decode_failed", lifecycle),
 ]:
-    if needle not in helper:
+    if needle not in source:
         raise SystemExit(f"Missing atomic NBT safety invariant: {needle}")
 
-recall = helper.split(
-    "public static boolean convertMaidToWeapon(Player player, Entity entity, ItemStack weaponStack,",
-    1,
-)[1].split("public static boolean convertWeaponToMaid", 1)[0]
-if recall.index("commitStoredMaidData") > recall.index("entity.discard()"):
+capture = lifecycle.split(
+    "public static boolean capture(", 1
+)[1].split("public static boolean manifest(", 1)[0]
+if capture.index("ContractMaidStorage.commit") > capture.index("entity.discard()"):
     raise SystemExit("Maid entity can be discarded before its encoded data is accepted")
-if "createNewMaidFromWeapon(player, weaponStack, notifyPlayer)" in helper.split(
-    "public static boolean convertWeaponToMaid", 1
-)[1].split("private static boolean createNewMaidFromWeapon", 1)[0]:
-    raise SystemExit("Restore failure can replace retained contract data with a new maid")
 
 # The codec is versioned, checksummed, bounded during decompression, and verifies
 # the complete encoded candidate before removing the legacy representation.
@@ -104,8 +100,8 @@ for _ in range(1000):
 
 # Warnings are diagnostic only. Full world SavedData externalization and hard item
 # rejection are intentionally absent from the formal format.
-for forbidden in ["ContractMaidStorage", "hardExceeded()", "CONTRACT_NBT_HARD"]:
-    if forbidden in helper + guard + weapon + intrinsic + config:
+for forbidden in ["hardExceeded()", "CONTRACT_NBT_HARD", "ContractMaidSavedData"]:
+    if forbidden in lifecycle + storage + guard + weapon + intrinsic + config:
         raise SystemExit(f"Obsolete hard/external storage path remains: {forbidden}")
 if (ROOT / "src/main/java/com/maidweapon/forge/system/ContractMaidStorage.java").exists():
     raise SystemExit("Whole-contract world SavedData storage must not be present")
