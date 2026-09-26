@@ -18,7 +18,7 @@ import java.io.IOException;
  * entity operations only.</p>
  */
 public final class TlmEntityAdapter {
-    private static final TlmReflection TLM = TlmReflection.INSTANCE;
+    private static final TlmReflection TLM = TlmReflection.instance();
 
     public static boolean isMaidEntity(Entity entity) {
         return TLM.isMaidEntity(entity);
