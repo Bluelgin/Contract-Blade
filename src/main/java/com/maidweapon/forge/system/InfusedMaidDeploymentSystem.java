@@ -2,10 +2,8 @@ package com.maidweapon.forge.system;
 
 import com.mojang.logging.LogUtils;
 import com.maidweapon.common.MaidWeaponConfig;
-import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
-import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
 import com.maidweapon.forge.item.MaidWeaponItem;
@@ -14,6 +12,7 @@ import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractRecoveryService;
 import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
+import com.maidweapon.forge.system.deployment.ContractMaidRuntimeService;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -289,7 +288,7 @@ public final class InfusedMaidDeploymentSystem {
             // TLM/Curios can close one maid page before opening another. The manifested
             // maid carries a tagged, non-droppable visual copy of the contract weapon;
             // it must never be treated as a real external transfer during that page switch.
-            if (TripleMagicCompat.isPhantom(stack)) continue;
+            if (ContractTransferSafetyService.isProjectionPhantom(stack)) continue;
             if (!hasDeployedMaid(player, stack)) continue;
             String maidId = MaidWeaponItem.getBoundMaidUUID(stack);
             if (maidId != null) forceRecall(player, maidId, 0);
@@ -391,23 +390,8 @@ public final class InfusedMaidDeploymentSystem {
         if (player.tickCount % 20 == 0 || !ContractRecoveryService.hasLocation(weapon)) {
             rememberDeploymentLocation(weapon, maid);
         }
-        if (player.tickCount % 20 == 0) {
-            TouhouLittleMaidHelper.syncFavorabilityFromMaid(maid, weapon);
-        }
         ContractRecoveryService.clearFailure(weapon);
-        TouhouLittleMaidHelper.setAllDaySchedule(maid);
-        if (maid instanceof LivingEntity living) {
-            TripleMagicCompat.equipPhantoms(player, living, weapon);
-            TripleMagicCompat.syncMaidSpellLoadout(player, living, weapon);
-            if (TaczCompat.isGun(weapon)) {
-                TaczCompat.maintain(player, living, weapon);
-            }
-            boolean safeTask = MaidCareTaskSystem.applySafeTask(player, weapon, maid);
-            if (!safeTask) {
-                ContractCombatTaskRouter.configure(player, weapon, maid);
-                TripleMagicCompat.castFallbackSpell(player, living, weapon);
-            }
-        }
+        ContractMaidRuntimeService.maintain(player, weapon, maid);
     }
 
     /**
@@ -466,13 +450,9 @@ public final class InfusedMaidDeploymentSystem {
         maid = findManifestedMaid(player, desired.maidId());
         if (maid == null) return false;
 
-        // 共享的显形初始化（原任务记忆、作息、装备幻影、法术配置、
-        // TACZ 投影）已在 convertWeaponToMaid 内完成，这里只处理任务切换。
-        if (maid instanceof LivingEntity living) {
-            if (!MaidCareTaskSystem.applySafeTask(player, weapon, maid)) {
-                ContractCombatTaskRouter.configure(player, weapon, maid);
-            }
-        }
+        // Lifecycle restore owns entity initialization; runtime service owns
+        // temporary care/combat task selection and optional-mod projections.
+        ContractMaidRuntimeService.selectCombatTask(player, weapon, maid);
         rememberDeploymentLocation(weapon, maid);
         ContractRecoveryService.clearFailure(weapon);
         ACTIVE_WEAPONS.put(player.getUUID(),
@@ -522,11 +502,7 @@ public final class InfusedMaidDeploymentSystem {
         Entity maid = findManifestedMaid(player, maidId);
         if (weapon.isEmpty() || maid == null) return false;
 
-        MaidCareTaskSystem.restoreOriginalTask(weapon, maid);
-        if (maid instanceof LivingEntity living) {
-            TaczCompat.clear(player, living, weapon);
-            TripleMagicCompat.clearPhantoms(living, weapon);
-        }
+        ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
         if (TouhouLittleMaidHelper.convertMaidToWeapon(player, maid, weapon, false)) {
             MaidCareTaskSystem.clearOriginalTask(weapon);
             clearDeploymentLocation(weapon);
