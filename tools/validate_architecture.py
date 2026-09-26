@@ -48,7 +48,7 @@ helper = read(JAVA / "com/maidweapon/forge/compat/TouhouLittleMaidHelper.java")
 deployment = read(JAVA / "com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
 if len(helper.splitlines()) > 220:
     raise SystemExit("TouhouLittleMaidHelper stopped being a thin facade")
-if len(deployment.splitlines()) > 725:
+if len(deployment.splitlines()) > 650:
     raise SystemExit("InfusedMaidDeploymentSystem is growing back into a god class")
 
 # Development-only registry aliases may remain for old worlds, but not in the UI.
