@@ -72,7 +72,7 @@ deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeployme
 transfer = read("src/main/java/com/maidweapon/forge/system/deployment/ContractTransferSafetyService.java")
 if "if (slot.container == player.getInventory()) continue;" not in deployment:
     raise SystemExit("Container-close recall must ignore the player's own inventory slots")
-if "if (TripleMagicCompat.isPhantom(stack)) continue;" not in deployment:
+if "ContractTransferSafetyService.isProjectionPhantom(stack)" not in deployment:
     raise SystemExit("TLM accessory page changes can still recall the phantom contract weapon")
 if "if (TripleMagicCompat.isPhantom(stack)) continue;" not in transfer:
     raise SystemExit("Phantom contracts must also be ignored by self-storage rescue")
@@ -101,7 +101,8 @@ if "if (!hungry) return false;" not in care:
     raise SystemExit("Safe-care mode still overrides Native POWER while the owner is not hungry")
 if "return switchIfNeeded(maid, FEED_TASK);" not in care:
     raise SystemExit("A failed feeding-task switch can still suppress weapon-specific combat")
-if "TripleMagicCompat.clearPhantoms(living, weapon)" not in deployment:
+runtime = read("src/main/java/com/maidweapon/forge/system/deployment/ContractMaidRuntimeService.java")
+if "TripleMagicCompat.clearPhantoms(living, weapon)" not in runtime:
     raise SystemExit("Recall can discard final-tick SlashBlade progress")
 
 magic = read("src/main/java/com/maidweapon/forge/compat/TripleMagicCompat.java")
