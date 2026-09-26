@@ -4,10 +4,9 @@ import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.data.MaidWeaponDataSerializer;
 import com.maidweapon.common.sin.SinSlotManager;
-import com.maidweapon.common.sin.SinType;
 import com.maidweapon.common.system.LoyaltySystem;
+import com.maidweapon.common.legacy.LegacySinArchive;
 import com.maidweapon.common.system.MonsterTierRegistry;
-import com.maidweapon.forge.system.SinFragmentSystem;
 import com.maidweapon.forge.system.contract.ContractInteractionService;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import net.minecraft.nbt.CompoundTag;
@@ -288,20 +287,11 @@ public class MaidWeaponItem extends SwordItem {
                         data.getEnderDragonKills(), data.getWitherKills()));
             }
 
-            // 罪恶系统显示
-            List<SinType> sins = data.getEmbeddedSins();
-            if (!sins.isEmpty()) {
-                tooltip.add(Component.empty());
-                tooltip.add(Component.literal("§8§l─── 七宗罪 ───"));
-                for (SinType sin : sins) {
-                    tooltip.add(Component.literal(sin.getColor() + "✦ " + sin.getChineseName()
-                            + " §7[" + SinFragmentSystem.getPower(stack, sin) + "/"
-                            + SinFragmentSystem.MAX_POWER + "]"));
-                }
-                tooltip.add(Component.translatable("maid_weapon.tooltip.sin_slot_used",
-                        sins.size(), SinSlotManager.getMaxSlots(sins)));
-            } else {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.sin_slot"));
+            // Legacy Part data is preserved for old worlds but is no longer active Core gameplay.
+            if (LegacySinArchive.hasData(data)) {
+                tooltip.add(Component.translatable(
+                        "maid_weapon.tooltip.legacy_sin_data",
+                        LegacySinArchive.entryCount(data)));
             }
 
             // 主人信息
