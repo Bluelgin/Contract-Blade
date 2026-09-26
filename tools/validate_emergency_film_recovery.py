@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 deployment = (ROOT / "src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java").read_text(
     encoding="utf-8"
 )
-helper = (ROOT / "src/main/java/com/maidweapon/forge/compat/TouhouLittleMaidHelper.java").read_text(
+film_service = (ROOT / "src/main/java/com/maidweapon/forge/compat/tlm/TlmFilmService.java").read_text(
     encoding="utf-8"
 )
 
@@ -29,18 +29,18 @@ assert "if (weapon.isEmpty())" in deployment and "ACTIVE_CARRIERS.getOrDefault" 
     "missing fallback for third-party carriers that vanish without a destroy event"
 )
 
-required_helper = (
+required_film = (
     '"touhou_little_maid", "film"',
     'filmTag.put("MaidInfo", maidData)',
-    'filmTag.put(TAG_FILM_PROGRESS, progress)',
-    'forgeData.remove(TAG_ENTITY_BINDING_ID)',
-    "TAG_EMERGENCY_FILM_PROGRESS",
-    "ContractNbtGuard.inspect(filmTag)",
+    'filmTag.put(ContractMaidKeys.FILM_PROGRESS, progress)',
+    'forgeData.remove(ContractMaidKeys.ENTITY_BINDING_ID)',
+    "ContractMaidKeys.EMERGENCY_FILM_PROGRESS",
+    "ContractMaidStorage.inspectExternalPayload(player, filmTag)",
 )
-for token in required_helper:
-    assert token in helper, f"missing TLM film compatibility token: {token}"
+for token in required_film:
+    assert token in film_service, f"missing TLM film compatibility token: {token}"
 
-film_method = helper[helper.index("public static ItemStack createEmergencyResurrectionFilm") :]
+film_method = film_service[film_service.index("public static ItemStack createEmergencyResurrectionFilm") :]
 for inventory_key in ("MaidInventory", "MaidBaubleInventory", "MaidExperience", "ArmorItems", "HandItems"):
     assert f'remove("{inventory_key}")' not in film_method, (
         f"emergency film must retain {inventory_key} because no tombstone is created"
