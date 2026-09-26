@@ -2,7 +2,6 @@ package com.maidweapon.forge.event;
 
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.data.MaidWeaponData;
-import com.maidweapon.common.sin.SinType;
 import com.maidweapon.common.system.ResonanceSystem;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
@@ -90,7 +89,7 @@ public final class MaidBondCombatHandler {
         if (inCombat) {
             int interval = MaidWeaponConfig.RESONANCE_COMBAT_DRAIN_INTERVAL.get();
             if (interval > 0 && time % interval == 0) data.reduceResonance(1);
-        } else if (!data.hasSin(SinType.LUST)) {
+        } else {
             ResonanceSystem.recover(data, MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get());
         }
         MaidWeaponItem.setMaidData(weapon, data);
