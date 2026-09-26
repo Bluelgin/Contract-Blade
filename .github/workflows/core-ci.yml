@@ -4,10 +4,13 @@ on:
   push:
     branches:
       - master
-      - "codex/**"
   pull_request:
     branches:
       - master
+
+concurrency:
+  group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
