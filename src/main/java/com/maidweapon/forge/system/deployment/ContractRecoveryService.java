@@ -45,7 +45,6 @@ public final class ContractRecoveryService {
     public enum TickResult {
         IDLE,
         WAITING,
-        MAID_AVAILABLE,
         TIMED_OUT
     }
 
@@ -140,9 +139,6 @@ public final class ContractRecoveryService {
     public static TickResult tick(Player player) {
         RecoveryAttempt attempt = player == null ? null : RECOVERIES.get(player.getUUID());
         if (attempt == null || player.getServer() == null) return TickResult.IDLE;
-
-        Entity maid = ContractWeaponLocator.findManifestedMaid(player, attempt.maidId);
-        if (maid != null) return TickResult.MAID_AVAILABLE;
 
         long elapsed = player.getServer().overworld().getGameTime() - attempt.startedAt;
         ServerLevel source = player.getServer().getLevel(attempt.location.dimension());
