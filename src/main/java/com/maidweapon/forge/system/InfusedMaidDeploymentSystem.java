@@ -7,7 +7,6 @@ import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
 import com.maidweapon.forge.item.MaidWeaponItem;
-import com.maidweapon.forge.system.deployment.ContractCombatTaskRouter;
 import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractRecoveryService;
@@ -77,8 +76,7 @@ public final class InfusedMaidDeploymentSystem {
         UUID playerId = player.getUUID();
         boolean maintenanceTick = player.tickCount % 5 == 0;
         if (maintenanceTick) {
-            TripleMagicCompat.purgeLeakedCopies(player);
-            TaczCompat.purgeLeakedLinks(player);
+            ContractMaidRuntimeService.purgeLeakedProjections(player);
             ContractTransferSafetyService.rescueSelfStoredContract(player);
         }
         if (ContractRecoveryService.hasRecovery(player)) {
