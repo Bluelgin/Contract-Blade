@@ -161,5 +161,6 @@
   "maid_weapon.message.contract_nbt_largest": "占用最大的物品：%s，%s（%s）",
   "maid_weapon.message.contract_nbt_encode_failed": "女仆未能安全写入契约；女仆实体与原始武器数据均保持不变。",
   "maid_weapon.message.contract_nbt_decode_failed": "保存的女仆数据未通过校验；契约已保留，请查看服务器日志。",
-  "maid_weapon.message.contract_nbt_restore_failed": "女仆未能安全恢复。契约数据已保留，请查看服务器日志。"
+  "maid_weapon.message.contract_nbt_restore_failed": "女仆未能安全恢复。契约数据已保留，请查看服务器日志。",
+  "maid_weapon.tooltip.legacy_sin_data": "§8旧版 Part 七罪数据：§7%s 项（仅保留，不再影响 Core 玩法）"
 }
