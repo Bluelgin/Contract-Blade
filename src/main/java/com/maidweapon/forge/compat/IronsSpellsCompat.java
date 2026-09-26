@@ -1,81 +1,42 @@
 package com.maidweapon.forge.compat;
 
+import net.minecraftforge.fml.ModList;
+
 /**
- * ========================================
- * 铁魔法（Iron's Spells 'n Spellbooks）兼容层
- * ========================================
+ * Narrow Iron's Spells 'n Spellbooks compatibility boundary.
  *
- * 铁魔法 Mod 提供了法术系统、法杖、魔法书等。
- *
- * 本兼容层预留的功能：
- *   1. 检测铁魔法是否安装
- *   2. 注册铁魔法中的怪物到Tier系统
- *   3. 法杖女仆物品的法术加成（联动功能）
- *   4. 女仆武器附魔法术的能力
- *
- * ⚠️ 当前为桩代码，安装铁魔法后替换为实际实现
- *
- * 铁魔法主类：io.redspace.ironsspellbooks.IronsSpellbooks
- * 法杖物品：io.redspace.ironsspellbooks.item.StaffItem
- * 法术系统：io.redspace.ironsspellbooks.api.spells
+ * <p>Actual contract combat projection is implemented by
+ * {@link TripleMagicCompat}. These beta-era methods remain only as stable,
+ * explicit compatibility shims instead of pretending to provide unfinished
+ * spell mutation.</p>
  */
 public final class IronsSpellsCompat {
+    private static final String MOD_ID = "irons_spellbooks";
 
-    private static boolean loaded = false;
-
-    static {
-        try {
-            Class.forName("io.redspace.ironsspellbooks.IronsSpellbooks");
-            loaded = true;
-        } catch (ClassNotFoundException e) {
-            loaded = false;
-        }
-    }
-
-    /** 检查铁魔法是否已安装 */
     public static boolean isLoaded() {
-        return loaded;
+        return ModList.get().isLoaded(MOD_ID);
     }
 
-    /**
-     * 注册铁魔法中的怪物到Tier系统
-     * 铁魔法有很多Boss怪物（如亡灵巫师、火焰术士等）
-     *
-     * 示例（集成后替换）：
-     *   ModCompatManager.registerBoss("irons_spellbooks:archevoker", true);
-     *   ModCompatManager.registerMonsterTier("irons_spellbooks:necromancer", 3);
-     *   ModCompatManager.registerMonsterTier("irons_spellbooks:cryomancer", 3);
-     *   ModCompatManager.registerMonsterTier("irons_spellbooks:pyromancer", 3);
-     */
+    /** Dynamic tier estimation replaced the old per-mod monster table. */
+    @Deprecated
     public static void registerMonsters() {
-        if (!loaded) return;
-        // TODO: 注册铁魔法怪物
+        // Intentionally empty.
     }
 
     /**
-     * 获取铁魔法法杖的法术强度
-     * 用于法杖女仆联动
-     *
-     * @param staffStack 法杖物品堆栈
-     * @return 法术强度乘数，1.0为默认
+     * Core leaves Iron's spell power calculation to Iron's itself.
      */
+    @Deprecated
     public static float getStaffSpellPower(Object staffStack) {
-        if (!loaded) return 1.0f;
-        // TODO: 集成后读取铁魔法法杖属性
         return 1.0f;
     }
 
     /**
-     * 为女仆武器附加法术能力
-     * 当铁魔法+万法皆通+本Mod同时安装时可用
-     *
-     * @param weaponStack 女仆武器
-     * @param spellId 法术ID
-     * @return 是否成功附加
+     * Directly mutating spell containers is unsupported; TripleMagicCompat
+     * projects the owner's weapon/loadout onto the maid at runtime instead.
      */
+    @Deprecated
     public static boolean addSpellToWeapon(Object weaponStack, String spellId) {
-        if (!loaded) return false;
-        // TODO: 法杖女仆联动实现
         return false;
     }
 
