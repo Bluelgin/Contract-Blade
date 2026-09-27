@@ -270,10 +270,10 @@ public final class ContractInteriorBuilder {
                 o.offset(maxX + 1, 6, maxZ + 1), Blocks.DEEPSLATE_TILE_SLAB);
         if ((maxX - minX) >= (maxZ - minZ)) {
             fill(level, o.offset(minX, 7, (minZ + maxZ) / 2),
-                    o.offset(maxX, 7, (minZ + maxZ) / 2), Blocks.DEPSLATE_TILES);
+                    o.offset(maxX, 7, (minZ + maxZ) / 2), Blocks.DEEPSLATE_TILES);
         } else {
             fill(level, o.offset((minX + maxX) / 2, 7, minZ),
-                    o.offset((minX + maxX) / 2, 7, maxZ), Blocks.DEPSLATE_TILES);
+                    o.offset((minX + maxX) / 2, 7, maxZ), Blocks.DEEPSLATE_TILES);
         }
     }
 
