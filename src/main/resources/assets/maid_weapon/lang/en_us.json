@@ -197,5 +197,15 @@
   "maid_weapon.message.interior.missing_contract": "§cThe contract weapon used to enter this interior is missing, so leaving is temporarily blocked",
   "maid_weapon.message.interior.recall_failed": "§cThe maid could not be stored safely. Leaving was cancelled.",
   "maid_weapon.message.interior.left": "§7You left the contract interior",
-  "maid_weapon.message.interior.contract_drop_blocked": "§eThe active contract weapon cannot be dropped inside its interior; it was returned to your inventory"
+  "maid_weapon.message.interior.contract_drop_blocked": "§eThe active contract weapon cannot be dropped inside its interior; it was returned to your inventory",
+  "patchouli.maid_weapon.entry.contract_interior.name": "Contract Interiors",
+  "patchouli.maid_weapon.entry.contract_interior.page.0": "Every concrete weapon contract owns one stable $(thing)contract interior$(). This is not a duplicate maid or a fake NPC space: entering manifests the real maid stored by that contract, and leaving safely stores the same entity back into the same weapon.$(br2)Each binding receives its own home, so different contracts never share one plot.",
+  "patchouli.maid_weapon.entry.contract_interior.page.1.title": "Contract Heart Key",
+  "patchouli.maid_weapon.entry.contract_interior.page.1": "Hold the $(item)Contract Heart Key$() in your main hand and one of your own contract weapons in the offhand, then use the key. Use it again inside to store the maid safely and return to the exact place you entered from.$(br2)Entry is refused while the maid is manifested outside, the contract has been superseded, or the weapon belongs to another player.",
+  "patchouli.maid_weapon.entry.contract_interior.page.2.title": "Level Shapes Space",
+  "patchouli.maid_weapon.entry.contract_interior.page.2": "Contract level determines how much space can remain stable. Lv.1—2, 3—4, 5—6, 7—8 and 9—10 form five spatial stages. New land, rooms, gardens and distant areas expand outward as the contract grows.$(br2)Expansion is one-way: old regions are not globally rebuilt every visit, so normal upgrades do not erase your own decoration.",
+  "patchouli.maid_weapon.entry.contract_interior.page.3.title": "Favorability Feels Lived In",
+  "patchouli.maid_weapon.entry.contract_interior.page.3": "Favorability does not make the world larger. It changes how much the interior feels like $(thing)her actual home$(). The 0—384 range is divided into six warmth stages that gradually add carpets, flowers, books, lights, food and other signs of daily life.$(br2)Dynamic decoration only uses reserved positions and will not overwrite a block you already replaced.",
+  "patchouli.maid_weapon.entry.contract_interior.page.4.title": "Safety and Boundaries",
+  "patchouli.maid_weapon.entry.contract_interior.page.4": "Interiors live in one quiet dimension with contract plots spaced far apart. The garden boundary moves outward as the contract levels so a wandering maid does not walk into the void. The active contract weapon cannot be dropped inside.$(br2)Logout, death and abnormal travel prefer preserving the maid. If serialization fails, the live maid is not deleted; the same contract can re-enter later and recover her."
 }
