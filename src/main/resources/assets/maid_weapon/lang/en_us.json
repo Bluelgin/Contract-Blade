@@ -196,5 +196,6 @@
   "maid_weapon.message.interior.entered": "§dThe contract interior answers you",
   "maid_weapon.message.interior.missing_contract": "§cThe contract weapon used to enter this interior is missing, so leaving is temporarily blocked",
   "maid_weapon.message.interior.recall_failed": "§cThe maid could not be stored safely. Leaving was cancelled.",
-  "maid_weapon.message.interior.left": "§7You left the contract interior"
+  "maid_weapon.message.interior.left": "§7You left the contract interior",
+  "maid_weapon.message.interior.contract_drop_blocked": "§eThe active contract weapon cannot be dropped inside its interior; it was returned to your inventory"
 }
