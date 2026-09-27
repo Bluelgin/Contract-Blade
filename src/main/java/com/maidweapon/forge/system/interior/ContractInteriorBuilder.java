@@ -111,6 +111,12 @@ public final class ContractInteriorBuilder {
         carveDoor(level, o, 13, 0, Direction.WEST);
         carveDoor(level, o, 7, 0, Direction.EAST);
 
+        // Short covered connector so the kitchen is part of the home even in rain.
+        fill(level, o.offset(8, 0, -1), o.offset(12, 0, 1), Blocks.SPRUCE_PLANKS);
+        fill(level, o.offset(8, 4, -2), o.offset(12, 4, 2), Blocks.DEPSLATE_TILE_SLAB);
+        pillar(level, o.offset(9, 1, -2), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        pillar(level, o.offset(11, 1, 2), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+
         // Covered engawa connecting the original room and the new wing.
         fill(level, o.offset(-8, 0, 7), o.offset(20, 0, 9), Blocks.SPRUCE_PLANKS);
         for (int x = -8; x <= 20; x += 4) {
@@ -166,6 +172,12 @@ public final class ContractInteriorBuilder {
         carveDoor(level, o, 0, -28, Direction.NORTH);
         carveDoor(level, o, 0, -6, Direction.SOUTH);
         carveDoor(level, o, 12, -33, Direction.WEST);
+
+        // Side link from the covered north corridor to the tea room.
+        fill(level, o.offset(3, 0, -34), o.offset(11, 0, -32), Blocks.SPRUCE_PLANKS);
+        fill(level, o.offset(3, 4, -35), o.offset(11, 4, -31), Blocks.DEPSLATE_TILE_SLAB);
+        pillar(level, o.offset(5, 1, -35), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        pillar(level, o.offset(9, 1, -31), 3, Blocks.STRIPPED_DARK_OAK_LOG);
 
         fill(level, o.offset(-6, 1, -37), o.offset(6, 3, -37), Blocks.BOOKSHELF);
         fill(level, o.offset(-1, 0, -34), o.offset(1, 0, -31), Blocks.RED_CARPET);
