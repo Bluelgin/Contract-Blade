@@ -198,5 +198,6 @@
   "maid_weapon.message.interior.entered": "§d契约内景回应了你",
   "maid_weapon.message.interior.missing_contract": "§c找不到进入此内景时使用的契约武器，暂时无法离开",
   "maid_weapon.message.interior.recall_failed": "§c女仆未能安全回到契约，离开已取消",
-  "maid_weapon.message.interior.left": "§7你离开了契约内景"
+  "maid_weapon.message.interior.left": "§7你离开了契约内景",
+  "maid_weapon.message.interior.contract_drop_blocked": "§e内景中的契约武器不能丢弃，已放回背包"
 }
