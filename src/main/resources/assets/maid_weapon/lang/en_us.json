@@ -187,7 +187,7 @@
   "maid_weapon.tooltip.upgrade.boss_combined_five": "§7Reach 5 combined undefeated Dragon/Wither kills",
   "maid_weapon.tooltip.upgrade.boss_combined_ten": "§7Reach 10 combined undefeated Dragon/Wither kills",
   "item.maid_weapon.contract_interior_key": "Contract Heart Key",
-  "maid_weapon.tooltip.interior_key.use": "Hold a contract weapon in the other hand; use to enter its interior. Use again inside to return.",
+  "maid_weapon.tooltip.interior_key.use": "Hold the Heart Key in your main hand and the contract weapon offhand; use to enter. Use again inside to return.",
   "maid_weapon.tooltip.interior_key.progression": "Contract level expands the space; favorability changes the signs of life",
   "maid_weapon.message.interior.need_contract": "§7Hold one of your contract weapons in the other hand",
   "maid_weapon.message.interior.recall_first": "§eThe maid is still manifested outside. Recall her before entering.",
