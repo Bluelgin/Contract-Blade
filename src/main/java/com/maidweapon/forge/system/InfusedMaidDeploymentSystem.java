@@ -268,9 +268,12 @@ public final class InfusedMaidDeploymentSystem {
             ACTIVE_WEAPONS.remove(player.getUUID());
             ACTIVE_CARRIERS.remove(player.getUUID());
         } else {
-            // Forge returns a cancelled toss to the player inventory. Keeping the
-            // contract is safer than allowing its active entity anchor to disappear.
+            // ItemTossEvent removes the stack before firing. Cancellation prevents
+            // the entity from spawning, so the protected contract must be restored
+            // explicitly or it would disappear from the system.
+            ItemStack protectedStack = event.getEntity().getItem().copy();
             event.setCanceled(true);
+            player.getInventory().placeItemBackInInventory(protectedStack);
             player.displayClientMessage(Component.translatable(
                     "maid_weapon.message.deployed_contract_transfer_blocked"), true);
         }
