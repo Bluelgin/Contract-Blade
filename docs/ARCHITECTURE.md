@@ -74,7 +74,9 @@ globally rewritten on every entry.
 The real TLM maid remains the only manifested maid authority inside the
 interior. Entry manifests from the contract after teleport; exit captures the
 same entity back into the same binding before returning the player. Interior
-code must not depend on the hotbar deployment state machine.
+code must not depend on the hotbar deployment state machine. Conversely, the
+hotbar deployment state machine explicitly ignores the interior dimension so it
+cannot adopt or recall the maid manifested by the interior lifecycle.
 
 Visual homes are replaceable presentation assets. External schematics/templates
 must have explicit redistribution/modification terms and must not become a
