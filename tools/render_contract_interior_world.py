@@ -30,7 +30,13 @@ GALLERY_BASE_X = -8192
 GALLERY_BASE_Z = -4096
 GALLERY_STAGE_SPACING = 144
 GALLERY_ORIGIN_Y = 80
-DEFAULT_RADIUS = 60
+GALLERY_STAGE_RADII = {
+    1: 12,
+    2: 20,
+    3: 30,
+    4: 40,
+    5: 52,
+}
 DEFAULT_Y_MIN = 74
 DEFAULT_Y_MAX = 105
 
@@ -43,6 +49,8 @@ BLOCK_COLORS = {
     "minecraft:water": "#4c77bd",
     "minecraft:spruce_planks": "#80613e",
     "minecraft:bamboo_mosaic": "#c3a663",
+    "minecraft:bamboo": "#7fa64b",
+    "minecraft:moss_carpet": "#679b52",
     "minecraft:stripped_dark_oak_log": "#4a382c",
     "minecraft:dark_oak_log": "#493528",
     "minecraft:dark_oak_fence": "#4b3728",
@@ -699,14 +707,22 @@ def dimension_path(world: Path) -> Path:
     )
 
 
-def gallery_bounds(stage: int, radius: int) -> tuple[int, int, int, int]:
+def gallery_bounds(
+    stage: int,
+    radius: int | None,
+) -> tuple[int, int, int, int]:
     origin_x = GALLERY_BASE_X + (stage - 1) * GALLERY_STAGE_SPACING
     origin_z = GALLERY_BASE_Z
+    effective_radius = (
+        radius
+        if radius is not None
+        else GALLERY_STAGE_RADII[stage] + 2
+    )
     return (
-        origin_x - radius,
-        origin_x + radius,
-        origin_z - radius,
-        origin_z + radius,
+        origin_x - effective_radius,
+        origin_x + effective_radius,
+        origin_z - effective_radius,
+        origin_z + effective_radius,
     )
 
 
@@ -719,7 +735,12 @@ def main() -> int:
     parser.add_argument("--mode", choices=("iso", "top"), default="iso")
     parser.add_argument("--format", choices=("svg", "png"), default=None)
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--radius", type=int, default=DEFAULT_RADIUS)
+    parser.add_argument(
+        "--radius",
+        type=int,
+        default=None,
+        help="override crop radius; default is stage radius + 2 blocks",
+    )
     parser.add_argument("--y-min", type=int, default=DEFAULT_Y_MIN)
     parser.add_argument("--y-max", type=int, default=DEFAULT_Y_MAX)
     args = parser.parse_args()
