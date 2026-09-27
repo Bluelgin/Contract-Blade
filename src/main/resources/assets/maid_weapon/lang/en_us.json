@@ -185,5 +185,16 @@
   "maid_weapon.tooltip.upgrade.wither": "§7Defeat the Wither without dying",
   "maid_weapon.tooltip.upgrade.boss_each_three": "§7Defeat the Ender Dragon and Wither 3 times each without dying",
   "maid_weapon.tooltip.upgrade.boss_combined_five": "§7Reach 5 combined undefeated Dragon/Wither kills",
-  "maid_weapon.tooltip.upgrade.boss_combined_ten": "§7Reach 10 combined undefeated Dragon/Wither kills"
+  "maid_weapon.tooltip.upgrade.boss_combined_ten": "§7Reach 10 combined undefeated Dragon/Wither kills",
+  "item.maid_weapon.contract_interior_key": "Contract Heart Key",
+  "maid_weapon.tooltip.interior_key.use": "Hold a contract weapon in the other hand; use to enter its interior. Use again inside to return.",
+  "maid_weapon.tooltip.interior_key.progression": "Contract level expands the space; favorability changes the signs of life",
+  "maid_weapon.message.interior.need_contract": "§7Hold one of your contract weapons in the other hand",
+  "maid_weapon.message.interior.recall_first": "§eThe maid is still manifested outside. Recall her before entering.",
+  "maid_weapon.message.interior.unavailable": "§cThe contract interior is unavailable. Check that world data loaded correctly.",
+  "maid_weapon.message.interior.maid_restore_failed": "§cThe maid could not be manifested safely inside. You were returned.",
+  "maid_weapon.message.interior.entered": "§dThe contract interior answers you",
+  "maid_weapon.message.interior.missing_contract": "§cThe contract weapon used to enter this interior is missing, so leaving is temporarily blocked",
+  "maid_weapon.message.interior.recall_failed": "§cThe maid could not be stored safely. Leaving was cancelled.",
+  "maid_weapon.message.interior.left": "§7You left the contract interior"
 }
