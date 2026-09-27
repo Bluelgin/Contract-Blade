@@ -57,7 +57,17 @@ public final class ContractInteriorService {
             message(player, "maid_weapon.message.superseded_contract");
             return false;
         }
-        if (!MaidWeaponItem.hasMaidEntityData(contract)) {
+
+        String bindingId = MaidWeaponItem.ensureBindingId(contract);
+        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        Entity existingMaid = maidId == null ? null
+                : ContractWeaponLocator.findManifestedMaid(player, maidId);
+        boolean resumeInteriorMaid = existingMaid != null
+                && existingMaid.level().dimension().equals(INTERIOR_LEVEL)
+                && bindingId.equals(existingMaid.getPersistentData().getString(
+                        com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID));
+
+        if (!MaidWeaponItem.hasMaidEntityData(contract) && !resumeInteriorMaid) {
             message(player, "maid_weapon.message.interior.recall_first");
             return false;
         }
@@ -70,7 +80,6 @@ public final class ContractInteriorService {
             return false;
         }
 
-        String bindingId = MaidWeaponItem.ensureBindingId(contract);
         MaidWeaponData data = MaidInfusion.data(contract);
         ContractInteriorProfile profile = ContractInteriorProfile.from(data);
         ContractInteriorSavedData saved = ContractInteriorSavedData.get(server);
@@ -89,15 +98,17 @@ public final class ContractInteriorService {
         );
         player.fallDistance = 0.0F;
 
-        if (!ContractMaidLifecycleService.manifest(player, contract, false)) {
+        if (!resumeInteriorMaid
+                && !ContractMaidLifecycleService.manifest(player, contract, false)) {
             restoreReturn(player);
             clearReturn(player);
             message(player, "maid_weapon.message.interior.maid_restore_failed");
             return false;
         }
 
-        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
-        Entity maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
+        Entity maid = resumeInteriorMaid
+                ? existingMaid
+                : (maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId));
         if (maid != null) {
             maid.moveTo(
                     origin.getX() + 2.5D,
