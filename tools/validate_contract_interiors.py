@@ -39,6 +39,7 @@ mod_items = read("src/main/java/com/maidweapon/forge/init/ModItems.java")
 creative = read("src/main/java/com/maidweapon/forge/init/ModCreativeTab.java")
 architecture = read("docs/ARCHITECTURE.md")
 assets = read("docs/INTERIOR_ASSETS.md")
+renderer = read("tools/render_contract_interior_world.py")
 
 for needle in [
     "MAX_SPACE_STAGE = 5",
@@ -145,6 +146,19 @@ if "## Contract interiors" not in architecture:
     raise SystemExit("contract interior architecture is undocumented")
 if "CC BY 4.0" not in assets or "Import policy" not in assets:
     raise SystemExit("external interior asset licensing/import policy is missing")
+
+
+compile(renderer, "tools/render_contract_interior_world.py", "exec")
+for needle in [
+    'dimensions" / "maid_weapon" / "contract_interior"',
+    'f"r.{region_x}.{region_z}.mca"',
+    '"block_states"',
+    "values_per_long = 64 // bits",
+    "def render_iso",
+    "def render_top",
+]:
+    if needle not in renderer:
+        raise SystemExit(f"offline contract interior renderer is incomplete: {needle}")
 
 for language in ["en_us", "zh_cn"]:
     payload = json.loads(
