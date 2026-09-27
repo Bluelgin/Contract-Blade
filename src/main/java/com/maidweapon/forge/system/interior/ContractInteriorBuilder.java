@@ -130,7 +130,7 @@ public final class ContractInteriorBuilder {
 
         // Short covered connector so the kitchen is part of the home even in rain.
         fill(level, o.offset(8, 0, -1), o.offset(12, 0, 1), Blocks.SPRUCE_PLANKS);
-        fill(level, o.offset(8, 4, -2), o.offset(12, 4, 2), Blocks.DEEPSLATE_TILE_SLAB);
+        buildCoveredWalkwayRoof(level, o, 8, -2, 12, 2, 4);
         pillar(level, o.offset(9, 1, -2), 3, Blocks.STRIPPED_DARK_OAK_LOG);
         pillar(level, o.offset(11, 1, 2), 3, Blocks.STRIPPED_DARK_OAK_LOG);
 
@@ -139,7 +139,7 @@ public final class ContractInteriorBuilder {
         for (int x = -8; x <= 20; x += 4) {
             pillar(level, o.offset(x, 1, 9), 4, Blocks.STRIPPED_DARK_OAK_LOG);
         }
-        fill(level, o.offset(-9, 5, 6), o.offset(21, 5, 10), Blocks.DEEPSLATE_TILE_SLAB);
+        buildCoveredWalkwayRoof(level, o, -9, 6, 21, 10, 5);
 
         level.setBlockAndUpdate(o.offset(15, 1, -2), Blocks.SMOKER.defaultBlockState());
         level.setBlockAndUpdate(o.offset(16, 1, -2), Blocks.FURNACE.defaultBlockState());
@@ -193,18 +193,7 @@ public final class ContractInteriorBuilder {
         fill(level, o.offset(3, 0, -35), o.offset(11, 0, -33), Blocks.SPRUCE_PLANKS);
         pillar(level, o.offset(5, 1, -36), 3, Blocks.STRIPPED_DARK_OAK_LOG);
         pillar(level, o.offset(9, 1, -32), 3, Blocks.STRIPPED_DARK_OAK_LOG);
-        for (int x = 3; x <= 11; x++) {
-            level.setBlock(
-                    o.offset(x, 4, -36),
-                    Blocks.DEEPSLATE_TILE_SLAB.defaultBlockState(),
-                    Block.UPDATE_CLIENTS
-            );
-            level.setBlock(
-                    o.offset(x, 4, -32),
-                    Blocks.DEEPSLATE_TILE_SLAB.defaultBlockState(),
-                    Block.UPDATE_CLIENTS
-            );
-        }
+        buildCoveredWalkwayRoof(level, o, 3, -36, 11, -32, 4);
 
         fill(level, o.offset(-6, 1, -36), o.offset(6, 3, -36), Blocks.BOOKSHELF);
         fill(level, o.offset(-1, 0, -35), o.offset(1, 0, -33), Blocks.RED_CARPET);
@@ -333,6 +322,67 @@ public final class ContractInteriorBuilder {
                         Block.UPDATE_CLIENTS
                 );
             }
+        }
+    }
+
+    private static void buildCoveredWalkwayRoof(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ,
+            int baseY
+    ) {
+        int width = maxX - minX;
+        int depth = maxZ - minZ;
+
+        if (width >= depth) {
+            int north = minZ;
+            int south = maxZ;
+            int step = 0;
+            while (north + step < south - step) {
+                int y = baseY + (step / 2);
+                placeRoofRowZ(
+                        level, o, minX, maxX, y,
+                        north + step, Direction.NORTH
+                );
+                placeRoofRowZ(
+                        level, o, minX, maxX, y,
+                        south - step, Direction.SOUTH
+                );
+                step++;
+            }
+            int ridgeZ = (north + south) / 2;
+            fill(
+                    level,
+                    o.offset(minX, baseY + 2, ridgeZ),
+                    o.offset(maxX, baseY + 2, ridgeZ),
+                    Blocks.DEEPSLATE_TILE_SLAB
+            );
+        } else {
+            int west = minX;
+            int east = maxX;
+            int step = 0;
+            while (west + step < east - step) {
+                int y = baseY + (step / 2);
+                placeRoofRowX(
+                        level, o, minZ, maxZ, y,
+                        west + step, Direction.WEST
+                );
+                placeRoofRowX(
+                        level, o, minZ, maxZ, y,
+                        east - step, Direction.EAST
+                );
+                step++;
+            }
+            int ridgeX = (west + east) / 2;
+            fill(
+                    level,
+                    o.offset(ridgeX, baseY + 2, minZ),
+                    o.offset(ridgeX, baseY + 2, maxZ),
+                    Blocks.DEEPSLATE_TILE_SLAB
+            );
         }
     }
 
