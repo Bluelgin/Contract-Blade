@@ -76,6 +76,11 @@ for needle in [
     "fillGableEndsZ",
     "fillGableEndsX",
     "for (int y = -4; y <= 20; y++)",
+    "placeNaturalPathBlock",
+    "scatterOuterRingGroundCover",
+    "buildBambooGrove",
+    "buildOpenPavilion",
+    "buildPond",
 ]:
     if needle not in builder:
         raise SystemExit(f"interior builder lost staged/non-destructive behavior: {needle}")
@@ -171,6 +176,8 @@ for needle in [
     "def render_iso_png",
     "def render_top_png",
     "class Raster",
+    "GALLERY_STAGE_RADII",
+    "default is stage radius + 2 blocks",
 ]:
     if needle not in renderer:
         raise SystemExit(f"offline contract interior renderer is incomplete: {needle}")
@@ -201,7 +208,11 @@ if "galleryPreviewMode" not in build_gradle or "tlm_mandatory" not in build_grad
     raise SystemExit("gallery preview build mode is not wired through Gradle resources")
 if 'mandatory = ${tlm_mandatory}' not in mods_toml:
     raise SystemExit("TLM preview-only mandatory override is missing")
-if "ContractInteriorGallery.rebuild(source.getServer()" not in commands:
+if (
+    "private static int generateInteriorGallery" not in commands
+    or "ContractInteriorGallery.rebuild(" not in commands
+    or "source.getServer()" not in commands
+):
     raise SystemExit("server-console gallery generation command is missing")
 if "public static int rebuild(MinecraftServer server" not in gallery:
     raise SystemExit("gallery cannot be generated headlessly by preview CI")
