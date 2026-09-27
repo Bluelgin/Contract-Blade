@@ -770,12 +770,43 @@ def dimension_path(world: Path) -> Path:
     )
 
 
+def gallery_origin(stage: int) -> tuple[int, int]:
+    return (
+        GALLERY_BASE_X + (stage - 1) * GALLERY_STAGE_SPACING,
+        GALLERY_BASE_Z,
+    )
+
+
+def rotate_blocks(
+    blocks: dict[tuple[int, int, int], str],
+    stage: int,
+    rotation: int,
+) -> dict[tuple[int, int, int], str]:
+    if rotation == 0:
+        return blocks
+
+    center_x, center_z = gallery_origin(stage)
+    rotated: dict[tuple[int, int, int], str] = {}
+    for (x, y, z), name in blocks.items():
+        dx = x - center_x
+        dz = z - center_z
+        if rotation == 90:
+            rx, rz = -dz, dx
+        elif rotation == 180:
+            rx, rz = -dx, -dz
+        elif rotation == 270:
+            rx, rz = dz, -dx
+        else:
+            raise ValueError(f"unsupported rotation {rotation}")
+        rotated[(center_x + rx, y, center_z + rz)] = name
+    return rotated
+
+
 def gallery_bounds(
     stage: int,
     radius: int | None,
 ) -> tuple[int, int, int, int]:
-    origin_x = GALLERY_BASE_X + (stage - 1) * GALLERY_STAGE_SPACING
-    origin_z = GALLERY_BASE_Z
+    origin_x, origin_z = gallery_origin(stage)
     effective_radius = (
         radius
         if radius is not None
@@ -796,6 +827,13 @@ def main() -> int:
     parser.add_argument("world", type=Path, help="Minecraft Java world folder (contains level.dat)")
     parser.add_argument("--stage", type=int, choices=range(1, 6), default=5)
     parser.add_argument("--mode", choices=("iso", "top"), default="iso")
+    parser.add_argument(
+        "--rotation",
+        type=int,
+        choices=(0, 90, 180, 270),
+        default=0,
+        help="rotate the stage around its gallery origin before rendering",
+    )
     parser.add_argument("--format", choices=("svg", "png"), default=None)
     parser.add_argument("--output", type=Path)
     parser.add_argument(
@@ -820,6 +858,7 @@ def main() -> int:
         args.y_min,
         args.y_max,
     )
+    blocks = rotate_blocks(blocks, args.stage, args.rotation)
 
     output = args.output
     output_format = args.format
@@ -831,15 +870,17 @@ def main() -> int:
         output_format = "svg"
 
     if output is None:
+        rotation_suffix = "" if args.rotation == 0 else f"_r{args.rotation}"
         output = Path(
-            f"contract_interior_stage_{args.stage}_{args.mode}.{output_format}"
+            f"contract_interior_stage_{args.stage}_{args.mode}"
+            f"{rotation_suffix}.{output_format}"
         )
     output = output.expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
 
     title = (
         f"Contract Interior Stage {args.stage} — "
-        f"offline {args.mode} render from Anvil data"
+        f"offline {args.mode} render from Anvil data — {args.rotation}°"
     )
     if output_format == "png":
         if args.mode == "top":
