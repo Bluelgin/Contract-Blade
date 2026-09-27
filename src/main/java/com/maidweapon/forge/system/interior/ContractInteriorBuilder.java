@@ -211,6 +211,18 @@ public final class ContractInteriorBuilder {
         buildCherryTree(level, o.offset(46, 0, 8));
         buildCherryTree(level, o.offset(46, 0, -12));
 
+        // Late-stage paths make the grounds read as one coherent home instead of
+        // isolated set pieces.
+        buildPath(level, o, 0, 11, 0, 18, Blocks.GRAVEL);
+        buildPath(level, o, 0, 18, 34, 18, Blocks.GRAVEL);
+        buildPath(level, o, 34, 18, 34, 26, Blocks.GRAVEL);
+
+        buildPath(level, o, 3, -28, 25, -28, Blocks.MOSSY_STONE_BRICKS);
+        buildPath(level, o, 25, -28, 25, -43, Blocks.MOSSY_STONE_BRICKS);
+
+        buildPath(level, o, -10, -28, -35, -28, Blocks.COARSE_DIRT);
+        buildPath(level, o, -35, -28, -35, -42, Blocks.COARSE_DIRT);
+
         // Quiet lookout at the far edge.
         fill(level, o.offset(-46, 0, -48), o.offset(-36, 0, -38), Blocks.POLISHED_ANDESITE);
         pillar(level, o.offset(-45, 1, -47), 5, Blocks.DARK_OAK_LOG);
@@ -333,6 +345,42 @@ public final class ContractInteriorBuilder {
         level.setBlockAndUpdate(base, Blocks.COBBLESTONE_WALL.defaultBlockState());
         level.setBlockAndUpdate(base.above(), Blocks.DARK_OAK_FENCE.defaultBlockState());
         level.setBlockAndUpdate(base.above(2), Blocks.LANTERN.defaultBlockState());
+    }
+
+    private static void buildPath(
+            ServerLevel level,
+            BlockPos o,
+            int x1,
+            int z1,
+            int x2,
+            int z2,
+            Block block
+    ) {
+        int x = x1;
+        int z = z1;
+
+        while (x != x2) {
+            placePathTile(level, o, x, z, block);
+            x += Integer.compare(x2, x);
+        }
+        while (z != z2) {
+            placePathTile(level, o, x, z, block);
+            z += Integer.compare(z2, z);
+        }
+        placePathTile(level, o, x2, z2, block);
+    }
+
+    private static void placePathTile(
+            ServerLevel level,
+            BlockPos o,
+            int x,
+            int z,
+            Block block
+    ) {
+        for (int width = -1; width <= 1; width++) {
+            BlockPos pos = o.offset(x + width, -1, z);
+            level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_CLIENTS);
+        }
     }
 
     private static void placeStoneEdge(
