@@ -57,7 +57,7 @@ public final class ContractInteriorBuilder {
     public static void clearSnapshotArea(ServerLevel level, BlockPos origin) {
         int radius = 58;
         for (int x = -radius; x <= radius; x++) {
-            for (int y = -4; y <= 12; y++) {
+            for (int y = -4; y <= 20; y++) {
                 for (int z = -radius; z <= radius; z++) {
                     BlockPos pos = origin.offset(x, y, z);
                     if (!level.isEmptyBlock(pos)) {
@@ -95,6 +95,13 @@ public final class ContractInteriorBuilder {
 
         // A small stone genkan and warm central room establish the base "home".
         fill(level, o.offset(-2, 0, 7), o.offset(2, 0, 10), Blocks.POLISHED_ANDESITE);
+        for (int x = -2; x <= 2; x++) {
+            level.setBlockAndUpdate(
+                    o.offset(x, -1, 11),
+                    Blocks.STONE_BRICK_STAIRS.defaultBlockState()
+                            .setValue(StairBlock.FACING, Direction.SOUTH)
+            );
+        }
         fill(level, o.offset(-5, 0, -3), o.offset(5, 0, 3), Blocks.BIRCH_PLANKS);
         fill(level, o.offset(-1, 0, -3), o.offset(1, 0, 3), Blocks.SPRUCE_PLANKS);
         level.setBlockAndUpdate(o.offset(-5, 1, 4), Blocks.CHEST.defaultBlockState());
@@ -137,7 +144,7 @@ public final class ContractInteriorBuilder {
 
         // Main stepping-stone approach from the house toward a small torii.
         for (int z = 11; z <= 25; z += 2) {
-            level.setBlockAndUpdate(o.offset(0, 0, z), Blocks.MOSSY_STONE_BRICKS.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(0, -1, z), Blocks.MOSSY_STONE_BRICKS.defaultBlockState());
         }
         buildTorii(level, o.offset(0, 0, 26));
 
@@ -199,12 +206,14 @@ public final class ContractInteriorBuilder {
 
         // South-east guest pavilion with its own veranda.
         buildJapaneseRoom(level, o, 27, 27, 43, 39);
+        carveDoor(level, o, 35, 27, Direction.NORTH);
         fill(level, o.offset(25, 0, 24), o.offset(45, 0, 26), Blocks.SPRUCE_PLANKS);
         buildLanternPost(level, o.offset(26, 0, 25));
         buildLanternPost(level, o.offset(44, 0, 25));
 
         // A small shrine in the north-east provides a final destination.
         buildJapaneseRoom(level, o, 29, -48, 43, -38);
+        carveDoor(level, o, 35, -38, Direction.SOUTH);
         buildTorii(level, o.offset(36, 0, -34));
         fill(level, o.offset(34, 0, -38), o.offset(38, 0, -35), Blocks.POLISHED_ANDESITE);
 
@@ -316,7 +325,7 @@ public final class ContractInteriorBuilder {
             int south = maxZ + 2;
             int step = 0;
             while (north + step < south - step) {
-                int y = 6 + step;
+                int y = 6 + (step / 2);
                 int northZ = north + step;
                 int southZ = south - step;
                 placeRoofRowZ(level, o, minX - 2, maxX + 2, y, northZ, Direction.NORTH);
@@ -324,7 +333,7 @@ public final class ContractInteriorBuilder {
                 step++;
             }
 
-            int ridgeY = 6 + step;
+            int ridgeY = 7 + (step / 2);
             int ridgeZ = (north + south) / 2;
             fill(level,
                     o.offset(minX - 1, ridgeY, ridgeZ),
@@ -343,7 +352,7 @@ public final class ContractInteriorBuilder {
             int east = maxX + 2;
             int step = 0;
             while (west + step < east - step) {
-                int y = 6 + step;
+                int y = 6 + (step / 2);
                 int westX = west + step;
                 int eastX = east - step;
                 placeRoofRowX(level, o, minZ - 2, maxZ + 2, y, westX, Direction.WEST);
@@ -351,7 +360,7 @@ public final class ContractInteriorBuilder {
                 step++;
             }
 
-            int ridgeY = 6 + step;
+            int ridgeY = 7 + (step / 2);
             int ridgeX = (west + east) / 2;
             fill(level,
                     o.offset(ridgeX, ridgeY, minZ - 1),
