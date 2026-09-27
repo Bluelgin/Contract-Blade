@@ -87,23 +87,7 @@ public final class ContractInteriorGallery {
         ServerLevel level = interiorLevel(player);
         if (level == null) return false;
 
-        int safeWarmth = Math.max(
-                1,
-                Math.min(warmth, ContractInteriorProfile.MAX_WARMTH_STAGE)
-        );
-
-        buildScaffold(level, true);
-        for (int stage = 1; stage <= ContractInteriorProfile.MAX_SPACE_STAGE; stage++) {
-            BlockPos origin = stageOrigin(stage);
-            ContractInteriorBuilder.buildSnapshot(
-                    level,
-                    origin,
-                    stage,
-                    safeWarmth,
-                    true
-            );
-            placeStageMarker(level, origin, stage);
-        }
+        int safeWarmth = rebuild(level, warmth, true);
 
         boolean entered = ContractInteriorService.enterGallery(player, overviewSpawn());
         if (entered) {
@@ -116,6 +100,33 @@ public final class ContractInteriorGallery {
             );
         }
         return entered;
+    }
+
+    public static int rebuild(ServerLevel level, int warmth, boolean clearFirst) {
+        int safeWarmth = Math.max(
+                1,
+                Math.min(warmth, ContractInteriorProfile.MAX_WARMTH_STAGE)
+        );
+
+        buildScaffold(level, clearFirst);
+        for (int stage = 1; stage <= ContractInteriorProfile.MAX_SPACE_STAGE; stage++) {
+            BlockPos origin = stageOrigin(stage);
+            ContractInteriorBuilder.buildSnapshot(
+                    level,
+                    origin,
+                    stage,
+                    safeWarmth,
+                    clearFirst
+            );
+            placeStageMarker(level, origin, stage);
+        }
+        return safeWarmth;
+    }
+
+    public static int rebuild(MinecraftServer server, int warmth, boolean clearFirst) {
+        ServerLevel level = server.getLevel(ContractInteriorService.INTERIOR_LEVEL);
+        if (level == null) return -1;
+        return rebuild(level, warmth, clearFirst);
     }
 
     public static void ensureBuilt(ServerLevel level) {
