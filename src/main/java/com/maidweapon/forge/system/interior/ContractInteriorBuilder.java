@@ -1,6 +1,7 @@
 package com.maidweapon.forge.system.interior;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -87,61 +88,269 @@ public final class ContractInteriorBuilder {
 
     private static void buildCore(ServerLevel level, BlockPos o) {
         buildGround(level, o, 0, 12);
-        fill(level, o.offset(-5, 0, -5), o.offset(5, 0, 5), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(-5, 1, -5), o.offset(5, 5, 5));
-        fill(level, o.offset(-6, 6, -6), o.offset(6, 6, 6), Blocks.DARK_OAK_SLAB);
-        level.setBlockAndUpdate(o.offset(0, 1, 0), Blocks.LANTERN.defaultBlockState());
+
+        buildJapaneseRoom(level, o, -7, -6, 7, 6);
+        carveDoor(level, o, 0, 6, Direction.SOUTH);
+
+        // A small stone genkan and warm central room establish the base "home".
+        fill(level, o.offset(-2, 0, 7), o.offset(2, 0, 10), Blocks.POLISHED_ANDESITE);
+        fill(level, o.offset(-5, 0, -3), o.offset(5, 0, 3), Blocks.BIRCH_PLANKS);
+        fill(level, o.offset(-1, 0, -3), o.offset(1, 0, 3), Blocks.SPRUCE_PLANKS);
+        level.setBlockAndUpdate(o.offset(-5, 1, 4), Blocks.CHEST.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(5, 1, 4), Blocks.BARREL.defaultBlockState());
+
+        buildLanternPost(level, o.offset(-4, 0, 9));
+        buildLanternPost(level, o.offset(4, 0, 9));
     }
 
     private static void buildAnnex(ServerLevel level, BlockPos o) {
         buildGround(level, o, 12, 20);
-        fill(level, o.offset(13, 0, -4), o.offset(19, 0, 4), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(13, 1, -4), o.offset(19, 5, 4));
-        fill(level, o.offset(12, 6, -5), o.offset(20, 6, 5), Blocks.DARK_OAK_SLAB);
-        fill(level, o.offset(5, 1, -1), o.offset(13, 3, 1), Blocks.AIR);
-        level.setBlockAndUpdate(o.offset(16, 1, 0), Blocks.CRAFTING_TABLE.defaultBlockState());
+
+        // Kitchen / work wing.
+        buildJapaneseRoom(level, o, 13, -5, 19, 5);
+        carveDoor(level, o, 13, 0, Direction.WEST);
+        carveDoor(level, o, 7, 0, Direction.EAST);
+
+        // Covered engawa connecting the original room and the new wing.
+        fill(level, o.offset(-8, 0, 7), o.offset(20, 0, 9), Blocks.SPRUCE_PLANKS);
+        for (int x = -8; x <= 20; x += 4) {
+            pillar(level, o.offset(x, 1, 9), 4, Blocks.STRIPPED_DARK_OAK_LOG);
+        }
+        fill(level, o.offset(-9, 5, 6), o.offset(21, 5, 10), Blocks.DEPSLATE_TILE_SLAB);
+
+        level.setBlockAndUpdate(o.offset(15, 1, -2), Blocks.SMOKER.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(16, 1, -2), Blocks.FURNACE.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(17, 1, -2), Blocks.CRAFTING_TABLE.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(18, 1, -2), Blocks.BARREL.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(16, 1, 2), Blocks.CAULDRON.defaultBlockState());
     }
 
     private static void buildGarden(ServerLevel level, BlockPos o) {
         buildGround(level, o, 20, 30);
-        fill(level, o.offset(-29, -1, -10), o.offset(-21, -1, 10), Blocks.GRASS_BLOCK);
-        fill(level, o.offset(-28, -1, -4), o.offset(-23, -1, 4), Blocks.WATER);
-        for (int z = -10; z <= 10; z += 2) {
-            level.setBlockAndUpdate(o.offset(-21, 0, z), Blocks.OAK_LEAVES.defaultBlockState());
+
+        // Main stepping-stone approach from the house toward a small torii.
+        for (int z = 11; z <= 25; z += 2) {
+            level.setBlockAndUpdate(o.offset(0, 0, z), Blocks.MOSSY_STONE_BRICKS.defaultBlockState());
         }
-        level.setBlockAndUpdate(o.offset(-22, 0, -8), Blocks.CHERRY_SAPLING.defaultBlockState());
-        level.setBlockAndUpdate(o.offset(-22, 0, 8), Blocks.CHERRY_SAPLING.defaultBlockState());
+        buildTorii(level, o.offset(0, 0, 26));
+
+        // Pond and planted west garden.
+        fill(level, o.offset(-29, -1, -11), o.offset(-18, -1, 9), Blocks.MOSS_BLOCK);
+        fill(level, o.offset(-27, -1, -7), o.offset(-20, -1, 5), Blocks.WATER);
+        placeStoneEdge(level, o, -28, -8, -19, 6);
+
+        buildCherryTree(level, o.offset(-23, 0, 12));
+        buildCherryTree(level, o.offset(-16, 0, -13));
+        buildShrub(level, o.offset(-18, 0, 7));
+        buildShrub(level, o.offset(-18, 0, -8));
+
+        level.setBlockAndUpdate(o.offset(-24, 0, -1), Blocks.LILY_PAD.defaultBlockState());
+        buildLanternPost(level, o.offset(-17, 0, 14));
     }
 
     private static void buildStudy(ServerLevel level, BlockPos o) {
         buildGround(level, o, 30, 40);
-        fill(level, o.offset(-5, 0, -39), o.offset(5, 0, -31), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(-5, 1, -39), o.offset(5, 5, -31));
-        fill(level, o.offset(-6, 6, -40), o.offset(6, 6, -30), Blocks.DARK_OAK_SLAB);
-        fill(level, o.offset(-3, 1, -38), o.offset(3, 3, -38), Blocks.BOOKSHELF);
-        fill(level, o.offset(-1, 1, -30), o.offset(1, 3, -27), Blocks.AIR);
+
+        // A quiet north wing: study on the left, tea room on the right.
+        buildJapaneseRoom(level, o, -8, -39, 8, -28);
+        buildJapaneseRoom(level, o, 12, -38, 22, -28);
+
+        // Covered north corridor from the original home.
+        fill(level, o.offset(-2, 0, -27), o.offset(2, 0, -7), Blocks.SPRUCE_PLANKS);
+        for (int z = -27; z <= -7; z += 4) {
+            pillar(level, o.offset(-3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
+            pillar(level, o.offset(3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
+        }
+        fill(level, o.offset(-4, 5, -28), o.offset(4, 5, -6), Blocks.DEPSLATE_TILE_SLAB);
+
+        carveDoor(level, o, 0, -28, Direction.NORTH);
+        carveDoor(level, o, 0, -6, Direction.SOUTH);
+        carveDoor(level, o, 12, -33, Direction.WEST);
+
+        fill(level, o.offset(-6, 1, -37), o.offset(6, 3, -37), Blocks.BOOKSHELF);
+        fill(level, o.offset(-1, 0, -34), o.offset(1, 0, -31), Blocks.RED_CARPET);
+        level.setBlockAndUpdate(o.offset(16, 1, -33), Blocks.CAKE.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(18, 1, -33), Blocks.POTTED_AZALEA.defaultBlockState());
+
+        // Small karesansui court in the north-west.
+        fill(level, o.offset(-29, -1, -39), o.offset(-14, -1, -27), Blocks.SAND);
+        for (int x = -27; x <= -16; x += 4) {
+            fill(level, o.offset(x, 0, -37), o.offset(x + 1, 0, -36), Blocks.SMOOTH_STONE);
+        }
+        buildShrub(level, o.offset(-27, 0, -29));
+        buildShrub(level, o.offset(-16, 0, -29));
     }
 
     private static void buildEstate(ServerLevel level, BlockPos o) {
         buildGround(level, o, 40, 52);
-        fill(level, o.offset(-7, 0, 41), o.offset(7, 0, 50), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(-7, 1, 41), o.offset(7, 5, 50));
-        fill(level, o.offset(-8, 6, 40), o.offset(8, 6, 51), Blocks.DARK_OAK_SLAB);
 
-        for (int x = -30; x <= 30; x += 6) {
-            level.setBlockAndUpdate(o.offset(x, 0, 46), Blocks.CHERRY_LEAVES.defaultBlockState());
-        }
-        for (int z = -30; z <= 30; z += 6) {
-            level.setBlockAndUpdate(o.offset(46, 0, z), Blocks.CHERRY_LEAVES.defaultBlockState());
+        // South-east guest pavilion with its own veranda.
+        buildJapaneseRoom(level, o, 27, 27, 43, 39);
+        fill(level, o.offset(25, 0, 24), o.offset(45, 0, 26), Blocks.SPRUCE_PLANKS);
+        buildLanternPost(level, o.offset(26, 0, 25));
+        buildLanternPost(level, o.offset(44, 0, 25));
+
+        // A small shrine in the north-east provides a final destination.
+        buildJapaneseRoom(level, o, 29, -48, 43, -38);
+        buildTorii(level, o.offset(36, 0, -34));
+        fill(level, o.offset(34, 0, -38), o.offset(38, 0, -35), Blocks.POLISHED_ANDESITE);
+
+        // Larger outer pond and bridge tie the late-stage grounds together.
+        fill(level, o.offset(12, -1, 18), o.offset(25, -1, 30), Blocks.WATER);
+        placeStoneEdge(level, o, 11, 17, 26, 31);
+        fill(level, o.offset(20, 0, 20), o.offset(30, 0, 22), Blocks.SPRUCE_PLANKS);
+        for (int x = 20; x <= 30; x += 5) {
+            level.setBlockAndUpdate(o.offset(x, 1, 19), Blocks.DARK_OAK_FENCE.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x, 1, 23), Blocks.DARK_OAK_FENCE.defaultBlockState());
         }
 
-        // Small pavilion / quiet lookout.
-        fill(level, o.offset(42, 0, -46), o.offset(50, 0, -38), Blocks.POLISHED_ANDESITE);
-        pillar(level, o.offset(42, 1, -46), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(50, 1, -46), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(42, 1, -38), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(50, 1, -38), 5, Blocks.DARK_OAK_LOG);
-        fill(level, o.offset(41, 6, -47), o.offset(51, 6, -37), Blocks.DARK_OAK_SLAB);
+        buildCherryTree(level, o.offset(-37, 0, 33));
+        buildCherryTree(level, o.offset(-26, 0, 42));
+        buildCherryTree(level, o.offset(-8, 0, 45));
+        buildCherryTree(level, o.offset(8, 0, 45));
+        buildCherryTree(level, o.offset(46, 0, 8));
+        buildCherryTree(level, o.offset(46, 0, -12));
+
+        // Quiet lookout at the far edge.
+        fill(level, o.offset(-46, 0, -48), o.offset(-36, 0, -38), Blocks.POLISHED_ANDESITE);
+        pillar(level, o.offset(-45, 1, -47), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-37, 1, -47), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-45, 1, -39), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-37, 1, -39), 5, Blocks.DARK_OAK_LOG);
+        fill(level, o.offset(-46, 6, -48), o.offset(-36, 6, -38), Blocks.DEPSLATE_TILE_SLAB);
+    }
+
+    private static void buildJapaneseRoom(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ
+    ) {
+        fill(level, o.offset(minX, 0, minZ), o.offset(maxX, 0, maxZ), Blocks.SPRUCE_PLANKS);
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z : new int[]{minZ, maxZ}) {
+                buildWallColumn(level, o, x, z, minX, minZ, maxX, maxZ);
+            }
+        }
+        for (int z = minZ + 1; z < maxZ; z++) {
+            for (int x : new int[]{minX, maxX}) {
+                buildWallColumn(level, o, x, z, minX, minZ, maxX, maxZ);
+            }
+        }
+
+        // Dark overhanging roof + a raised ridge.
+        fill(level, o.offset(minX - 1, 6, minZ - 1),
+                o.offset(maxX + 1, 6, maxZ + 1), Blocks.DEPSLATE_TILE_SLAB);
+        if ((maxX - minX) >= (maxZ - minZ)) {
+            fill(level, o.offset(minX, 7, (minZ + maxZ) / 2),
+                    o.offset(maxX, 7, (minZ + maxZ) / 2), Blocks.DEPSLATE_TILES);
+        } else {
+            fill(level, o.offset((minX + maxX) / 2, 7, minZ),
+                    o.offset((minX + maxX) / 2, 7, maxZ), Blocks.DEPSLATE_TILES);
+        }
+    }
+
+    private static void buildWallColumn(
+            ServerLevel level,
+            BlockPos o,
+            int x,
+            int z,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ
+    ) {
+        boolean corner = (x == minX || x == maxX) && (z == minZ || z == maxZ);
+        boolean frame = corner
+                || (x == minX || x == maxX ? Math.floorMod(z - minZ, 4) == 0
+                : Math.floorMod(x - minX, 4) == 0);
+
+        if (frame) {
+            pillar(level, o.offset(x, 1, z), 5, Blocks.STRIPPED_DARK_OAK_LOG);
+            return;
+        }
+
+        level.setBlock(o.offset(x, 1, z), Blocks.WHITE_TERRACOTTA.defaultBlockState(), Block.UPDATE_CLIENTS);
+        level.setBlock(o.offset(x, 2, z), Blocks.WHITE_STAINED_GLASS.defaultBlockState(), Block.UPDATE_CLIENTS);
+        level.setBlock(o.offset(x, 3, z), Blocks.WHITE_STAINED_GLASS.defaultBlockState(), Block.UPDATE_CLIENTS);
+        level.setBlock(o.offset(x, 4, z), Blocks.WHITE_TERRACOTTA.defaultBlockState(), Block.UPDATE_CLIENTS);
+        level.setBlock(o.offset(x, 5, z), Blocks.STRIPPED_DARK_OAK_LOG.defaultBlockState(), Block.UPDATE_CLIENTS);
+    }
+
+    private static void carveDoor(
+            ServerLevel level,
+            BlockPos o,
+            int x,
+            int z,
+            Direction direction
+    ) {
+        level.setBlockAndUpdate(o.offset(x, 1, z), Blocks.AIR.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(x, 2, z), Blocks.AIR.defaultBlockState());
+
+        if (direction.getAxis() == Direction.Axis.X) {
+            level.setBlockAndUpdate(o.offset(x, 1, z + 1), Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x, 2, z + 1), Blocks.AIR.defaultBlockState());
+        } else {
+            level.setBlockAndUpdate(o.offset(x + 1, 1, z), Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x + 1, 2, z), Blocks.AIR.defaultBlockState());
+        }
+    }
+
+    private static void buildTorii(ServerLevel level, BlockPos center) {
+        pillar(level, center.offset(-3, 0, 0), 6, Blocks.RED_CONCRETE);
+        pillar(level, center.offset(3, 0, 0), 6, Blocks.RED_CONCRETE);
+        fill(level, center.offset(-4, 5, 0), center.offset(4, 5, 0), Blocks.RED_CONCRETE);
+        fill(level, center.offset(-3, 6, 0), center.offset(3, 6, 0), Blocks.DARK_OAK_LOG);
+    }
+
+    private static void buildCherryTree(ServerLevel level, BlockPos base) {
+        pillar(level, base, 5, Blocks.CHERRY_LOG);
+        for (int x = -2; x <= 2; x++) {
+            for (int y = 3; y <= 6; y++) {
+                for (int z = -2; z <= 2; z++) {
+                    if (Math.abs(x) + Math.abs(z) > 3) continue;
+                    BlockPos pos = base.offset(x, y, z);
+                    if (level.isEmptyBlock(pos)) {
+                        level.setBlock(pos, Blocks.CHERRY_LEAVES.defaultBlockState(), Block.UPDATE_CLIENTS);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void buildShrub(ServerLevel level, BlockPos base) {
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                level.setBlockAndUpdate(base.offset(x, 0, z), Blocks.AZALEA_LEAVES.defaultBlockState());
+            }
+        }
+    }
+
+    private static void buildLanternPost(ServerLevel level, BlockPos base) {
+        level.setBlockAndUpdate(base, Blocks.COBBLESTONE_WALL.defaultBlockState());
+        level.setBlockAndUpdate(base.above(), Blocks.DARK_OAK_FENCE.defaultBlockState());
+        level.setBlockAndUpdate(base.above(2), Blocks.LANTERN.defaultBlockState());
+    }
+
+    private static void placeStoneEdge(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ
+    ) {
+        for (int x = minX; x <= maxX; x++) {
+            level.setBlockAndUpdate(o.offset(x, 0, minZ), Blocks.COBBLESTONE.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x, 0, maxZ), Blocks.COBBLESTONE.defaultBlockState());
+        }
+        for (int z = minZ + 1; z < maxZ; z++) {
+            level.setBlockAndUpdate(o.offset(minX, 0, z), Blocks.COBBLESTONE.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(maxX, 0, z), Blocks.COBBLESTONE.defaultBlockState());
+        }
     }
 
     private static int radiusForStage(int stage) {
