@@ -53,6 +53,33 @@ Modifier-key state such as Shift must be read only from this client package.
 Common item code must not depend on `Screen` or reinterpret
 `TooltipFlag.isAdvanced()` (F3+H advanced tooltips) as a modifier key.
 
+## Contract interiors
+
+Weapon interiors are a Core contract feature, not a deployment mode. Every
+concrete contract is assigned one stable plot inside the single
+`maid_weapon:contract_interior` dimension by binding ID.
+
+The interior stack is split into focused responsibilities:
+
+- `ContractInteriorService`: enter/exit authority, return position and maid lifecycle;
+- `ContractInteriorSavedData`: persistent binding-to-plot allocation and built stage;
+- `ContractInteriorProfile`: maps contract level/favorability to visual progression;
+- `ContractInteriorBuilder`: built-in fallback home and reserved dynamic decorations;
+- `ContractInteriorEvents`: logout/death/void/drop safety only.
+
+Contract level controls monotonic spatial growth. Favorability controls
+reversible lived-in details at reserved positions. Player edits must never be
+globally rewritten on every entry.
+
+The real TLM maid remains the only manifested maid authority inside the
+interior. Entry manifests from the contract after teleport; exit captures the
+same entity back into the same binding before returning the player. Interior
+code must not depend on the hotbar deployment state machine.
+
+Visual homes are replaceable presentation assets. External schematics/templates
+must have explicit redistribution/modification terms and must not become a
+runtime dependency of the contract identity or lifecycle layers.
+
 ## Deployment
 
 `InfusedMaidDeploymentSystem` remains the orchestration state machine. Focused
