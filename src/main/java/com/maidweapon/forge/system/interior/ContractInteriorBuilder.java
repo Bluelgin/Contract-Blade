@@ -46,7 +46,7 @@ public final class ContractInteriorBuilder {
         int safeWarmth = Math.max(1, Math.min(warmth, ContractInteriorProfile.MAX_WARMTH_STAGE));
 
         if (clearFirst) {
-            clearSnapshotArea(level, origin);
+            clearSnapshotArea(level, origin, safeStage);
         }
 
         for (int current = 1; current <= safeStage; current++) {
@@ -56,7 +56,15 @@ public final class ContractInteriorBuilder {
     }
 
     public static void clearSnapshotArea(ServerLevel level, BlockPos origin) {
-        int radius = 58;
+        clearSnapshotArea(level, origin, ContractInteriorProfile.MAX_SPACE_STAGE);
+    }
+
+    private static void clearSnapshotArea(
+            ServerLevel level,
+            BlockPos origin,
+            int stage
+    ) {
+        int radius = radiusForStage(stage) + 6;
         for (int x = -radius; x <= radius; x++) {
             for (int y = -4; y <= 20; y++) {
                 for (int z = -radius; z <= radius; z++) {
@@ -152,6 +160,7 @@ public final class ContractInteriorBuilder {
         // Pond and planted west garden. Keep the shoreline flush with the
         // ground so it reads as a garden pond rather than a rectangular pool.
         buildPond(level, o, -26, -1, 4, 7);
+        paintOuterRingPatch(level, o, 20, 30, -26, -1, 5, 9, 13);
 
         buildCherryTree(level, o.offset(-25, 0, 13));
         buildCherryTree(level, o.offset(-23, 0, -13));
@@ -264,8 +273,10 @@ public final class ContractInteriorBuilder {
         // Quiet lookout on the far western rim.
         buildOpenPavilion(level, o, -47, -26);
 
-        // A small bamboo grove and sparse petals/moss break up the final-stage
-        // lawn without turning the home into a dense decorative theme park.
+        // Intentional moss gardens anchor the bamboo and cherry grove. Sparse
+        // loose ground cover then fills only a few remaining gaps.
+        paintOuterRingPatch(level, o, 40, 52, -44, 10, 4, 8, 19);
+        paintOuterRingPatch(level, o, 40, 52, 0, 46, 16, 4, 23);
         buildBambooGrove(level, o.offset(-44, 0, 10));
         scatterOuterRingGroundCover(level, o, 40, 52, 5);
     }
@@ -547,15 +558,24 @@ public final class ContractInteriorBuilder {
             int z,
             Direction direction
     ) {
-        level.setBlockAndUpdate(o.offset(x, 1, z), Blocks.AIR.defaultBlockState());
-        level.setBlockAndUpdate(o.offset(x, 2, z), Blocks.AIR.defaultBlockState());
+        clearGeneratedWallBlock(level, o.offset(x, 1, z));
+        clearGeneratedWallBlock(level, o.offset(x, 2, z));
 
         if (direction.getAxis() == Direction.Axis.X) {
-            level.setBlockAndUpdate(o.offset(x, 1, z + 1), Blocks.AIR.defaultBlockState());
-            level.setBlockAndUpdate(o.offset(x, 2, z + 1), Blocks.AIR.defaultBlockState());
+            clearGeneratedWallBlock(level, o.offset(x, 1, z + 1));
+            clearGeneratedWallBlock(level, o.offset(x, 2, z + 1));
         } else {
-            level.setBlockAndUpdate(o.offset(x + 1, 1, z), Blocks.AIR.defaultBlockState());
-            level.setBlockAndUpdate(o.offset(x + 1, 2, z), Blocks.AIR.defaultBlockState());
+            clearGeneratedWallBlock(level, o.offset(x + 1, 1, z));
+            clearGeneratedWallBlock(level, o.offset(x + 1, 2, z));
+        }
+    }
+
+    private static void clearGeneratedWallBlock(ServerLevel level, BlockPos pos) {
+        var state = level.getBlockState(pos);
+        if (state.is(Blocks.WHITE_TERRACOTTA)
+                || state.is(Blocks.WHITE_STAINED_GLASS)
+                || state.is(Blocks.STRIPPED_DARK_OAK_LOG)) {
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
         }
     }
 
@@ -660,17 +680,21 @@ public final class ContractInteriorBuilder {
     ) {
         int x = x1;
         int z = z1;
+        Direction.Axis finalAxis = x1 != x2
+                ? Direction.Axis.X
+                : Direction.Axis.Z;
 
         while (x != x2) {
             placePathTile(level, o, x, z, block, Direction.Axis.X);
+            finalAxis = Direction.Axis.X;
             x += Integer.compare(x2, x);
         }
         while (z != z2) {
             placePathTile(level, o, x, z, block, Direction.Axis.Z);
+            finalAxis = Direction.Axis.Z;
             z += Integer.compare(z2, z);
         }
 
-        Direction.Axis finalAxis = x1 != x2 ? Direction.Axis.X : Direction.Axis.Z;
         placePathTile(level, o, x2, z2, block, finalAxis);
     }
 
@@ -789,8 +813,8 @@ public final class ContractInteriorBuilder {
                     continue;
                 }
 
-                int hash = Math.floorMod(x * 31 + z * 17 + salt * 43, 37);
-                if (hash > 1) continue;
+                int hash = landscapeHash(x, z, salt);
+                if (Math.floorMod(hash, 113) > 1) continue;
 
                 BlockPos ground = o.offset(x, -1, z);
                 BlockPos plant = o.offset(x, 0, z);
@@ -799,7 +823,9 @@ public final class ContractInteriorBuilder {
                     continue;
                 }
 
-                Block cover = hash == 0 ? Blocks.PINK_PETALS : Blocks.MOSS_CARPET;
+                Block cover = (hash & 7) == 0
+                        ? Blocks.PINK_PETALS
+                        : Blocks.MOSS_CARPET;
                 level.setBlock(
                         plant,
                         cover.defaultBlockState(),
@@ -807,6 +833,56 @@ public final class ContractInteriorBuilder {
                 );
             }
         }
+    }
+
+    private static void paintOuterRingPatch(
+            ServerLevel level,
+            BlockPos o,
+            int previousRadius,
+            int radius,
+            int centerX,
+            int centerZ,
+            int radiusX,
+            int radiusZ,
+            int salt
+    ) {
+        for (int x = centerX - radiusX; x <= centerX + radiusX; x++) {
+            for (int z = centerZ - radiusZ; z <= centerZ + radiusZ; z++) {
+                if (!insideIsland(x, z, radius)
+                        || insideIsland(x, z, previousRadius)) {
+                    continue;
+                }
+
+                double dx = (x - centerX) / (double) radiusX;
+                double dz = (z - centerZ) / (double) radiusZ;
+                if (dx * dx + dz * dz > 1.0) continue;
+
+                BlockPos surface = o.offset(x, -1, z);
+                if (!level.getBlockState(surface).is(Blocks.GRASS_BLOCK)) continue;
+
+                int hash = landscapeHash(x, z, salt);
+                Block material = switch (Math.floorMod(hash, 13)) {
+                    case 0 -> Blocks.COARSE_DIRT;
+                    case 1 -> Blocks.GRAVEL;
+                    default -> Blocks.MOSS_BLOCK;
+                };
+                level.setBlock(
+                        surface,
+                        material.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+        }
+    }
+
+    private static int landscapeHash(int x, int z, int salt) {
+        long value = x * 341873128712L
+                + z * 132897987541L
+                + salt * 42595009L;
+        value ^= value << 13;
+        value ^= value >>> 7;
+        value ^= value << 17;
+        return (int) (value ^ (value >>> 32));
     }
 
     private static void buildBambooGrove(ServerLevel level, BlockPos base) {
@@ -949,24 +1025,6 @@ public final class ContractInteriorBuilder {
                 o.offset(maxX + 1, ridgeY, ridgeZ),
                 Blocks.DEEPSLATE_TILES
         );
-    }
-
-    private static void placeStoneEdge(
-            ServerLevel level,
-            BlockPos o,
-            int minX,
-            int minZ,
-            int maxX,
-            int maxZ
-    ) {
-        for (int x = minX; x <= maxX; x++) {
-            level.setBlockAndUpdate(o.offset(x, 0, minZ), Blocks.COBBLESTONE.defaultBlockState());
-            level.setBlockAndUpdate(o.offset(x, 0, maxZ), Blocks.COBBLESTONE.defaultBlockState());
-        }
-        for (int z = minZ + 1; z < maxZ; z++) {
-            level.setBlockAndUpdate(o.offset(minX, 0, z), Blocks.COBBLESTONE.defaultBlockState());
-            level.setBlockAndUpdate(o.offset(maxX, 0, z), Blocks.COBBLESTONE.defaultBlockState());
-        }
     }
 
     private static int radiusForStage(int stage) {
