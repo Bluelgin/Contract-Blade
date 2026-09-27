@@ -32,6 +32,40 @@ public final class ContractInteriorBuilder {
         applyWarmth(level, origin, profile.warmthStage());
     }
 
+    public static void buildSnapshot(
+            ServerLevel level,
+            BlockPos origin,
+            int stage,
+            int warmth,
+            boolean clearFirst
+    ) {
+        int safeStage = Math.max(1, Math.min(stage, ContractInteriorProfile.MAX_SPACE_STAGE));
+        int safeWarmth = Math.max(1, Math.min(warmth, ContractInteriorProfile.MAX_WARMTH_STAGE));
+
+        if (clearFirst) {
+            clearSnapshotArea(level, origin);
+        }
+
+        for (int current = 1; current <= safeStage; current++) {
+            buildStage(level, origin, current);
+        }
+        applyWarmth(level, origin, safeWarmth);
+    }
+
+    public static void clearSnapshotArea(ServerLevel level, BlockPos origin) {
+        int radius = 58;
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -4; y <= 12; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    BlockPos pos = origin.offset(x, y, z);
+                    if (!level.isEmptyBlock(pos)) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                    }
+                }
+            }
+        }
+    }
+
     private static void buildStage(ServerLevel level, BlockPos o, int stage) {
         switch (stage) {
             case 1 -> buildCore(level, o);
