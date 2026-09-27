@@ -37,6 +37,26 @@ for path in JAVA.rglob("*.java"):
         if prefix in source:
             raise SystemExit(f"third-party API leaked outside compat layer: {rel}: {prefix}")
 
+# Contract tooltip key state and presentation are client-only.
+item_source = read(JAVA / "com/maidweapon/forge/item/MaidWeaponItem.java")
+if "Screen.hasShiftDown()" in item_source or "flag.isAdvanced()" in item_source:
+    raise SystemExit("MaidWeaponItem regained client key-state or F3+H tooltip logic")
+
+legacy_tooltip_handler = JAVA / "com/maidweapon/forge/event/MaidInfusionEventHandler.java"
+if legacy_tooltip_handler.exists():
+    raise SystemExit("legacy generic contract tooltip handler was restored")
+
+tooltip_handler = read(
+    JAVA / "com/maidweapon/forge/client/tooltip/ContractTooltipHandler.java"
+)
+tooltip_composer = read(
+    JAVA / "com/maidweapon/forge/client/tooltip/ContractTooltipComposer.java"
+)
+if "value = Dist.CLIENT" not in tooltip_handler:
+    raise SystemExit("contract tooltip handler is no longer client-only")
+if "Screen.hasShiftDown()" not in tooltip_composer:
+    raise SystemExit("contract tooltip composer lost real Shift expansion")
+
 # The bootstrap must not own gameplay interaction logic.
 bootstrap = read(JAVA / "com/maidweapon/forge/MaidWeaponMod.java")
 if "InteractMaidEvent" in bootstrap or "addListenerMethod" in bootstrap:
