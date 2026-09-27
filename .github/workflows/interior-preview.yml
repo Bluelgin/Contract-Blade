@@ -110,13 +110,13 @@ jobs:
             --password contract-blade-preview \
             "maidweapon interior gallery generate 4"
 
-          sleep 20
+          sleep 2
 
           python tools/rcon_command.py \
             --password contract-blade-preview \
             "save-all flush"
 
-          sleep 8
+          sleep 2
 
           python tools/rcon_command.py \
             --password contract-blade-preview \
@@ -156,6 +156,16 @@ jobs:
               --mode top \
               --format png \
               --output "interior-preview/stage_${stage}_top.png"
+          done
+
+          for rotation in 90 180 270; do
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage 5 \
+              --mode iso \
+              --rotation "$rotation" \
+              --format png \
+              --output "interior-preview/stage_5_iso_r${rotation}.png"
           done
 
           sha256sum interior-preview/*.png
