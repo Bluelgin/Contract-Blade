@@ -212,5 +212,6 @@
   "maid_weapon.message.interior.gallery_entered": "§bEntered the Contract Interior design gallery. All five stages share one dimension for direct comparison and editing.",
   "maid_weapon.message.interior.gallery_stage": "§bMoved to Contract Interior Stage %s",
   "maid_weapon.message.interior.gallery_rebuilt": "§eDesign gallery rebuilt at warmth stage %s. Manual edits in the gallery were reset.",
-  "maid_weapon.message.interior.gallery_left": "§7Left the Contract Interior design gallery"
+  "maid_weapon.message.interior.gallery_left": "§7Left the Contract Interior design gallery",
+  "maid_weapon.message.interior.gallery_busy": "§eLeave the active real contract interior before entering the design gallery."
 }
