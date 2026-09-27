@@ -76,6 +76,27 @@ For easiest handoff, zip the whole world save. If only the custom dimension is
 needed, include the world's `dimensions/maid_weapon/contract_interior` data
 plus the level metadata so the region files can be interpreted correctly.
 
+## Offline render from the real save
+
+After the gallery has been generated at least once, the repository can render
+the actual Anvil region data without launching Minecraft:
+
+```bash
+python tools/render_contract_interior_world.py /path/to/world --stage 5
+python tools/render_contract_interior_world.py /path/to/world --stage 5 --mode top
+```
+
+The renderer reads
+`dimensions/maid_weapon/contract_interior/region/*.mca` directly, decodes the
+1.20.x section palettes/block-state long arrays, and writes an SVG. It therefore
+shows the blocks that are actually saved in the world rather than a conceptual
+mockup of the Java builder.
+
+The SVG renderer intentionally uses simplified block colors instead of Minecraft
+textures. Geometry and occupied block positions come from the save; material
+appearance is an approximation. For texture-accurate full-world rendering, a
+tool such as BlueMap can be pointed at the same world save.
+
 ## Visual review
 
 The current layout was checked with an offline plan/isometric approximation
