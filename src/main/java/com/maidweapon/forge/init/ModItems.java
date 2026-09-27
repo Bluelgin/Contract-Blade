@@ -2,6 +2,7 @@ package com.maidweapon.forge.init;
 
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
+import com.maidweapon.forge.item.ContractInteriorKeyItem;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.item.PetWeaponItem;
@@ -41,6 +42,10 @@ public final class ModItems {
             "dog_blade", () -> new PetWeaponItem(PetWeaponItem.Kind.DOG));
     public static final RegistryObject<Item> CAT_BLADE = ITEMS.register(
             "cat_blade", () -> new PetWeaponItem(PetWeaponItem.Kind.CAT));
+
+    public static final RegistryObject<Item> CONTRACT_INTERIOR_KEY = ITEMS.register(
+            "contract_interior_key", () -> new ContractInteriorKeyItem(
+                    new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
 
     public static final RegistryObject<Item> SPIRIT_CRYSTAL = ITEMS.register(
             "spirit_crystal", () -> new Item(new Item.Properties().stacksTo(16)) {

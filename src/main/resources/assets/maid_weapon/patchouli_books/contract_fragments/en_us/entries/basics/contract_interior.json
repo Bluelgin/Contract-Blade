@@ -1,0 +1,33 @@
+{
+  "sortnum": 4,
+  "name": "patchouli.maid_weapon.entry.contract_interior.name",
+  "icon": "maid_weapon:contract_interior_key",
+  "category": "maid_weapon:basics",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.contract_interior.page.0"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "maid_weapon:contract_interior_key",
+      "title": "patchouli.maid_weapon.entry.contract_interior.page.1.title",
+      "text": "patchouli.maid_weapon.entry.contract_interior.page.1"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.contract_interior.page.2.title",
+      "text": "patchouli.maid_weapon.entry.contract_interior.page.2"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.contract_interior.page.3.title",
+      "text": "patchouli.maid_weapon.entry.contract_interior.page.3"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.contract_interior.page.4.title",
+      "text": "patchouli.maid_weapon.entry.contract_interior.page.4"
+    }
+  ]
+}

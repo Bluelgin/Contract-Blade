@@ -12,6 +12,7 @@ import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractRecoveryService;
 import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
 import com.maidweapon.forge.system.deployment.ContractMaidRuntimeService;
+import com.maidweapon.forge.system.interior.ContractInteriorService;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -74,6 +75,15 @@ public final class InfusedMaidDeploymentSystem {
 
         Player player = event.player;
         UUID playerId = player.getUUID();
+
+        // A contract interior owns its manifested maid lifecycle explicitly.
+        // Hotbar deployment must never adopt or recall that maid.
+        if (player.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) {
+            clearTransitions(player);
+            ACTIVE_WEAPONS.remove(playerId);
+            ACTIVE_CARRIERS.remove(playerId);
+            return;
+        }
         boolean maintenanceTick = player.tickCount % 5 == 0;
         if (maintenanceTick) {
             ContractMaidRuntimeService.purgeLeakedProjections(player);
@@ -258,9 +268,12 @@ public final class InfusedMaidDeploymentSystem {
             ACTIVE_WEAPONS.remove(player.getUUID());
             ACTIVE_CARRIERS.remove(player.getUUID());
         } else {
-            // Forge returns a cancelled toss to the player inventory. Keeping the
-            // contract is safer than allowing its active entity anchor to disappear.
+            // ItemTossEvent removes the stack before firing. Cancellation prevents
+            // the entity from spawning, so the protected contract must be restored
+            // explicitly or it would disappear from the system.
+            ItemStack protectedStack = event.getEntity().getItem().copy();
             event.setCanceled(true);
+            player.getInventory().placeItemBackInInventory(protectedStack);
             player.displayClientMessage(Component.translatable(
                     "maid_weapon.message.deployed_contract_transfer_blocked"), true);
         }

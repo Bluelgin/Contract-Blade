@@ -19,6 +19,11 @@ checks = {
         "MaidWeaponItem.isOwner",
         1,
     ),
+    "contract interior owner gate": (
+        "src/main/java/com/maidweapon/forge/system/interior/ContractInteriorService.java",
+        "MaidWeaponItem.isOwner",
+        1,
+    ),
     "deployment owner gates": (
         "src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java",
         "MaidWeaponItem.isOwner",

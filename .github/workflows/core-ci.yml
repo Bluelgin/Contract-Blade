@@ -56,6 +56,7 @@ jobs:
           python tools/validate_contract_resonance.py
           python tools/validate_emergency_film_recovery.py
           python tools/validate_patchouli.py
+          python tools/validate_contract_interiors.py
 
       - name: Build
         run: gradle --no-daemon clean build -Pci=true
