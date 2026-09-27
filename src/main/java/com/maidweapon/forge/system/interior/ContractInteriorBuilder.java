@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.StairBlock;
 
 /**
  * Built-in fallback home for contract interiors.
@@ -252,7 +253,12 @@ public final class ContractInteriorBuilder {
             int maxX,
             int maxZ
     ) {
-        fill(level, o.offset(minX, 0, minZ), o.offset(maxX, 0, maxZ), Blocks.SPRUCE_PLANKS);
+        // Stone sill keeps the timber frame visually separate from the grass.
+        fill(level, o.offset(minX, -1, minZ),
+                o.offset(maxX, -1, maxZ), Blocks.POLISHED_ANDESITE);
+        fill(level, o.offset(minX, 0, minZ),
+                o.offset(maxX, 0, maxZ), Blocks.SPRUCE_PLANKS);
+        buildTatamiFloor(level, o, minX + 1, minZ + 1, maxX - 1, maxZ - 1);
 
         for (int x = minX; x <= maxX; x++) {
             for (int z : new int[]{minZ, maxZ}) {
@@ -265,15 +271,138 @@ public final class ContractInteriorBuilder {
             }
         }
 
-        // Dark overhanging roof + a raised ridge.
-        fill(level, o.offset(minX - 1, 6, minZ - 1),
-                o.offset(maxX + 1, 6, maxZ + 1), Blocks.DEEPSLATE_TILE_SLAB);
-        if ((maxX - minX) >= (maxZ - minZ)) {
-            fill(level, o.offset(minX, 7, (minZ + maxZ) / 2),
-                    o.offset(maxX, 7, (minZ + maxZ) / 2), Blocks.DEEPSLATE_TILES);
+        buildGabledRoof(level, o, minX, minZ, maxX, maxZ);
+    }
+
+    private static void buildTatamiFloor(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ
+    ) {
+        if (minX > maxX || minZ > maxZ) return;
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                boolean seamX = Math.floorMod(x - minX, 4) == 3;
+                boolean seamZ = Math.floorMod(z - minZ, 3) == 2;
+                Block block = (seamX || seamZ)
+                        ? Blocks.SPRUCE_PLANKS
+                        : Blocks.BAMBOO_MOSAIC;
+                level.setBlock(
+                        o.offset(x, 0, z),
+                        block.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+        }
+    }
+
+    private static void buildGabledRoof(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ
+    ) {
+        int width = maxX - minX;
+        int depth = maxZ - minZ;
+
+        if (width >= depth) {
+            int north = minZ - 2;
+            int south = maxZ + 2;
+            int step = 0;
+            while (north + step < south - step) {
+                int y = 6 + step;
+                int northZ = north + step;
+                int southZ = south - step;
+                placeRoofRowZ(level, o, minX - 2, maxX + 2, y, northZ, Direction.NORTH);
+                placeRoofRowZ(level, o, minX - 2, maxX + 2, y, southZ, Direction.SOUTH);
+                step++;
+            }
+
+            int ridgeY = 6 + step;
+            int ridgeZ = (north + south) / 2;
+            fill(level,
+                    o.offset(minX - 1, ridgeY, ridgeZ),
+                    o.offset(maxX + 1, ridgeY, ridgeZ),
+                    Blocks.DEEPSLATE_TILES);
+            fill(level,
+                    o.offset(minX - 2, 5, minZ - 2),
+                    o.offset(maxX + 2, 5, minZ - 2),
+                    Blocks.DEEPSLATE_TILE_SLAB);
+            fill(level,
+                    o.offset(minX - 2, 5, maxZ + 2),
+                    o.offset(maxX + 2, 5, maxZ + 2),
+                    Blocks.DEEPSLATE_TILE_SLAB);
         } else {
-            fill(level, o.offset((minX + maxX) / 2, 7, minZ),
-                    o.offset((minX + maxX) / 2, 7, maxZ), Blocks.DEEPSLATE_TILES);
+            int west = minX - 2;
+            int east = maxX + 2;
+            int step = 0;
+            while (west + step < east - step) {
+                int y = 6 + step;
+                int westX = west + step;
+                int eastX = east - step;
+                placeRoofRowX(level, o, minZ - 2, maxZ + 2, y, westX, Direction.WEST);
+                placeRoofRowX(level, o, minZ - 2, maxZ + 2, y, eastX, Direction.EAST);
+                step++;
+            }
+
+            int ridgeY = 6 + step;
+            int ridgeX = (west + east) / 2;
+            fill(level,
+                    o.offset(ridgeX, ridgeY, minZ - 1),
+                    o.offset(ridgeX, ridgeY, maxZ + 1),
+                    Blocks.DEEPSLATE_TILES);
+            fill(level,
+                    o.offset(minX - 2, 5, minZ - 2),
+                    o.offset(minX - 2, 5, maxZ + 2),
+                    Blocks.DEEPSLATE_TILE_SLAB);
+            fill(level,
+                    o.offset(maxX + 2, 5, minZ - 2),
+                    o.offset(maxX + 2, 5, maxZ + 2),
+                    Blocks.DEEPSLATE_TILE_SLAB);
+        }
+    }
+
+    private static void placeRoofRowZ(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int maxX,
+            int y,
+            int z,
+            Direction facing
+    ) {
+        for (int x = minX; x <= maxX; x++) {
+            level.setBlock(
+                    o.offset(x, y, z),
+                    Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState()
+                            .setValue(StairBlock.FACING, facing),
+                    Block.UPDATE_CLIENTS
+            );
+        }
+    }
+
+    private static void placeRoofRowX(
+            ServerLevel level,
+            BlockPos o,
+            int minZ,
+            int maxZ,
+            int y,
+            int x,
+            Direction facing
+    ) {
+        for (int z = minZ; z <= maxZ; z++) {
+            level.setBlock(
+                    o.offset(x, y, z),
+                    Blocks.DEEPSLATE_TILE_STAIRS.defaultBlockState()
+                            .setValue(StairBlock.FACING, facing),
+                    Block.UPDATE_CLIENTS
+            );
         }
     }
 
@@ -297,11 +426,31 @@ public final class ContractInteriorBuilder {
             return;
         }
 
-        level.setBlock(o.offset(x, 1, z), Blocks.WHITE_TERRACOTTA.defaultBlockState(), Block.UPDATE_CLIENTS);
-        level.setBlock(o.offset(x, 2, z), Blocks.WHITE_STAINED_GLASS.defaultBlockState(), Block.UPDATE_CLIENTS);
-        level.setBlock(o.offset(x, 3, z), Blocks.WHITE_STAINED_GLASS.defaultBlockState(), Block.UPDATE_CLIENTS);
-        level.setBlock(o.offset(x, 4, z), Blocks.WHITE_TERRACOTTA.defaultBlockState(), Block.UPDATE_CLIENTS);
-        level.setBlock(o.offset(x, 5, z), Blocks.STRIPPED_DARK_OAK_LOG.defaultBlockState(), Block.UPDATE_CLIENTS);
+        level.setBlock(
+                o.offset(x, 1, z),
+                Blocks.WHITE_TERRACOTTA.defaultBlockState(),
+                Block.UPDATE_CLIENTS
+        );
+        level.setBlock(
+                o.offset(x, 2, z),
+                Blocks.WHITE_STAINED_GLASS.defaultBlockState(),
+                Block.UPDATE_CLIENTS
+        );
+        level.setBlock(
+                o.offset(x, 3, z),
+                Blocks.WHITE_STAINED_GLASS.defaultBlockState(),
+                Block.UPDATE_CLIENTS
+        );
+        level.setBlock(
+                o.offset(x, 4, z),
+                Blocks.WHITE_TERRACOTTA.defaultBlockState(),
+                Block.UPDATE_CLIENTS
+        );
+        level.setBlock(
+                o.offset(x, 5, z),
+                Blocks.STRIPPED_DARK_OAK_LOG.defaultBlockState(),
+                Block.UPDATE_CLIENTS
+        );
     }
 
     private static void carveDoor(
@@ -372,14 +521,16 @@ public final class ContractInteriorBuilder {
         int z = z1;
 
         while (x != x2) {
-            placePathTile(level, o, x, z, block);
+            placePathTile(level, o, x, z, block, Direction.Axis.X);
             x += Integer.compare(x2, x);
         }
         while (z != z2) {
-            placePathTile(level, o, x, z, block);
+            placePathTile(level, o, x, z, block, Direction.Axis.Z);
             z += Integer.compare(z2, z);
         }
-        placePathTile(level, o, x2, z2, block);
+
+        Direction.Axis finalAxis = x1 != x2 ? Direction.Axis.X : Direction.Axis.Z;
+        placePathTile(level, o, x2, z2, block, finalAxis);
     }
 
     private static void placePathTile(
@@ -387,10 +538,13 @@ public final class ContractInteriorBuilder {
             BlockPos o,
             int x,
             int z,
-            Block block
+            Block block,
+            Direction.Axis travelAxis
     ) {
         for (int width = -1; width <= 1; width++) {
-            BlockPos pos = o.offset(x + width, -1, z);
+            BlockPos pos = travelAxis == Direction.Axis.X
+                    ? o.offset(x, -1, z + width)
+                    : o.offset(x + width, -1, z);
             level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_CLIENTS);
         }
     }
