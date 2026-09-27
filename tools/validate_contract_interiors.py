@@ -185,6 +185,9 @@ for needle in [
     "class Raster",
     "GALLERY_STAGE_RADII",
     "default is stage radius + 2 blocks",
+    "name == \"minecraft:bamboo\"",
+    "name.endswith(\"_slab\")",
+    "def block_visual_shape",
 ]:
     if needle not in renderer:
         raise SystemExit(f"offline contract interior renderer is incomplete: {needle}")
