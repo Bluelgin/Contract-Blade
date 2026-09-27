@@ -31,6 +31,7 @@ saved = read("src/main/java/com/maidweapon/forge/system/interior/ContractInterio
 builder = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorBuilder.java")
 service = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorService.java")
 events = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorEvents.java")
+deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
 key_item = read("src/main/java/com/maidweapon/forge/item/ContractInteriorKeyItem.java")
 mod_items = read("src/main/java/com/maidweapon/forge/init/ModItems.java")
 creative = read("src/main/java/com/maidweapon/forge/init/ModCreativeTab.java")
@@ -76,6 +77,9 @@ for needle in [
 
 if "InfusedMaidDeploymentSystem" in service + events + builder + saved + profile:
     raise SystemExit("contract interior depends on the hotbar deployment state machine")
+
+if "ContractInteriorService.INTERIOR_LEVEL" not in deployment:
+    raise SystemExit("hotbar deployment can adopt/recall the maid while inside a contract interior")
 
 third_party_prefixes = (
     "import com.tacz.",
