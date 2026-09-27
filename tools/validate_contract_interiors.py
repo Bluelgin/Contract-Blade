@@ -66,9 +66,17 @@ for needle in [
     "buildGround(level, o, 12, 20)",
     "previousRadius",
     "buildBoundary",
+    "buildGabledRoof",
+    "Blocks.DEEPSLATE_TILE_STAIRS",
+    "Blocks.BAMBOO_MOSAIC",
+    "fillGableEndsZ",
+    "fillGableEndsX",
+    "for (int y = -4; y <= 20; y++)",
 ]:
     if needle not in builder:
         raise SystemExit(f"interior builder lost staged/non-destructive behavior: {needle}")
+if "DEPSLATE_" in builder:
+    raise SystemExit("interior builder contains misspelled deepslate block constants")
 
 for needle in [
     "MaidWeaponItem.ensureBindingId(contract)",
