@@ -207,6 +207,15 @@ public final class ContractInteriorBuilder {
         }
         buildShrub(level, o.offset(-27, 0, -32));
         buildShrub(level, o.offset(-16, 0, -32));
+
+        // The Stage 4 wing should feel like a real courtyard destination rather
+        // than a detached building at the end of a debug path.
+        paintOuterRingPatch(level, o, 30, 40, 0, -34, 12, 5, 17);
+        buildLanternPost(level, o.offset(-5, 0, -31));
+        buildLanternPost(level, o.offset(5, 0, -31));
+        buildShrub(level, o.offset(-11, 0, -32));
+        buildShrub(level, o.offset(10, 0, -32));
+        scatterOuterRingGroundCover(level, o, 30, 40, 4);
     }
 
     private static void buildEstate(ServerLevel level, BlockPos o) {
