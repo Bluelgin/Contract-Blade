@@ -98,6 +98,28 @@ models such as stairs, slabs, panes and fences are currently simplified for the
 preview. For texture/model-accurate full-world rendering, a tool such as BlueMap
 can be pointed at the same world save.
 
+## Automated real-save preview
+
+The `Contract Interior Preview` GitHub Actions workflow can generate a fresh
+headless Forge world without opening the Minecraft client. Preview mode only
+relaxes the TLM metadata dependency for that CI server; normal builds still
+require Touhou Little Maid.
+
+The workflow:
+
+1. starts a headless Forge server;
+2. runs `maidweapon interior gallery generate 4` through RCON;
+3. flushes and stops the server cleanly;
+4. reads the resulting `.mca` files with
+   `tools/render_contract_interior_world.py`;
+5. produces top-down and isometric PNGs for all five stages;
+6. uploads them as the `contract-interior-preview` Actions artifact.
+
+This gives a repeatable review image derived from the real saved world after
+every structural change. It is still a simplified renderer: block placement is
+authoritative, while Minecraft model/texture/lighting fidelity remains outside
+the lightweight CI renderer.
+
 ## Visual review
 
 The current layout was checked with an offline plan/isometric approximation
