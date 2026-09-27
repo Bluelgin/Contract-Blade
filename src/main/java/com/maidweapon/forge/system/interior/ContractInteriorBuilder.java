@@ -40,8 +40,15 @@ public final class ContractInteriorBuilder {
             case 4 -> buildStudy(level, o);
             case 5 -> buildEstate(level, o);
             default -> {
+                return;
             }
         }
+
+        int previousRadius = stage <= 1 ? 0 : radiusForStage(stage - 1);
+        if (previousRadius > 0) {
+            clearBoundary(level, o, previousRadius);
+        }
+        buildBoundary(level, o, radiusForStage(stage));
     }
 
     private static void buildCore(ServerLevel level, BlockPos o) {
@@ -101,6 +108,47 @@ public final class ContractInteriorBuilder {
         pillar(level, o.offset(24, 1, -20), 5, Blocks.DARK_OAK_LOG);
         pillar(level, o.offset(32, 1, -20), 5, Blocks.DARK_OAK_LOG);
         fill(level, o.offset(23, 6, -29), o.offset(33, 6, -19), Blocks.DARK_OAK_SLAB);
+    }
+
+    private static int radiusForStage(int stage) {
+        return switch (stage) {
+            case 1 -> 12;
+            case 2 -> 20;
+            case 3 -> 30;
+            case 4 -> 40;
+            default -> 52;
+        };
+    }
+
+    private static void buildBoundary(ServerLevel level, BlockPos o, int radius) {
+        int y = o.getY();
+        for (int offset = -radius; offset <= radius; offset++) {
+            placeFenceIfOpen(level, o.offset(offset, 0, -radius));
+            placeFenceIfOpen(level, o.offset(offset, 0, radius));
+            placeFenceIfOpen(level, o.offset(-radius, 0, offset));
+            placeFenceIfOpen(level, o.offset(radius, 0, offset));
+        }
+    }
+
+    private static void clearBoundary(ServerLevel level, BlockPos o, int radius) {
+        for (int offset = -radius; offset <= radius; offset++) {
+            clearGeneratedFence(level, o.offset(offset, 0, -radius));
+            clearGeneratedFence(level, o.offset(offset, 0, radius));
+            clearGeneratedFence(level, o.offset(-radius, 0, offset));
+            clearGeneratedFence(level, o.offset(radius, 0, offset));
+        }
+    }
+
+    private static void placeFenceIfOpen(ServerLevel level, BlockPos pos) {
+        if (level.isEmptyBlock(pos)) {
+            level.setBlockAndUpdate(pos, Blocks.DARK_OAK_FENCE.defaultBlockState());
+        }
+    }
+
+    private static void clearGeneratedFence(ServerLevel level, BlockPos pos) {
+        if (level.getBlockState(pos).is(Blocks.DARK_OAK_FENCE)) {
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+        }
     }
 
     private static void applyWarmth(ServerLevel level, BlockPos o, int warmth) {
