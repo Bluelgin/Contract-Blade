@@ -93,9 +93,10 @@ shows the blocks that are actually saved in the world rather than a conceptual
 mockup of the Java builder.
 
 The SVG renderer intentionally uses simplified block colors instead of Minecraft
-textures. Geometry and occupied block positions come from the save; material
-appearance is an approximation. For texture-accurate full-world rendering, a
-tool such as BlueMap can be pointed at the same world save.
+textures. Block occupancy/coordinates come from the save, while complex block
+models such as stairs, slabs, panes and fences are currently simplified for the
+preview. For texture/model-accurate full-world rendering, a tool such as BlueMap
+can be pointed at the same world save.
 
 ## Visual review
 
