@@ -1209,10 +1209,18 @@ public final class ContractInteriorBuilder {
     private static boolean insideIsland(int x, int z, int radius) {
         if (Math.abs(x) > radius || Math.abs(z) > radius) return false;
 
-        // Softly chamfer the four corners while retaining generous buildable
-        // space along each cardinal edge.
-        int diagonalLimit = (radius * 185) / 100;
-        return Math.abs(x) + Math.abs(z) <= diagonalLimit;
+        // A high-order superellipse keeps useful cardinal-edge building space
+        // while removing the obvious "square platform with clipped corners"
+        // silhouette. Small deterministic edge noise prevents a perfect CAD curve.
+        double nx = Math.abs(x) / (double) radius;
+        double nz = Math.abs(z) / (double) radius;
+        double shape = Math.pow(nx, 7.0D) + Math.pow(nz, 7.0D);
+        int edgeNoise = Math.floorMod(
+                x * 37 + z * 19 + radius * 11,
+                9
+        ) - 4;
+        double threshold = 1.0D + edgeNoise * 0.004D;
+        return shape <= threshold;
     }
 
     private static void buildOpenRoom(ServerLevel level, BlockPos from, BlockPos to) {
