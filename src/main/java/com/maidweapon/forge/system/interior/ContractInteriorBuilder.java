@@ -248,15 +248,15 @@ public final class ContractInteriorBuilder {
         buildPath(level, o, 25, -39, 35, -39, Blocks.MOSSY_STONE_BRICKS);
 
         buildPath(level, o, -10, -33, -40, -33, Blocks.COARSE_DIRT);
-        buildPath(level, o, -40, -33, -40, -46, Blocks.COARSE_DIRT);
+        buildPath(level, o, -40, -33, -46, -26, Blocks.COARSE_DIRT);
 
-        // Quiet lookout at the far north-west edge.
-        fill(level, o.offset(-51, 0, -51), o.offset(-43, 0, -43), Blocks.POLISHED_ANDESITE);
-        pillar(level, o.offset(-50, 1, -50), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-44, 1, -50), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-50, 1, -44), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-44, 1, -44), 5, Blocks.DARK_OAK_LOG);
-        fill(level, o.offset(-51, 6, -51), o.offset(-43, 6, -43), Blocks.DEEPSLATE_TILE_SLAB);
+        // Quiet lookout on the far western rim, away from the clipped island corner.
+        fill(level, o.offset(-51, 0, -30), o.offset(-43, 0, -22), Blocks.POLISHED_ANDESITE);
+        pillar(level, o.offset(-50, 1, -29), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-44, 1, -29), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-50, 1, -23), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-44, 1, -23), 5, Blocks.DARK_OAK_LOG);
+        fill(level, o.offset(-51, 6, -30), o.offset(-43, 6, -22), Blocks.DEEPSLATE_TILE_SLAB);
     }
 
     private static void buildJapaneseRoom(
@@ -654,20 +654,35 @@ public final class ContractInteriorBuilder {
     }
 
     private static void buildBoundary(ServerLevel level, BlockPos o, int radius) {
-        for (int offset = -radius; offset <= radius; offset++) {
-            placeBoundaryIfOpen(level, o.offset(offset, 0, -radius));
-            placeBoundaryIfOpen(level, o.offset(offset, 0, radius));
-            placeBoundaryIfOpen(level, o.offset(-radius, 0, offset));
-            placeBoundaryIfOpen(level, o.offset(radius, 0, offset));
-        }
+        forEachIslandBoundaryOutside(radius, (x, z) ->
+                placeBoundaryIfOpen(level, o.offset(x, 0, z)));
     }
 
     private static void clearBoundary(ServerLevel level, BlockPos o, int radius) {
-        for (int offset = -radius; offset <= radius; offset++) {
-            clearGeneratedBoundary(level, o.offset(offset, 0, -radius));
-            clearGeneratedBoundary(level, o.offset(offset, 0, radius));
-            clearGeneratedBoundary(level, o.offset(-radius, 0, offset));
-            clearGeneratedBoundary(level, o.offset(radius, 0, offset));
+        forEachIslandBoundaryOutside(radius, (x, z) ->
+                clearGeneratedBoundary(level, o.offset(x, 0, z)));
+    }
+
+    private static void forEachIslandBoundaryOutside(
+            int radius,
+            java.util.function.BiConsumer<Integer, Integer> consumer
+    ) {
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                if (!insideIsland(x, z, radius)) continue;
+
+                int[][] neighbors = {
+                        {x + 1, z},
+                        {x - 1, z},
+                        {x, z + 1},
+                        {x, z - 1}
+                };
+                for (int[] neighbor : neighbors) {
+                    if (!insideIsland(neighbor[0], neighbor[1], radius)) {
+                        consumer.accept(neighbor[0], neighbor[1]);
+                    }
+                }
+            }
         }
     }
 
@@ -724,11 +739,11 @@ public final class ContractInteriorBuilder {
     ) {
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
-                if (previousRadius > 0
-                        && Math.abs(x) <= previousRadius
-                        && Math.abs(z) <= previousRadius) {
+                if (!insideIsland(x, z, radius)) continue;
+                if (previousRadius > 0 && insideIsland(x, z, previousRadius)) {
                     continue;
                 }
+
                 level.setBlock(
                         o.offset(x, -3, z),
                         Blocks.DIRT.defaultBlockState(),
@@ -746,6 +761,15 @@ public final class ContractInteriorBuilder {
                 );
             }
         }
+    }
+
+    private static boolean insideIsland(int x, int z, int radius) {
+        if (Math.abs(x) > radius || Math.abs(z) > radius) return false;
+
+        // Softly chamfer the four corners while retaining generous buildable
+        // space along each cardinal edge.
+        int diagonalLimit = (radius * 185) / 100;
+        return Math.abs(x) + Math.abs(z) <= diagonalLimit;
     }
 
     private static void buildOpenRoom(ServerLevel level, BlockPos from, BlockPos to) {
