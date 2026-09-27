@@ -31,6 +31,8 @@ saved = read("src/main/java/com/maidweapon/forge/system/interior/ContractInterio
 builder = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorBuilder.java")
 service = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorService.java")
 events = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorEvents.java")
+gallery = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorGallery.java")
+commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
 deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
 key_item = read("src/main/java/com/maidweapon/forge/item/ContractInteriorKeyItem.java")
 mod_items = read("src/main/java/com/maidweapon/forge/init/ModItems.java")
@@ -85,6 +87,34 @@ if "InfusedMaidDeploymentSystem" in service + events + builder + saved + profile
 
 if "ContractInteriorService.INTERIOR_LEVEL" not in deployment:
     raise SystemExit("hotbar deployment can adopt/recall the maid while inside a contract interior")
+
+
+for needle in [
+    "BASE_X = -8192",
+    "BASE_Z = -4096",
+    "STAGE_SPACING = 144",
+    "ContractInteriorBuilder.buildSnapshot",
+    "if (isStageBuilt(level, origin)) continue;",
+    "public static boolean rebuild",
+]:
+    if needle not in gallery:
+        raise SystemExit(f"contract interior gallery invariant is missing: {needle}")
+
+if "clearFirst) {" not in builder or "clearSnapshotArea(level, origin)" not in builder:
+    raise SystemExit("explicit gallery rebuild cannot reset a stage snapshot")
+if "ContractInteriorGallery.open" not in commands:
+    raise SystemExit("contract interior gallery command is missing")
+if "ContractInteriorGallery.visitStage" not in commands:
+    raise SystemExit("contract interior stage jump command is missing")
+if "ContractInteriorGallery.rebuild" not in commands:
+    raise SystemExit("contract interior rebuild command is missing")
+if "ContractInteriorService.isGallerySession" not in commands:
+    raise SystemExit("contract interior gallery leave command is missing")
+if 'TAG_GALLERY = "Gallery"' not in service:
+    raise SystemExit("gallery sessions are not isolated from real contract sessions")
+if "ContractInteriorGallery.overviewSpawn()" not in service:
+    raise SystemExit("gallery void recovery does not return to the gallery overview")
+
 
 if "placeItemBackInInventory(protectedStack)" not in events:
     raise SystemExit("cancelled interior contract toss can delete the contract stack")
