@@ -42,6 +42,17 @@ Input handlers only decide which gesture owns an action. Permission and
 capture/recall behavior go through `ContractInteractionService`. The Forge
 bootstrap must never subscribe a second reflected TLM interaction path.
 
+## Client presentation
+
+Contract tooltip presentation is client-only under
+`com.maidweapon.forge.client.tooltip`. Bound contract weapons of every supported
+type use the same `ItemTooltipEvent` entry point and `MaidInfusion` access
+facade. `MaidWeaponItem` only owns the unbound hint.
+
+Modifier-key state such as Shift must be read only from this client package.
+Common item code must not depend on `Screen` or reinterpret
+`TooltipFlag.isAdvanced()` (F3+H advanced tooltips) as a modifier key.
+
 ## Deployment
 
 `InfusedMaidDeploymentSystem` remains the orchestration state machine. Focused

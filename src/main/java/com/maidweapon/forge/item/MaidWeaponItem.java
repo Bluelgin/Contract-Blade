@@ -4,9 +4,6 @@ import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.data.MaidWeaponDataSerializer;
 import com.maidweapon.common.sin.SinSlotManager;
-import com.maidweapon.common.system.LoyaltySystem;
-import com.maidweapon.common.legacy.LegacySinArchive;
-import com.maidweapon.common.system.MonsterTierRegistry;
 import com.maidweapon.forge.system.contract.ContractInteractionService;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import net.minecraft.nbt.CompoundTag;
@@ -237,104 +234,20 @@ public class MaidWeaponItem extends SwordItem {
 
     // ==================== Tooltip 显示 ====================
 
+    /**
+     * Bound contract presentation is composed by the client-only contract tooltip layer.
+     * The item itself only owns the unbound hint so common item code never depends on
+     * client key-state classes.
+     */
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level,
                                  List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, level, tooltip, flag);
+        if (hasMaidData(stack)) return;
 
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
-
-        if (hasMaidData(stack)) {
-            MaidWeaponData data = getMaidData(stack);
-            boolean hasEntity = hasMaidEntityData(stack);
-            if (isContractSuperseded(stack)) {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.superseded_contract"));
-            }
-
-            // 女仆名称 + 状态标记
-            String statusColor = hasEntity ? "§a" : "§7";
-            String statusSuffix = hasEntity ? "" : " §7(已释放)";
-            tooltip.add(Component.translatable("maid_weapon.tooltip.maid_name",
-                    statusColor + data.getMaidName() + statusSuffix));
-
-            // 等级
-            tooltip.add(Component.translatable("maid_weapon.tooltip.level", data.getLevel()));
-
-            // 下一级升级条件（已释放时隐藏升级提示）
-            if (hasEntity) {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.next_upgrade", data.getNextUpgradeHint()));
-            }
-
-            // 好感度
-            tooltip.add(Component.translatable("maid_weapon.tooltip.favorability",
-                    data.getFavorability(), LoyaltySystem.getFavorabilityTitle(data.getFavorability())));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.favorability_bonus",
-                    String.format("%.1f", (data.getFavorabilityDamageMultiplier() - 1.0f) * 100.0f)));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
-                    data.getResonance(), MaidWeaponData.MAX_RESONANCE));
-
-            // 战斗统计
-            tooltip.add(Component.translatable("maid_weapon.tooltip.kills", data.getTotalKills()));
-
-            // 已解锁最高Tier
-            tooltip.add(Component.translatable("maid_weapon.tooltip.unlocked_tier",
-                    MonsterTierRegistry.getTierName(data.getUnlockedTier())));
-
-            // Boss击杀统计（如果有）
-            if (data.getEnderDragonKills() > 0 || data.getWitherKills() > 0) {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.boss_kills",
-                        data.getEnderDragonKills(), data.getWitherKills()));
-            }
-
-            // Legacy Part data is preserved for old worlds but is no longer active Core gameplay.
-            if (LegacySinArchive.hasData(data)) {
-                tooltip.add(Component.translatable(
-                        "maid_weapon.tooltip.legacy_sin_data",
-                        LegacySinArchive.entryCount(data)));
-            }
-
-            // 主人信息
-            String ownerName = getOwnerName(stack);
-            if (ownerName != null) {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.owner", ownerName));
-            }
-
-            // 释放/捕获提示
-            boolean slashBlade = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
-            if (hasEntity) {
-                tooltip.add(Component.translatable(slashBlade
-                        ? "maid_weapon.tooltip.release_hint_sb"
-                        : "maid_weapon.tooltip.release_hint"));
-            } else {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.recapture_hint"));
-            }
-
-            // 按住 Shift 显示详细信息
-            if (flag.isAdvanced()) {
-                tooltip.add(Component.empty());
-                tooltip.add(Component.literal("§7─── 战斗加成 ───"));
-                tooltip.add(Component.literal(
-                        String.format("§7等级加成: §a+%.1f 攻击力", data.getAttackDamageBonus())
-                ));
-                tooltip.add(Component.literal(
-                        String.format("§7好感伤害奖励: §a+%.1f%%",
-                                (data.getFavorabilityDamageMultiplier() - 1.0f) * 100.0f)
-                ));
-                float totalDmg = (3.0f + data.getAttackDamageBonus()) * data.getFavorabilityDamageMultiplier();
-                tooltip.add(Component.literal(
-                        String.format("§7实际伤害: §f%.1f", totalDmg)
-                ));
-                tooltip.add(Component.empty());
-                tooltip.add(Component.literal("§7─── 成长机制 ───"));
-                tooltip.add(Component.literal("§7使用此武器攻击怪物，"));
-                tooltip.add(Component.literal("§7若在怪物死亡前未死亡，"));
-                tooltip.add(Component.literal("§7即可根据怪物Tier提升等级。"));
-            }
-
-        } else {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.soul_slab_hint"));
-        }
+        tooltip.add(Component.translatable("maid_weapon.tooltip.soul_slab_hint"));
     }
 
     // ==================== 实体交互（右键女仆） ====================
