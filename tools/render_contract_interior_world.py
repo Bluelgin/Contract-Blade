@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 
-AIR = {"minecraft:air", "minecraft:cave_air", "minecraft:void_air"}
+AIR = {"minecraft:air", "minecraft:cave_air", "minecraft:void_air", "minecraft:barrier"}
 
 GALLERY_BASE_X = -8192
 GALLERY_BASE_Z = -4096
