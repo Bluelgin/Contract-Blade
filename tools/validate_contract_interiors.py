@@ -60,6 +60,9 @@ for needle in [
     "for (int stage = built + 1; stage <= profile.spaceStage(); stage++)",
     "applyWarmth(level, origin, profile.warmthStage())",
     "controlledDecoration",
+    "buildGround(level, o, 12, 20)",
+    "previousRadius",
+    "buildBoundary",
 ]:
     if needle not in builder:
         raise SystemExit(f"interior builder lost staged/non-destructive behavior: {needle}")
@@ -71,6 +74,8 @@ for needle in [
     "MaidWeaponItem.isOwner(contract, player)",
     "MaidWeaponItem.isContractSuperseded(contract)",
     "restoreReturn(player)",
+    "resumeInteriorMaid",
+    "existingMaid.level().dimension().equals(INTERIOR_LEVEL)",
 ]:
     if needle not in service:
         raise SystemExit(f"interior lifecycle invariant is missing: {needle}")
@@ -80,6 +85,11 @@ if "InfusedMaidDeploymentSystem" in service + events + builder + saved + profile
 
 if "ContractInteriorService.INTERIOR_LEVEL" not in deployment:
     raise SystemExit("hotbar deployment can adopt/recall the maid while inside a contract interior")
+
+if "placeItemBackInInventory(protectedStack)" not in events:
+    raise SystemExit("cancelled interior contract toss can delete the contract stack")
+if "placeItemBackInInventory(protectedStack)" not in deployment:
+    raise SystemExit("cancelled deployed-contract toss can delete the contract stack")
 
 third_party_prefixes = (
     "import com.tacz.",
