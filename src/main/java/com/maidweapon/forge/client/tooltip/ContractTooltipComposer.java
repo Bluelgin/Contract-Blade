@@ -51,7 +51,7 @@ public final class ContractTooltipComposer {
 
         if (!expanded) return;
 
-        appendContractSection(stack, data, stored, superseded, ownerAccess, tooltip);
+        appendContractSection(stack, data, tooltip);
         appendGrowthSection(data, tooltip);
         appendPowerSection(data, dedicated, ownerAccess, tooltip);
         appendUsageSection(stack, stored, superseded, dedicated, ownerAccess, tooltip);
@@ -60,9 +60,6 @@ public final class ContractTooltipComposer {
     private static void appendContractSection(
             ItemStack stack,
             MaidWeaponData data,
-            boolean stored,
-            boolean superseded,
-            boolean ownerAccess,
             List<Component> tooltip
     ) {
         tooltip.add(Component.empty());
@@ -75,13 +72,6 @@ public final class ContractTooltipComposer {
         tooltip.add(Component.translatable("maid_weapon.tooltip.level", data.getLevel()));
         tooltip.add(Component.translatable("maid_weapon.tooltip.favorability",
                 data.getFavorability(), LoyaltySystem.getFavorabilityTitle(data.getFavorability())));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
-                data.getResonance(), MaidWeaponData.MAX_RESONANCE));
-        tooltip.add(Component.translatable(statusKey(stored, superseded)));
-
-        if (!ownerAccess) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.borrowed_contract_locked"));
-        }
     }
 
     private static void appendGrowthSection(MaidWeaponData data, List<Component> tooltip) {
