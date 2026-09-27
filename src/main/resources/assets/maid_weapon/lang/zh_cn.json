@@ -209,5 +209,6 @@
   "patchouli.maid_weapon.entry.contract_interior.page.3.title": "好感决定生活",
   "patchouli.maid_weapon.entry.contract_interior.page.3": "好感度不负责扩大世界，而是改变这里有多像$(thing)她真正住着的家$()。0—384 点好感被划为六档，逐渐增加地毯、花、书架、灯光、食物等生活痕迹。$(br2)这些动态装饰只使用系统预留位置；如果你已经把某个位置改成别的方块，内景不会强行覆盖你的装修。",
   "patchouli.maid_weapon.entry.contract_interior.page.4.title": "安全与边界",
-  "patchouli.maid_weapon.entry.contract_interior.page.4": "内景位于独立的安静空间，每份契约之间相隔很远。庭院边界会随等级向外移动，避免女仆自行走入虚空。内景中的当前契约武器不能直接丢弃。$(br2)断线、死亡或异常传送时系统会优先保存女仆；若一次保存失败，真实女仆不会被删除，之后仍可用同一契约重新进入并恢复。"
+  "patchouli.maid_weapon.entry.contract_interior.page.4": "内景位于独立的安静空间，每份契约之间相隔很远。庭院边界会随等级向外移动，避免女仆自行走入虚空。内景中的当前契约武器不能直接丢弃。$(br2)断线、死亡或异常传送时系统会优先保存女仆；若一次保存失败，真实女仆不会被删除，之后仍可用同一契约重新进入并恢复。",
+  "maid_weapon.message.manifested_maid_not_found": "§e没有定位到这份契约当前已显现的女仆；请靠近她后重试"
 }
