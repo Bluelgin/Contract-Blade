@@ -149,109 +149,114 @@ public final class ContractInteriorBuilder {
         buildTorii(level, o.offset(0, 0, 26));
 
         // Pond and planted west garden.
-        fill(level, o.offset(-29, -1, -11), o.offset(-18, -1, 9), Blocks.MOSS_BLOCK);
-        fill(level, o.offset(-27, -1, -7), o.offset(-20, -1, 5), Blocks.WATER);
-        placeStoneEdge(level, o, -28, -8, -19, 6);
+        fill(level, o.offset(-30, -1, -12), o.offset(-21, -1, 12), Blocks.MOSS_BLOCK);
+        fill(level, o.offset(-29, -1, -7), o.offset(-23, -1, 5), Blocks.WATER);
+        placeStoneEdge(level, o, -30, -8, -22, 6);
 
-        buildCherryTree(level, o.offset(-23, 0, 12));
-        buildCherryTree(level, o.offset(-16, 0, -13));
-        buildShrub(level, o.offset(-18, 0, 7));
-        buildShrub(level, o.offset(-18, 0, -8));
+        buildCherryTree(level, o.offset(-25, 0, 13));
+        buildCherryTree(level, o.offset(-23, 0, -13));
+        buildShrub(level, o.offset(-22, 0, 8));
+        buildShrub(level, o.offset(-22, 0, -8));
 
-        level.setBlockAndUpdate(o.offset(-24, 0, -1), Blocks.LILY_PAD.defaultBlockState());
-        buildLanternPost(level, o.offset(-17, 0, 14));
+        level.setBlockAndUpdate(o.offset(-26, 0, -1), Blocks.LILY_PAD.defaultBlockState());
+        buildLanternPost(level, o.offset(-22, 0, 14));
     }
 
     private static void buildStudy(ServerLevel level, BlockPos o) {
         buildGround(level, o, 30, 40);
 
         // A quiet north wing: study on the left, tea room on the right.
-        buildJapaneseRoom(level, o, -8, -39, 8, -28);
-        buildJapaneseRoom(level, o, 12, -38, 22, -28);
+        buildJapaneseRoom(level, o, -8, -40, 8, -33);
+        buildJapaneseRoom(level, o, 12, -40, 22, -33);
 
-        // Covered north corridor from the original home.
-        fill(level, o.offset(-2, 0, -27), o.offset(2, 0, -7), Blocks.SPRUCE_PLANKS);
-        for (int z = -27; z <= -7; z += 4) {
+        // Covered north corridor from the original home. This is intentionally
+        // the only Stage 4 feature that crosses older rings.
+        fill(level, o.offset(-2, 0, -32), o.offset(2, 0, -7), Blocks.SPRUCE_PLANKS);
+        for (int z = -31; z <= -7; z += 4) {
             pillar(level, o.offset(-3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
             pillar(level, o.offset(3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
         }
-        fill(level, o.offset(-4, 5, -28), o.offset(4, 5, -6), Blocks.DEEPSLATE_TILE_SLAB);
+        fill(level, o.offset(-4, 5, -33), o.offset(4, 5, -6), Blocks.DEEPSLATE_TILE_SLAB);
 
-        carveDoor(level, o, 0, -28, Direction.NORTH);
+        carveDoor(level, o, 0, -33, Direction.NORTH);
         carveDoor(level, o, 0, -6, Direction.SOUTH);
-        carveDoor(level, o, 12, -33, Direction.WEST);
+        carveDoor(level, o, 12, -36, Direction.WEST);
 
         // Side link from the covered north corridor to the tea room.
-        fill(level, o.offset(3, 0, -34), o.offset(11, 0, -32), Blocks.SPRUCE_PLANKS);
-        fill(level, o.offset(3, 4, -35), o.offset(11, 4, -31), Blocks.DEEPSLATE_TILE_SLAB);
-        pillar(level, o.offset(5, 1, -35), 3, Blocks.STRIPPED_DARK_OAK_LOG);
-        pillar(level, o.offset(9, 1, -31), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        fill(level, o.offset(3, 0, -37), o.offset(11, 0, -35), Blocks.SPRUCE_PLANKS);
+        fill(level, o.offset(3, 4, -38), o.offset(11, 4, -34), Blocks.DEEPSLATE_TILE_SLAB);
+        pillar(level, o.offset(5, 1, -38), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        pillar(level, o.offset(9, 1, -34), 3, Blocks.STRIPPED_DARK_OAK_LOG);
 
-        fill(level, o.offset(-6, 1, -37), o.offset(6, 3, -37), Blocks.BOOKSHELF);
-        fill(level, o.offset(-1, 0, -34), o.offset(1, 0, -31), Blocks.RED_CARPET);
-        level.setBlockAndUpdate(o.offset(16, 1, -33), Blocks.CAKE.defaultBlockState());
-        level.setBlockAndUpdate(o.offset(18, 1, -33), Blocks.POTTED_AZALEA.defaultBlockState());
+        fill(level, o.offset(-6, 1, -38), o.offset(6, 3, -38), Blocks.BOOKSHELF);
+        fill(level, o.offset(-1, 0, -37), o.offset(1, 0, -35), Blocks.RED_CARPET);
+        level.setBlockAndUpdate(o.offset(16, 1, -36), Blocks.CAKE.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(18, 1, -36), Blocks.POTTED_AZALEA.defaultBlockState());
 
-        // Small karesansui court in the north-west.
-        fill(level, o.offset(-29, -1, -39), o.offset(-14, -1, -27), Blocks.SAND);
+        // Small karesansui court in the north-west, fully in the new ring.
+        fill(level, o.offset(-29, -1, -40), o.offset(-14, -1, -31), Blocks.SAND);
         for (int x = -27; x <= -16; x += 4) {
-            fill(level, o.offset(x, 0, -37), o.offset(x + 1, 0, -36), Blocks.SMOOTH_STONE);
+            fill(level, o.offset(x, 0, -38), o.offset(x + 1, 0, -37), Blocks.SMOOTH_STONE);
         }
-        buildShrub(level, o.offset(-27, 0, -29));
-        buildShrub(level, o.offset(-16, 0, -29));
+        buildShrub(level, o.offset(-27, 0, -32));
+        buildShrub(level, o.offset(-16, 0, -32));
     }
 
     private static void buildEstate(ServerLevel level, BlockPos o) {
         buildGround(level, o, 40, 52);
 
-        // South-east guest pavilion with its own veranda.
-        buildJapaneseRoom(level, o, 27, 27, 43, 39);
-        carveDoor(level, o, 35, 27, Direction.NORTH);
-        fill(level, o.offset(25, 0, 24), o.offset(45, 0, 26), Blocks.SPRUCE_PLANKS);
-        buildLanternPost(level, o.offset(26, 0, 25));
-        buildLanternPost(level, o.offset(44, 0, 25));
+        // Southern guest pavilion: the building itself lives entirely in the
+        // newly unlocked outer ring.
+        buildJapaneseRoom(level, o, 20, 41, 36, 49);
+        carveDoor(level, o, 28, 41, Direction.NORTH);
+        fill(level, o.offset(18, 0, 38), o.offset(38, 0, 40), Blocks.SPRUCE_PLANKS);
+        buildLanternPost(level, o.offset(19, 0, 39));
+        buildLanternPost(level, o.offset(37, 0, 39));
 
-        // A small shrine in the north-east provides a final destination.
-        buildJapaneseRoom(level, o, 29, -48, 43, -38);
-        carveDoor(level, o, 35, -38, Direction.SOUTH);
-        buildTorii(level, o.offset(36, 0, -34));
-        fill(level, o.offset(34, 0, -38), o.offset(38, 0, -35), Blocks.POLISHED_ANDESITE);
+        // Northern shrine, also fully in the Stage 5 ring.
+        buildJapaneseRoom(level, o, 28, -50, 42, -42);
+        carveDoor(level, o, 35, -42, Direction.SOUTH);
+        buildTorii(level, o.offset(35, 0, -38));
+        fill(level, o.offset(33, 0, -42), o.offset(37, 0, -39), Blocks.POLISHED_ANDESITE);
 
-        // Larger outer pond and bridge tie the late-stage grounds together.
-        fill(level, o.offset(12, -1, 18), o.offset(25, -1, 30), Blocks.WATER);
-        placeStoneEdge(level, o, 11, 17, 26, 31);
-        fill(level, o.offset(20, 0, 20), o.offset(30, 0, 22), Blocks.SPRUCE_PLANKS);
-        for (int x = 20; x <= 30; x += 5) {
-            level.setBlockAndUpdate(o.offset(x, 1, 19), Blocks.DARK_OAK_FENCE.defaultBlockState());
-            level.setBlockAndUpdate(o.offset(x, 1, 23), Blocks.DARK_OAK_FENCE.defaultBlockState());
+        // Eastern pond / bridge occupy the new ring instead of replacing the
+        // Stage 3 garden.
+        fill(level, o.offset(41, -1, 10), o.offset(49, -1, 28), Blocks.WATER);
+        placeStoneEdge(level, o, 40, 9, 50, 29);
+        fill(level, o.offset(38, 0, 18), o.offset(50, 0, 20), Blocks.SPRUCE_PLANKS);
+        for (int x = 40; x <= 50; x += 5) {
+            level.setBlockAndUpdate(o.offset(x, 1, 17), Blocks.DARK_OAK_FENCE.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x, 1, 21), Blocks.DARK_OAK_FENCE.defaultBlockState());
         }
 
-        buildCherryTree(level, o.offset(-37, 0, 33));
-        buildCherryTree(level, o.offset(-26, 0, 42));
-        buildCherryTree(level, o.offset(-8, 0, 45));
-        buildCherryTree(level, o.offset(8, 0, 45));
+        buildCherryTree(level, o.offset(-45, 0, 30));
+        buildCherryTree(level, o.offset(-28, 0, 45));
+        buildCherryTree(level, o.offset(-8, 0, 46));
+        buildCherryTree(level, o.offset(8, 0, 46));
         buildCherryTree(level, o.offset(46, 0, 8));
         buildCherryTree(level, o.offset(46, 0, -12));
 
         // Late-stage paths make the grounds read as one coherent home instead of
-        // isolated set pieces.
+        // isolated set pieces. These narrow paths are reserved expansion lanes.
         buildPath(level, o, 0, 11, 0, 18, Blocks.GRAVEL);
-        buildPath(level, o, 0, 18, 34, 18, Blocks.GRAVEL);
-        buildPath(level, o, 34, 18, 34, 26, Blocks.GRAVEL);
+        buildPath(level, o, 0, 18, 40, 18, Blocks.GRAVEL);
+        buildPath(level, o, 40, 18, 40, 39, Blocks.GRAVEL);
+        buildPath(level, o, 40, 39, 28, 39, Blocks.GRAVEL);
 
-        buildPath(level, o, 3, -28, 25, -28, Blocks.MOSSY_STONE_BRICKS);
-        buildPath(level, o, 25, -28, 25, -43, Blocks.MOSSY_STONE_BRICKS);
+        buildPath(level, o, 3, -33, 25, -33, Blocks.MOSSY_STONE_BRICKS);
+        buildPath(level, o, 25, -33, 25, -39, Blocks.MOSSY_STONE_BRICKS);
+        buildPath(level, o, 25, -39, 35, -39, Blocks.MOSSY_STONE_BRICKS);
 
-        buildPath(level, o, -10, -28, -35, -28, Blocks.COARSE_DIRT);
-        buildPath(level, o, -35, -28, -35, -42, Blocks.COARSE_DIRT);
+        buildPath(level, o, -10, -33, -40, -33, Blocks.COARSE_DIRT);
+        buildPath(level, o, -40, -33, -40, -46, Blocks.COARSE_DIRT);
 
-        // Quiet lookout at the far edge.
-        fill(level, o.offset(-46, 0, -48), o.offset(-36, 0, -38), Blocks.POLISHED_ANDESITE);
-        pillar(level, o.offset(-45, 1, -47), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-37, 1, -47), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-45, 1, -39), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-37, 1, -39), 5, Blocks.DARK_OAK_LOG);
-        fill(level, o.offset(-46, 6, -48), o.offset(-36, 6, -38), Blocks.DEEPSLATE_TILE_SLAB);
+        // Quiet lookout at the far north-west edge.
+        fill(level, o.offset(-51, 0, -51), o.offset(-43, 0, -43), Blocks.POLISHED_ANDESITE);
+        pillar(level, o.offset(-50, 1, -50), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-44, 1, -50), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-50, 1, -44), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(-44, 1, -44), 5, Blocks.DARK_OAK_LOG);
+        fill(level, o.offset(-51, 6, -51), o.offset(-43, 6, -43), Blocks.DEEPSLATE_TILE_SLAB);
     }
 
     private static void buildJapaneseRoom(
