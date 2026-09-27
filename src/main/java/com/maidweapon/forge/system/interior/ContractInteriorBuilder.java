@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.StairBlock;
 
 /**
@@ -148,10 +149,9 @@ public final class ContractInteriorBuilder {
         }
         buildTorii(level, o.offset(0, 0, 26));
 
-        // Pond and planted west garden.
-        fill(level, o.offset(-30, -1, -12), o.offset(-21, -1, 12), Blocks.MOSS_BLOCK);
-        fill(level, o.offset(-29, -1, -7), o.offset(-23, -1, 5), Blocks.WATER);
-        placeStoneEdge(level, o, -30, -8, -22, 6);
+        // Pond and planted west garden. Keep the shoreline flush with the
+        // ground so it reads as a garden pond rather than a rectangular pool.
+        buildPond(level, o, -26, -1, 4, 7);
 
         buildCherryTree(level, o.offset(-25, 0, 13));
         buildCherryTree(level, o.offset(-23, 0, -13));
@@ -159,7 +159,9 @@ public final class ContractInteriorBuilder {
         buildShrub(level, o.offset(-22, 0, -8));
 
         level.setBlockAndUpdate(o.offset(-26, 0, -1), Blocks.LILY_PAD.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(-24, 0, 2), Blocks.LILY_PAD.defaultBlockState());
         buildLanternPost(level, o.offset(-22, 0, 14));
+        scatterOuterRingGroundCover(level, o, 20, 30, 3);
     }
 
     private static void buildStudy(ServerLevel level, BlockPos o) {
@@ -169,24 +171,31 @@ public final class ContractInteriorBuilder {
         buildJapaneseRoom(level, o, -8, -38, 8, -31);
         buildJapaneseRoom(level, o, 12, -38, 22, -31);
 
-        // Covered north corridor from the original home. This is intentionally
-        // the only Stage 4 feature that crosses older rings.
-        fill(level, o.offset(-2, 0, -30), o.offset(2, 0, -7), Blocks.SPRUCE_PLANKS);
-        for (int z = -29; z <= -7; z += 4) {
-            pillar(level, o.offset(-3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
-            pillar(level, o.offset(3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
-        }
-        fill(level, o.offset(-4, 5, -31), o.offset(4, 5, -6), Blocks.DEEPSLATE_TILE_SLAB);
+        // A narrow garden approach crosses the older rings. Path placement only
+        // replaces natural/generated ground, so player construction keeps priority.
+        buildPath(level, o, 0, -7, 0, -30, Blocks.MOSSY_STONE_BRICKS);
 
         carveDoor(level, o, 0, -31, Direction.NORTH);
         carveDoor(level, o, 0, -6, Direction.SOUTH);
         carveDoor(level, o, 12, -34, Direction.WEST);
 
-        // Side link from the covered north corridor to the tea room.
+        // The tea-room side link stays in the newly unlocked ring and remains
+        // visually light instead of becoming another large flat roof.
         fill(level, o.offset(3, 0, -35), o.offset(11, 0, -33), Blocks.SPRUCE_PLANKS);
-        fill(level, o.offset(3, 4, -36), o.offset(11, 4, -32), Blocks.DEEPSLATE_TILE_SLAB);
         pillar(level, o.offset(5, 1, -36), 3, Blocks.STRIPPED_DARK_OAK_LOG);
         pillar(level, o.offset(9, 1, -32), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        for (int x = 3; x <= 11; x++) {
+            level.setBlock(
+                    o.offset(x, 4, -36),
+                    Blocks.DEEPSLATE_TILE_SLAB.defaultBlockState(),
+                    Block.UPDATE_CLIENTS
+            );
+            level.setBlock(
+                    o.offset(x, 4, -32),
+                    Blocks.DEEPSLATE_TILE_SLAB.defaultBlockState(),
+                    Block.UPDATE_CLIENTS
+            );
+        }
 
         fill(level, o.offset(-6, 1, -36), o.offset(6, 3, -36), Blocks.BOOKSHELF);
         fill(level, o.offset(-1, 0, -35), o.offset(1, 0, -33), Blocks.RED_CARPET);
@@ -220,14 +229,16 @@ public final class ContractInteriorBuilder {
         fill(level, o.offset(33, 0, -42), o.offset(37, 0, -39), Blocks.POLISHED_ANDESITE);
 
         // Eastern pond / bridge occupy the new ring instead of replacing the
-        // Stage 3 garden.
-        fill(level, o.offset(41, -1, 10), o.offset(49, -1, 28), Blocks.WATER);
-        placeStoneEdge(level, o, 40, 9, 50, 29);
+        // Stage 3 garden. The irregular flush shoreline reads much more naturally
+        // in the real-save preview than the old stone-edged rectangle.
+        buildPond(level, o, 45, 19, 4, 9);
         fill(level, o.offset(38, 0, 18), o.offset(50, 0, 20), Blocks.SPRUCE_PLANKS);
         for (int x = 40; x <= 50; x += 5) {
             level.setBlockAndUpdate(o.offset(x, 1, 17), Blocks.DARK_OAK_FENCE.defaultBlockState());
             level.setBlockAndUpdate(o.offset(x, 1, 21), Blocks.DARK_OAK_FENCE.defaultBlockState());
         }
+        level.setBlockAndUpdate(o.offset(45, 0, 14), Blocks.LILY_PAD.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(47, 0, 24), Blocks.LILY_PAD.defaultBlockState());
 
         buildCherryTree(level, o.offset(-45, 0, 30));
         buildCherryTree(level, o.offset(-28, 0, 45));
@@ -250,13 +261,13 @@ public final class ContractInteriorBuilder {
         buildPath(level, o, -10, -33, -40, -33, Blocks.COARSE_DIRT);
         buildPath(level, o, -40, -33, -46, -26, Blocks.COARSE_DIRT);
 
-        // Quiet lookout on the far western rim, away from the clipped island corner.
-        fill(level, o.offset(-51, 0, -30), o.offset(-43, 0, -22), Blocks.POLISHED_ANDESITE);
-        pillar(level, o.offset(-50, 1, -29), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-44, 1, -29), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-50, 1, -23), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(-44, 1, -23), 5, Blocks.DARK_OAK_LOG);
-        fill(level, o.offset(-51, 6, -30), o.offset(-43, 6, -22), Blocks.DEEPSLATE_TILE_SLAB);
+        // Quiet lookout on the far western rim.
+        buildOpenPavilion(level, o, -47, -26);
+
+        // A small bamboo grove and sparse petals/moss break up the final-stage
+        // lawn without turning the home into a dense decorative theme park.
+        buildBambooGrove(level, o.offset(-44, 0, 10));
+        scatterOuterRingGroundCover(level, o, 40, 52, 5);
     }
 
     private static void buildJapaneseRoom(
@@ -557,17 +568,71 @@ public final class ContractInteriorBuilder {
 
     private static void buildCherryTree(ServerLevel level, BlockPos base) {
         pillar(level, base, 5, Blocks.CHERRY_LOG);
-        for (int x = -2; x <= 2; x++) {
-            for (int y = 3; y <= 6; y++) {
-                for (int z = -2; z <= 2; z++) {
-                    if (Math.abs(x) + Math.abs(z) > 3) continue;
+
+        // Small horizontal branches make the trunk read through the canopy.
+        placeCherryBranch(level, base.offset(1, 3, 0), Direction.Axis.X);
+        placeCherryBranch(level, base.offset(-1, 4, 0), Direction.Axis.X);
+        placeCherryBranch(level, base.offset(0, 3, 1), Direction.Axis.Z);
+        placeCherryBranch(level, base.offset(0, 4, -1), Direction.Axis.Z);
+
+        for (int y = 3; y <= 7; y++) {
+            int radius = switch (y) {
+                case 3 -> 1;
+                case 4 -> 2;
+                case 5, 6 -> 3;
+                default -> 2;
+            };
+
+            for (int x = -radius; x <= radius; x++) {
+                for (int z = -radius; z <= radius; z++) {
+                    int distance = x * x + z * z;
+                    int edgeNoise = Math.floorMod(
+                            (base.getX() + x) * 31 + (base.getZ() + z) * 17 + y * 13,
+                            7
+                    );
+                    if (distance > radius * radius + (edgeNoise == 0 ? 2 : 0)) continue;
+                    if (distance > radius * radius && edgeNoise != 0) continue;
+
                     BlockPos pos = base.offset(x, y, z);
                     if (level.isEmptyBlock(pos)) {
-                        level.setBlock(pos, Blocks.CHERRY_LEAVES.defaultBlockState(), Block.UPDATE_CLIENTS);
+                        level.setBlock(
+                                pos,
+                                Blocks.CHERRY_LEAVES.defaultBlockState(),
+                                Block.UPDATE_CLIENTS
+                        );
                     }
                 }
             }
         }
+
+        // A few lower hanging leaves soften the silhouette.
+        for (BlockPos pos : new BlockPos[]{
+                base.offset(2, 3, 1),
+                base.offset(-2, 3, -1),
+                base.offset(1, 3, -2),
+                base.offset(-1, 3, 2)
+        }) {
+            if (level.isEmptyBlock(pos)) {
+                level.setBlock(
+                        pos,
+                        Blocks.CHERRY_LEAVES.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+        }
+    }
+
+    private static void placeCherryBranch(
+            ServerLevel level,
+            BlockPos pos,
+            Direction.Axis axis
+    ) {
+        level.setBlock(
+                pos,
+                Blocks.CHERRY_LOG.defaultBlockState()
+                        .setValue(RotatedPillarBlock.AXIS, axis),
+                Block.UPDATE_CLIENTS
+        );
     }
 
     private static void buildShrub(ServerLevel level, BlockPos base) {
@@ -617,12 +682,273 @@ public final class ContractInteriorBuilder {
             Block block,
             Direction.Axis travelAxis
     ) {
-        for (int width = -1; width <= 1; width++) {
-            BlockPos pos = travelAxis == Direction.Axis.X
-                    ? o.offset(x, -1, z + width)
-                    : o.offset(x + width, -1, z);
+        placeNaturalPathBlock(level, o.offset(x, -1, z), pathVariation(block, x, z));
+
+        // Alternate one side block so long routes stay walkable but do not read
+        // as ruler-straight three-block roads.
+        int hash = Math.floorMod(x * 31 + z * 17, 4);
+        if (hash != 0) {
+            int side = (hash & 1) == 0 ? -1 : 1;
+            BlockPos sidePos = travelAxis == Direction.Axis.X
+                    ? o.offset(x, -1, z + side)
+                    : o.offset(x + side, -1, z);
+            placeNaturalPathBlock(level, sidePos, pathVariation(block, x + side, z - side));
+        }
+    }
+
+    private static Block pathVariation(Block preferred, int x, int z) {
+        int hash = Math.floorMod(x * 19 + z * 23, 11);
+        if (preferred == Blocks.GRAVEL && hash == 0) return Blocks.COARSE_DIRT;
+        if (preferred == Blocks.COARSE_DIRT && hash == 0) return Blocks.GRAVEL;
+        if (preferred == Blocks.MOSSY_STONE_BRICKS && hash == 0) {
+            return Blocks.MOSSY_COBBLESTONE;
+        }
+        return preferred;
+    }
+
+    private static void placeNaturalPathBlock(
+            ServerLevel level,
+            BlockPos pos,
+            Block block
+    ) {
+        var state = level.getBlockState(pos);
+        if (state.is(Blocks.GRASS_BLOCK)
+                || state.is(Blocks.DIRT)
+                || state.is(Blocks.COARSE_DIRT)
+                || state.is(Blocks.GRAVEL)
+                || state.is(Blocks.MOSS_BLOCK)
+                || state.is(Blocks.MOSSY_STONE_BRICKS)
+                || state.is(Blocks.MOSSY_COBBLESTONE)
+                || state.is(Blocks.STONE_BRICKS)) {
             level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_CLIENTS);
         }
+    }
+
+    private static void buildPond(
+            ServerLevel level,
+            BlockPos o,
+            int centerX,
+            int centerZ,
+            int radiusX,
+            int radiusZ
+    ) {
+        for (int x = centerX - radiusX - 1; x <= centerX + radiusX + 1; x++) {
+            for (int z = centerZ - radiusZ - 1; z <= centerZ + radiusZ + 1; z++) {
+                BlockPos surface = o.offset(x, -1, z);
+                if (!isLandscapeSurface(level, surface)) continue;
+
+                double dx = (x - centerX) / (double) radiusX;
+                double dz = (z - centerZ) / (double) radiusZ;
+                double distance = dx * dx + dz * dz;
+                int noise = Math.floorMod(x * 31 + z * 17, 9);
+                double waterLimit = 1.0 + (noise - 4) * 0.015;
+
+                if (distance <= waterLimit) {
+                    level.setBlock(
+                            surface,
+                            Blocks.WATER.defaultBlockState(),
+                            Block.UPDATE_CLIENTS
+                    );
+                    continue;
+                }
+
+                if (distance <= 1.35) {
+                    Block shore = switch (noise % 4) {
+                        case 0 -> Blocks.MOSS_BLOCK;
+                        case 1 -> Blocks.GRAVEL;
+                        case 2 -> Blocks.MOSSY_COBBLESTONE;
+                        default -> Blocks.GRASS_BLOCK;
+                    };
+                    level.setBlock(surface, shore.defaultBlockState(), Block.UPDATE_CLIENTS);
+                }
+            }
+        }
+    }
+
+    private static boolean isLandscapeSurface(ServerLevel level, BlockPos pos) {
+        var state = level.getBlockState(pos);
+        return state.is(Blocks.GRASS_BLOCK)
+                || state.is(Blocks.DIRT)
+                || state.is(Blocks.COARSE_DIRT)
+                || state.is(Blocks.GRAVEL)
+                || state.is(Blocks.MOSS_BLOCK)
+                || state.is(Blocks.SAND);
+    }
+
+    private static void scatterOuterRingGroundCover(
+            ServerLevel level,
+            BlockPos o,
+            int previousRadius,
+            int radius,
+            int salt
+    ) {
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                if (!insideIsland(x, z, radius)
+                        || insideIsland(x, z, previousRadius)) {
+                    continue;
+                }
+
+                int hash = Math.floorMod(x * 31 + z * 17 + salt * 43, 37);
+                if (hash > 1) continue;
+
+                BlockPos ground = o.offset(x, -1, z);
+                BlockPos plant = o.offset(x, 0, z);
+                if (!level.getBlockState(ground).is(Blocks.GRASS_BLOCK)
+                        || !level.isEmptyBlock(plant)) {
+                    continue;
+                }
+
+                Block cover = hash == 0 ? Blocks.PINK_PETALS : Blocks.MOSS_CARPET;
+                level.setBlock(
+                        plant,
+                        cover.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+        }
+    }
+
+    private static void buildBambooGrove(ServerLevel level, BlockPos base) {
+        int[][] stalks = {
+                {0, 0, 7},
+                {2, 1, 5},
+                {-2, 1, 6},
+                {1, -2, 6},
+                {-1, -3, 5},
+                {3, -2, 4},
+                {-3, -1, 4}
+        };
+
+        for (int[] stalk : stalks) {
+            BlockPos root = base.offset(stalk[0], -1, stalk[1]);
+            if (level.getBlockState(root).is(Blocks.GRASS_BLOCK)) {
+                level.setBlock(
+                        root,
+                        Blocks.MOSS_BLOCK.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+            for (int y = 0; y < stalk[2]; y++) {
+                BlockPos pos = base.offset(stalk[0], y, stalk[1]);
+                if (level.isEmptyBlock(pos)) {
+                    level.setBlock(
+                            pos,
+                            Blocks.BAMBOO.defaultBlockState(),
+                            Block.UPDATE_CLIENTS
+                    );
+                }
+            }
+        }
+    }
+
+    private static void buildOpenPavilion(
+            ServerLevel level,
+            BlockPos o,
+            int centerX,
+            int centerZ
+    ) {
+        fill(
+                level,
+                o.offset(centerX - 4, -1, centerZ - 4),
+                o.offset(centerX + 4, -1, centerZ + 4),
+                Blocks.POLISHED_ANDESITE
+        );
+        fill(
+                level,
+                o.offset(centerX - 3, 0, centerZ - 3),
+                o.offset(centerX + 3, 0, centerZ + 3),
+                Blocks.SPRUCE_PLANKS
+        );
+
+        for (int dx : new int[]{-3, 3}) {
+            for (int dz : new int[]{-3, 3}) {
+                pillar(
+                        level,
+                        o.offset(centerX + dx, 1, centerZ + dz),
+                        5,
+                        Blocks.STRIPPED_DARK_OAK_LOG
+                );
+            }
+        }
+
+        // Low railing with a south-facing entrance.
+        for (int x = centerX - 2; x <= centerX + 2; x++) {
+            level.setBlockAndUpdate(
+                    o.offset(x, 1, centerZ - 3),
+                    Blocks.DARK_OAK_FENCE.defaultBlockState()
+            );
+            if (Math.abs(x - centerX) > 1) {
+                level.setBlockAndUpdate(
+                        o.offset(x, 1, centerZ + 3),
+                        Blocks.DARK_OAK_FENCE.defaultBlockState()
+                );
+            }
+        }
+        for (int z = centerZ - 2; z <= centerZ + 2; z++) {
+            level.setBlockAndUpdate(
+                    o.offset(centerX - 3, 1, z),
+                    Blocks.DARK_OAK_FENCE.defaultBlockState()
+            );
+            level.setBlockAndUpdate(
+                    o.offset(centerX + 3, 1, z),
+                    Blocks.DARK_OAK_FENCE.defaultBlockState()
+            );
+        }
+
+        buildOpenGabledRoof(
+                level,
+                o,
+                centerX - 3,
+                centerZ - 3,
+                centerX + 3,
+                centerZ + 3
+        );
+        buildLanternPost(level, o.offset(centerX, 0, centerZ));
+    }
+
+    private static void buildOpenGabledRoof(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int minZ,
+            int maxX,
+            int maxZ
+    ) {
+        int north = minZ - 2;
+        int south = maxZ + 2;
+        int step = 0;
+        while (north + step < south - step) {
+            int y = 6 + (step / 2);
+            placeRoofRowZ(
+                    level,
+                    o,
+                    minX - 2,
+                    maxX + 2,
+                    y,
+                    north + step,
+                    Direction.NORTH
+            );
+            placeRoofRowZ(
+                    level,
+                    o,
+                    minX - 2,
+                    maxX + 2,
+                    y,
+                    south - step,
+                    Direction.SOUTH
+            );
+            step++;
+        }
+
+        int ridgeY = 7 + (step / 2);
+        int ridgeZ = (north + south) / 2;
+        fill(
+                level,
+                o.offset(minX - 1, ridgeY, ridgeZ),
+                o.offset(maxX + 1, ridgeY, ridgeZ),
+                Blocks.DEEPSLATE_TILES
+        );
     }
 
     private static void placeStoneEdge(
