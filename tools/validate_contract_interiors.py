@@ -212,7 +212,7 @@ for needle in [
     "render_contract_interior_world.py",
     "--format png",
     "actions/upload-artifact@v4",
-    "stage_5_iso_r\${rotation}.png",
+    "stage_5_iso_r${rotation}.png",
     "--rotation \"$rotation\"",
 ]:
     if needle not in preview_workflow:
