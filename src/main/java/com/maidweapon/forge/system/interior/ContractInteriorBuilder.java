@@ -71,12 +71,12 @@ public final class ContractInteriorBuilder {
     private static void buildGarden(ServerLevel level, BlockPos o) {
         buildGround(level, o, 30);
         fill(level, o.offset(-23, 0, -10), o.offset(-9, 0, 10), Blocks.GRASS_BLOCK);
-        fill(level, o.offset(-20, 0, -4), o.offset(-14, 0, 4), Blocks.WATER);
+        fill(level, o.offset(-20, -1, -4), o.offset(-14, -1, 4), Blocks.WATER);
         for (int z = -10; z <= 10; z += 2) {
-            level.setBlockAndUpdate(o.offset(-7, 1, z), Blocks.OAK_LEAVES.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(-7, 0, z), Blocks.OAK_LEAVES.defaultBlockState());
         }
-        level.setBlockAndUpdate(o.offset(-11, 1, -8), Blocks.CHERRY_SAPLING.defaultBlockState());
-        level.setBlockAndUpdate(o.offset(-11, 1, 8), Blocks.CHERRY_SAPLING.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(-11, 0, -8), Blocks.CHERRY_SAPLING.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(-11, 0, 8), Blocks.CHERRY_SAPLING.defaultBlockState());
     }
 
     private static void buildStudy(ServerLevel level, BlockPos o) {
@@ -95,10 +95,10 @@ public final class ContractInteriorBuilder {
         fill(level, o.offset(-8, 6, 13), o.offset(8, 6, 27), Blocks.DARK_OAK_SLAB);
 
         for (int x = -30; x <= 30; x += 6) {
-            level.setBlockAndUpdate(o.offset(x, 1, 34), Blocks.CHERRY_LEAVES.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x, 0, 34), Blocks.CHERRY_LEAVES.defaultBlockState());
         }
         for (int z = -30; z <= 30; z += 6) {
-            level.setBlockAndUpdate(o.offset(34, 1, z), Blocks.CHERRY_LEAVES.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(34, 0, z), Blocks.CHERRY_LEAVES.defaultBlockState());
         }
 
         // Small pavilion / quiet lookout.
