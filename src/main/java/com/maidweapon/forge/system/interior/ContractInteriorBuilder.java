@@ -52,7 +52,7 @@ public final class ContractInteriorBuilder {
     }
 
     private static void buildCore(ServerLevel level, BlockPos o) {
-        buildGround(level, o, 12);
+        buildGround(level, o, 0, 12);
         fill(level, o.offset(-5, 0, -5), o.offset(5, 0, 5), Blocks.SPRUCE_PLANKS);
         buildOpenRoom(level, o.offset(-5, 1, -5), o.offset(5, 5, 5));
         fill(level, o.offset(-6, 6, -6), o.offset(6, 6, 6), Blocks.DARK_OAK_SLAB);
@@ -60,54 +60,54 @@ public final class ContractInteriorBuilder {
     }
 
     private static void buildAnnex(ServerLevel level, BlockPos o) {
-        buildGround(level, o, 20);
-        fill(level, o.offset(7, 0, -4), o.offset(15, 0, 4), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(7, 1, -4), o.offset(15, 5, 4));
-        fill(level, o.offset(6, 6, -5), o.offset(16, 6, 5), Blocks.DARK_OAK_SLAB);
-        fill(level, o.offset(5, 1, -1), o.offset(7, 3, 1), Blocks.AIR);
-        level.setBlockAndUpdate(o.offset(11, 1, 0), Blocks.CRAFTING_TABLE.defaultBlockState());
+        buildGround(level, o, 12, 20);
+        fill(level, o.offset(13, 0, -4), o.offset(19, 0, 4), Blocks.SPRUCE_PLANKS);
+        buildOpenRoom(level, o.offset(13, 1, -4), o.offset(19, 5, 4));
+        fill(level, o.offset(12, 6, -5), o.offset(20, 6, 5), Blocks.DARK_OAK_SLAB);
+        fill(level, o.offset(5, 1, -1), o.offset(13, 3, 1), Blocks.AIR);
+        level.setBlockAndUpdate(o.offset(16, 1, 0), Blocks.CRAFTING_TABLE.defaultBlockState());
     }
 
     private static void buildGarden(ServerLevel level, BlockPos o) {
-        buildGround(level, o, 30);
-        fill(level, o.offset(-23, 0, -10), o.offset(-9, 0, 10), Blocks.GRASS_BLOCK);
-        fill(level, o.offset(-20, -1, -4), o.offset(-14, -1, 4), Blocks.WATER);
+        buildGround(level, o, 20, 30);
+        fill(level, o.offset(-29, -1, -10), o.offset(-21, -1, 10), Blocks.GRASS_BLOCK);
+        fill(level, o.offset(-28, -1, -4), o.offset(-23, -1, 4), Blocks.WATER);
         for (int z = -10; z <= 10; z += 2) {
-            level.setBlockAndUpdate(o.offset(-7, 0, z), Blocks.OAK_LEAVES.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(-21, 0, z), Blocks.OAK_LEAVES.defaultBlockState());
         }
-        level.setBlockAndUpdate(o.offset(-11, 0, -8), Blocks.CHERRY_SAPLING.defaultBlockState());
-        level.setBlockAndUpdate(o.offset(-11, 0, 8), Blocks.CHERRY_SAPLING.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(-22, 0, -8), Blocks.CHERRY_SAPLING.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(-22, 0, 8), Blocks.CHERRY_SAPLING.defaultBlockState());
     }
 
     private static void buildStudy(ServerLevel level, BlockPos o) {
-        buildGround(level, o, 40);
-        fill(level, o.offset(-5, 0, -17), o.offset(5, 0, -9), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(-5, 1, -17), o.offset(5, 5, -9));
-        fill(level, o.offset(-6, 6, -18), o.offset(6, 6, -8), Blocks.DARK_OAK_SLAB);
-        fill(level, o.offset(-3, 1, -16), o.offset(3, 3, -16), Blocks.BOOKSHELF);
-        fill(level, o.offset(-1, 1, -8), o.offset(1, 3, -5), Blocks.AIR);
+        buildGround(level, o, 30, 40);
+        fill(level, o.offset(-5, 0, -39), o.offset(5, 0, -31), Blocks.SPRUCE_PLANKS);
+        buildOpenRoom(level, o.offset(-5, 1, -39), o.offset(5, 5, -31));
+        fill(level, o.offset(-6, 6, -40), o.offset(6, 6, -30), Blocks.DARK_OAK_SLAB);
+        fill(level, o.offset(-3, 1, -38), o.offset(3, 3, -38), Blocks.BOOKSHELF);
+        fill(level, o.offset(-1, 1, -30), o.offset(1, 3, -27), Blocks.AIR);
     }
 
     private static void buildEstate(ServerLevel level, BlockPos o) {
-        buildGround(level, o, 52);
-        fill(level, o.offset(-7, 0, 14), o.offset(7, 0, 26), Blocks.SPRUCE_PLANKS);
-        buildOpenRoom(level, o.offset(-7, 1, 14), o.offset(7, 5, 26));
-        fill(level, o.offset(-8, 6, 13), o.offset(8, 6, 27), Blocks.DARK_OAK_SLAB);
+        buildGround(level, o, 40, 52);
+        fill(level, o.offset(-7, 0, 41), o.offset(7, 0, 50), Blocks.SPRUCE_PLANKS);
+        buildOpenRoom(level, o.offset(-7, 1, 41), o.offset(7, 5, 50));
+        fill(level, o.offset(-8, 6, 40), o.offset(8, 6, 51), Blocks.DARK_OAK_SLAB);
 
         for (int x = -30; x <= 30; x += 6) {
-            level.setBlockAndUpdate(o.offset(x, 0, 34), Blocks.CHERRY_LEAVES.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(x, 0, 46), Blocks.CHERRY_LEAVES.defaultBlockState());
         }
         for (int z = -30; z <= 30; z += 6) {
-            level.setBlockAndUpdate(o.offset(34, 0, z), Blocks.CHERRY_LEAVES.defaultBlockState());
+            level.setBlockAndUpdate(o.offset(46, 0, z), Blocks.CHERRY_LEAVES.defaultBlockState());
         }
 
         // Small pavilion / quiet lookout.
-        fill(level, o.offset(24, 0, -28), o.offset(32, 0, -20), Blocks.POLISHED_ANDESITE);
-        pillar(level, o.offset(24, 1, -28), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(32, 1, -28), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(24, 1, -20), 5, Blocks.DARK_OAK_LOG);
-        pillar(level, o.offset(32, 1, -20), 5, Blocks.DARK_OAK_LOG);
-        fill(level, o.offset(23, 6, -29), o.offset(33, 6, -19), Blocks.DARK_OAK_SLAB);
+        fill(level, o.offset(42, 0, -46), o.offset(50, 0, -38), Blocks.POLISHED_ANDESITE);
+        pillar(level, o.offset(42, 1, -46), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(50, 1, -46), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(42, 1, -38), 5, Blocks.DARK_OAK_LOG);
+        pillar(level, o.offset(50, 1, -38), 5, Blocks.DARK_OAK_LOG);
+        fill(level, o.offset(41, 6, -47), o.offset(51, 6, -37), Blocks.DARK_OAK_SLAB);
     }
 
     private static int radiusForStage(int stage) {
@@ -177,9 +177,36 @@ public final class ContractInteriorBuilder {
         }
     }
 
-    private static void buildGround(ServerLevel level, BlockPos o, int radius) {
-        fill(level, o.offset(-radius, -3, -radius), o.offset(radius, -2, radius), Blocks.DIRT);
-        fill(level, o.offset(-radius, -1, -radius), o.offset(radius, -1, radius), Blocks.GRASS_BLOCK);
+    private static void buildGround(
+            ServerLevel level,
+            BlockPos o,
+            int previousRadius,
+            int radius
+    ) {
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                if (previousRadius > 0
+                        && Math.abs(x) <= previousRadius
+                        && Math.abs(z) <= previousRadius) {
+                    continue;
+                }
+                level.setBlock(
+                        o.offset(x, -3, z),
+                        Blocks.DIRT.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+                level.setBlock(
+                        o.offset(x, -2, z),
+                        Blocks.DIRT.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+                level.setBlock(
+                        o.offset(x, -1, z),
+                        Blocks.GRASS_BLOCK.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+        }
     }
 
     private static void buildOpenRoom(ServerLevel level, BlockPos from, BlockPos to) {
@@ -221,7 +248,7 @@ public final class ContractInteriorBuilder {
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {
                 for (int z = minZ; z <= maxZ; z++) {
-                    level.setBlockAndUpdate(new BlockPos(x, y, z), block.defaultBlockState());
+                    level.setBlock(new BlockPos(x, y, z), block.defaultBlockState(), Block.UPDATE_CLIENTS);
                 }
             }
         }
