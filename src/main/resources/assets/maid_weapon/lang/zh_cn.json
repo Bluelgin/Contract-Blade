@@ -214,5 +214,6 @@
   "maid_weapon.message.interior.gallery_entered": "§b已进入契约内景设计画廊。五个阶段位于同一维度，可直接飞行比较与修改。",
   "maid_weapon.message.interior.gallery_stage": "§b已前往契约内景 Stage %s",
   "maid_weapon.message.interior.gallery_rebuilt": "§e设计画廊已重建，好感生活层级：%s。注意：原有手工修改已被重置。",
-  "maid_weapon.message.interior.gallery_left": "§7已离开契约内景设计画廊"
+  "maid_weapon.message.interior.gallery_left": "§7已离开契约内景设计画廊",
+  "maid_weapon.message.interior.gallery_busy": "§e请先离开当前真实契约内景，再进入设计画廊"
 }
