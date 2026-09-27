@@ -186,6 +186,8 @@ for needle in [
     "GALLERY_STAGE_RADII",
     "default is stage radius + 2 blocks",
     "name == \"minecraft:bamboo\"",
+    "choices=(0, 90, 180, 270)",
+    "def rotate_blocks",
     "name.endswith(\"_slab\")",
     "def block_visual_shape",
 ]:
@@ -210,6 +212,8 @@ for needle in [
     "render_contract_interior_world.py",
     "--format png",
     "actions/upload-artifact@v4",
+    "stage_5_iso_r\${rotation}.png",
+    "--rotation \"$rotation\"",
 ]:
     if needle not in preview_workflow:
         raise SystemExit(f"real-save preview workflow is incomplete: {needle}")
