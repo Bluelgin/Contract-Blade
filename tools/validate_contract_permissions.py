@@ -47,11 +47,31 @@ if "hasDeployedMaid" not in deployment or "deployed_contract_transfer_blocked" n
 
 weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
 interaction = read("src/main/java/com/maidweapon/forge/system/contract/ContractInteractionService.java")
+commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
 gui_gate = "hasMaidData(stack) && !player.isShiftKeyDown()"
 if gui_gate not in weapon:
     raise SystemExit("Normal right-click must pass through to TLM's manifested-maid GUI")
 if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner" not in interaction:
     raise SystemExit("Contract interaction authority is not centralized")
+
+if "ContractInteractionService.toggleHeld" not in weapon:
+    raise SystemExit("Dedicated contract sneak-right-click no longer uses the unified toggle")
+for needle in [
+    "public static InteractionResult toggleHeld",
+    "MaidWeaponItem.hasMaidEntityData(weapon)",
+    "TouhouLittleMaidCompat.convertWeaponToMaid(player, weapon)",
+    "ContractWeaponLocator.findManifestedMaid(player, maidId)",
+    "return capture(player, maid, weapon);",
+]:
+    if needle not in interaction:
+        raise SystemExit(f"Dedicated contract toggle is incomplete: {needle}")
+
+if "instanceof MaidWeaponItem" in commands:
+    raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")
+if commands.count("editableContract(source)") < 3:
+    raise SystemExit("Level/favorability/resonance commands do not share the generic contract gate")
+if "MaidInfusion.isInfused(stack)" not in commands or "MaidWeaponItem.isOwner(stack, player)" not in commands:
+    raise SystemExit("Debug contract command gate is missing generic contract/owner validation")
 
 if "favorability > 0" in deployment or "getFavorability() <= 0" in deployment:
     raise SystemExit("Zero favorability must not block or recall contract manifestation")
