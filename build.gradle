@@ -14,6 +14,10 @@ def compatWorld = providers.gradleProperty('compatWorld').orNull
 def tlmTestMode = providers.gradleProperty('tlmTest').orElse('latest').get()
 def compatRunDir = providers.gradleProperty('compatRunDir').orNull
 def ciMode = providers.gradleProperty('ci').map { it.toBoolean() }.orElse(false).get()
+def galleryPreviewMode = providers.gradleProperty('galleryPreview')
+        .map { it.toBoolean() }
+        .orElse(false)
+        .get()
 
 repositories {
     flatDir {
@@ -209,7 +213,8 @@ tasks.named('processResources', ProcessResources).configure {
             mod_license         : mod_license,
             mod_version         : mod_version,
             mod_authors         : mod_authors,
-            mod_description     : mod_description
+            mod_description     : mod_description,
+            tlm_mandatory       : galleryPreviewMode ? 'false' : 'true'
     ]
     inputs.properties replaceProperties
     filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
