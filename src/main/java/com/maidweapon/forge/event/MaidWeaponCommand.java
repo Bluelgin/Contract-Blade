@@ -60,20 +60,14 @@ public class MaidWeaponCommand {
 
     private static int setLevel(CommandSourceStack source, int level) {
         try {
-            ItemStack stack = source.getPlayerOrException().getMainHandItem();
-            if (!(stack.getItem() instanceof MaidWeaponItem)) {
-                source.sendFailure(Component.literal("§c请手持女仆之刃"));
-                return 0;
-            }
-            if (!MaidWeaponItem.hasMaidData(stack)) {
-                source.sendFailure(Component.literal("§c女仆之刃尚未绑定女仆"));
-                return 0;
-            }
-            MaidWeaponData data = MaidWeaponItem.getMaidData(stack);
+            ItemStack stack = editableContract(source);
+            if (stack.isEmpty()) return 0;
+
+            MaidWeaponData data = MaidInfusion.data(stack);
             data.setLevel(level);
             MaidWeaponItem.setMaidData(stack, data);
 
-            source.sendSuccess(() -> Component.literal("§a已将女仆之刃等级设为 Lv." + level), true);
+            source.sendSuccess(() -> Component.literal("§a已将契约等级设为 Lv." + level), true);
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));
@@ -83,19 +77,13 @@ public class MaidWeaponCommand {
 
     private static int setFavorability(CommandSourceStack source, int value) {
         try {
-            ItemStack stack = source.getPlayerOrException().getMainHandItem();
-            if (!(stack.getItem() instanceof MaidWeaponItem)) {
-                source.sendFailure(Component.literal("§c请手持女仆之刃"));
-                return 0;
-            }
-            if (!MaidWeaponItem.hasMaidData(stack)) {
-                source.sendFailure(Component.literal("§c女仆之刃尚未绑定女仆"));
-                return 0;
-            }
-            MaidWeaponData data = MaidWeaponItem.getMaidData(stack);
+            ItemStack stack = editableContract(source);
+            if (stack.isEmpty()) return 0;
+
+            MaidWeaponData data = MaidInfusion.data(stack);
             data.setFavorability(value);
             MaidWeaponItem.setMaidData(stack, data);
-            source.sendSuccess(() -> Component.literal("§a已将女仆之刃好感度设为 " + value + "/384"), true);
+            source.sendSuccess(() -> Component.literal("§a已将契约好感度设为 " + value + "/384"), true);
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));
@@ -105,15 +93,9 @@ public class MaidWeaponCommand {
 
     private static int setResonance(CommandSourceStack source, int value) {
         try {
-            ItemStack stack = source.getPlayerOrException().getMainHandItem();
-            if (!MaidInfusion.isInfused(stack)) {
-                source.sendFailure(Component.literal("§c请手持已有契约的武器"));
-                return 0;
-            }
-            if (!MaidWeaponItem.isOwner(stack, source.getPlayerOrException())) {
-                source.sendFailure(Component.literal("§c只有契约原主人可以修改共鸣"));
-                return 0;
-            }
+            ItemStack stack = editableContract(source);
+            if (stack.isEmpty()) return 0;
+
             MaidWeaponData data = MaidInfusion.data(stack);
             data.setResonance(value);
             MaidWeaponItem.setMaidData(stack, data);
@@ -124,6 +106,21 @@ public class MaidWeaponCommand {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));
             return 0;
         }
+    }
+
+    private static ItemStack editableContract(CommandSourceStack source)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        var player = source.getPlayerOrException();
+        ItemStack stack = player.getMainHandItem();
+        if (!MaidInfusion.isInfused(stack)) {
+            source.sendFailure(Component.literal("§c请手持已有契约的武器"));
+            return ItemStack.EMPTY;
+        }
+        if (!MaidWeaponItem.isOwner(stack, player)) {
+            source.sendFailure(Component.literal("§c只有契约原主人可以修改契约数据"));
+            return ItemStack.EMPTY;
+        }
+        return stack;
     }
 
     private static int auditNbt(CommandSourceStack source) {
