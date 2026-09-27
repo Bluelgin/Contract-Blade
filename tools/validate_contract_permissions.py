@@ -14,10 +14,10 @@ checks = {
         "MaidWeaponItem.isOwner",
         5,
     ),
-    "inventory owner gates": (
-        "src/main/java/com/maidweapon/forge/event/MaidInfusionEventHandler.java",
+    "contract tooltip owner gate": (
+        "src/main/java/com/maidweapon/forge/client/tooltip/ContractTooltipComposer.java",
         "MaidWeaponItem.isOwner",
-        2,
+        1,
     ),
     "deployment owner gates": (
         "src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java",
