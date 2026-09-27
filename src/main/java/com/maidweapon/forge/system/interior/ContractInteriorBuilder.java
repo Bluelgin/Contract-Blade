@@ -116,7 +116,7 @@ public final class ContractInteriorBuilder {
         for (int x = -8; x <= 20; x += 4) {
             pillar(level, o.offset(x, 1, 9), 4, Blocks.STRIPPED_DARK_OAK_LOG);
         }
-        fill(level, o.offset(-9, 5, 6), o.offset(21, 5, 10), Blocks.DEPSLATE_TILE_SLAB);
+        fill(level, o.offset(-9, 5, 6), o.offset(21, 5, 10), Blocks.DEEPSLATE_TILE_SLAB);
 
         level.setBlockAndUpdate(o.offset(15, 1, -2), Blocks.SMOKER.defaultBlockState());
         level.setBlockAndUpdate(o.offset(16, 1, -2), Blocks.FURNACE.defaultBlockState());
@@ -161,7 +161,7 @@ public final class ContractInteriorBuilder {
             pillar(level, o.offset(-3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
             pillar(level, o.offset(3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
         }
-        fill(level, o.offset(-4, 5, -28), o.offset(4, 5, -6), Blocks.DEPSLATE_TILE_SLAB);
+        fill(level, o.offset(-4, 5, -28), o.offset(4, 5, -6), Blocks.DEEPSLATE_TILE_SLAB);
 
         carveDoor(level, o, 0, -28, Direction.NORTH);
         carveDoor(level, o, 0, -6, Direction.SOUTH);
@@ -217,7 +217,7 @@ public final class ContractInteriorBuilder {
         pillar(level, o.offset(-37, 1, -47), 5, Blocks.DARK_OAK_LOG);
         pillar(level, o.offset(-45, 1, -39), 5, Blocks.DARK_OAK_LOG);
         pillar(level, o.offset(-37, 1, -39), 5, Blocks.DARK_OAK_LOG);
-        fill(level, o.offset(-46, 6, -48), o.offset(-36, 6, -38), Blocks.DEPSLATE_TILE_SLAB);
+        fill(level, o.offset(-46, 6, -48), o.offset(-36, 6, -38), Blocks.DEEPSLATE_TILE_SLAB);
     }
 
     private static void buildJapaneseRoom(
@@ -243,7 +243,7 @@ public final class ContractInteriorBuilder {
 
         // Dark overhanging roof + a raised ridge.
         fill(level, o.offset(minX - 1, 6, minZ - 1),
-                o.offset(maxX + 1, 6, maxZ + 1), Blocks.DEPSLATE_TILE_SLAB);
+                o.offset(maxX + 1, 6, maxZ + 1), Blocks.DEEPSLATE_TILE_SLAB);
         if ((maxX - minX) >= (maxZ - minZ)) {
             fill(level, o.offset(minX, 7, (minZ + maxZ) / 2),
                     o.offset(maxX, 7, (minZ + maxZ) / 2), Blocks.DEPSLATE_TILES);
