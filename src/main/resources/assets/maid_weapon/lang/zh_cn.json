@@ -187,5 +187,16 @@
   "maid_weapon.tooltip.upgrade.wither": "§7无死亡击杀凋灵",
   "maid_weapon.tooltip.upgrade.boss_each_three": "§7无死亡击杀末影龙和凋灵各 3 次",
   "maid_weapon.tooltip.upgrade.boss_combined_five": "§7累计无死亡击杀末影龙与凋灵共 5 次",
-  "maid_weapon.tooltip.upgrade.boss_combined_ten": "§7累计无死亡击杀末影龙与凋灵共 10 次"
+  "maid_weapon.tooltip.upgrade.boss_combined_ten": "§7累计无死亡击杀末影龙与凋灵共 10 次",
+  "item.maid_weapon.contract_interior_key": "契约心钥",
+  "maid_weapon.tooltip.interior_key.use": "与契约武器分持双手，右键进入契约内景；内景中再次使用返回",
+  "maid_weapon.tooltip.interior_key.progression": "契约等级扩展空间，好感度改变生活痕迹",
+  "maid_weapon.message.interior.need_contract": "§7另一只手需要持有一件属于你的契约武器",
+  "maid_weapon.message.interior.recall_first": "§e女仆仍在外界显现，请先将她召回契约",
+  "maid_weapon.message.interior.unavailable": "§c契约内景暂时无法建立，请检查世界数据包是否正确加载",
+  "maid_weapon.message.interior.maid_restore_failed": "§c未能在契约内景中安全显现女仆，已返回原处",
+  "maid_weapon.message.interior.entered": "§d契约内景回应了你",
+  "maid_weapon.message.interior.missing_contract": "§c找不到进入此内景时使用的契约武器，暂时无法离开",
+  "maid_weapon.message.interior.recall_failed": "§c女仆未能安全回到契约，离开已取消",
+  "maid_weapon.message.interior.left": "§7你离开了契约内景"
 }
