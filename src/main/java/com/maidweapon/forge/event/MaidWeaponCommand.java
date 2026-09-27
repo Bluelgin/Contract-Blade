@@ -80,6 +80,15 @@ public class MaidWeaponCommand {
                                                         IntegerArgumentType.getInteger(
                                                                 ctx,
                                                                 "warmth")))))
+                                .then(Commands.literal("generate")
+                                        .then(Commands.argument(
+                                                        "warmth",
+                                                        IntegerArgumentType.integer(1, 6))
+                                                .executes(ctx -> generateInteriorGallery(
+                                                        ctx.getSource(),
+                                                        IntegerArgumentType.getInteger(
+                                                                ctx,
+                                                                "warmth")))))
                                 .then(Commands.literal("leave")
                                         .executes(ctx -> leaveInteriorGallery(
                                                 ctx.getSource())))))
@@ -168,6 +177,30 @@ public class MaidWeaponCommand {
         } catch (Exception exception) {
             source.sendFailure(Component.literal(
                     "§c无法重建契约内景画廊: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int generateInteriorGallery(CommandSourceStack source, int warmth) {
+        try {
+            int applied = ContractInteriorGallery.rebuild(
+                    source.getServer(),
+                    warmth,
+                    true
+            );
+            if (applied < 0) {
+                source.sendFailure(Component.literal("§c契约内景维度没有加载"));
+                return 0;
+            }
+            source.sendSuccess(
+                    () -> Component.literal(
+                            "§a已在无玩家模式下生成契约内景画廊，好感层级 " + applied),
+                    true
+            );
+            return 1;
+        } catch (Exception exception) {
+            source.sendFailure(Component.literal(
+                    "§c无法生成契约内景画廊: " + exception.getMessage()));
             return 0;
         }
     }
