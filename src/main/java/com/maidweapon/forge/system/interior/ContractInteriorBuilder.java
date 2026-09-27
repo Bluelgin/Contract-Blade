@@ -113,7 +113,7 @@ public final class ContractInteriorBuilder {
 
         // Short covered connector so the kitchen is part of the home even in rain.
         fill(level, o.offset(8, 0, -1), o.offset(12, 0, 1), Blocks.SPRUCE_PLANKS);
-        fill(level, o.offset(8, 4, -2), o.offset(12, 4, 2), Blocks.DEPSLATE_TILE_SLAB);
+        fill(level, o.offset(8, 4, -2), o.offset(12, 4, 2), Blocks.DEEPSLATE_TILE_SLAB);
         pillar(level, o.offset(9, 1, -2), 3, Blocks.STRIPPED_DARK_OAK_LOG);
         pillar(level, o.offset(11, 1, 2), 3, Blocks.STRIPPED_DARK_OAK_LOG);
 
@@ -175,7 +175,7 @@ public final class ContractInteriorBuilder {
 
         // Side link from the covered north corridor to the tea room.
         fill(level, o.offset(3, 0, -34), o.offset(11, 0, -32), Blocks.SPRUCE_PLANKS);
-        fill(level, o.offset(3, 4, -35), o.offset(11, 4, -31), Blocks.DEPSLATE_TILE_SLAB);
+        fill(level, o.offset(3, 4, -35), o.offset(11, 4, -31), Blocks.DEEPSLATE_TILE_SLAB);
         pillar(level, o.offset(5, 1, -35), 3, Blocks.STRIPPED_DARK_OAK_LOG);
         pillar(level, o.offset(9, 1, -31), 3, Blocks.STRIPPED_DARK_OAK_LOG);
 
