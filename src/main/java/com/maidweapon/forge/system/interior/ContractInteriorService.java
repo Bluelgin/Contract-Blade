@@ -157,9 +157,14 @@ public final class ContractInteriorService {
     }
 
     public static void recoverFromVoid(ServerPlayer player) {
-        if (!isInside(player) || player.getY() >= 30.0D) return;
+        if (!isInside(player)) return;
+
         String bindingId = returnState(player).getString(TAG_ACTIVE_BINDING);
-        if (bindingId.isEmpty() || player.getServer() == null) return;
+        if (bindingId.isEmpty()) {
+            emergencyReturnToOverworld(player);
+            return;
+        }
+        if (player.getY() >= 30.0D || player.getServer() == null) return;
 
         ContractInteriorSavedData.Plot plot =
                 ContractInteriorSavedData.get(player.getServer()).getOrCreate(bindingId);
@@ -173,6 +178,23 @@ public final class ContractInteriorService {
                 player.getXRot()
         );
         player.fallDistance = 0.0F;
+    }
+
+    private static void emergencyReturnToOverworld(ServerPlayer player) {
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+        ServerLevel overworld = server.overworld();
+        BlockPos spawn = overworld.getSharedSpawnPos();
+        player.teleportTo(
+                overworld,
+                spawn.getX() + 0.5D,
+                spawn.getY() + 1.0D,
+                spawn.getZ() + 0.5D,
+                player.getYRot(),
+                player.getXRot()
+        );
+        player.fallDistance = 0.0F;
+        clearReturn(player);
     }
 
     public static boolean isInside(ServerPlayer player) {
