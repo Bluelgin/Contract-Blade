@@ -5,6 +5,8 @@ import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.ContractNbtAudit;
 import com.maidweapon.forge.system.ContractNbtGuard;
+import com.maidweapon.forge.system.interior.ContractInteriorGallery;
+import com.maidweapon.forge.system.interior.ContractInteriorService;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -55,6 +57,32 @@ public class MaidWeaponCommand {
                 // /maidweapon nbt
                 .then(Commands.literal("nbt")
                         .executes(ctx -> auditNbt(ctx.getSource())))
+
+                // /maidweapon interior gallery [stage/rebuild/leave]
+                .then(Commands.literal("interior")
+                        .then(Commands.literal("gallery")
+                                .executes(ctx -> openInteriorGallery(ctx.getSource()))
+                                .then(Commands.literal("stage")
+                                        .then(Commands.argument(
+                                                        "stage",
+                                                        IntegerArgumentType.integer(1, 5))
+                                                .executes(ctx -> visitInteriorGalleryStage(
+                                                        ctx.getSource(),
+                                                        IntegerArgumentType.getInteger(
+                                                                ctx,
+                                                                "stage")))))
+                                .then(Commands.literal("rebuild")
+                                        .then(Commands.argument(
+                                                        "warmth",
+                                                        IntegerArgumentType.integer(1, 6))
+                                                .executes(ctx -> rebuildInteriorGallery(
+                                                        ctx.getSource(),
+                                                        IntegerArgumentType.getInteger(
+                                                                ctx,
+                                                                "warmth")))))
+                                .then(Commands.literal("leave")
+                                        .executes(ctx -> leaveInteriorGallery(
+                                                ctx.getSource())))))
         );
     }
 
@@ -104,6 +132,57 @@ public class MaidWeaponCommand {
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int openInteriorGallery(CommandSourceStack source) {
+        try {
+            return ContractInteriorGallery.open(source.getPlayerOrException()) ? 1 : 0;
+        } catch (Exception exception) {
+            source.sendFailure(Component.literal(
+                    "§c无法进入契约内景画廊: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int visitInteriorGalleryStage(CommandSourceStack source, int stage) {
+        try {
+            return ContractInteriorGallery.visitStage(
+                    source.getPlayerOrException(),
+                    stage
+            ) ? 1 : 0;
+        } catch (Exception exception) {
+            source.sendFailure(Component.literal(
+                    "§c无法前往 Stage " + stage + ": " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int rebuildInteriorGallery(CommandSourceStack source, int warmth) {
+        try {
+            return ContractInteriorGallery.rebuild(
+                    source.getPlayerOrException(),
+                    warmth
+            ) ? 1 : 0;
+        } catch (Exception exception) {
+            source.sendFailure(Component.literal(
+                    "§c无法重建契约内景画廊: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int leaveInteriorGallery(CommandSourceStack source) {
+        try {
+            var player = source.getPlayerOrException();
+            if (!ContractInteriorService.isGallerySession(player)) {
+                source.sendFailure(Component.literal("§e你当前不在契约内景画廊"));
+                return 0;
+            }
+            return ContractInteriorService.exit(player) ? 1 : 0;
+        } catch (Exception exception) {
+            source.sendFailure(Component.literal(
+                    "§c无法离开契约内景画廊: " + exception.getMessage()));
             return 0;
         }
     }
