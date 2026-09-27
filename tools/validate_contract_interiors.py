@@ -40,6 +40,10 @@ creative = read("src/main/java/com/maidweapon/forge/init/ModCreativeTab.java")
 architecture = read("docs/ARCHITECTURE.md")
 assets = read("docs/INTERIOR_ASSETS.md")
 renderer = read("tools/render_contract_interior_world.py")
+mods_toml = read("src/main/resources/META-INF/mods.toml")
+build_gradle = read("build.gradle")
+preview_workflow = read(".github/workflows/interior-preview.yml")
+rcon = read("tools/rcon_command.py")
 
 for needle in [
     "MAX_SPACE_STAGE = 5",
@@ -164,9 +168,43 @@ for needle in [
     "values_per_long = 64 // bits",
     "def render_iso",
     "def render_top",
+    "def render_iso_png",
+    "def render_top_png",
+    "class Raster",
 ]:
     if needle not in renderer:
         raise SystemExit(f"offline contract interior renderer is incomplete: {needle}")
+
+
+compile(rcon, "tools/rcon_command.py", "exec")
+for needle in [
+    "encode_packet",
+    "receive_packet",
+    "RCON authentication failed",
+]:
+    if needle not in rcon:
+        raise SystemExit(f"preview RCON helper is incomplete: {needle}")
+
+for needle in [
+    "Contract Interior Preview",
+    "-PgalleryPreview=true",
+    "maidweapon interior gallery generate 4",
+    "save-all flush",
+    "render_contract_interior_world.py",
+    "--format png",
+    "actions/upload-artifact@v4",
+]:
+    if needle not in preview_workflow:
+        raise SystemExit(f"real-save preview workflow is incomplete: {needle}")
+
+if "galleryPreviewMode" not in build_gradle or "tlm_mandatory" not in build_gradle:
+    raise SystemExit("gallery preview build mode is not wired through Gradle resources")
+if 'mandatory = ${tlm_mandatory}' not in mods_toml:
+    raise SystemExit("TLM preview-only mandatory override is missing")
+if "ContractInteriorGallery.rebuild(source.getServer()" not in commands:
+    raise SystemExit("server-console gallery generation command is missing")
+if "public static int rebuild(MinecraftServer server" not in gallery:
+    raise SystemExit("gallery cannot be generated headlessly by preview CI")
 
 for language in ["en_us", "zh_cn"]:
     payload = json.loads(
