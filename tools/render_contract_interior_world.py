@@ -459,6 +459,32 @@ class Raster:
         path.write_bytes(bytes(payload))
 
 
+def block_visual_shape(name: str) -> tuple[float, float]:
+    """Return approximate horizontal footprint and height for PNG previews."""
+    if name.endswith("_carpet"):
+        return 0.96, 0.08
+    if "petal" in name:
+        return 0.58, 0.06
+    if name == "minecraft:lily_pad":
+        return 0.82, 0.04
+    if name == "minecraft:bamboo":
+        return 0.24, 1.0
+    if name.endswith("_fence"):
+        return 0.30, 1.0
+    if name.endswith("_wall"):
+        return 0.46, 1.0
+    if name == "minecraft:lantern":
+        return 0.44, 0.72
+    if name.endswith("_slab"):
+        return 1.0, 0.5
+    return 1.0, 1.0
+
+
+def is_reduced_footprint(name: str) -> bool:
+    width, _height = block_visual_shape(name)
+    return width < 0.99
+
+
 def render_top_png(
     blocks: dict[tuple[int, int, int], str],
     output: Path,
@@ -482,10 +508,38 @@ def render_top_png(
     height = (max_z - min_z + 1) * pixel + margin * 2
     raster = Raster(width, height)
 
-    for (x, z), (_y, name) in top.items():
+    for (x, z), (y, name) in top.items():
         px = margin + (x - min_x) * pixel
         py = margin + (z - min_z) * pixel
-        raster.fill_rect(px, py, px + pixel, py + pixel, block_color(name))
+        width_factor, _height_factor = block_visual_shape(name)
+
+        if width_factor < 0.99:
+            below = blocks.get((x, y - 1, z))
+            if below is not None:
+                raster.fill_rect(
+                    px,
+                    py,
+                    px + pixel,
+                    py + pixel,
+                    block_color(below),
+                )
+
+            inset = max(1, round(pixel * (1.0 - width_factor) / 2.0))
+            raster.fill_rect(
+                px + inset,
+                py + inset,
+                px + pixel - inset,
+                py + pixel - inset,
+                block_color(name),
+            )
+        else:
+            raster.fill_rect(
+                px,
+                py,
+                px + pixel,
+                py + pixel,
+                block_color(name),
+            )
 
     raster.write_png(output)
 
@@ -531,32 +585,41 @@ def render_iso_png(
         sx += ox
         sy += oy
 
+        width_factor, height_factor = block_visual_shape(name)
+        tw = tile_width * width_factor
+        th = tile_height * width_factor
+        bh = block_height * height_factor
+
         top_visible = (x, y + 1, z) not in occupied
-        left_visible = (x - 1, y, z) not in occupied
-        right_visible = (x, y, z - 1) not in occupied
+        if width_factor < 0.99:
+            left_visible = True
+            right_visible = True
+        else:
+            left_visible = (x - 1, y, z) not in occupied
+            right_visible = (x, y, z - 1) not in occupied
 
         top = [
-            (sx, sy - block_height),
-            (sx + tile_width / 2, sy - block_height + tile_height / 2),
-            (sx, sy - block_height + tile_height),
-            (sx - tile_width / 2, sy - block_height + tile_height / 2),
+            (sx, sy - bh),
+            (sx + tw / 2, sy - bh + th / 2),
+            (sx, sy - bh + th),
+            (sx - tw / 2, sy - bh + th / 2),
         ]
         left = [
-            (sx - tile_width / 2, sy - block_height + tile_height / 2),
-            (sx, sy - block_height + tile_height),
-            (sx, sy + tile_height),
-            (sx - tile_width / 2, sy + tile_height / 2),
+            (sx - tw / 2, sy - bh + th / 2),
+            (sx, sy - bh + th),
+            (sx, sy + th),
+            (sx - tw / 2, sy + th / 2),
         ]
         right = [
-            (sx, sy - block_height + tile_height),
-            (sx + tile_width / 2, sy - block_height + tile_height / 2),
-            (sx + tile_width / 2, sy + tile_height / 2),
-            (sx, sy + tile_height),
+            (sx, sy - bh + th),
+            (sx + tw / 2, sy - bh + th / 2),
+            (sx + tw / 2, sy + th / 2),
+            (sx, sy + th),
         ]
 
-        if left_visible:
+        if left_visible and height_factor > 0.05:
             raster.fill_polygon(left, shade(base, 0.72))
-        if right_visible:
+        if right_visible and height_factor > 0.05:
             raster.fill_polygon(right, shade(base, 0.58))
         if top_visible:
             raster.fill_polygon(top, base)
