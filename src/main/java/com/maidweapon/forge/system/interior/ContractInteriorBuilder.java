@@ -166,32 +166,32 @@ public final class ContractInteriorBuilder {
         buildGround(level, o, 30, 40);
 
         // A quiet north wing: study on the left, tea room on the right.
-        buildJapaneseRoom(level, o, -8, -40, 8, -33);
-        buildJapaneseRoom(level, o, 12, -40, 22, -33);
+        buildJapaneseRoom(level, o, -8, -38, 8, -31);
+        buildJapaneseRoom(level, o, 12, -38, 22, -31);
 
         // Covered north corridor from the original home. This is intentionally
         // the only Stage 4 feature that crosses older rings.
-        fill(level, o.offset(-2, 0, -32), o.offset(2, 0, -7), Blocks.SPRUCE_PLANKS);
-        for (int z = -31; z <= -7; z += 4) {
+        fill(level, o.offset(-2, 0, -30), o.offset(2, 0, -7), Blocks.SPRUCE_PLANKS);
+        for (int z = -29; z <= -7; z += 4) {
             pillar(level, o.offset(-3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
             pillar(level, o.offset(3, 1, z), 4, Blocks.STRIPPED_DARK_OAK_LOG);
         }
-        fill(level, o.offset(-4, 5, -33), o.offset(4, 5, -6), Blocks.DEEPSLATE_TILE_SLAB);
+        fill(level, o.offset(-4, 5, -31), o.offset(4, 5, -6), Blocks.DEEPSLATE_TILE_SLAB);
 
-        carveDoor(level, o, 0, -33, Direction.NORTH);
+        carveDoor(level, o, 0, -31, Direction.NORTH);
         carveDoor(level, o, 0, -6, Direction.SOUTH);
-        carveDoor(level, o, 12, -36, Direction.WEST);
+        carveDoor(level, o, 12, -34, Direction.WEST);
 
         // Side link from the covered north corridor to the tea room.
-        fill(level, o.offset(3, 0, -37), o.offset(11, 0, -35), Blocks.SPRUCE_PLANKS);
-        fill(level, o.offset(3, 4, -38), o.offset(11, 4, -34), Blocks.DEEPSLATE_TILE_SLAB);
-        pillar(level, o.offset(5, 1, -38), 3, Blocks.STRIPPED_DARK_OAK_LOG);
-        pillar(level, o.offset(9, 1, -34), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        fill(level, o.offset(3, 0, -35), o.offset(11, 0, -33), Blocks.SPRUCE_PLANKS);
+        fill(level, o.offset(3, 4, -36), o.offset(11, 4, -32), Blocks.DEEPSLATE_TILE_SLAB);
+        pillar(level, o.offset(5, 1, -36), 3, Blocks.STRIPPED_DARK_OAK_LOG);
+        pillar(level, o.offset(9, 1, -32), 3, Blocks.STRIPPED_DARK_OAK_LOG);
 
-        fill(level, o.offset(-6, 1, -38), o.offset(6, 3, -38), Blocks.BOOKSHELF);
-        fill(level, o.offset(-1, 0, -37), o.offset(1, 0, -35), Blocks.RED_CARPET);
-        level.setBlockAndUpdate(o.offset(16, 1, -36), Blocks.CAKE.defaultBlockState());
-        level.setBlockAndUpdate(o.offset(18, 1, -36), Blocks.POTTED_AZALEA.defaultBlockState());
+        fill(level, o.offset(-6, 1, -36), o.offset(6, 3, -36), Blocks.BOOKSHELF);
+        fill(level, o.offset(-1, 0, -35), o.offset(1, 0, -33), Blocks.RED_CARPET);
+        level.setBlockAndUpdate(o.offset(16, 1, -34), Blocks.CAKE.defaultBlockState());
+        level.setBlockAndUpdate(o.offset(18, 1, -34), Blocks.POTTED_AZALEA.defaultBlockState());
 
         // Small karesansui court in the north-west, fully in the new ring.
         fill(level, o.offset(-29, -1, -40), o.offset(-14, -1, -31), Blocks.SAND);
@@ -393,7 +393,7 @@ public final class ContractInteriorBuilder {
             int south
     ) {
         int center = (north + south) / 2;
-        for (int z = north + 1; z < south; z++) {
+        for (int z = north + 2; z <= south - 2; z++) {
             int distance = Math.min(z - north, south - z);
             int roofY = 6 + (distance / 2);
             for (int y = 6; y < roofY; y++) {
@@ -423,7 +423,7 @@ public final class ContractInteriorBuilder {
             int east
     ) {
         int center = (west + east) / 2;
-        for (int x = west + 1; x < east; x++) {
+        for (int x = west + 2; x <= east - 2; x++) {
             int distance = Math.min(x - west, east - x);
             int roofY = 6 + (distance / 2);
             for (int y = 6; y < roofY; y++) {
