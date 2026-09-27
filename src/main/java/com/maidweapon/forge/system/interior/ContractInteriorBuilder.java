@@ -121,7 +121,6 @@ public final class ContractInteriorBuilder {
     }
 
     private static void buildBoundary(ServerLevel level, BlockPos o, int radius) {
-        int y = o.getY();
         for (int offset = -radius; offset <= radius; offset++) {
             placeFenceIfOpen(level, o.offset(offset, 0, -radius));
             placeFenceIfOpen(level, o.offset(offset, 0, radius));
@@ -159,9 +158,9 @@ public final class ContractInteriorBuilder {
         controlledDecoration(level, o.offset(0, 1, 3), Blocks.CAKE, warmth >= 4);
         controlledDecoration(level, o.offset(-3, 2, 0), Blocks.LANTERN, warmth >= 4);
         controlledDecoration(level, o.offset(3, 2, 0), Blocks.LANTERN, warmth >= 4);
-        controlledDecoration(level, o.offset(-8, 1, 7), Blocks.PINK_PETALS, warmth >= 5);
-        controlledDecoration(level, o.offset(-7, 1, 7), Blocks.PINK_PETALS, warmth >= 5);
-        controlledDecoration(level, o.offset(-6, 1, 7), Blocks.PINK_PETALS, warmth >= 5);
+        controlledDecoration(level, o.offset(-8, 0, 7), Blocks.PINK_PETALS, warmth >= 5);
+        controlledDecoration(level, o.offset(-7, 0, 7), Blocks.PINK_PETALS, warmth >= 5);
+        controlledDecoration(level, o.offset(-6, 0, 7), Blocks.PINK_PETALS, warmth >= 5);
         controlledDecoration(level, o.offset(0, 1, -3), Blocks.POTTED_AZALEA, warmth >= 6);
     }
 
