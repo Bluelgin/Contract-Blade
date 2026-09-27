@@ -35,6 +35,7 @@ public final class ContractInteriorService {
     private static final String TAG_Z = "Z";
     private static final String TAG_Y_ROT = "YRot";
     private static final String TAG_X_ROT = "XRot";
+    private static final String TAG_GALLERY = "Gallery";
 
     public static ItemStack contractForKey(ServerPlayer player, InteractionHand keyHand) {
         ItemStack candidate = keyHand == InteractionHand.MAIN_HAND
@@ -126,6 +127,14 @@ public final class ContractInteriorService {
     public static boolean exit(ServerPlayer player) {
         if (!isInside(player)) return false;
         CompoundTag state = returnState(player);
+
+        if (state.getBoolean(TAG_GALLERY)) {
+            restoreReturn(player);
+            clearReturn(player);
+            message(player, "maid_weapon.message.interior.gallery_left");
+            return true;
+        }
+
         String bindingId = state.getString(TAG_ACTIVE_BINDING);
         ItemStack contract = findContractByBinding(player, bindingId);
         if (contract.isEmpty()) {
@@ -144,8 +153,42 @@ public final class ContractInteriorService {
         return true;
     }
 
+    public static boolean enterGallery(ServerPlayer player, BlockPos target) {
+        if (player == null || target == null) return false;
+
+        MinecraftServer server = player.getServer();
+        if (server == null) return false;
+        ServerLevel interior = server.getLevel(INTERIOR_LEVEL);
+        if (interior == null) {
+            message(player, "maid_weapon.message.interior.unavailable");
+            return false;
+        }
+
+        if (isInside(player)) {
+            if (!isGallerySession(player)) return false;
+        } else {
+            saveReturn(player, "");
+            returnState(player).putBoolean(TAG_GALLERY, true);
+        }
+
+        player.teleportTo(
+                interior,
+                target.getX() + 0.5D,
+                target.getY() + 1.1D,
+                target.getZ() + 0.5D,
+                player.getYRot(),
+                player.getXRot()
+        );
+        player.fallDistance = 0.0F;
+        return true;
+    }
+
+    public static boolean isGallerySession(ServerPlayer player) {
+        return isInside(player) && returnState(player).getBoolean(TAG_GALLERY);
+    }
+
     public static void prepareForLogout(ServerPlayer player) {
-        if (!isInside(player)) return;
+        if (!isInside(player) || isGallerySession(player)) return;
         ItemStack contract = findContractByBinding(
                 player,
                 returnState(player).getString(TAG_ACTIVE_BINDING)
@@ -170,7 +213,24 @@ public final class ContractInteriorService {
     public static void recoverFromVoid(ServerPlayer player) {
         if (!isInside(player)) return;
 
-        String bindingId = returnState(player).getString(TAG_ACTIVE_BINDING);
+        CompoundTag state = returnState(player);
+        if (state.getBoolean(TAG_GALLERY)) {
+            if (player.getY() < 30.0D) {
+                BlockPos safe = ContractInteriorGallery.overviewSpawn();
+                player.teleportTo(
+                        (ServerLevel) player.level(),
+                        safe.getX() + 0.5D,
+                        safe.getY() + 1.1D,
+                        safe.getZ() + 0.5D,
+                        player.getYRot(),
+                        player.getXRot()
+                );
+                player.fallDistance = 0.0F;
+            }
+            return;
+        }
+
+        String bindingId = state.getString(TAG_ACTIVE_BINDING);
         if (bindingId.isEmpty()) {
             emergencyReturnToOverworld(player);
             return;
