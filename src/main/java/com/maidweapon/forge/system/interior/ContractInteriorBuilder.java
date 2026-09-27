@@ -347,6 +347,7 @@ public final class ContractInteriorBuilder {
                     o.offset(minX - 2, 5, maxZ + 2),
                     o.offset(maxX + 2, 5, maxZ + 2),
                     Blocks.DEEPSLATE_TILE_SLAB);
+            fillGableEndsZ(level, o, minX, maxX, north, south);
         } else {
             int west = minX - 2;
             int east = maxX + 2;
@@ -374,6 +375,67 @@ public final class ContractInteriorBuilder {
                     o.offset(maxX + 2, 5, minZ - 2),
                     o.offset(maxX + 2, 5, maxZ + 2),
                     Blocks.DEEPSLATE_TILE_SLAB);
+            fillGableEndsX(level, o, minZ, maxZ, west, east);
+        }
+    }
+
+    private static void fillGableEndsZ(
+            ServerLevel level,
+            BlockPos o,
+            int minX,
+            int maxX,
+            int north,
+            int south
+    ) {
+        int center = (north + south) / 2;
+        for (int z = north + 1; z < south; z++) {
+            int distance = Math.min(z - north, south - z);
+            int roofY = 6 + (distance / 2);
+            for (int y = 6; y < roofY; y++) {
+                Block block = z == center
+                        ? Blocks.STRIPPED_DARK_OAK_LOG
+                        : Blocks.WHITE_TERRACOTTA;
+                level.setBlock(
+                        o.offset(minX, y, z),
+                        block.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+                level.setBlock(
+                        o.offset(maxX, y, z),
+                        block.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
+        }
+    }
+
+    private static void fillGableEndsX(
+            ServerLevel level,
+            BlockPos o,
+            int minZ,
+            int maxZ,
+            int west,
+            int east
+    ) {
+        int center = (west + east) / 2;
+        for (int x = west + 1; x < east; x++) {
+            int distance = Math.min(x - west, east - x);
+            int roofY = 6 + (distance / 2);
+            for (int y = 6; y < roofY; y++) {
+                Block block = x == center
+                        ? Blocks.STRIPPED_DARK_OAK_LOG
+                        : Blocks.WHITE_TERRACOTTA;
+                level.setBlock(
+                        o.offset(x, y, minZ),
+                        block.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+                level.setBlock(
+                        o.offset(x, y, maxZ),
+                        block.defaultBlockState(),
+                        Block.UPDATE_CLIENTS
+                );
+            }
         }
     }
 
