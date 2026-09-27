@@ -23,6 +23,10 @@ public final class TlmReflection {
 
     static final TlmReflection INSTANCE = new TlmReflection();
 
+    public static TlmReflection instance() {
+        return INSTANCE;
+    }
+
     private boolean tlmLoaded = false;
     private Class<?> maidEntityClass = null;
 

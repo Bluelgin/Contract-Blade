@@ -4,10 +4,10 @@ import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.data.MaidWeaponDataSerializer;
 import com.maidweapon.common.sin.SinSlotManager;
-import com.maidweapon.common.sin.SinType;
 import com.maidweapon.common.system.LoyaltySystem;
+import com.maidweapon.common.legacy.LegacySinArchive;
 import com.maidweapon.common.system.MonsterTierRegistry;
-import com.maidweapon.forge.system.SinFragmentSystem;
+import com.maidweapon.forge.system.contract.ContractInteractionService;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -287,20 +287,11 @@ public class MaidWeaponItem extends SwordItem {
                         data.getEnderDragonKills(), data.getWitherKills()));
             }
 
-            // 罪恶系统显示
-            List<SinType> sins = data.getEmbeddedSins();
-            if (!sins.isEmpty()) {
-                tooltip.add(Component.empty());
-                tooltip.add(Component.literal("§8§l─── 七宗罪 ───"));
-                for (SinType sin : sins) {
-                    tooltip.add(Component.literal(sin.getColor() + "✦ " + sin.getChineseName()
-                            + " §7[" + SinFragmentSystem.getPower(stack, sin) + "/"
-                            + SinFragmentSystem.MAX_POWER + "]"));
-                }
-                tooltip.add(Component.translatable("maid_weapon.tooltip.sin_slot_used",
-                        sins.size(), SinSlotManager.getMaxSlots(sins)));
-            } else {
-                tooltip.add(Component.translatable("maid_weapon.tooltip.sin_slot"));
+            // Legacy Part data is preserved for old worlds but is no longer active Core gameplay.
+            if (LegacySinArchive.hasData(data)) {
+                tooltip.add(Component.translatable(
+                        "maid_weapon.tooltip.legacy_sin_data",
+                        LegacySinArchive.entryCount(data)));
             }
 
             // 主人信息
@@ -359,30 +350,15 @@ public class MaidWeaponItem extends SwordItem {
      * 无需 EventPriority 冲突、无需反射订阅 TLM 内部事件。
      */
     @Override
-    public InteractionResult interactLivingEntity(ItemStack stack, Player player, LivingEntity target, InteractionHand hand) {
-        if (player.level().isClientSide()) return InteractionResult.PASS;
-        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
-
-        // 只对 TLM 女仆生效
-        if (!TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()) return InteractionResult.PASS;
-        if (!TouhouLittleMaidCompat.isMaidEntity(target)) return InteractionResult.PASS;
-
-        // A normal right-click on a manifested contract maid belongs to TLM so
-        // its inventory and management screen remain accessible. Sneaking is
-        // the explicit gesture for recalling an already-bound maid.
-        if (hasMaidData(stack) && !player.isShiftKeyDown()) return InteractionResult.PASS;
-
-        // 检查武器主人权限（已绑定的武器只有主人才能操作）
-        if (hasMaidData(stack) && !isOwner(stack, player)) {
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.not_owner"), true);
-            return InteractionResult.FAIL;
+    public InteractionResult interactLivingEntity(ItemStack stack, Player player,
+                                                  LivingEntity target, InteractionHand hand) {
+        if (player.level().isClientSide() || hand != InteractionHand.MAIN_HAND) {
+            return InteractionResult.PASS;
         }
-
-        boolean success = TouhouLittleMaidCompat.convertMaidToWeapon(player, target, stack);
-        // SUCCESS → TLM 视作 consumesAction=true → 跳过 GUI
-        // FAIL → TLM 继续执行 → 打开 GUI（但我们的消息已显示）
-        return success ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        // A normal right-click on an already manifested contract belongs to TLM's GUI.
+        // Sneaking explicitly hands the gesture to the contract interaction authority.
+        if (hasMaidData(stack) && !player.isShiftKeyDown()) return InteractionResult.PASS;
+        return ContractInteractionService.capture(player, target, stack);
     }
 
     // ==================== 右键使用（空气/方块） ====================
@@ -419,12 +395,9 @@ public class MaidWeaponItem extends SwordItem {
             // 拔刀剑模式使用潜行+Q释放（见 MaidWeaponDropHandler），这里跳过
             boolean isSlashBladeMode = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
             if (!isSlashBladeMode) {
-                if (TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()) {
-                    InteractionResult result =
-                            TouhouLittleMaidCompat.onPlayerShiftRightClick(player, hand);
-                    if (result.consumesAction()) {
-                        return InteractionResultHolder.success(stack);
-                    }
+                InteractionResult result = ContractInteractionService.recallHeld(player, hand);
+                if (result.consumesAction()) {
+                    return InteractionResultHolder.success(stack);
                 }
             }
         }

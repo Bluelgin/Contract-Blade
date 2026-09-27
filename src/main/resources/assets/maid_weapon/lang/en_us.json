@@ -159,5 +159,6 @@
   "maid_weapon.message.contract_nbt_largest": "Largest stored item: %s, %s (%s)",
   "maid_weapon.message.contract_nbt_encode_failed": "The maid could not be stored safely. She and the original weapon data were left unchanged.",
   "maid_weapon.message.contract_nbt_decode_failed": "The stored maid data failed validation. The contract was retained; check the server log.",
-  "maid_weapon.message.contract_nbt_restore_failed": "The maid could not be restored safely. Contract data was retained; check the server log."
+  "maid_weapon.message.contract_nbt_restore_failed": "The maid could not be restored safely. Contract data was retained; check the server log.",
+  "maid_weapon.tooltip.legacy_sin_data": "§8Legacy Part sin data: §7%s entries (preserved only; no Core gameplay effect)"
 }

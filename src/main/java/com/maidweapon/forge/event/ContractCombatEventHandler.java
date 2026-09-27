@@ -8,7 +8,6 @@ import com.maidweapon.common.system.ResonanceSystem;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.ChallengeTracker;
-import com.maidweapon.forge.system.SinFragmentSystem;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -86,7 +85,6 @@ public final class ContractCombatEventHandler {
         ModCompatManager.notifyMonsterKilled("maid_sword", targetId, tier,
                 ChallengeTracker.hasBoss(playerId));
         MaidWeaponItem.setMaidData(weapon, data);
-        SinFragmentSystem.consumeOnKill(player, weapon);
         ChallengeTracker.clear(playerId);
     }
 

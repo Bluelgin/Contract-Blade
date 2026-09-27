@@ -13,6 +13,7 @@ def compatTestMode = providers.gradleProperty('compatTest').orElse('vanilla').ge
 def compatWorld = providers.gradleProperty('compatWorld').orNull
 def tlmTestMode = providers.gradleProperty('tlmTest').orElse('latest').get()
 def compatRunDir = providers.gradleProperty('compatRunDir').orNull
+def ciMode = providers.gradleProperty('ci').map { it.toBoolean() }.orElse(false).get()
 
 repositories {
     flatDir {
@@ -109,22 +110,31 @@ dependencies {
     // Minecraft Forge
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Mandatory Touhou Little Maid runtime; all integration is version-tolerant and not bundled.
-    if (tlmTestMode == 'old') {
-        runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
-    } else if (tlmTestMode == 'pack') {
-        runtimeOnly fg.deobf("compat:touhoulittlemaid:1.5.2-forge+mc1.20.1")
-    } else {
-        runtimeOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
+    // Mandatory Touhou Little Maid runtime for launch profiles. CI compiles the
+    // version-tolerant reflection boundary without resolving a local runtime jar.
+    if (!ciMode) {
+        if (tlmTestMode == 'old') {
+            runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
+        } else if (tlmTestMode == 'pack') {
+            runtimeOnly fg.deobf("compat:touhoulittlemaid:1.5.2-forge+mc1.20.1")
+        } else {
+            runtimeOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
+        }
     }
 
-    // Compile against TACZ without bundling it. Prefer the local test copy, while
-    // retaining a CurseMaven fallback so a clean checkout remains buildable.
-    def taczDependency = file('libs/tacz-1.20.1-1.1.8-release.jar').exists()
+    // Compile against TACZ without bundling it. Local development keeps the
+    // ForgeGradle deobf path; clean CI uses the public CurseMaven jar directly
+    // because only TACZ's stable API types are required at compile time.
+    def localTacz = file('libs/tacz-1.20.1-1.1.8-release.jar').exists()
+    def taczDependency = localTacz
             ? "local:tacz:1.20.1-1.1.8-release"
             : "curse.maven:timeless-and-classics-zero-1028108:8055552"
-    compileOnly fg.deobf(taczDependency)
-    if (compatTestMode == 'tacz') {
+    if (ciMode && !localTacz) {
+        compileOnly taczDependency
+    } else {
+        compileOnly fg.deobf(taczDependency)
+    }
+    if (compatTestMode == 'tacz' && !ciMode) {
         runtimeOnly fg.deobf(taczDependency)
     }
 

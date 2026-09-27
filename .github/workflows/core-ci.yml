@@ -1,0 +1,61 @@
+name: Contract Blade Core CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Prepare optional compile APIs
+        run: |
+          mkdir -p libs
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
+            -o libs/tacz-1.20.1-1.1.8-release.jar
+
+      - name: Architecture and data validators
+        run: |
+          python tools/validate_architecture.py
+          python tools/validate_legacy_core_boundary.py
+          python tools/validate_contract_nbt_safety.py
+          python tools/validate_contract_permissions.py
+          python tools/validate_contract_resonance.py
+          python tools/validate_emergency_film_recovery.py
+          python tools/validate_patchouli.py
+
+      - name: Build
+        run: gradle --no-daemon clean build -Pci=true

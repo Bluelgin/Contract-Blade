@@ -67,9 +67,12 @@ public class MaidWeaponData {
     /** 凋灵击杀数（无死亡） */
     private int witherKills = 0;
 
-    // ==================== 罪恶系统 ====================
+    // ==================== Legacy Part archive ====================
 
-    /** 已嵌入的罪恶列表 */
+    /**
+     * Serialized seven-sins payload from the paused Part campaign.
+     * Core preserves it for old worlds but must not use it for gameplay.
+     */
     private List<SinType> embeddedSins = new ArrayList<>();
 
     // ==================== 常量 ====================
@@ -300,9 +303,10 @@ public class MaidWeaponData {
         return base + (favorability / (float)MAX_FAVORABILITY) * slope;
     }
 
-    // ==================== 罪恶系统 ====================
+    // ==================== Legacy Part archive access ====================
 
     /**
+     * Returns archived seven-sins data retained for old saves.
      * 获取已嵌入的罪恶列表
      */
     public List<SinType> getEmbeddedSins() {

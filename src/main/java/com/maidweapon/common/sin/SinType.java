@@ -8,6 +8,10 @@ package com.maidweapon.common.sin;
  * 定义七种罪恶的类型。
  * 每种罪恶有唯一的ID、中文名、英文名。
  */
+/**
+ * @deprecated Serialized schema retained for legacy Part saves only.
+ */
+@Deprecated
 public enum SinType {
 
     PRIDE("pride", "紫御守·孤高", "Amulet of Pride", "§5"),        // 紫色

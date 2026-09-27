@@ -41,11 +41,12 @@ if "hasDeployedMaid" not in deployment or "deployed_contract_transfer_blocked" n
     raise SystemExit("Manifested-contract drop protection is missing")
 
 weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
-mod_entry = read("src/main/java/com/maidweapon/forge/MaidWeaponMod.java")
+interaction = read("src/main/java/com/maidweapon/forge/system/contract/ContractInteractionService.java")
 gui_gate = "hasMaidData(stack) && !player.isShiftKeyDown()"
-event_gui_gate = "MaidWeaponItem.hasMaidData(targetStack) && !player.isShiftKeyDown()"
-if gui_gate not in weapon or event_gui_gate not in mod_entry:
+if gui_gate not in weapon:
     raise SystemExit("Normal right-click must pass through to TLM's manifested-maid GUI")
+if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner" not in interaction:
+    raise SystemExit("Contract interaction authority is not centralized")
 
 if "favorability > 0" in deployment or "getFavorability() <= 0" in deployment:
     raise SystemExit("Zero favorability must not block or recall contract manifestation")
@@ -68,37 +69,49 @@ if "compatTestMode == 'native-power'" not in build_gradle or "tlm-native-power-1
     raise SystemExit("TLM: Native POWER development runtime profile is missing")
 
 deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
+transfer = read("src/main/java/com/maidweapon/forge/system/deployment/ContractTransferSafetyService.java")
 if "if (slot.container == player.getInventory()) continue;" not in deployment:
     raise SystemExit("Container-close recall must ignore the player's own inventory slots")
-if "if (TripleMagicCompat.isPhantom(stack)) continue;" not in deployment:
+if "ContractTransferSafetyService.isProjectionPhantom(stack)" not in deployment:
     raise SystemExit("TLM accessory page changes can still recall the phantom contract weapon")
-if deployment.count("if (TripleMagicCompat.isPhantom(stack)) continue;") < 2:
+if "if (TripleMagicCompat.isPhantom(stack)) continue;" not in transfer:
     raise SystemExit("Phantom contracts must also be ignored by self-storage rescue")
-if "rescueSelfStoredContract(player)" not in deployment:
+if "ContractTransferSafetyService.rescueSelfStoredContract(player)" not in deployment:
     raise SystemExit("A manifested maid can still consume a contract stored in her own inventory")
-if 'getMethod("getMaid")' not in deployment or "returnContractToPlayer" not in deployment:
+if 'getMethod("getMaid")' not in transfer or "returnToPlayer" not in transfer:
     raise SystemExit("Self-contract inventory rescue is not tied to the opened TLM maid")
 recall_body = deployment.split("private static boolean recall(Player player, String maidId)", 1)[1]
-if "rescueSelfStoredContract(player);" not in recall_body.split("private static", 1)[0]:
+if "ContractTransferSafetyService.rescueSelfStoredContract(player);" not in recall_body.split("private static", 1)[0]:
     raise SystemExit("Recall can still discard a maid before rescuing her own contract stack")
-if "TripleMagicCompat.usesMaidSpellTask(weapon)" not in deployment:
+
+recovery_body = deployment.split("private static boolean processRecovery(Player player)", 1)[1].split(
+    "private static", 1
+)[0]
+if recovery_body.index("recall(player, maidId)") > recovery_body.index("ContractRecoveryService.tick(player)"):
+    raise SystemExit("Recovery must attempt recall before advancing timeout state")
+recovery = read("src/main/java/com/maidweapon/forge/system/deployment/ContractRecoveryService.java")
+if "MAID_AVAILABLE" in recovery:
+    raise SystemExit("A loaded-but-unrecallable maid can bypass recovery timeout")
+task_router = read("src/main/java/com/maidweapon/forge/system/deployment/ContractCombatTaskRouter.java")
+if "TripleMagicCompat.usesMaidSpellTask(weapon)" not in task_router:
     raise SystemExit("Magic contract weapons must select Wan Fa Jie Tong's ranged task")
-if "TripleMagicCompat.getMaidSpellRangedTaskId()" not in deployment:
+if "TripleMagicCompat.getMaidSpellRangedTaskId()" not in task_router:
     raise SystemExit("Wan Fa Jie Tong ranged task selection is still hard-coded")
-if "MAGIC_TASK_FAILURE" not in deployment:
+if "MAGIC_TASK_FAILURE" not in task_router:
     raise SystemExit("Magic task failures are silent and cannot be diagnosed in a modpack")
-if "SlashBladeCompat.usesMaidSlashBladeTask(weapon)" not in deployment:
+if "SlashBladeCompat.usesMaidSlashBladeTask(weapon)" not in task_router:
     raise SystemExit("Supported SlashBlade maid addons do not select their dedicated task")
-if "SlashBladeCompat.getMaidSlashBladeTaskId()" not in deployment:
+if "SlashBladeCompat.getMaidSlashBladeTaskId()" not in task_router:
     raise SystemExit("SlashBlade maid task UID selection is missing or hard-coded in deployment")
-if "SLASHBLADE_TASK_FAILURE" not in deployment:
+if "SLASHBLADE_TASK_FAILURE" not in task_router:
     raise SystemExit("True POWER task failures are silent and cannot safely fall back")
 care = read("src/main/java/com/maidweapon/forge/system/MaidCareTaskSystem.java")
 if "if (!hungry) return false;" not in care:
     raise SystemExit("Safe-care mode still overrides Native POWER while the owner is not hungry")
 if "return switchIfNeeded(maid, FEED_TASK);" not in care:
     raise SystemExit("A failed feeding-task switch can still suppress weapon-specific combat")
-if "TripleMagicCompat.clearPhantoms(living, weapon)" not in deployment:
+runtime = read("src/main/java/com/maidweapon/forge/system/deployment/ContractMaidRuntimeService.java")
+if "TripleMagicCompat.clearPhantoms(living, weapon)" not in runtime:
     raise SystemExit("Recall can discard final-tick SlashBlade progress")
 
 magic = read("src/main/java/com/maidweapon/forge/compat/TripleMagicCompat.java")

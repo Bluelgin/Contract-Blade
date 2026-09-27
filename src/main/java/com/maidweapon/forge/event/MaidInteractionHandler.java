@@ -2,6 +2,7 @@ package com.maidweapon.forge.event;
 
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
+import com.maidweapon.forge.system.contract.ContractInteractionService;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -47,7 +48,7 @@ public class MaidInteractionHandler {
         if (isSlashBladeMode(mainHand) && !event.getEntity().isShiftKeyDown()) return;
 
         event.setCanceled(true);
-        TouhouLittleMaidCompat.onPlayerInteractWithMaid(event.getEntity(), event.getTarget(), InteractionHand.MAIN_HAND);
+        ContractInteractionService.capture(event.getEntity(), event.getTarget(), mainHand);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -62,9 +63,7 @@ public class MaidInteractionHandler {
             return; // 客户端侧不做释放操作，仅放行数据包
         }
 
-        if (TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()) {
-            TouhouLittleMaidCompat.onPlayerShiftRightClick(event.getEntity(), InteractionHand.MAIN_HAND);
-        }
+        ContractInteractionService.recallHeld(event.getEntity(), InteractionHand.MAIN_HAND);
     }
 
     private static boolean isSlashBladeMode(ItemStack stack) {

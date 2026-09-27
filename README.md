@@ -6,6 +6,8 @@
 
 The default branch contains the maintained Core addon only. The legacy Part campaign is paused and retained on the archive branch for reference, not shipped in Core releases.
 
+Architecture and extension boundaries are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Legacy seven-sins NBT from older worlds is preserved as archival metadata, but it no longer affects Core combat, resonance, deployment, or progression.
+
 Contract Blade is a Touhou Little Maid addon that lets maids form persistent contracts with supported weapons. Contracted companions can manifest in combat, return safely when their weapon is switched, build Contract Resonance, and strengthen their weapon through shared battles. Versioned compressed storage preserves maid inventories, appearances, capabilities, and progression while reducing contract NBT size.
 
 ## Features
