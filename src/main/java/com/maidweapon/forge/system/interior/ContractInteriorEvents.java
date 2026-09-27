@@ -35,7 +35,14 @@ public final class ContractInteriorEvents {
     public static void onToss(ItemTossEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer player)) return;
         if (ContractInteriorService.isActiveContract(player, event.getEntity().getItem())) {
+            net.minecraft.world.item.ItemStack protectedStack = event.getEntity().getItem().copy();
             event.setCanceled(true);
+            player.getInventory().placeItemBackInInventory(protectedStack);
+            player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable(
+                            "maid_weapon.message.interior.contract_drop_blocked"),
+                    true
+            );
         }
     }
 
