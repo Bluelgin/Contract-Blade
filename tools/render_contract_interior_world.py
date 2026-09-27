@@ -8,11 +8,13 @@ Examples:
   python tools/render_contract_interior_world.py ./run/saves/Test --stage 5
   python tools/render_contract_interior_world.py ./world --stage 3 --mode top
   python tools/render_contract_interior_world.py ./world --stage 5 --output stage5.svg
+  python tools/render_contract_interior_world.py ./world --stage 5 --format png
 """
 
 from __future__ import annotations
 
 import argparse
+import binascii
 import gzip
 import html
 import math
@@ -368,6 +370,192 @@ def shade(hex_color: str, factor: float) -> str:
     return "#" + "".join(f"{channel:02x}" for channel in adjusted)
 
 
+def hex_rgb(hex_color: str) -> tuple[int, int, int]:
+    value = hex_color.lstrip("#")
+    return tuple(int(value[i : i + 2], 16) for i in (0, 2, 4))
+
+
+class Raster:
+    def __init__(self, width: int, height: int, background: str = "#f8f6f1"):
+        self.width = width
+        self.height = height
+        bg = hex_rgb(background)
+        self.pixels = bytearray(bg * (width * height))
+
+    def set_pixel(self, x: int, y: int, color: tuple[int, int, int]) -> None:
+        if x < 0 or y < 0 or x >= self.width or y >= self.height:
+            return
+        index = (y * self.width + x) * 3
+        self.pixels[index : index + 3] = bytes(color)
+
+    def fill_rect(self, x0: int, y0: int, x1: int, y1: int, color: str) -> None:
+        rgb = hex_rgb(color)
+        for y in range(max(0, y0), min(self.height, y1)):
+            for x in range(max(0, x0), min(self.width, x1)):
+                self.set_pixel(x, y, rgb)
+
+    def fill_polygon(self, points: list[tuple[float, float]], color: str) -> None:
+        if len(points) < 3:
+            return
+
+        rgb = hex_rgb(color)
+        min_y = max(0, math.floor(min(y for _, y in points)))
+        max_y = min(self.height - 1, math.ceil(max(y for _, y in points)))
+
+        for py in range(min_y, max_y + 1):
+            scan_y = py + 0.5
+            intersections: list[float] = []
+            for index, (x1, y1) in enumerate(points):
+                x2, y2 = points[(index + 1) % len(points)]
+                if y1 == y2:
+                    continue
+                if not (min(y1, y2) <= scan_y < max(y1, y2)):
+                    continue
+                ratio = (scan_y - y1) / (y2 - y1)
+                intersections.append(x1 + ratio * (x2 - x1))
+
+            intersections.sort()
+            for idx in range(0, len(intersections) - 1, 2):
+                start = max(0, math.floor(intersections[idx]))
+                end = min(self.width - 1, math.ceil(intersections[idx + 1]))
+                for px in range(start, end + 1):
+                    self.set_pixel(px, py, rgb)
+
+    def write_png(self, path: Path) -> None:
+        def chunk(kind: bytes, payload: bytes) -> bytes:
+            checksum = binascii.crc32(kind)
+            checksum = binascii.crc32(payload, checksum) & 0xFFFFFFFF
+            return (
+                struct.pack(">I", len(payload))
+                + kind
+                + payload
+                + struct.pack(">I", checksum)
+            )
+
+        scanlines = bytearray()
+        row_size = self.width * 3
+        for y in range(self.height):
+            scanlines.append(0)
+            start = y * row_size
+            scanlines.extend(self.pixels[start : start + row_size])
+
+        payload = bytearray(b"\x89PNG\r\n\x1a\n")
+        payload.extend(
+            chunk(
+                b"IHDR",
+                struct.pack(">IIBBBBB", self.width, self.height, 8, 2, 0, 0, 0),
+            )
+        )
+        payload.extend(chunk(b"IDAT", zlib.compress(bytes(scanlines), level=9)))
+        payload.extend(chunk(b"IEND", b""))
+        path.write_bytes(bytes(payload))
+
+
+def render_top_png(
+    blocks: dict[tuple[int, int, int], str],
+    output: Path,
+    pixel: int = 6,
+) -> None:
+    if not blocks:
+        raise ValueError("no blocks found in render bounds")
+
+    top: dict[tuple[int, int], tuple[int, str]] = {}
+    for (x, y, z), name in blocks.items():
+        current = top.get((x, z))
+        if current is None or y > current[0]:
+            top[(x, z)] = (y, name)
+
+    min_x = min(x for x, _ in top)
+    max_x = max(x for x, _ in top)
+    min_z = min(z for _, z in top)
+    max_z = max(z for _, z in top)
+    margin = 16
+    width = (max_x - min_x + 1) * pixel + margin * 2
+    height = (max_z - min_z + 1) * pixel + margin * 2
+    raster = Raster(width, height)
+
+    for (x, z), (_y, name) in top.items():
+        px = margin + (x - min_x) * pixel
+        py = margin + (z - min_z) * pixel
+        raster.fill_rect(px, py, px + pixel, py + pixel, block_color(name))
+
+    raster.write_png(output)
+
+
+def render_iso_png(
+    blocks: dict[tuple[int, int, int], str],
+    output: Path,
+    tile_width: int = 10,
+    tile_height: int = 6,
+    block_height: int = 7,
+) -> None:
+    if not blocks:
+        raise ValueError("no blocks found in render bounds")
+
+    coords = list(blocks)
+    min_world_y = min(y for _, y, _ in coords)
+
+    def project(x: int, y: int, z: int) -> tuple[float, float]:
+        sx = (x - z) * tile_width / 2
+        sy = (x + z) * tile_height / 2 - (y - min_world_y) * block_height
+        return sx, sy
+
+    projected = [project(x, y, z) for x, y, z in coords]
+    min_sx = min(x for x, _ in projected)
+    max_sx = max(x for x, _ in projected)
+    min_sy = min(y for _, y in projected)
+    max_sy = max(y for _, y in projected)
+
+    margin = 36
+    width = math.ceil(max_sx - min_sx + tile_width * 4 + margin * 2)
+    height = math.ceil(max_sy - min_sy + block_height * 4 + margin * 2)
+    ox = -min_sx + margin + tile_width * 2
+    oy = -min_sy + margin
+    raster = Raster(width, height)
+
+    occupied = set(blocks)
+    ordered = sorted(coords, key=lambda pos: (pos[0] + pos[2], pos[1], pos[0] - pos[2]))
+
+    for x, y, z in ordered:
+        name = blocks[(x, y, z)]
+        base = block_color(name)
+        sx, sy = project(x, y, z)
+        sx += ox
+        sy += oy
+
+        top_visible = (x, y + 1, z) not in occupied
+        left_visible = (x - 1, y, z) not in occupied
+        right_visible = (x, y, z - 1) not in occupied
+
+        top = [
+            (sx, sy - block_height),
+            (sx + tile_width / 2, sy - block_height + tile_height / 2),
+            (sx, sy - block_height + tile_height),
+            (sx - tile_width / 2, sy - block_height + tile_height / 2),
+        ]
+        left = [
+            (sx - tile_width / 2, sy - block_height + tile_height / 2),
+            (sx, sy - block_height + tile_height),
+            (sx, sy + tile_height),
+            (sx - tile_width / 2, sy + tile_height / 2),
+        ]
+        right = [
+            (sx, sy - block_height + tile_height),
+            (sx + tile_width / 2, sy - block_height + tile_height / 2),
+            (sx + tile_width / 2, sy + tile_height / 2),
+            (sx, sy + tile_height),
+        ]
+
+        if left_visible:
+            raster.fill_polygon(left, shade(base, 0.72))
+        if right_visible:
+            raster.fill_polygon(right, shade(base, 0.58))
+        if top_visible:
+            raster.fill_polygon(top, base)
+
+    raster.write_png(output)
+
+
 def svg_header(width: int, height: int, title: str) -> list[str]:
     safe_title = html.escape(title)
     return [
@@ -529,6 +717,7 @@ def main() -> int:
     parser.add_argument("world", type=Path, help="Minecraft Java world folder (contains level.dat)")
     parser.add_argument("--stage", type=int, choices=range(1, 6), default=5)
     parser.add_argument("--mode", choices=("iso", "top"), default="iso")
+    parser.add_argument("--format", choices=("svg", "png"), default=None)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--radius", type=int, default=DEFAULT_RADIUS)
     parser.add_argument("--y-min", type=int, default=DEFAULT_Y_MIN)
@@ -549,8 +738,18 @@ def main() -> int:
     )
 
     output = args.output
+    output_format = args.format
+    if output_format is None and output is not None:
+        suffix = output.suffix.lower().lstrip(".")
+        if suffix in {"svg", "png"}:
+            output_format = suffix
+    if output_format is None:
+        output_format = "svg"
+
     if output is None:
-        output = Path(f"contract_interior_stage_{args.stage}_{args.mode}.svg")
+        output = Path(
+            f"contract_interior_stage_{args.stage}_{args.mode}.{output_format}"
+        )
     output = output.expanduser().resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
 
@@ -558,7 +757,12 @@ def main() -> int:
         f"Contract Interior Stage {args.stage} — "
         f"offline {args.mode} render from Anvil data"
     )
-    if args.mode == "top":
+    if output_format == "png":
+        if args.mode == "top":
+            render_top_png(blocks, output)
+        else:
+            render_iso_png(blocks, output)
+    elif args.mode == "top":
         render_top(blocks, output, title)
     else:
         render_iso(blocks, output, title)
