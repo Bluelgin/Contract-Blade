@@ -655,31 +655,38 @@ public final class ContractInteriorBuilder {
 
     private static void buildBoundary(ServerLevel level, BlockPos o, int radius) {
         for (int offset = -radius; offset <= radius; offset++) {
-            placeFenceIfOpen(level, o.offset(offset, 0, -radius));
-            placeFenceIfOpen(level, o.offset(offset, 0, radius));
-            placeFenceIfOpen(level, o.offset(-radius, 0, offset));
-            placeFenceIfOpen(level, o.offset(radius, 0, offset));
+            placeBoundaryIfOpen(level, o.offset(offset, 0, -radius));
+            placeBoundaryIfOpen(level, o.offset(offset, 0, radius));
+            placeBoundaryIfOpen(level, o.offset(-radius, 0, offset));
+            placeBoundaryIfOpen(level, o.offset(radius, 0, offset));
         }
     }
 
     private static void clearBoundary(ServerLevel level, BlockPos o, int radius) {
         for (int offset = -radius; offset <= radius; offset++) {
-            clearGeneratedFence(level, o.offset(offset, 0, -radius));
-            clearGeneratedFence(level, o.offset(offset, 0, radius));
-            clearGeneratedFence(level, o.offset(-radius, 0, offset));
-            clearGeneratedFence(level, o.offset(radius, 0, offset));
+            clearGeneratedBoundary(level, o.offset(offset, 0, -radius));
+            clearGeneratedBoundary(level, o.offset(offset, 0, radius));
+            clearGeneratedBoundary(level, o.offset(-radius, 0, offset));
+            clearGeneratedBoundary(level, o.offset(radius, 0, offset));
         }
     }
 
-    private static void placeFenceIfOpen(ServerLevel level, BlockPos pos) {
+    private static void placeBoundaryIfOpen(ServerLevel level, BlockPos pos) {
         if (level.isEmptyBlock(pos)) {
-            level.setBlockAndUpdate(pos, Blocks.DARK_OAK_FENCE.defaultBlockState());
+            level.setBlockAndUpdate(pos, Blocks.BARRIER.defaultBlockState());
+        }
+        if (level.isEmptyBlock(pos.above())) {
+            level.setBlockAndUpdate(pos.above(), Blocks.BARRIER.defaultBlockState());
         }
     }
 
-    private static void clearGeneratedFence(ServerLevel level, BlockPos pos) {
-        if (level.getBlockState(pos).is(Blocks.DARK_OAK_FENCE)) {
-            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+    private static void clearGeneratedBoundary(ServerLevel level, BlockPos pos) {
+        for (int y = 0; y <= 1; y++) {
+            BlockPos target = pos.above(y);
+            if (level.getBlockState(target).is(Blocks.BARRIER)
+                    || level.getBlockState(target).is(Blocks.DARK_OAK_FENCE)) {
+                level.setBlockAndUpdate(target, Blocks.AIR.defaultBlockState());
+            }
         }
     }
 
