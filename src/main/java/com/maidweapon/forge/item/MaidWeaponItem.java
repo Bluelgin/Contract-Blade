@@ -1,5 +1,6 @@
 package com.maidweapon.forge.item;
 
+import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.data.MaidWeaponDataSerializer;
 import com.maidweapon.common.sin.SinSlotManager;
