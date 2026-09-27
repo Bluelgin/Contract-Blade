@@ -165,10 +165,15 @@ public final class ContractInteriorService {
         }
 
         if (isInside(player)) {
-            if (!isGallerySession(player)) return false;
+            if (!isGallerySession(player)) {
+                message(player, "maid_weapon.message.interior.gallery_busy");
+                return false;
+            }
         } else {
             saveReturn(player, "");
-            returnState(player).putBoolean(TAG_GALLERY, true);
+            CompoundTag state = returnState(player);
+            state.putBoolean(TAG_GALLERY, true);
+            player.getPersistentData().put(TAG_RETURN, state);
         }
 
         player.teleportTo(
