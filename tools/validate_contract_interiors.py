@@ -77,6 +77,9 @@ for needle in [
     "fillGableEndsX",
     "for (int y = -4; y <= 20; y++)",
     "placeNaturalPathBlock",
+    "clearGeneratedWallBlock",
+    "landscapeHash",
+    "paintOuterRingPatch",
     "scatterOuterRingGroundCover",
     "buildBambooGrove",
     "buildOpenPavilion",
@@ -118,8 +121,12 @@ for needle in [
     if needle not in gallery:
         raise SystemExit(f"contract interior gallery invariant is missing: {needle}")
 
-if "clearFirst) {" not in builder or "clearSnapshotArea(level, origin)" not in builder:
-    raise SystemExit("explicit gallery rebuild cannot reset a stage snapshot")
+if (
+    "clearFirst) {" not in builder
+    or "clearSnapshotArea(level, origin, safeStage)" not in builder
+    or "radiusForStage(stage) + 6" not in builder
+):
+    raise SystemExit("explicit gallery rebuild cannot reset a stage snapshot efficiently")
 if "ContractInteriorGallery.open" not in commands:
     raise SystemExit("contract interior gallery command is missing")
 if "ContractInteriorGallery.visitStage" not in commands:
