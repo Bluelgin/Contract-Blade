@@ -114,7 +114,7 @@ public final class ContractInteriorBuilder {
         controlledDecoration(level, o.offset(-8, 1, 7), Blocks.PINK_PETALS, warmth >= 5);
         controlledDecoration(level, o.offset(-7, 1, 7), Blocks.PINK_PETALS, warmth >= 5);
         controlledDecoration(level, o.offset(-6, 1, 7), Blocks.PINK_PETALS, warmth >= 5);
-        controlledDecoration(level, o.offset(0, 1, -3), Blocks.POTTED_AZALEA_BUSH, warmth >= 6);
+        controlledDecoration(level, o.offset(0, 1, -3), Blocks.POTTED_AZALEA, warmth >= 6);
     }
 
     private static void controlledDecoration(
