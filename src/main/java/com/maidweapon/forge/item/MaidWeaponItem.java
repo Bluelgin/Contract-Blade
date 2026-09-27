@@ -308,7 +308,7 @@ public class MaidWeaponItem extends SwordItem {
             // 拔刀剑模式使用潜行+Q释放（见 MaidWeaponDropHandler），这里跳过
             boolean isSlashBladeMode = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
             if (!isSlashBladeMode) {
-                InteractionResult result = ContractInteractionService.recallHeld(player, hand);
+                InteractionResult result = ContractInteractionService.toggleHeld(player, hand);
                 if (result.consumesAction()) {
                     return InteractionResultHolder.success(stack);
                 }
