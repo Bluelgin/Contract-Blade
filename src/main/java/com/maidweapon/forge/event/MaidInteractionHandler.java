@@ -3,6 +3,7 @@ package com.maidweapon.forge.event;
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.system.contract.ContractInteractionService;
+import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -16,7 +17,7 @@ import net.minecraftforge.fml.common.Mod;
  * 女仆交互事件处理器。
  *
  * 普通模式：左键女仆 → 捕获
- * 拔刀剑模式：潜行+左键女仆 → 捕获，潜行+左键空 → 释放
+ * 拔刀剑模式：潜行+左键女仆 → 缔结/召回，潜行+左键空 → 切换显现状态
  */
 @Mod.EventBusSubscriber
 public class MaidInteractionHandler {
@@ -56,9 +57,9 @@ public class MaidInteractionHandler {
         ItemStack mainHand = event.getEntity().getMainHandItem();
         if (!isSlashBladeMode(mainHand)) return; // 仅拔刀剑版
         if (!event.getEntity().isShiftKeyDown()) return;
-        if (!MaidWeaponItem.hasMaidEntityData(mainHand)) return;
+        if (!MaidInfusion.isInfused(mainHand)) return;
 
-        // 客户端返回 SUCCESS 以触发数据包发送到服务端
+        // Stored and manifested states use the same lifecycle authority.
         if (event.getLevel().isClientSide()) {
             return; // 客户端侧不做释放操作，仅放行数据包
         }
