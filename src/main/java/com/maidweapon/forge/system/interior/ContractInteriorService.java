@@ -2,7 +2,8 @@ package com.maidweapon.forge.system.interior;
 
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
-import com.maidweapon.forge.compat.tlm.ContractMaidLifecycleService;
+import com.maidweapon.forge.system.contract.ContractLifecycleService;
+import com.maidweapon.forge.item.ContractInteriorKeyItem;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
@@ -42,6 +43,27 @@ public final class ContractInteriorService {
                 ? player.getOffhandItem()
                 : player.getMainHandItem();
         return MaidInfusion.isInfused(candidate) ? candidate : ItemStack.EMPTY;
+    }
+
+    /**
+     * Resolve the contract participating in first-entry terrain selection.
+     *
+     * <p>The normal Heart Key layout is preferred, but the held contract is
+     * accepted as a fallback for clickable-chat recovery.</p>
+     */
+    public static ItemStack contractForSelection(ServerPlayer player) {
+        ItemStack main = player.getMainHandItem();
+        ItemStack off = player.getOffhandItem();
+
+        if (main.getItem() instanceof ContractInteriorKeyItem && MaidInfusion.isInfused(off)) {
+            return off;
+        }
+        if (off.getItem() instanceof ContractInteriorKeyItem && MaidInfusion.isInfused(main)) {
+            return main;
+        }
+        if (MaidInfusion.isInfused(main)) return main;
+        if (MaidInfusion.isInfused(off)) return off;
+        return ItemStack.EMPTY;
     }
 
     public static boolean enter(ServerPlayer player, ItemStack contract) {
@@ -85,8 +107,20 @@ public final class ContractInteriorService {
         ContractInteriorProfile profile = ContractInteriorProfile.from(data);
         ContractInteriorSavedData saved = ContractInteriorSavedData.get(server);
         ContractInteriorSavedData.Plot plot = saved.getOrCreate(bindingId);
+
+        if (!plot.hasTerrainTheme()) {
+            ContractInteriorSelectionService.prompt(player, contract);
+            return true;
+        }
+
         BlockPos origin = origin(plot);
-        ContractInteriorBuilder.ensureBuilt(interior, origin, profile, saved, bindingId);
+        ContractInteriorTerrainBuilder.ensureGenerated(
+                interior,
+                origin,
+                profile,
+                saved,
+                bindingId
+        );
 
         saveReturn(player, bindingId);
         player.teleportTo(
@@ -100,7 +134,7 @@ public final class ContractInteriorService {
         player.fallDistance = 0.0F;
 
         if (!resumeInteriorMaid
-                && !ContractMaidLifecycleService.manifest(player, contract, false)) {
+                && !ContractLifecycleService.manifest(player, contract, false)) {
             restoreReturn(player);
             clearReturn(player);
             message(player, "maid_weapon.message.interior.maid_restore_failed");
@@ -292,7 +326,7 @@ public final class ContractInteriorService {
         if (maid == null) {
             return MaidWeaponItem.hasMaidEntityData(contract);
         }
-        return ContractMaidLifecycleService.capture(player, maid, contract, false);
+        return ContractLifecycleService.capture(player, maid, contract, false);
     }
 
     private static ItemStack findContractByBinding(ServerPlayer player, String bindingId) {
