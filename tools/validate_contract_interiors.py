@@ -116,6 +116,17 @@ for needle in [
     if needle not in terrain_builder:
         raise SystemExit(f"real contract terrain progression is incomplete: {needle}")
 
+inside_land_body = terrain_builder.split(
+    "private static boolean insideLand", 1
+)[1].split("private static void buildBoundary", 1)[0]
+if "hash(" in inside_land_body or "Math.floorMod" in inside_land_body:
+    raise SystemExit(
+        "interior stage footprints must stay strictly nested; "
+        "radius-dependent/random edge noise can reopen void seams"
+    )
+if "Math.pow(nx, 6.0D) + Math.pow(nz, 6.0D) <= 1.0D" not in inside_land_body:
+    raise SystemExit("interior expansion lost its monotonic rounded-square footprint")
+
 for theme in [
     "PLAINS_GARDEN",
     "SAKURA_GARDEN",
