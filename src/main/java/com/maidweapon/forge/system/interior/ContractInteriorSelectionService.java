@@ -72,9 +72,12 @@ public final class ContractInteriorSelectionService {
             return false;
         }
 
+        net.minecraft.server.MinecraftServer server = player.getServer();
+        if (server == null) return false;
+
         String bindingId = MaidWeaponItem.ensureBindingId(contract);
         ContractInteriorSavedData saved =
-                ContractInteriorSavedData.get(player.getServer());
+                ContractInteriorSavedData.get(server);
         ContractInteriorSavedData.Plot plot = saved.getOrCreate(bindingId);
 
         if (plot.hasTerrainTheme()) {
