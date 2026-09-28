@@ -477,7 +477,7 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     private static boolean isAutoWeapon(ItemStack stack, Player player) {
-        return MaidInfusion.isInfused(stack) && !MaidInfusion.isContractBlade(stack)
+        return MaidInfusion.isInfused(stack)
                 && MaidWeaponItem.isOwner(stack, player)
                 && !MaidWeaponItem.isContractSuperseded(stack)
                 && !EmbeddedSpiritApi.isDormant(stack)
