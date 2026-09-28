@@ -163,6 +163,10 @@ for needle in [
         raise SystemExit(f"interior lifecycle invariant is missing: {needle}")
 if "ContractInteriorBuilder.ensureBuilt" in service:
     raise SystemExit("real player interiors regressed to the generated example-home builder")
+if "contractForSelection(ServerPlayer player)" not in service:
+    raise SystemExit("terrain selection lost the Heart Key contract resolver")
+if service.count("instanceof ContractInteriorKeyItem") < 2:
+    raise SystemExit("terrain selection can bypass the Heart Key hand pairing")
 
 if "InfusedMaidDeploymentSystem" in service + events + builder + terrain_builder + saved + profile:
     raise SystemExit("contract interior depends on the hotbar deployment state machine")
