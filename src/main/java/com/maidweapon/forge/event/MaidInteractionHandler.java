@@ -5,10 +5,8 @@ import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.system.contract.ContractInteractionService;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,8 +14,8 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * 女仆交互事件处理器。
  *
- * 普通模式：左键女仆 → 捕获
- * 拔刀剑模式：潜行+左键女仆 → 缔结/召回，潜行+左键空 → 切换显现状态
+ * 未绑定的专属武器可直接与女仆缔结；SlashBlade 兼容入口保留潜行攻击缔结。
+ * 已绑定后的显现/召回全部交给统一 deployment 状态机。
  */
 @Mod.EventBusSubscriber
 public class MaidInteractionHandler {
@@ -29,11 +27,6 @@ public class MaidInteractionHandler {
         if (stack.getItem() instanceof MaidWeaponItem) return true;
         // 拔刀剑版（通过 SlashBladeMode 标签识别）
         return stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
-    }
-
-    /** 检查是否持有已绑定的女仆武器 */
-    private static boolean hasBoundMaid(ItemStack stack) {
-        return isMaidWeapon(stack) && MaidWeaponItem.hasMaidData(stack);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -61,21 +54,6 @@ public class MaidInteractionHandler {
 
         event.setCanceled(true);
         ContractInteractionService.capture(event.getEntity(), event.getTarget(), mainHand);
-    }
-
-    @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
-        ItemStack mainHand = event.getEntity().getMainHandItem();
-        if (!isSlashBladeMode(mainHand)) return; // 仅拔刀剑版
-        if (!event.getEntity().isShiftKeyDown()) return;
-        if (!MaidInfusion.isInfused(mainHand)) return;
-
-        // Stored and manifested states use the same lifecycle authority.
-        if (event.getLevel().isClientSide()) {
-            return; // 客户端侧不做释放操作，仅放行数据包
-        }
-
-        ContractInteractionService.toggleHeld(event.getEntity(), InteractionHand.MAIN_HAND);
     }
 
     private static boolean isSlashBladeMode(ItemStack stack) {
