@@ -26,7 +26,7 @@ permissions:
 jobs:
   preview:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -110,6 +110,10 @@ jobs:
             --password contract-blade-preview \
             "maidweapon interior gallery generate 4"
 
+          python tools/rcon_command.py \
+            --password contract-blade-preview \
+            "maidweapon interior terrain-preview generate"
+
           sleep 2
 
           python tools/rcon_command.py \
@@ -168,15 +172,58 @@ jobs:
               --output "interior-preview/stage_5_iso_r${rotation}.png"
           done
 
+          # Real player-built terrain: Sakura progression row.
+          terrain_radii=(18 26 34 42 54)
+          for stage in 1 2 3 4 5; do
+            center_x=$((-16384 + (stage - 1) * 144))
+            radius=${terrain_radii[$((stage - 1))]}
+
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage "$stage" \
+              --center-x "$center_x" \
+              --center-z -8192 \
+              --radius "$radius" \
+              --mode iso \
+              --format png \
+              --output "interior-preview/terrain_sakura_stage_${stage}_iso.png"
+
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage "$stage" \
+              --center-x "$center_x" \
+              --center-z -8192 \
+              --radius "$radius" \
+              --mode top \
+              --format png \
+              --output "interior-preview/terrain_sakura_stage_${stage}_top.png"
+          done
+
+          # Maximum-stage comparison for every selectable terrain theme.
+          themes=(plains_garden sakura_garden bamboo_grove lake_islet hill_garden)
+          for index in 0 1 2 3 4; do
+            center_x=$((-16384 + index * 144))
+            theme=${themes[$index]}
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage 5 \
+              --center-x "$center_x" \
+              --center-z -8448 \
+              --radius 54 \
+              --mode iso \
+              --format png \
+              --output "interior-preview/terrain_${theme}_stage_5_iso.png"
+          done
+
           sha256sum interior-preview/*.png
 
-      - name: Emit Stage 5 preview payload
+      - name: Emit real terrain Stage 5 preview payload
         shell: bash
         run: |
-          echo "STAGE5_PNG_BASE64_BEGIN"
-          gzip -c interior-preview/stage_5_iso.png | base64 -w 0
+          echo "TERRAIN_STAGE5_PNG_BASE64_BEGIN"
+          gzip -c interior-preview/terrain_sakura_stage_5_iso.png | base64 -w 0
           echo
-          echo "STAGE5_PNG_BASE64_END"
+          echo "TERRAIN_STAGE5_PNG_BASE64_END"
 
       - name: Upload interior previews
         uses: actions/upload-artifact@v4
