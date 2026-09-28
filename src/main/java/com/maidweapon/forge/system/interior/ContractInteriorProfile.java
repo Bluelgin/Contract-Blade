@@ -3,11 +3,12 @@ package com.maidweapon.forge.system.interior;
 import com.maidweapon.common.data.MaidWeaponData;
 
 /**
- * Stable visual/progression profile for one contract interior.
+ * Stable progression profile for one contract interior.
  *
- * <p>Contract level controls permanent spatial growth. Favorability controls
- * reversible lived-in decoration. Resonance is deliberately not persisted here
- * so short-term combat state cannot erase home progression.</p>
+ * <p>Contract level controls permanent usable-area growth. The warmth stage is
+ * retained only for the optional developer/example gallery; real player-owned
+ * terrain never inserts furniture from favorability. Favorability is reserved
+ * for future maid-at-home behavior.</p>
  */
 public record ContractInteriorProfile(int spaceStage, int warmthStage) {
     public static final int MAX_SPACE_STAGE = 5;
