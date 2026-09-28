@@ -61,8 +61,6 @@ public final class ContractInteriorService {
         if (off.getItem() instanceof ContractInteriorKeyItem && MaidInfusion.isInfused(main)) {
             return main;
         }
-        if (MaidInfusion.isInfused(main)) return main;
-        if (MaidInfusion.isInfused(off)) return off;
         return ItemStack.EMPTY;
     }
 
