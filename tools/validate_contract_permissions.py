@@ -51,9 +51,9 @@ lifecycle = read("src/main/java/com/maidweapon/forge/system/contract/ContractLif
 binding_table = read("src/main/java/com/maidweapon/forge/menu/MaidInjectorMenu.java")
 maid_interaction = read("src/main/java/com/maidweapon/forge/event/MaidInteractionHandler.java")
 commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
-gui_gate = "hasMaidData(stack) && !player.isShiftKeyDown()"
+gui_gate = "if (hasMaidData(stack)) return InteractionResult.PASS;"
 if gui_gate not in weapon:
-    raise SystemExit("Normal right-click must pass through to TLM's manifested-maid GUI")
+    raise SystemExit("Bound Contract Blade right-click must pass through to TLM/deployment")
 if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner" not in interaction:
     raise SystemExit("Contract interaction authority is not centralized")
 
