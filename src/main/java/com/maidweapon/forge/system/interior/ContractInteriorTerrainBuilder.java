@@ -466,11 +466,15 @@ public final class ContractInteriorTerrainBuilder {
 
     private static boolean insideLand(int x, int z, int radius, long seed) {
         if (Math.abs(x) > radius || Math.abs(z) > radius) return false;
+
+        // This footprint MUST be monotonic across stages. Using radius-dependent
+        // edge noise here can make a later footprint fail to contain a previous
+        // one, leaving a one-block void seam after the old barrier is removed.
+        // Terrain character belongs in height/decor/water, not in progression
+        // boundary randomness.
         double nx = Math.abs(x) / (double) radius;
         double nz = Math.abs(z) / (double) radius;
-        double shape = Math.pow(nx, 6.0D) + Math.pow(nz, 6.0D);
-        int noise = Math.floorMod(hash(seed, x, z, radius), 9) - 4;
-        return shape <= 1.0D + noise * 0.004D;
+        return Math.pow(nx, 6.0D) + Math.pow(nz, 6.0D) <= 1.0D;
     }
 
     private static void buildBoundary(
