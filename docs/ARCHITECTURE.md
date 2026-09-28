@@ -33,8 +33,10 @@ state has a single authority at any moment:
 - intrinsic spirit projection: one selected contract projected into the legacy
   root fields, with dormant archives kept outside the active authority.
 
-The storage boundary is `ContractMaidStorage`; live/stored transitions are owned
-by `ContractMaidLifecycleService`.
+The storage boundary is `ContractMaidStorage`; low-level TLM serialization is
+owned by `ContractMaidLifecycleService`. Core callers use
+`ContractLifecycleService`, so the Contract Table, dedicated Contract Blade
+items and other interaction entry points request the same stored/live lifecycle.
 
 ## Player interaction
 
@@ -59,17 +61,29 @@ Weapon interiors are a Core contract feature, not a deployment mode. Every
 concrete contract is assigned one stable plot inside the single
 `maid_weapon:contract_interior` dimension by binding ID.
 
+The real player-owned interior is **land, not a generated house**. First entry
+chooses one immutable terrain theme and seed. Contract level expands the usable
+area in five monotonic rings; only the newly unlocked ring may be generated.
+The player's older land, buildings and decoration are authoritative and must
+never be globally rebuilt.
+
 The interior stack is split into focused responsibilities:
 
 - `ContractInteriorService`: enter/exit authority, return position and maid lifecycle;
-- `ContractInteriorSavedData`: persistent binding-to-plot allocation and built stage;
-- `ContractInteriorProfile`: maps contract level/favorability to visual progression;
-- `ContractInteriorBuilder`: built-in fallback home and reserved dynamic decorations;
+- `ContractInteriorSavedData`: binding-to-plot allocation, terrain theme/seed and generated stage;
+- `ContractInteriorProfile`: maps contract level to the five usable-area stages;
+- `ContractInteriorSelectionService`: one-time player terrain choice;
+- `ContractInteriorTerrainBuilder`: deterministic incremental land generation and invisible boundary;
+- `ContractInteriorBuilder`: developer/example Japanese home only; never the real player-home generator;
+- `ContractInteriorGallery`: optional example-home/design workspace;
 - `ContractInteriorEvents`: logout/death/void/drop safety only.
 
-Contract level controls monotonic spatial growth. Favorability controls
-reversible lived-in details at reserved positions. Player edits must never be
-globally rewritten on every entry.
+Built-in terrain themes keep a build-friendly central clearing while changing
+the atmosphere of later land: plains, sakura, bamboo, lake islet and low hills.
+Terrain generation is deterministic from `theme + seed + coordinates`.
+Favorability does **not** place furniture or rewrite terrain; it is reserved for
+future maid-at-home behavior and interaction. Resonance likewise remains a
+temporary ambience concern rather than permanent world geometry.
 
 The real TLM maid remains the only manifested maid authority inside the
 interior. Entry manifests from the contract after teleport; exit captures the
@@ -78,9 +92,9 @@ code must not depend on the hotbar deployment state machine. Conversely, the
 hotbar deployment state machine explicitly ignores the interior dimension so it
 cannot adopt or recall the maid manifested by the interior lifecycle.
 
-Visual homes are replaceable presentation assets. External schematics/templates
-must have explicit redistribution/modification terms and must not become a
-runtime dependency of the contract identity or lifecycle layers.
+The example-home gallery and external schematics are presentation/development
+assets only. They must never become runtime dependencies of contract identity,
+terrain progression or maid lifecycle.
 
 ## Deployment
 
