@@ -47,6 +47,9 @@ if "hasDeployedMaid" not in deployment or "deployed_contract_transfer_blocked" n
 
 weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
 interaction = read("src/main/java/com/maidweapon/forge/system/contract/ContractInteractionService.java")
+lifecycle = read("src/main/java/com/maidweapon/forge/system/contract/ContractLifecycleService.java")
+binding_table = read("src/main/java/com/maidweapon/forge/menu/MaidInjectorMenu.java")
+maid_interaction = read("src/main/java/com/maidweapon/forge/event/MaidInteractionHandler.java")
 commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
 gui_gate = "hasMaidData(stack) && !player.isShiftKeyDown()"
 if gui_gate not in weapon:
@@ -57,14 +60,41 @@ if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner
 if "ContractInteractionService.toggleHeld" not in weapon:
     raise SystemExit("Dedicated contract sneak-right-click no longer uses the unified toggle")
 for needle in [
-    "public static InteractionResult toggleHeld",
-    "MaidWeaponItem.hasMaidEntityData(weapon)",
-    "TouhouLittleMaidCompat.convertWeaponToMaid(player, weapon)",
-    "ContractWeaponLocator.findManifestedMaid(player, maidId)",
-    "return capture(player, maid, weapon);",
+    "ContractLifecycleService.capture",
+    "ContractLifecycleService.toggle",
 ]:
     if needle not in interaction:
-        raise SystemExit(f"Dedicated contract toggle is incomplete: {needle}")
+        raise SystemExit(f"Contract interaction no longer delegates lifecycle authority: {needle}")
+for forbidden in [
+    "ContractWeaponLocator",
+    "convertWeaponToMaid",
+    "convertMaidToWeapon",
+]:
+    if forbidden in interaction:
+        raise SystemExit(f"Contract interaction regained a second lifecycle implementation: {forbidden}")
+
+for needle in [
+    "MaidInfusion.containsMaid(contract)",
+    "ContractWeaponLocator.findManifestedMaid",
+    "TouhouLittleMaidCompat.convertWeaponToMaid",
+    "TouhouLittleMaidCompat.convertMaidToWeapon",
+    "TouhouLittleMaidCompat.infuseFromFilm",
+    "TouhouLittleMaidCompat.extractMaidToFilm",
+]:
+    if needle not in lifecycle:
+        raise SystemExit(f"Unified contract lifecycle is incomplete: {needle}")
+
+for needle in [
+    "ContractLifecycleService.extractToFilm",
+    "ContractLifecycleService.infuseFromFilm",
+]:
+    if needle not in binding_table:
+        raise SystemExit(f"Contract Table bypasses unified lifecycle: {needle}")
+
+if "MaidInfusion.isInfused(mainHand)" not in maid_interaction:
+    raise SystemExit("SlashBlade gesture cannot toggle a manifested contract back into storage")
+if "ContractInteractionService.toggleHeld" not in maid_interaction:
+    raise SystemExit("SlashBlade gesture bypasses unified contract interaction")
 
 if "instanceof MaidWeaponItem" in commands:
     raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")
