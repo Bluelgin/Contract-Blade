@@ -268,55 +268,26 @@ public class MaidWeaponItem extends SwordItem {
         if (player.level().isClientSide() || hand != InteractionHand.MAIN_HAND) {
             return InteractionResult.PASS;
         }
-        // A normal right-click on an already manifested contract belongs to TLM's GUI.
-        // Sneaking explicitly hands the gesture to the contract interaction authority.
-        if (hasMaidData(stack) && !player.isShiftKeyDown()) return InteractionResult.PASS;
+        // Once bound, this item behaves like every Contract Table carrier:
+        // deployment owns manifestation/recall and right-click belongs to TLM.
+        if (hasMaidData(stack)) return InteractionResult.PASS;
         return ContractInteractionService.capture(player, target, stack);
     }
 
     // ==================== 右键使用（空气/方块） ====================
 
     /**
-     * 右键使用（空气/方块）：潜行时切换女仆的收纳/显现状态。
-     *
-     * 玩家潜行 + 右键空气：
-     * - 女仆在武器中：显现；
-     * - 女仆已显现：召回到同一份契约。
+     * Bound Contract Blades deliberately do not own a manual summon/recall
+     * gesture. They participate in the same main-hand deployment state machine
+     * as weapons created through the Contract Table.
      */
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide) {
-            boolean sneak = player.isShiftKeyDown();
-            boolean hasData = hasMaidData(stack);
-            if (sneak && hasData) {
-                return InteractionResultHolder.success(stack);
-            }
-            return InteractionResultHolder.pass(stack);
-        }
-
-        LOGGER.info("[MaidWeapon] SERVER use() player={} hand={} shift={} hasData={}",
-                player.getScoreboardName(), hand, player.isShiftKeyDown(), hasMaidData(stack));
-
-        if (hasMaidData(stack) && !isOwner(stack, player)) {
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.not_owner"), true);
-            return InteractionResultHolder.fail(stack);
-        }
-
-        // 潜行 + 右键空气：普通契约之刃只负责提交“切换契约状态”请求。
-        // 真正的收纳/显现生命周期统一由 ContractLifecycleService 处理。
-        if (player.isShiftKeyDown() && hasMaidData(stack)) {
-            // SlashBlade 自己的输入由 MaidInteractionHandler 接管，避免抢占本体右键。
-            boolean isSlashBladeMode = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
-            if (!isSlashBladeMode) {
-                InteractionResult result = ContractInteractionService.toggleHeld(player, hand);
-                if (result.consumesAction()) {
-                    return InteractionResultHolder.success(stack);
-                }
-            }
-        }
-        return InteractionResultHolder.pass(stack);
+    public InteractionResultHolder<ItemStack> use(
+            Level level,
+            Player player,
+            InteractionHand hand
+    ) {
+        return InteractionResultHolder.pass(player.getItemInHand(hand));
     }
 
     // ==================== 工具属性 ====================
