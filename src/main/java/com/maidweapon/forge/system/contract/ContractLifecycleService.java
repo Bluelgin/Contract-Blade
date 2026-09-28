@@ -1,6 +1,7 @@
 package com.maidweapon.forge.system.contract;
 
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
+import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
@@ -42,7 +43,7 @@ public final class ContractLifecycleService {
                 && !MaidWeaponItem.isOwner(contract, player)) {
             return false;
         }
-        return TouhouLittleMaidCompat.convertMaidToWeapon(
+        return TouhouLittleMaidHelper.convertMaidToWeapon(
                 player,
                 maid,
                 contract,
@@ -61,7 +62,7 @@ public final class ContractLifecycleService {
                 || MaidWeaponItem.isContractSuperseded(contract)) {
             return false;
         }
-        return TouhouLittleMaidCompat.convertWeaponToMaid(
+        return TouhouLittleMaidHelper.convertWeaponToMaid(
                 player,
                 contract,
                 notifyPlayer
@@ -110,7 +111,7 @@ public final class ContractLifecycleService {
             ItemStack film,
             ItemStack contract
     ) {
-        return TouhouLittleMaidCompat.infuseFromFilm(player, film, contract);
+        return TouhouLittleMaidHelper.infuseFromFilm(player, film, contract);
     }
 
     public static ItemStack extractToFilm(
@@ -118,7 +119,7 @@ public final class ContractLifecycleService {
             ItemStack contract,
             ItemStack emptyFilm
     ) {
-        return TouhouLittleMaidCompat.extractMaidToFilm(
+        return TouhouLittleMaidHelper.extractMaidToFilm(
                 player,
                 contract,
                 emptyFilm
