@@ -144,8 +144,7 @@ public final class TouhouLittleMaidHelper {
         if (!isMaidEntity(entity)) return InteractionResult.PASS;
         ItemStack heldItem = player.getItemInHand(hand);
         if (!MaidInfusion.isWeapon(heldItem)) return InteractionResult.PASS;
-        return convertMaidToWeapon(player, entity, heldItem)
-                ? InteractionResult.SUCCESS : InteractionResult.FAIL;
+        return ContractInteractionService.capture(player, entity, heldItem);
     }
 
     /** Legacy facade retained for callers compiled against beta builds. */
