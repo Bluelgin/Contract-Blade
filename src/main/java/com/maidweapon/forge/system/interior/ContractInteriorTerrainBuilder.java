@@ -107,7 +107,9 @@ public final class ContractInteriorTerrainBuilder {
         }
 
         decorateRing(level, origin, theme, seed, previousRadius, radius);
-        ensureSpawnClearing(level, origin);
+        if (stage == 1) {
+            ensureSpawnClearing(level, origin);
+        }
     }
 
     private static void generateColumn(
@@ -252,7 +254,8 @@ public final class ContractInteriorTerrainBuilder {
                 switch (theme) {
                     case PLAINS_GARDEN -> decoratePlains(level, surface, hash);
                     case SAKURA_GARDEN -> decorateSakura(
-                            level, origin, surface, seed, x, z, radius, hash);
+                            level, origin, surface, seed, x, z,
+                            previousRadius, radius, hash);
                     case BAMBOO_GROVE -> decorateBamboo(level, surface, hash);
                     case LAKE_ISLET -> decorateLake(level, surface, hash);
                     case HILL_GARDEN -> decorateHill(level, surface, hash);
@@ -278,12 +281,15 @@ public final class ContractInteriorTerrainBuilder {
             long seed,
             int x,
             int z,
+            int previousRadius,
             int radius,
             int hash
     ) {
         if (!isNaturalLand(level, surface)) return;
         int value = Math.floorMod(hash, 313);
-        if (value == 0 && clearTreeFootprint(level, surface.above())) {
+        boolean clearOfOldLand = previousRadius <= 0
+                || !insideLand(x, z, previousRadius + 4, seed);
+        if (value == 0 && clearOfOldLand && clearTreeFootprint(level, surface.above())) {
             buildCherryTree(level, origin, surface.above(), seed, radius);
         } else if (Math.floorMod(hash, 47) == 0) {
             level.setBlockAndUpdate(surface.above(), Blocks.PINK_PETALS.defaultBlockState());
