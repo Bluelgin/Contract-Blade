@@ -95,12 +95,16 @@ for needle in [
     if needle not in binding_table:
         raise SystemExit(f"Contract Table bypasses unified lifecycle: {needle}")
 
-if "MaidInfusion.isInfused(mainHand)" not in maid_interaction:
-    raise SystemExit("SlashBlade gesture cannot toggle a manifested contract back into storage")
-if "ContractInteractionService.toggleHeld" not in maid_interaction:
-    raise SystemExit("SlashBlade gesture bypasses unified contract interaction")
 if "if (MaidInfusion.isInfused(mainHand)) {" not in maid_interaction:
-    raise SystemExit("Bound dedicated weapon attacks can still bypass generic deployment recall")
+    raise SystemExit("Bound weapon attacks can still bypass generic deployment recall")
+if "ContractInteractionService.toggleHeld" in maid_interaction:
+    raise SystemExit("Bound SlashBlade regained a second manual summon/recall path")
+if "PlayerInteractEvent.LeftClickEmpty" in maid_interaction:
+    raise SystemExit("Bound SlashBlade still owns a manual empty-space recall gesture")
+if "ContractLifecycleService.manifest(player, weapon, false)" not in deployment:
+    raise SystemExit("Generic deployment bypasses unified contract manifest lifecycle")
+if "ContractLifecycleService.capture(player, maid, weapon, false)" not in deployment:
+    raise SystemExit("Generic deployment bypasses unified contract recall lifecycle")
 
 if "instanceof MaidWeaponItem" in commands:
     raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")
