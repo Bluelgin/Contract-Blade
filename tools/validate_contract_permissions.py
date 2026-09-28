@@ -80,10 +80,10 @@ for forbidden in [
 for needle in [
     "MaidInfusion.containsMaid(contract)",
     "ContractWeaponLocator.findManifestedMaid",
-    "TouhouLittleMaidCompat.convertWeaponToMaid",
-    "TouhouLittleMaidCompat.convertMaidToWeapon",
-    "TouhouLittleMaidCompat.infuseFromFilm",
-    "TouhouLittleMaidCompat.extractMaidToFilm",
+    "TouhouLittleMaidHelper.convertWeaponToMaid",
+    "TouhouLittleMaidHelper.convertMaidToWeapon",
+    "TouhouLittleMaidHelper.infuseFromFilm",
+    "TouhouLittleMaidHelper.extractMaidToFilm",
 ]:
     if needle not in lifecycle:
         raise SystemExit(f"Unified contract lifecycle is incomplete: {needle}")
