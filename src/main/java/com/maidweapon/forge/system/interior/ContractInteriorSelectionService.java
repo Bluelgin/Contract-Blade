@@ -22,7 +22,7 @@ public final class ContractInteriorSelectionService {
         ).withStyle(ChatFormatting.GRAY));
 
         for (ContractInteriorTerrainTheme theme : ContractInteriorTerrainTheme.values()) {
-            Component button = Component.literal("  [ ")
+            net.minecraft.network.chat.MutableComponent button = Component.literal("  [ ")
                     .append(theme.title())
                     .append(Component.literal(" ]"))
                     .withStyle(style -> style
