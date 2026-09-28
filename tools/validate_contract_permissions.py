@@ -57,8 +57,12 @@ if gui_gate not in weapon:
 if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner" not in interaction:
     raise SystemExit("Contract interaction authority is not centralized")
 
-if "ContractInteractionService.toggleHeld" not in weapon:
-    raise SystemExit("Dedicated contract sneak-right-click no longer uses the unified toggle")
+if "ContractInteractionService.toggleHeld" in weapon:
+    raise SystemExit("Dedicated Contract Blade regained a second manual summon/recall gesture")
+if "if (hasMaidData(stack)) return InteractionResult.PASS;" not in weapon:
+    raise SystemExit("Bound Contract Blade right-click must belong to TLM/deployment, not capture")
+if "!MaidInfusion.isContractBlade(stack)" in deployment:
+    raise SystemExit("Dedicated Contract Blades are still excluded from Contract Table deployment behavior")
 for needle in [
     "ContractLifecycleService.capture",
     "ContractLifecycleService.toggle",
@@ -95,6 +99,8 @@ if "MaidInfusion.isInfused(mainHand)" not in maid_interaction:
     raise SystemExit("SlashBlade gesture cannot toggle a manifested contract back into storage")
 if "ContractInteractionService.toggleHeld" not in maid_interaction:
     raise SystemExit("SlashBlade gesture bypasses unified contract interaction")
+if "if (MaidInfusion.isInfused(mainHand)) {" not in maid_interaction:
+    raise SystemExit("Bound dedicated weapon attacks can still bypass generic deployment recall")
 
 if "instanceof MaidWeaponItem" in commands:
     raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")
