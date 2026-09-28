@@ -85,6 +85,11 @@ BLOCK_COLORS = {
     "minecraft:potted_dandelion": "#ceb35b",
     "minecraft:potted_azalea_bush": "#668755",
     "minecraft:lily_pad": "#46733f",
+    "minecraft:dandelion": "#e2c74d",
+    "minecraft:poppy": "#c7443f",
+    "minecraft:blue_orchid": "#6ca8d9",
+    "minecraft:fern": "#4f8247",
+    "minecraft:azalea": "#5f8e50",
     "minecraft:lodestone": "#6c7883",
 }
 
@@ -469,6 +474,14 @@ def block_visual_shape(name: str) -> tuple[float, float]:
         return 0.82, 0.04
     if name == "minecraft:bamboo":
         return 0.24, 1.0
+    if name in {
+        "minecraft:dandelion",
+        "minecraft:poppy",
+        "minecraft:blue_orchid",
+        "minecraft:fern",
+        "minecraft:azalea",
+    }:
+        return 0.32, 0.55
     if name.endswith("_fence"):
         return 0.30, 1.0
     if name.endswith("_wall"):
