@@ -304,10 +304,10 @@ public class MaidWeaponItem extends SwordItem {
             return InteractionResultHolder.fail(stack);
         }
 
-        // 潜行 + 右键空气：切换显现/召回（普通剑模式）
-        // 拔刀剑模式使用潜行+Q（见 MaidWeaponDropHandler）
+        // 潜行 + 右键空气：普通契约之刃只负责提交“切换契约状态”请求。
+        // 真正的收纳/显现生命周期统一由 ContractLifecycleService 处理。
         if (player.isShiftKeyDown() && hasMaidData(stack)) {
-            // 拔刀剑模式使用潜行+Q释放（见 MaidWeaponDropHandler），这里跳过
+            // SlashBlade 自己的输入由 MaidInteractionHandler 接管，避免抢占本体右键。
             boolean isSlashBladeMode = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
             if (!isSlashBladeMode) {
                 InteractionResult result = ContractInteractionService.toggleHeld(player, hand);
