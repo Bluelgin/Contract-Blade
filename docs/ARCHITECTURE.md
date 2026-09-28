@@ -65,7 +65,9 @@ The real player-owned interior is **land, not a generated house**. First entry
 chooses one immutable terrain theme and seed. Contract level expands the usable
 area in five monotonic rings; only the newly unlocked ring may be generated.
 The player's older land, buildings and decoration are authoritative and must
-never be globally rebuilt.
+never be globally rebuilt. Spatial stage footprints must be strictly nested;
+a later stage must fully contain every earlier stage so removing the old
+boundary can never expose a one-block void seam.
 
 The interior stack is split into focused responsibilities:
 
