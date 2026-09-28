@@ -98,8 +98,13 @@ terrain progression or maid lifecycle.
 
 ## Deployment
 
-`InfusedMaidDeploymentSystem` remains the orchestration state machine. Focused
-services own independent responsibilities:
+`InfusedMaidDeploymentSystem` is the single main-hand manifestation/recall
+state machine for **all** infused carriers, including the dedicated Contract
+Blade items. Contract Blades no longer own a sneak-right-click recall path;
+drawing/putting away the carrier follows the same rules as a weapon created by
+the Contract Table.
+
+Focused services own independent responsibilities:
 
 - `ContractWeaponLocator`: resolve the real contract and live maid;
 - `ContractCombatTaskRouter`: optional-mod combat task selection/fallback;
