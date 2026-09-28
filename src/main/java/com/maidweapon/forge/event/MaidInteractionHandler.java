@@ -45,7 +45,18 @@ public class MaidInteractionHandler {
         if (!TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()) return;
         if (!TouhouLittleMaidCompat.isMaidEntity(event.getTarget())) return;
 
-        // 拔刀剑模式需要潜行才捕获（否则正常攻击触发SA）
+        // Once a carrier is already bound, deployment owns manifestation/recall.
+        // Cancel attacks against its own maid, but never turn attack input into
+        // a second recall path.
+        if (MaidInfusion.isInfused(mainHand)) {
+            if (MaidWeaponItem.isBoundMaid(mainHand, event.getTarget())) {
+                event.setCanceled(true);
+            }
+            return;
+        }
+
+        // Legacy SlashBlade binding gesture still requires sneaking so normal
+        // attacks can reach SlashBlade SA logic.
         if (isSlashBladeMode(mainHand) && !event.getEntity().isShiftKeyDown()) return;
 
         event.setCanceled(true);
