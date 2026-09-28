@@ -1,5 +1,6 @@
 package com.maidweapon.forge.system;
 
+import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.mojang.logging.LogUtils;
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
@@ -457,7 +458,7 @@ public final class InfusedMaidDeploymentSystem {
             return false;
         }
 
-        if (!TouhouLittleMaidHelper.convertWeaponToMaid(player, weapon, false)) return false;
+        if (!ContractLifecycleService.manifest(player, weapon, false)) return false;
         maid = findManifestedMaid(player, desired.maidId());
         if (maid == null) return false;
 
@@ -514,7 +515,7 @@ public final class InfusedMaidDeploymentSystem {
         if (weapon.isEmpty() || maid == null) return false;
 
         ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
-        if (TouhouLittleMaidHelper.convertMaidToWeapon(player, maid, weapon, false)) {
+        if (ContractLifecycleService.capture(player, maid, weapon, false)) {
             MaidCareTaskSystem.clearOriginalTask(weapon);
             clearDeploymentLocation(weapon);
             return true;
