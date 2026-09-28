@@ -186,17 +186,29 @@ public final class ContractInteriorTerrainBuilder {
             int z
     ) {
         double distance = Math.sqrt((double) x * x + (double) z * z);
-        if (distance <= 12.0D) return 0;
+        if (distance <= 14.0D) return 0;
 
-        int broad = Math.floorMod(hash(seed, x / 5, z / 5, 23), 7);
+        // Broad continuous waves create readable garden contours instead of
+        // per-cell noise terraces. The world is still deterministic from seed.
+        double phaseX = Math.floorMod(seed, 97L) / 7.0D;
+        double phaseZ = Math.floorMod(seed >>> 9, 89L) / 6.0D;
+        double wave = Math.sin((x + phaseX) / 11.0D)
+                + Math.cos((z + phaseZ) / 13.0D)
+                + 0.45D * Math.sin((x + z + phaseX) / 17.0D);
+
         return switch (theme) {
-            case PLAINS_GARDEN -> broad == 0 ? 1 : 0;
-            case SAKURA_GARDEN -> broad <= 1 ? 1 : 0;
-            case BAMBOO_GROVE -> broad == 0 ? 1 : 0;
+            case PLAINS_GARDEN -> 0;
+            case SAKURA_GARDEN ->
+                    distance >= 28.0D && wave > 1.15D ? 1 : 0;
+            case BAMBOO_GROVE ->
+                    distance >= 24.0D && wave > 0.85D ? 1 : 0;
             case LAKE_ISLET -> 0;
             case HILL_GARDEN -> {
-                int ridge = Math.min(2, (int) Math.max(0, (distance - 18.0D) / 13.0D));
-                yield Math.max(0, ridge + (broad == 0 ? 1 : 0) - (broad == 6 ? 1 : 0));
+                int terrace = distance >= 38.0D ? 2
+                        : distance >= 25.0D ? 1 : 0;
+                if (distance >= 34.0D && wave > 1.15D) terrace++;
+                if (wave < -1.55D) terrace--;
+                yield Math.max(0, Math.min(3, terrace));
             }
         };
     }
