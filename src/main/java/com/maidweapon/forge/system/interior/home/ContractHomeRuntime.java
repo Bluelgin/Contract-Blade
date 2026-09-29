@@ -199,13 +199,14 @@ public final class ContractHomeRuntime {
         endAction(s); s.state.slot = Long.MIN_VALUE; s.failed.clear(); s.nextDecision = 0;
         tick(player);
     }
-    public static void stop(ServerPlayer player) {
+    public static boolean stop(ServerPlayer player) {
         Session s = SESSIONS.remove(player.getUUID());
-        if (s == null) return;
+        if (s == null) return true;
         // Persist the logical selection before stopping its real pose/navigation.
         s.state.lastSimulatedAt = Instant.now().toEpochMilli(); s.saved.setDirty();
         // Retain the marker until lifecycle capture; failed lookup must still pause unattended AI.
-        endAction(s); TlmHomeBehaviorController.restore(s.maid);
+        endAction(s);
+        return TlmHomeBehaviorController.restore(s.maid);
     }
     public static void pause(ServerPlayer player) {
         Session s = SESSIONS.get(player.getUUID());
@@ -213,13 +214,15 @@ public final class ContractHomeRuntime {
         stop(player);
         pauseUncaptured(s.maid, s.binding);
     }
-    public static void prepareCapture(net.minecraft.world.entity.Entity entity) {
-        if (!(entity instanceof Mob maid)) return;
-        TlmHomeBehaviorController.restore(maid);
+    public static boolean prepareCapture(net.minecraft.world.entity.Entity entity) {
+        if (!(entity instanceof Mob maid)) return false;
+        // Never serialize Home Life's temporary brain/task/schedule scope into the contract.
+        if (!TlmHomeBehaviorController.restore(maid)) return false;
         if (maid.getPersistentData().getBoolean(PAUSED)) {
             maid.setNoAi(false); maid.getPersistentData().remove(PAUSED);
         }
         maid.getPersistentData().remove(RESIDENT);
+        return true;
     }
 
     /** Crash/restart and failed-recall safety. Never load a chunk to find an absent maid. */

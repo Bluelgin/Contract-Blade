@@ -12,15 +12,19 @@ exit/logout. The gallery remains separate.
   `MaidBedTask`, including TLM's sleep pose and favorability hook.
 - TLM **chair entity / cushion**, when `isTameableCanRide()` is enabled: real
   `startRiding`, as used by `MaidFindSitTask`. Actual passengers determine occupancy.
+- TLM **Gomoku / Chinese chess / western chess**: real `BlockJoy.startMaidSit` +
+  `EntitySit`, with the native `board_games` task and its `canSitInJoy` contract.
+  Home Life temporarily uses TLM's ALL schedule only for this action, then returns
+  to the scoped idle task; the player's original schedule is restored on release.
 - `WANDER`, `STAY_NEAR_PLAYER`, `IDLE` are safe non-furniture choices.
 
-`COOK`, `WORK`, `READ`, `PLAY`, `GARDEN`, `OBSERVE` are vocabulary reserved for
-adapters, not claimed working interactions. Vanilla beds, generic tables,
-kitchens and arbitrary third-party furniture are not automatically supported.
-TLM `BlockJoy.startMaidSit` was inspected, but `EntitySit.tickMaid` checks
-`EntityMaid.getScheduleDetail()` against world time and ejects incompatible
-passengers. Entertainment is intentionally deferred until that boundary can be
-integrated without changing the shared world's clock.
+`COOK`, `WORK`, `READ`, `GARDEN`, `OBSERVE` remain vocabulary reserved for
+adapters, not claimed working interactions. Vanilla beds, generic tables, kitchens
+and arbitrary third-party furniture are not automatically supported. TLM
+bookshelf/computer/keyboard Joy blocks remain deferred: `EntitySit.tickMaid` only
+permits IDLE (or a compatible WORK task), while the shared Contract Interior has
+fixed world time. We do not change the whole dimension clock merely to keep one
+maid seated.
 
 Source audit: TartaricAcid/TouhouLittleMaid `1.20`, commit
 `8a3ac5e9eacf0c6d63adf8832949f3ce81484fe6`; see `MaidBedTask`, `MaidFindSitTask`,
@@ -46,9 +50,11 @@ from `snapshot-2026-05-09-05-17-04`, SHA-256
   Native navigation/look/swim behaviors and TLM door interaction run normally. TLM's world-time schedule
   and independent furniture selection are excluded inside this scope so they do
   not instantly wake a real-time sleeper or override the chosen target.
-  Small original task/home/sitting/position settings are retained for crash
-  recovery; `refreshBrain` restores TLM behavior on release. Inventory/entity
-  NBT is never copied. Fire, injury, drowning, combat or a leash yields to TLM.
+  Small original task/schedule/home/sitting/position settings are retained for
+  crash recovery; `refreshBrain` restores TLM behavior on release. Restore
+  failure is observable at the lifecycle boundary: capture is refused rather
+  than serializing a temporary Home Life brain/task/schedule into the weapon.
+  Inventory/entity NBT is never copied. Fire, injury, drowning, combat or a leash yields to TLM.
 - `ContractInteriorGuideService`: a localized written book after successful
   real entry; receipt belongs to the plot. Full inventory defers delivery and
   retries every 30 seconds while at home.
@@ -103,8 +109,8 @@ checks plus architecture tripwires. Existing validators remain in Core CI.
 
 The existing headless preview workflow now includes the pinned TLM runtime and
 an explicit `contractinterior validate-home` fixture (available only with
-`-PgalleryPreview=true`). It checks plot NBT roundtrip/isolation, real bed/chair
-APIs, target invalidation and restoration of the same maid's brain. Preview still
+`-PgalleryPreview=true`). It checks plot NBT roundtrip/isolation, real bed/chair/board-game APIs,
+target invalidation and restoration of the same maid's brain/task/schedule. Preview still
 uses real Forge saves, `save-all flush` and `.mca` rendering for Sakura 1–5 and
 all five maximum-stage themes. These server checks verify state and APIs;
 client animation appearance and complex player-built routes still need in-game

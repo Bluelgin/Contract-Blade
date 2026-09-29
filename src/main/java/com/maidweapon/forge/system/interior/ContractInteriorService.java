@@ -321,15 +321,18 @@ public final class ContractInteriorService {
     }
 
     private static boolean recallInteriorMaid(ServerPlayer player, ItemStack contract) {
-        ContractHomeRuntime.stop(player);
+        boolean homeReleased = ContractHomeRuntime.stop(player);
         String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
-        if (maidId == null || maidId.isEmpty()) return true;
+        if (maidId == null || maidId.isEmpty()) return homeReleased;
 
         Entity maid = ContractWeaponLocator.findManifestedMaid(player, maidId);
         if (maid == null) {
-            return MaidWeaponItem.hasMaidEntityData(contract);
+            return homeReleased && MaidWeaponItem.hasMaidEntityData(contract);
         }
-        ContractHomeRuntime.prepareCapture(maid);
+        if (!homeReleased || !ContractHomeRuntime.prepareCapture(maid)) {
+            ContractHomeRuntime.pauseUncaptured(maid, MaidWeaponItem.getBindingId(contract));
+            return false;
+        }
         boolean captured = ContractLifecycleService.capture(player, maid, contract, false);
         if (!captured) ContractHomeRuntime.pauseUncaptured(maid, MaidWeaponItem.getBindingId(contract));
         return captured;
@@ -349,6 +352,15 @@ public final class ContractInteriorService {
         }
         ItemStack offhand = player.getOffhandItem();
         if (bindingId.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
+
+        // The active contract may be on the cursor or in an open/modded container.
+        // Resolve that real stack instead of creating a recovery copy.
+        ItemStack carried = player.containerMenu.getCarried();
+        if (bindingId.equals(MaidWeaponItem.getBindingId(carried))) return carried;
+        for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
+            ItemStack stack = slot.getItem();
+            if (bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
+        }
         return ItemStack.EMPTY;
     }
 

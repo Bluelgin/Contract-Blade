@@ -97,9 +97,11 @@ public final class ContractHomeValidation {
         com.maidweapon.forge.item.MaidWeaponItem.setBoundMaidUUID(contract, maid.getStringUUID());
         Entity chair = null;
         BlockPos bedPos = origin.offset(1, 0, 0);
+        BlockPos boardPos = origin.offset(-1, 0, 0);
         var adapter = new TlmHomeFurnitureAdapter();
         try {
             String oldTask = TlmEntityAdapter.taskId(maid);
+            String oldSchedule = String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid));
             check(TlmHomeBehaviorController.begin(maid), "behavior scope install");
             chair = (Entity) Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.item.EntityChair")
                     .getConstructor(Level.class).newInstance(level);
@@ -111,6 +113,20 @@ public final class ContractHomeValidation {
             adapter.stop(maid);
             chair.discard();
             check(!adapter.valid(level, seat, maid), "removed chair invalidated");
+
+            var boardBlock = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "gomoku"));
+            check(boardBlock != null && boardBlock != Blocks.AIR, "TLM gomoku registered");
+            level.setBlockAndUpdate(boardPos, boardBlock.defaultBlockState());
+            var boardAdapter = new TlmHomeBoardGameAdapter();
+            var board = boardAdapter.blockTarget(level, boardPos).orElseThrow();
+            check(board.activity() == ContractHomeActivity.PLAY, "board game indexed as PLAY");
+            check(boardAdapter.start(level, board, maid), "native board-game sit");
+            Entity boardSeat = maid.getVehicle();
+            check(boardSeat != null, "board-game EntitySit created");
+            for (int i = 0; i < 25; i++) boardSeat.tick();
+            check(boardAdapter.running(level, board, maid), "board game survives TLM schedule guard");
+            boardAdapter.stop(maid);
+            check(!maid.isPassenger(), "board-game stop releases maid");
 
             var bed = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "maid_bed"));
             check(bed != null && bed != Blocks.AIR, "TLM maid bed registered");
@@ -152,14 +168,17 @@ public final class ContractHomeValidation {
             check(!adapter.valid(level, sleep, maid), "removed bed invalidated");
             TlmHomeBehaviorController.restore(maid);
             check(oldTask.equals(TlmEntityAdapter.taskId(maid)), "original task restored");
+            check(oldSchedule.equals(String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid))),
+                    "original schedule restored");
             check(!maid.getPersistentData().contains("ContractHomeBehaviorSettings"), "behavior backup released");
-            System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair, loaded index, invalidation, brain scope, restore, NBT isolation");
+            System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game, loaded index, invalidation, brain scope, restore, NBT isolation");
         } finally {
             ContractHomeRuntime.stop(player);
             player.getInventory().clearContent(); player.getPersistentData().remove("MaidWeaponInteriorReturn");
             adapter.stop(maid); TlmHomeBehaviorController.restore(maid);
             maid.discard(); if (chair != null) chair.discard();
             level.setBlockAndUpdate(bedPos, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(boardPos, Blocks.AIR.defaultBlockState());
         }
     }
     @SuppressWarnings({"rawtypes", "unchecked"})

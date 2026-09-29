@@ -1,5 +1,6 @@
 package com.maidweapon.forge.system.interior.home;
 
+import com.maidweapon.forge.compat.tlm.TlmHomeBoardGameAdapter;
 import com.maidweapon.forge.compat.tlm.TlmHomeFurnitureAdapter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -13,7 +14,8 @@ import java.util.*;
  * No chunk tickets, getChunk(), world generation or retained offline sessions.
  */
 public final class ContractHomeFurnitureRegistry {
-    private static final List<ContractHomeFurnitureAdapter> ADAPTERS = new ArrayList<>(List.of(new TlmHomeFurnitureAdapter()));
+    private static final List<ContractHomeFurnitureAdapter> ADAPTERS = new ArrayList<>(List.of(
+            new TlmHomeFurnitureAdapter(), new TlmHomeBoardGameAdapter()));
     public static void registerAdapter(ContractHomeFurnitureAdapter adapter) { ADAPTERS.add(Objects.requireNonNull(adapter)); }
     public record Entry(ActivityTarget target, ContractHomeFurnitureAdapter adapter) {}
     private final NavigableMap<String, Entry> targets = new TreeMap<>();
