@@ -45,6 +45,8 @@ public final class TlmHomeBoardGameAdapter implements ContractHomeFurnitureAdapt
     public boolean valid(ServerLevel level, ActivityTarget target, Mob maid) {
         var fresh = blockTarget(level, target.position());
         if (fresh.isEmpty() || !fresh.get().key().equals(target.key())) return false;
+        Entity vehicle = maid.getVehicle();
+        if (matchesSeat(vehicle, target.position())) return true;
         Entity sit = sitEntity(level, target.position());
         return sit == null || !sit.isAlive() || sit.hasPassenger(maid);
     }
@@ -74,9 +76,9 @@ public final class TlmHomeBoardGameAdapter implements ContractHomeFurnitureAdapt
                 return false;
             }
             start.invoke(block, maid, state, level, target.position());
-            Entity sit = sitEntity(level, target.position());
-            boolean started = sit != null && sit.isAlive()
-                    && sit.hasPassenger(maid) && maid.getVehicle() == sit;
+            Entity sit = maid.getVehicle();
+            boolean started = matchesSeat(sit, target.position())
+                    && sit.isAlive() && sit.hasPassenger(maid);
             if (!started) TlmHomeBehaviorController.endBoardGame(maid);
             return started;
         } catch (ReflectiveOperationException | RuntimeException unsupported) {
@@ -88,8 +90,8 @@ public final class TlmHomeBoardGameAdapter implements ContractHomeFurnitureAdapt
     @Override
     public boolean running(ServerLevel level, ActivityTarget target, Mob maid) {
         if (!valid(level, target, maid)) return false;
-        Entity sit = sitEntity(level, target.position());
-        return sit != null && maid.getVehicle() == sit && sit.hasPassenger(maid);
+        Entity sit = maid.getVehicle();
+        return matchesSeat(sit, target.position()) && sit.hasPassenger(maid);
     }
 
     @Override
@@ -97,6 +99,16 @@ public final class TlmHomeBoardGameAdapter implements ContractHomeFurnitureAdapt
         if (maid.isPassenger() && maid.getVehicle() != null
                 && SIT.equals(maid.getVehicle().getClass().getName())) maid.stopRiding();
         TlmHomeBehaviorController.endBoardGame(maid);
+    }
+
+    private static boolean matchesSeat(Entity entity, BlockPos pos) {
+        if (entity == null || !SIT.equals(entity.getClass().getName())) return false;
+        try {
+            Object associated = entity.getClass().getMethod("getAssociatedBlockPos").invoke(entity);
+            return pos.equals(associated);
+        } catch (ReflectiveOperationException | RuntimeException unsupported) {
+            return false;
+        }
     }
 
     private static Entity sitEntity(ServerLevel level, BlockPos pos) {
