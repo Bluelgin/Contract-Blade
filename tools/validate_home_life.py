@@ -39,6 +39,9 @@ assert 'resumeHome' in service and 'ContractLifecycleService.manifest' in servic
 assert 'ContractHomeRuntime.prepareCapture(maid)' in service and 'homeReleased' in service
 assert 'player.containerMenu.getCarried()' in service and 'player.containerMenu.slots' in service
 assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPosition(), plot)' in service
+guide = (HOME / 'ContractInteriorGuideService.java').read_text()
+assert 'ClickEvent.Action.RUN_COMMAND' in guide
+assert '/contractinterior clock minecraft' in guide and '/contractinterior timezone +08:00' in guide
 care = (JAVA / 'system/MaidCareTaskSystem.java').read_text()
 assert 'ContractInteriorService.INTERIOR_LEVEL' in care
 print('Home Life authority, loaded-only indexing, cadence, terrain and save boundaries validated.')
