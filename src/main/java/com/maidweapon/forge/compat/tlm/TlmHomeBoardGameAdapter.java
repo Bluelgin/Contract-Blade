@@ -57,9 +57,23 @@ public final class TlmHomeBoardGameAdapter implements ContractHomeFurnitureAdapt
         try {
             BlockState state = level.getBlockState(target.position());
             Object block = state.getBlock();
-            block.getClass().getMethod("startMaidSit",
-                            TlmEntityAdapter.maidClass(), BlockState.class, Level.class, BlockPos.class)
-                    .invoke(block, maid, state, level, target.position());
+            java.lang.reflect.Method start = null;
+            for (java.lang.reflect.Method candidate : block.getClass().getMethods()) {
+                if (!candidate.getName().equals("startMaidSit") || candidate.getParameterCount() != 4) continue;
+                Class<?>[] p = candidate.getParameterTypes();
+                if (p[0].isInstance(maid)
+                        && p[1].isAssignableFrom(BlockState.class)
+                        && p[2].isInstance(level)
+                        && p[3].isAssignableFrom(BlockPos.class)) {
+                    start = candidate;
+                    break;
+                }
+            }
+            if (start == null) {
+                TlmHomeBehaviorController.endBoardGame(maid);
+                return false;
+            }
+            start.invoke(block, maid, state, level, target.position());
             Entity sit = sitEntity(level, target.position());
             boolean started = sit != null && sit.isAlive()
                     && sit.hasPassenger(maid) && maid.getVehicle() == sit;

@@ -120,6 +120,12 @@ public final class ContractHomeValidation {
             var boardAdapter = new TlmHomeBoardGameAdapter();
             var board = boardAdapter.blockTarget(level, boardPos).orElseThrow();
             check(board.activity() == ContractHomeActivity.PLAY, "board game indexed as PLAY");
+            check(TlmHomeBehaviorController.beginBoardGame(maid), "native board-game task scope");
+            check("touhou_little_maid:board_games".equals(TlmEntityAdapter.taskId(maid)),
+                    "native board-game task selected");
+            check("ALL".equals(String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid))),
+                    "native board-game schedule selected");
+            check(TlmHomeBehaviorController.endBoardGame(maid), "board-game task scope release");
             check(boardAdapter.start(level, board, maid), "native board-game sit");
             Entity boardSeat = maid.getVehicle();
             check(boardSeat != null, "board-game EntitySit created");
