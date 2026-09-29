@@ -12,19 +12,25 @@ exit/logout. The gallery remains separate.
   `MaidBedTask`, including TLM's sleep pose and favorability hook.
 - TLM **chair entity / cushion**, when `isTameableCanRide()` is enabled: real
   `startRiding`, as used by `MaidFindSitTask`. Actual passengers determine occupancy.
-- TLM **Gomoku / Chinese chess / western chess**: real `BlockJoy.startMaidSit` +
-  `EntitySit`, with the native `board_games` task and its `canSitInJoy` contract.
-  Home Life temporarily uses TLM's ALL schedule only for this action, then returns
-  to the scoped idle task; the player's original schedule is restored on release.
+- TLM **Gomoku / Chinese chess / western chess**: real `EntitySit` + the native
+  `board_games` task contract. The maid remains the real board passenger, so the
+  board's normal owner checks, game state, client packets and win/favorability logic
+  still see the real TLM maid.
+- TLM **bookshelf**: real `EntitySit` and TLM's native bookshelf animation, exposed
+  as `READ`.
+- TLM **computer / keyboard**: real `EntitySit` and their native TLM animations,
+  exposed as `PLAY`.
 - `WANDER`, `STAY_NEAR_PLAYER`, `IDLE` are safe non-furniture choices.
 
-`COOK`, `WORK`, `READ`, `GARDEN`, `OBSERVE` remain vocabulary reserved for
-adapters, not claimed working interactions. Vanilla beds, generic tables, kitchens
-and arbitrary third-party furniture are not automatically supported. TLM
-bookshelf/computer/keyboard Joy blocks remain deferred: `EntitySit.tickMaid` only
-permits IDLE (or a compatible WORK task), while the shared Contract Interior has
-fixed world time. We do not change the whole dimension clock merely to keep one
-maid seated.
+The shared Contract Interior world clock is never changed to satisfy TLM's
+world-time schedule. For bookshelf/computer/keyboard only, Home Life marks the
+exact selected `EntitySit` UUID and cancels that seat's schedule-driven dismount
+while the activity is active. The marker is removed before normal stop/restore,
+so arbitrary TLM seats and manual lifecycle cleanup are not globally blocked.
+
+`COOK`, `WORK`, `GARDEN`, `OBSERVE` remain extension vocabulary rather than
+claimed interactions. Vanilla beds, generic tables, kitchens and arbitrary
+third-party furniture are not automatically supported.
 
 Source audit: TartaricAcid/TouhouLittleMaid `1.20`, commit
 `8a3ac5e9eacf0c6d63adf8832949f3ce81484fe6`; see `MaidBedTask`, `MaidFindSitTask`,
@@ -110,7 +116,7 @@ checks plus architecture tripwires. Existing validators remain in Core CI.
 The existing headless preview workflow now includes the pinned TLM runtime and
 an explicit `contractinterior validate-home` fixture (available only with
 `-PgalleryPreview=true`). It checks plot NBT roundtrip/isolation, real bed/chair/board-game APIs,
-target invalidation and restoration of the same maid's brain/task/schedule. Preview still
+target invalidation, managed Joy-seat schedule bridging, and restoration of the same maid's brain/task/schedule. Preview still
 uses real Forge saves, `save-all flush` and `.mca` rendering for Sakura 1–5 and
 all five maximum-stage themes. These server checks verify state and APIs;
 client animation appearance and complex player-built routes still need in-game

@@ -16,6 +16,8 @@ runtime = (HOME / 'ContractHomeRuntime.java').read_text()
 registry = (HOME / 'ContractHomeFurnitureRegistry.java').read_text()
 behavior = (JAVA / 'compat/tlm/TlmHomeBehaviorController.java').read_text()
 board = (JAVA / 'compat/tlm/TlmHomeBoardGameAdapter.java').read_text()
+joy = (JAVA / 'compat/tlm/TlmHomeJoyAdapter.java').read_text()
+events = (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
 for path in HOME.glob('*.java'):
     source = path.read_text()
     for forbidden in ('setChunkForced(', 'addRegionTicket(', 'createAppearanceProxy(', 'saveWithoutId(',
@@ -26,6 +28,11 @@ assert 'getBlockEntities()' in registry and 'MAX_BLOCK_ENTITIES' in registry
 assert 'DECISION_INTERVAL = 600' in runtime and 'PATH_TIMEOUT = 400' in runtime
 assert 's.failed.add' in runtime and 'adapter.valid' in runtime
 assert 'new TlmHomeBoardGameAdapter()' in registry
+assert 'new TlmHomeJoyAdapter()' in registry
+for block_id in ('bookshelf', 'computer', 'keyboard'):
+    assert block_id in joy
+assert 'holdManagedSeat' in behavior and 'shouldKeepManagedSeat' in behavior
+assert 'onManagedSeatDismount' in events and 'EntityMountEvent' in events
 assert 'public static boolean restore(Mob maid)' in behavior
 assert 'beginBoardGame' in behavior and 'touhou_little_maid:board_games' in behavior
 for block_id in ('gomoku', 'cchess', 'wchess'):

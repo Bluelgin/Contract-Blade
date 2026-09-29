@@ -45,6 +45,9 @@ public class HomeClockResolverTest {
         check(ContractHomeActivityResolver.weight(ContractHomeActivity.STAY_NEAR_PLAYER, a.phase(), 384, true)
                 > ContractHomeActivityResolver.weight(ContractHomeActivity.STAY_NEAR_PLAYER, a.phase(), 0, true), "affection weight");
         check(ContractHomeActivityResolver.weight(ContractHomeActivity.STAY_NEAR_PLAYER, a.phase(), 384, false) == 0, "absent player");
+        check(ContractHomeActivityResolver.weight(ContractHomeActivity.READ, ContractHomeClock.Phase.EVENING, 0, true)
+                > ContractHomeActivityResolver.weight(ContractHomeActivity.READ, ContractHomeClock.Phase.NIGHT, 0, true),
+                "reading prefers waking hours");
         System.out.println("Home Clock/Resolver: phase, timezone, DST, Minecraft, binding/maid seeds and 10000 deterministic choices passed.");
     }
 }

@@ -21,6 +21,8 @@ public final class ContractHomeActivityResolver {
             case SLEEP -> phase == ContractHomeClock.Phase.NIGHT ? 85 : 2;
             case SIT -> phase == ContractHomeClock.Phase.EVENING ? 25 : 15;
             case PLAY -> phase == ContractHomeClock.Phase.EVENING ? 25 : 12;
+            case READ -> phase == ContractHomeClock.Phase.EVENING ? 22
+                    : phase == ContractHomeClock.Phase.DAY ? 16 : 8;
             case WANDER -> phase == ContractHomeClock.Phase.NIGHT ? 4 : 20;
             case STAY_NEAR_PLAYER -> playerPresent ? 3 + Math.max(0, Math.min(384, favorability)) / 12 : 0;
             case IDLE -> 5;

@@ -2,12 +2,14 @@ package com.maidweapon.forge.system.interior;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
+import com.maidweapon.forge.compat.tlm.TlmHomeBehaviorController;
 import com.maidweapon.forge.system.interior.home.ContractHomeRuntime;
 import com.maidweapon.forge.system.interior.home.ContractInteriorGuideService;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraftforge.event.entity.EntityMountEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -96,6 +98,15 @@ public final class ContractInteriorEvents {
                 && event.getEntity() instanceof net.minecraft.world.entity.Mob maid)
             ContractHomeRuntime.guardResident(maid);
     }
+    @SubscribeEvent
+    public static void onManagedSeatDismount(EntityMountEvent event) {
+        if (!event.isDismounting()
+                || !(event.getEntityMounting() instanceof net.minecraft.world.entity.Mob maid)) return;
+        if (TlmHomeBehaviorController.shouldKeepManagedSeat(maid, event.getEntityBeingMounted())) {
+            event.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent
     public static void onEntityJoin(EntityJoinLevelEvent event) {
         if (event.getLevel() instanceof ServerLevel level

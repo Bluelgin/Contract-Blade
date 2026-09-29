@@ -104,6 +104,7 @@ public final class ContractHomeValidation {
         Entity chair = null;
         BlockPos bedPos = origin.offset(1, 0, 0);
         BlockPos boardPos = origin.offset(-1, 0, 0);
+        BlockPos joyPos = origin.offset(0, 0, -1);
         var adapter = new TlmHomeFurnitureAdapter();
         try {
             String oldTask = TlmEntityAdapter.taskId(maid);
@@ -139,6 +140,22 @@ public final class ContractHomeValidation {
             check(boardAdapter.running(level, board, maid), "board game survives TLM schedule guard");
             boardAdapter.stop(maid);
             check(!maid.isPassenger(), "board-game stop releases maid");
+
+            var bookshelf = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "bookshelf"));
+            check(bookshelf != null && bookshelf != Blocks.AIR, "TLM bookshelf registered");
+            level.setBlockAndUpdate(joyPos, bookshelf.defaultBlockState());
+            var joyAdapter = new TlmHomeJoyAdapter();
+            var reading = joyAdapter.blockTarget(level, joyPos).orElseThrow();
+            check(reading.activity() == ContractHomeActivity.READ, "bookshelf indexed as READ");
+            check(joyAdapter.start(level, reading, maid), "native bookshelf sit");
+            Entity joySeat = maid.getVehicle();
+            check(joySeat != null, "bookshelf EntitySit created");
+            for (int i = 0; i < 25; i++) joySeat.tick();
+            check(joyAdapter.running(level, reading, maid),
+                    "managed bookshelf survives world-time schedule mismatch");
+            joyAdapter.stop(maid);
+            check(!maid.isPassenger(), "managed bookshelf stop releases maid");
+            level.setBlockAndUpdate(joyPos, Blocks.AIR.defaultBlockState());
 
             var bed = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "maid_bed"));
             check(bed != null && bed != Blocks.AIR, "TLM maid bed registered");
@@ -183,7 +200,7 @@ public final class ContractHomeValidation {
             check(oldSchedule.equals(String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid))),
                     "original schedule restored");
             check(!maid.getPersistentData().contains("ContractHomeBehaviorSettings"), "behavior backup released");
-            System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game, loaded index, invalidation, brain scope, restore, NBT isolation");
+            System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game/Joy furniture, loaded index, managed-seat clock bridge, invalidation, brain scope, restore, NBT isolation");
         } finally {
             ContractHomeRuntime.stop(player);
             player.getInventory().clearContent(); player.getPersistentData().remove("MaidWeaponInteriorReturn");
@@ -191,6 +208,7 @@ public final class ContractHomeValidation {
             maid.discard(); if (chair != null) chair.discard();
             level.setBlockAndUpdate(bedPos, Blocks.AIR.defaultBlockState());
             level.setBlockAndUpdate(boardPos, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(joyPos, Blocks.AIR.defaultBlockState());
         }
     }
     @SuppressWarnings({"rawtypes", "unchecked"})

@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.Brain;
@@ -22,6 +23,7 @@ import java.util.Set;
 public final class TlmHomeBehaviorController {
     private static final String BACKUP = "ContractHomeBehaviorSettings";
     private static final String BOARD_GAME_MODE = "ContractHomeBoardGame";
+    private static final String MANAGED_SEAT = "ContractHomeManagedSeat";
     private static final Activity HOME = new Activity("contract_blade_home");
 
     public static boolean begin(Mob maid) {
@@ -133,6 +135,22 @@ public final class TlmHomeBehaviorController {
         positions.getClass().getMethod("setConfigured", boolean.class).invoke(positions, true);
     }
 
+    public static void holdManagedSeat(Mob maid, Entity seat) {
+        if (seat != null) maid.getPersistentData().putUUID(MANAGED_SEAT, seat.getUUID());
+    }
+
+    public static boolean shouldKeepManagedSeat(Mob maid, Entity seat) {
+        return seat != null
+                && maid.level().dimension().equals(
+                        com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
+                && maid.getPersistentData().hasUUID(MANAGED_SEAT)
+                && maid.getPersistentData().getUUID(MANAGED_SEAT).equals(seat.getUUID());
+    }
+
+    public static void releaseManagedSeat(Mob maid) {
+        maid.getPersistentData().remove(MANAGED_SEAT);
+    }
+
     public static void clearWalk(Mob maid) {
         maid.getNavigation().stop();
         maid.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
@@ -145,8 +163,10 @@ public final class TlmHomeBehaviorController {
         CompoundTag backup = maid.getPersistentData().getCompound(BACKUP);
         if (backup.isEmpty()) {
             maid.getPersistentData().remove(BOARD_GAME_MODE);
+            maid.getPersistentData().remove(MANAGED_SEAT);
             return true;
         }
+        maid.getPersistentData().remove(MANAGED_SEAT);
         if (maid.isSleeping()) maid.stopSleeping();
         if (maid.isPassenger()) maid.stopRiding();
         clearWalk(maid);
@@ -165,6 +185,7 @@ public final class TlmHomeBehaviorController {
             maid.getClass().getMethod("refreshBrain", ServerLevel.class)
                     .invoke(maid, (ServerLevel) maid.level());
             maid.getPersistentData().remove(BOARD_GAME_MODE);
+            maid.getPersistentData().remove(MANAGED_SEAT);
             maid.getPersistentData().remove(BACKUP);
             return true;
         } catch (ReflectiveOperationException | RuntimeException unsupported) {
