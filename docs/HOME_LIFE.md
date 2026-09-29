@@ -20,11 +20,15 @@ exit/logout. The gallery remains separate.
   as `READ`.
 - TLM **computer / keyboard**: real `EntitySit` and their native TLM animations,
   exposed as `PLAY`.
+- TLM **picnic mat**: real picnic `EntitySit` plus TLM's own `MaidHomeMealTask`.
+  Food stays in the picnic mat's native item handler; the real maid takes one item
+  through TLM's meal API, hand/backpack handling, favorability cooldown and trigger path.
+  This is exposed as `MEAL`.
 - `WANDER`, `STAY_NEAR_PLAYER`, `IDLE` are safe non-furniture choices.
 
 The shared Contract Interior world clock is never changed to satisfy TLM's
-world-time schedule. For bookshelf/computer/keyboard only, Home Life marks the
-exact selected `EntitySit` UUID and cancels that seat's schedule-driven dismount
+world-time schedule. For bookshelf/computer/keyboard/picnic activities, Home Life
+marks the exact selected `EntitySit` UUID and cancels that seat's schedule-driven dismount
 while the activity is active. The marker is removed before normal stop/restore,
 so arbitrary TLM seats and manual lifecycle cleanup are not globally blocked.
 
@@ -116,7 +120,7 @@ checks plus architecture tripwires. Existing validators remain in Core CI.
 The existing headless preview workflow now includes the pinned TLM runtime and
 an explicit `contractinterior validate-home` fixture (available only with
 `-PgalleryPreview=true`). It checks plot NBT roundtrip/isolation, real bed/chair/board-game APIs,
-target invalidation, managed Joy-seat schedule bridging, and restoration of the same maid's brain/task/schedule. Preview still
+target invalidation, managed Joy/picnic schedule bridging, native Home Meal consumption, and restoration of the same maid's brain/task/schedule. Preview still
 uses real Forge saves, `save-all flush` and `.mca` rendering for Sakura 1–5 and
 all five maximum-stage themes. These server checks verify state and APIs;
 client animation appearance and complex player-built routes still need in-game

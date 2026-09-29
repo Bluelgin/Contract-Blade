@@ -15,6 +15,7 @@ import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
 import net.minecraft.world.entity.ai.behavior.Swim;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.schedule.Activity;
+import java.util.ArrayList;
 import java.util.Set;
 
 /** Temporary behavior scope on the SAME maid/brain; refreshBrain restores TLM on release.
@@ -117,9 +118,18 @@ public final class TlmHomeBehaviorController {
         BehaviorControl doors = (BehaviorControl) Class.forName(
                 "com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidInteractWithDoor")
                 .getMethod("create").invoke(null);
-        brain.addActivity(HOME, ImmutableList.of(Pair.of(0, new Swim(0.8f)),
-                Pair.of(1, new LookAtTargetSink(45, 90)), Pair.of(2, new MoveToTargetSink()),
-                Pair.of(3, doors)));
+        var behaviors = new ArrayList<Pair<Integer, BehaviorControl>>();
+        behaviors.add(Pair.of(0, new Swim(0.8f)));
+        behaviors.add(Pair.of(1, new LookAtTargetSink(45, 90)));
+        behaviors.add(Pair.of(2, new MoveToTargetSink()));
+        behaviors.add(Pair.of(3, doors));
+        if (homeMealSupported()) {
+            BehaviorControl meal = (BehaviorControl) Class.forName(
+                    "com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidHomeMealTask")
+                    .getConstructor().newInstance();
+            behaviors.add(Pair.of(4, meal));
+        }
+        brain.addActivity(HOME, ImmutableList.copyOf(behaviors));
         brain.setCoreActivities(Set.of(HOME));
         brain.setDefaultActivity(HOME);
         brain.setActiveActivityIfPossible(HOME);
@@ -133,6 +143,16 @@ public final class TlmHomeBehaviorController {
         positions.getClass().getMethod("setDimension", net.minecraft.resources.ResourceLocation.class)
                 .invoke(positions, maid.level().dimension().location());
         positions.getClass().getMethod("setConfigured", boolean.class).invoke(positions, true);
+    }
+
+    public static boolean homeMealSupported() {
+        try {
+            Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidHomeMealTask")
+                    .getConstructor();
+            return true;
+        } catch (ReflectiveOperationException | LinkageError unavailable) {
+            return false;
+        }
     }
 
     public static void holdManagedSeat(Mob maid, Entity seat) {

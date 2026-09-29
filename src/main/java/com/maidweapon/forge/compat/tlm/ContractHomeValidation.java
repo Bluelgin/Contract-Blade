@@ -105,6 +105,7 @@ public final class ContractHomeValidation {
         BlockPos bedPos = origin.offset(1, 0, 0);
         BlockPos boardPos = origin.offset(-1, 0, 0);
         BlockPos joyPos = origin.offset(0, 0, -1);
+        BlockPos picnicPos = origin.offset(0, 0, 2);
         var adapter = new TlmHomeFurnitureAdapter();
         try {
             String oldTask = TlmEntityAdapter.taskId(maid);
@@ -156,6 +157,45 @@ public final class ContractHomeValidation {
             joyAdapter.stop(maid);
             check(!maid.isPassenger(), "managed bookshelf stop releases maid");
             level.setBlockAndUpdate(joyPos, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(picnicPos, Blocks.AIR.defaultBlockState());
+
+            var picnic = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "picnic_mat"));
+            check(picnic != null && picnic != Blocks.AIR, "TLM picnic mat registered");
+            level.setBlockAndUpdate(picnicPos, picnic.defaultBlockState());
+            Object picnicTile = level.getBlockEntity(picnicPos);
+            check(picnicTile != null, "picnic tile created");
+            picnicTile.getClass().getMethod("setCenterPos", BlockPos.class).invoke(picnicTile, picnicPos);
+            Object handler = picnicTile.getClass().getMethod("getHandler").invoke(picnicTile);
+            handler.getClass().getMethod("setStackInSlot", int.class, net.minecraft.world.item.ItemStack.class)
+                    .invoke(handler, 0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD));
+            var picnicAdapter = new TlmHomePicnicAdapter();
+            var meal = picnicAdapter.blockTarget(level, picnicPos).orElseThrow();
+            check(meal.activity() == ContractHomeActivity.MEAL, "picnic indexed as MEAL");
+            check(picnicAdapter.start(level, meal, maid), "native picnic sit");
+            Entity picnicSeat = maid.getVehicle();
+            check(picnicSeat != null, "picnic EntitySit created");
+            for (int i = 0; i < 25; i++) picnicSeat.tick();
+            check(picnicAdapter.running(level, meal, maid),
+                    "managed picnic survives world-time schedule mismatch");
+
+            Class<?> mealTaskClass = Class.forName(
+                    "com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidHomeMealTask");
+            Object mealTask = mealTaskClass.getConstructor().newInstance();
+            java.lang.reflect.Method mealCheck = mealTaskClass.getDeclaredMethod(
+                    "checkExtraStartConditions", ServerLevel.class, TlmEntityAdapter.maidClass());
+            mealCheck.setAccessible(true);
+            check(Boolean.TRUE.equals(mealCheck.invoke(mealTask, level, maid)),
+                    "native Home Meal recognizes managed picnic");
+            java.lang.reflect.Method mealStart = mealTaskClass.getDeclaredMethod(
+                    "start", ServerLevel.class, TlmEntityAdapter.maidClass(), long.class);
+            mealStart.setAccessible(true);
+            mealStart.invoke(mealTask, level, maid, level.getGameTime());
+            Object remaining = handler.getClass().getMethod("getStackInSlot", int.class).invoke(handler, 0);
+            check(remaining instanceof net.minecraft.world.item.ItemStack stack && stack.isEmpty(),
+                    "native Home Meal consumes picnic inventory");
+            picnicAdapter.stop(maid);
+            check(!maid.isPassenger(), "managed picnic stop releases maid");
+            level.setBlockAndUpdate(picnicPos, Blocks.AIR.defaultBlockState());
 
             var bed = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "maid_bed"));
             check(bed != null && bed != Blocks.AIR, "TLM maid bed registered");
@@ -200,7 +240,7 @@ public final class ContractHomeValidation {
             check(oldSchedule.equals(String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid))),
                     "original schedule restored");
             check(!maid.getPersistentData().contains("ContractHomeBehaviorSettings"), "behavior backup released");
-            System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game/Joy furniture, loaded index, managed-seat clock bridge, invalidation, brain scope, restore, NBT isolation");
+            System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game/Joy/picnic Home Meal, loaded index, managed-seat clock bridge, invalidation, brain scope, restore, NBT isolation");
         } finally {
             ContractHomeRuntime.stop(player);
             player.getInventory().clearContent(); player.getPersistentData().remove("MaidWeaponInteriorReturn");

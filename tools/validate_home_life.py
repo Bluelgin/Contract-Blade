@@ -17,6 +17,7 @@ registry = (HOME / 'ContractHomeFurnitureRegistry.java').read_text()
 behavior = (JAVA / 'compat/tlm/TlmHomeBehaviorController.java').read_text()
 board = (JAVA / 'compat/tlm/TlmHomeBoardGameAdapter.java').read_text()
 joy = (JAVA / 'compat/tlm/TlmHomeJoyAdapter.java').read_text()
+picnic = (JAVA / 'compat/tlm/TlmHomePicnicAdapter.java').read_text()
 events = (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
 for path in HOME.glob('*.java'):
     source = path.read_text()
@@ -29,6 +30,9 @@ assert 'DECISION_INTERVAL = 600' in runtime and 'PATH_TIMEOUT = 400' in runtime
 assert 's.failed.add' in runtime and 'adapter.valid' in runtime
 assert 'new TlmHomeBoardGameAdapter()' in registry
 assert 'new TlmHomeJoyAdapter()' in registry
+assert 'new TlmHomePicnicAdapter()' in registry
+assert 'ContractHomeActivity.MEAL' in picnic
+assert 'MaidHomeMealTask' in behavior and 'homeMealSupported' in behavior
 for block_id in ('bookshelf', 'computer', 'keyboard'):
     assert block_id in joy
 assert 'holdManagedSeat' in behavior and 'shouldKeepManagedSeat' in behavior

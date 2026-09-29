@@ -48,6 +48,9 @@ public class HomeClockResolverTest {
         check(ContractHomeActivityResolver.weight(ContractHomeActivity.READ, ContractHomeClock.Phase.EVENING, 0, true)
                 > ContractHomeActivityResolver.weight(ContractHomeActivity.READ, ContractHomeClock.Phase.NIGHT, 0, true),
                 "reading prefers waking hours");
+        check(ContractHomeActivityResolver.weight(ContractHomeActivity.MEAL, ContractHomeClock.Phase.MORNING, 0, true)
+                > ContractHomeActivityResolver.weight(ContractHomeActivity.MEAL, ContractHomeClock.Phase.NIGHT, 0, true),
+                "meals prefer waking hours");
         System.out.println("Home Clock/Resolver: phase, timezone, DST, Minecraft, binding/maid seeds and 10000 deterministic choices passed.");
     }
 }

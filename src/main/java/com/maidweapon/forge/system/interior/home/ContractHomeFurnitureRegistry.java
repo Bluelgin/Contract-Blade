@@ -3,6 +3,7 @@ package com.maidweapon.forge.system.interior.home;
 import com.maidweapon.forge.compat.tlm.TlmHomeBoardGameAdapter;
 import com.maidweapon.forge.compat.tlm.TlmHomeFurnitureAdapter;
 import com.maidweapon.forge.compat.tlm.TlmHomeJoyAdapter;
+import com.maidweapon.forge.compat.tlm.TlmHomePicnicAdapter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -16,7 +17,8 @@ import java.util.*;
  */
 public final class ContractHomeFurnitureRegistry {
     private static final List<ContractHomeFurnitureAdapter> ADAPTERS = new ArrayList<>(List.of(
-            new TlmHomeFurnitureAdapter(), new TlmHomeBoardGameAdapter(), new TlmHomeJoyAdapter()));
+            new TlmHomeFurnitureAdapter(), new TlmHomeBoardGameAdapter(),
+            new TlmHomeJoyAdapter(), new TlmHomePicnicAdapter()));
     public static void registerAdapter(ContractHomeFurnitureAdapter adapter) { ADAPTERS.add(Objects.requireNonNull(adapter)); }
     public record Entry(ActivityTarget target, ContractHomeFurnitureAdapter adapter) {}
     private final NavigableMap<String, Entry> targets = new TreeMap<>();
