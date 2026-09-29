@@ -115,3 +115,14 @@ uses real Forge saves, `save-all flush` and `.mca` rendering for Sakura 1–5 an
 all five maximum-stage themes. These server checks verify state and APIs;
 client animation appearance and complex player-built routes still need in-game
 acceptance testing.
+
+
+## Interior containment
+
+An active home session is bound to its own generated plot footprint. Cross-dimension
+travel is handled by the normal lifecycle event, while same-dimension teleports
+(such as a waystone inside the shared Contract Interior dimension) are checked on
+the regular safety tick. A teleport outside the active binding's plot returns the
+owner to that plot's origin instead of exposing another binding's cell. This check
+is horizontal only, so vertical player builds inside the owned footprint remain
+usable.

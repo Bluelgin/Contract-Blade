@@ -251,5 +251,6 @@
   "maid_weapon.home.guide.zone.utc": "[UTC]",
   "maid_weapon.home.guide.zone.plus8": "[UTC+8]",
   "maid_weapon.home.guide.zone.shanghai": "[Asia/Shanghai]",
-  "maid_weapon.home.guide.click": "点击设置"
+  "maid_weapon.home.guide.click": "点击设置",
+  "maid_weapon.message.interior.plot_escape_recovered": "§d契约内景把你拉回了自己的土地；这里不会通往其他契约的家。"
 }

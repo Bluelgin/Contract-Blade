@@ -249,5 +249,6 @@
   "maid_weapon.home.guide.zone.utc": "[UTC]",
   "maid_weapon.home.guide.zone.plus8": "[UTC+8]",
   "maid_weapon.home.guide.zone.shanghai": "[Asia/Shanghai]",
-  "maid_weapon.home.guide.click": "Click to set"
+  "maid_weapon.home.guide.click": "Click to set",
+  "maid_weapon.message.interior.plot_escape_recovered": "§dThe contract interior pulled you back to your own land; this space cannot lead into another contract's home."
 }

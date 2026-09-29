@@ -303,7 +303,8 @@ public final class ContractInteriorService {
         // Same-dimension teleport mods do not fire PlayerChangedDimensionEvent.
         // Keep each active binding inside its own horizontal plot so a Waystone or
         // command cannot jump directly into another player's cell.
-        if (player.getY() >= 30.0D && insidePlot(player.blockPosition(), plot)) return;
+        boolean escapedPlot = !insidePlot(player.blockPosition(), plot);
+        if (player.getY() >= 30.0D && !escapedPlot) return;
 
         BlockPos origin = origin(plot);
         player.teleportTo(
@@ -315,6 +316,9 @@ public final class ContractInteriorService {
                 player.getXRot()
         );
         player.fallDistance = 0.0F;
+        if (escapedPlot && player.getY() >= 30.0D) {
+            message(player, "maid_weapon.message.interior.plot_escape_recovered");
+        }
     }
 
     private static void emergencyReturnToOverworld(ServerPlayer player) {
