@@ -57,7 +57,10 @@ assert 'ContractInteriorService.INTERIOR_LEVEL' in container_close and 'return;'
 assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPosition(), plot)' in service
 assert 'recoverDestroyedActiveContract' in service
 assert 'createEmergencyResurrectionFilm' in service
-assert 'PlayerDestroyItemEvent' in (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
+interior_events = (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
+assert 'PlayerDestroyItemEvent' in interior_events
+assert 'ContractTransferSafetyService.rescueSelfStoredContract(player)' in interior_events
+assert 'ContractInteriorService.rescueActiveContractFromContainer(player)' in interior_events
 guide = (HOME / 'ContractInteriorGuideService.java').read_text()
 assert 'ClickEvent.Action.RUN_COMMAND' in guide
 assert '/contractinterior clock minecraft' in guide and '/contractinterior timezone +08:00' in guide

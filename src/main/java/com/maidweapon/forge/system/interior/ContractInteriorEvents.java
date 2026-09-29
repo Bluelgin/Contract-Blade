@@ -3,6 +3,7 @@ package com.maidweapon.forge.system.interior;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import com.maidweapon.forge.compat.tlm.TlmHomeBehaviorController;
+import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
 import com.maidweapon.forge.system.interior.home.ContractHomeRuntime;
 import com.maidweapon.forge.system.interior.home.ContractInteriorGuideService;
 import net.minecraftforge.event.level.BlockEvent;
@@ -24,6 +25,13 @@ public final class ContractInteriorEvents {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        if (ContractInteriorService.isInside(player)
+                && !ContractInteriorService.isGallerySession(player)) {
+            // Keep the physical active contract out of maid/external containers even
+            // while a menu remains open. CloseEvent remains a second atomic boundary.
+            ContractTransferSafetyService.rescueSelfStoredContract(player);
+            ContractInteriorService.rescueActiveContractFromContainer(player);
+        }
         ContractInteriorService.recoverFromVoid(player);
         if (player.tickCount % 20 != 0) return;
         if (player.tickCount % 600 == 0) {
