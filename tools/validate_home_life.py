@@ -32,6 +32,7 @@ assert 'new TlmHomeBoardGameAdapter()' in registry
 assert 'new TlmHomeJoyAdapter()' in registry
 assert 'new TlmHomePicnicAdapter()' in registry
 assert 'ContractHomeActivity.MEAL' in picnic
+assert 'hasFood(tile)' in picnic and 'getStackInSlot' in picnic
 assert 'MaidHomeMealTask' in behavior and 'homeMealSupported' in behavior
 for block_id in ('bookshelf', 'computer', 'keyboard'):
     assert block_id in joy

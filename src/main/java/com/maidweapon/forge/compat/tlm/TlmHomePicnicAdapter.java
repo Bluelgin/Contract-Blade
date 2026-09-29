@@ -31,7 +31,7 @@ public final class TlmHomePicnicAdapter implements ContractHomeFurnitureAdapter 
         BlockState state = level.getBlockState(pos);
         if (!PICNIC.equals(ForgeRegistries.BLOCKS.getKey(state.getBlock()))) return Optional.empty();
         Object tile = level.getBlockEntity(pos);
-        if (tile == null || !isCenter(tile, pos)) return Optional.empty();
+        if (tile == null || !isCenter(tile, pos) || !hasFood(tile)) return Optional.empty();
         return Optional.of(new ActivityTarget(pos.immutable(), ContractHomeActivity.MEAL,
                 PICNIC.toString(), null, 3, !hasFreeSeat(level, tile)));
     }
@@ -109,6 +109,23 @@ public final class TlmHomePicnicAdapter implements ContractHomeFurnitureAdapter 
         } catch (ReflectiveOperationException | RuntimeException unsupported) {
             return false;
         }
+    }
+
+    private static boolean hasFood(Object tile) {
+        try {
+            Object handler = tile.getClass().getMethod("getHandler").invoke(tile);
+            int slots = ((Number) handler.getClass().getMethod("getSlots").invoke(handler)).intValue();
+            Method get = handler.getClass().getMethod("getStackInSlot", int.class);
+            for (int i = 0; i < slots; i++) {
+                Object value = get.invoke(handler, i);
+                if (value instanceof net.minecraft.world.item.ItemStack stack && !stack.isEmpty()) {
+                    return true;
+                }
+            }
+        } catch (ReflectiveOperationException | RuntimeException unsupported) {
+            return false;
+        }
+        return false;
     }
 
     private static boolean hasFreeSeat(ServerLevel level, Object tile) {
