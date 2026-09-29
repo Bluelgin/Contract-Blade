@@ -55,6 +55,9 @@ assert 'ContractInteriorService.rescueActiveContractFromContainer(serverPlayer)'
 container_close = deployment.split('public static void onContainerClose', 1)[1].split('private static boolean deliverEmergencyFilm', 1)[0]
 assert 'ContractInteriorService.INTERIOR_LEVEL' in container_close and 'return;' in container_close
 assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPosition(), plot)' in service
+assert 'recoverDestroyedActiveContract' in service
+assert 'createEmergencyResurrectionFilm' in service
+assert 'PlayerDestroyItemEvent' in (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
 guide = (HOME / 'ContractInteriorGuideService.java').read_text()
 assert 'ClickEvent.Action.RUN_COMMAND' in guide
 assert '/contractinterior clock minecraft' in guide and '/contractinterior timezone +08:00' in guide

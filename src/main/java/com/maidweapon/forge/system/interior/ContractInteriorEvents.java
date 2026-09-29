@@ -14,6 +14,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -48,6 +49,14 @@ public final class ContractInteriorEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             ContractInteriorService.prepareForDeath(player);
         }
+    }
+
+    @SubscribeEvent
+    public static void onActiveContractDestroyed(PlayerDestroyItemEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)
+                || !ContractInteriorService.isInside(player)
+                || ContractInteriorService.isGallerySession(player)) return;
+        ContractInteriorService.recoverDestroyedActiveContract(player, event.getOriginal());
     }
 
     @SubscribeEvent

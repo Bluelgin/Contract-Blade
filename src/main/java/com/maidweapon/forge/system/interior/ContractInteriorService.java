@@ -10,6 +10,7 @@ import com.maidweapon.forge.item.ContractInteriorKeyItem;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
+import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -347,6 +348,55 @@ public final class ContractInteriorService {
         String active = returnState(player).getString(TAG_ACTIVE_BINDING);
         String binding = MaidWeaponItem.getBindingId(stack);
         return binding != null && !binding.isEmpty() && binding.equals(active);
+    }
+
+    /**
+     * Emergency authority handoff when the physical active carrier breaks inside
+     * its own home. Reuses the same TLM resurrection-film format as generic
+     * deployment and commits film delivery before removing the live maid.
+     */
+    public static boolean recoverDestroyedActiveContract(ServerPlayer player, ItemStack destroyed) {
+        if (player == null || destroyed.isEmpty() || isGallerySession(player)
+                || !isActiveContract(player, destroyed)
+                || !MaidInfusion.isInfused(destroyed)
+                || !MaidWeaponItem.isOwner(destroyed, player)) return false;
+
+        String binding = MaidWeaponItem.getBindingId(destroyed);
+        String maidId = MaidWeaponItem.getBoundMaidUUID(destroyed);
+        Entity maid = maidId == null || maidId.isEmpty()
+                ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
+
+        boolean homeReleased = ContractHomeRuntime.stop(player);
+        boolean maidReleased = maid == null
+                || homeReleased && ContractHomeRuntime.prepareCapture(maid);
+
+        ItemStack film = maidReleased
+                ? TouhouLittleMaidHelper.createEmergencyResurrectionFilm(player, destroyed, maid)
+                : ItemStack.EMPTY;
+        if (!film.isEmpty() && deliverEmergencyFilm(player, film)) {
+            if (maid != null && !maid.isRemoved()) maid.discard();
+            restoreReturn(player);
+            clearReturn(player);
+            player.displayClientMessage(Component.translatable(
+                    "maid_weapon.message.carrier_destroyed_film_created"), false);
+            return true;
+        }
+
+        if (maid != null && !maid.isRemoved()) {
+            ContractHomeRuntime.pauseUncaptured(maid, binding);
+        }
+        restoreReturn(player);
+        clearReturn(player);
+        player.displayClientMessage(Component.translatable(
+                "maid_weapon.message.emergency_film_failed"), false);
+        return false;
+    }
+
+    private static boolean deliverEmergencyFilm(ServerPlayer player, ItemStack film) {
+        ItemStack remainder = film.copy();
+        player.getInventory().add(remainder);
+        if (remainder.isEmpty()) return true;
+        return player.drop(remainder, false) != null;
     }
 
     private static boolean recallInteriorMaid(ServerPlayer player, ItemStack contract) {
