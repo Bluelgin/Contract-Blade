@@ -35,9 +35,14 @@ assert 'ContractInteriorBuilder' not in terrain and 'Favorability' not in terrai
 saved = (JAVA / 'system/interior/ContractInteriorSavedData.java').read_text()
 assert 'HomeLife' in saved and 'value.home.save()' in saved
 service = (JAVA / 'system/interior/ContractInteriorService.java').read_text()
+deployment = (JAVA / 'system/InfusedMaidDeploymentSystem.java').read_text()
 assert 'resumeHome' in service and 'ContractLifecycleService.manifest' in service
 assert 'ContractHomeRuntime.prepareCapture(maid)' in service and 'homeReleased' in service
 assert 'player.containerMenu.getCarried()' in service and 'player.containerMenu.slots' in service
+assert 'rescueActiveContractFromContainer' in service
+assert 'ContractInteriorService.rescueActiveContractFromContainer(serverPlayer)' in deployment
+container_close = deployment.split('public static void onContainerClose', 1)[1].split('private static boolean deliverEmergencyFilm', 1)[0]
+assert 'ContractInteriorService.INTERIOR_LEVEL' in container_close and 'return;' in container_close
 assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPosition(), plot)' in service
 guide = (HOME / 'ContractInteriorGuideService.java').read_text()
 assert 'ClickEvent.Action.RUN_COMMAND' in guide

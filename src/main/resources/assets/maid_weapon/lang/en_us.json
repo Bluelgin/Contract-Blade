@@ -250,5 +250,6 @@
   "maid_weapon.home.guide.zone.plus8": "[UTC+8]",
   "maid_weapon.home.guide.zone.shanghai": "[Asia/Shanghai]",
   "maid_weapon.home.guide.click": "Click to set",
-  "maid_weapon.message.interior.plot_escape_recovered": "§dThe contract interior pulled you back to your own land; this space cannot lead into another contract's home."
+  "maid_weapon.message.interior.plot_escape_recovered": "§dThe contract interior pulled you back to your own land; this space cannot lead into another contract's home.",
+  "maid_weapon.message.interior.contract_container_blocked": "§eThe active home contract cannot be left in an interior container; it was returned to your inventory."
 }

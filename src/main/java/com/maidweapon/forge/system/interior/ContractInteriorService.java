@@ -374,13 +374,9 @@ public final class ContractInteriorService {
     }
 
     private static ItemStack findContractByBinding(ServerPlayer player, String bindingId) {
+        ItemStack carriedByPlayer = findPlayerContractByBinding(player, bindingId);
+        if (!carriedByPlayer.isEmpty()) return carriedByPlayer;
         if (bindingId == null || bindingId.isEmpty()) return ItemStack.EMPTY;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-        }
-        ItemStack offhand = player.getOffhandItem();
-        if (bindingId.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
 
         // The active contract may be on the cursor or in an open/modded container.
         // Resolve that real stack instead of creating a recovery copy.
@@ -391,6 +387,75 @@ public final class ContractInteriorService {
             if (bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
         }
         return ItemStack.EMPTY;
+    }
+
+    private static ItemStack findPlayerContractByBinding(ServerPlayer player, String bindingId) {
+        if (bindingId == null || bindingId.isEmpty()) return ItemStack.EMPTY;
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
+        }
+        ItemStack offhand = player.getOffhandItem();
+        if (bindingId.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
+        return ItemStack.EMPTY;
+    }
+
+    /**
+     * The active home contract must remain recoverable by its owner. A generic
+     * container may temporarily receive it while the maid is live; on close, move
+     * that exact stack back to the player instead of letting generic deployment
+     * capture the interior maid or leaving the owner locked out of the home.
+     */
+    public static boolean rescueActiveContractFromContainer(ServerPlayer player) {
+        if (!isInside(player) || isGallerySession(player)) return false;
+        String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
+        if (binding.isEmpty() || !findPlayerContractByBinding(player, binding).isEmpty()) return false;
+
+        for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
+            if (slot.container == player.getInventory()) continue;
+            ItemStack stack = slot.getItem();
+            if (!binding.equals(MaidWeaponItem.getBindingId(stack))) continue;
+
+            ItemStack contract = stack.copy();
+            int selected = player.getInventory().selected;
+            int free = player.getInventory().getFreeSlot();
+
+            if (free >= 0) {
+                slot.set(ItemStack.EMPTY);
+                slot.setChanged();
+                player.getInventory().setItem(free, contract);
+            } else {
+                int swap = -1;
+                for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                    ItemStack displaced = player.getInventory().getItem(i);
+                    if (!displaced.isEmpty() && slot.mayPlace(displaced)) {
+                        swap = i;
+                        break;
+                    }
+                }
+                if (swap >= 0) {
+                    ItemStack displaced = player.getInventory().getItem(swap);
+                    slot.set(displaced);
+                    slot.setChanged();
+                    player.getInventory().setItem(swap, contract);
+                } else {
+                    // Extremely defensive fallback for restrictive modded slots:
+                    // preserve contract authority even if one ordinary inventory
+                    // stack must be dropped beside the owner.
+                    ItemStack displaced = player.getInventory().getItem(selected);
+                    slot.set(ItemStack.EMPTY);
+                    slot.setChanged();
+                    player.getInventory().setItem(selected, contract);
+                    if (!displaced.isEmpty()) player.drop(displaced, false);
+                }
+            }
+
+            player.containerMenu.broadcastChanges();
+            player.displayClientMessage(Component.translatable(
+                    "maid_weapon.message.interior.contract_container_blocked"), true);
+            return true;
+        }
+        return false;
     }
 
     private static BlockPos origin(ContractInteriorSavedData.Plot plot) {

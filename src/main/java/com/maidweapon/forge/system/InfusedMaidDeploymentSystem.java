@@ -284,6 +284,15 @@ public final class InfusedMaidDeploymentSystem {
     public static void onContainerClose(PlayerContainerEvent.Close event) {
         Player player = event.getEntity();
         if (player.level().isClientSide) return;
+        // Contract Interior owns its own real-maid lifecycle. Keep the generic
+        // container-transfer recall path out of that dimension; only rescue stacks.
+        if (player.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) {
+            ContractTransferSafetyService.rescueSelfStoredContract(player);
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                ContractInteriorService.rescueActiveContractFromContainer(serverPlayer);
+            }
+            return;
+        }
         // A manifested maid must never serialize a contract weapon that is still
         // inside her own inventory. Move it back to the player's selected slot
         // before any recall can discard the inventory-owning entity.
