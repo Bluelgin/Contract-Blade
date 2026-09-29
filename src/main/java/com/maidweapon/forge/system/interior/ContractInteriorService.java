@@ -276,10 +276,35 @@ public final class ContractInteriorService {
             emergencyReturnToOverworld(player);
             return;
         }
-        if (player.getY() >= 30.0D || player.getServer() == null) return;
+        MinecraftServer server = player.getServer();
+        if (server == null) return;
+
+        ItemStack contract = findContractByBinding(player, bindingId);
+        if (contract.isEmpty() || !MaidInfusion.isInfused(contract)
+                || !MaidWeaponItem.isOwner(contract, player)
+                || MaidWeaponItem.isContractSuperseded(contract)) {
+            // A stale/invalid session must not leave a player stranded in the shared
+            // interior dimension. Preserve a live resident by pausing it, then return.
+            ContractHomeRuntime.pause(player);
+            restoreReturn(player);
+            clearReturn(player);
+            return;
+        }
 
         ContractInteriorSavedData.Plot plot =
-                ContractInteriorSavedData.get(player.getServer()).getOrCreate(bindingId);
+                ContractInteriorSavedData.get(server).getOrCreate(bindingId);
+        if (!plot.hasTerrainTheme() || plot.generatedStage() == 0) {
+            ContractHomeRuntime.pause(player);
+            restoreReturn(player);
+            clearReturn(player);
+            return;
+        }
+
+        // Same-dimension teleport mods do not fire PlayerChangedDimensionEvent.
+        // Keep each active binding inside its own horizontal plot so a Waystone or
+        // command cannot jump directly into another player's cell.
+        if (player.getY() >= 30.0D && insidePlot(player.blockPosition(), plot)) return;
+
         BlockPos origin = origin(plot);
         player.teleportTo(
                 (ServerLevel) player.level(),
@@ -382,11 +407,15 @@ public final class ContractInteriorService {
                 || MaidWeaponItem.isContractSuperseded(contract) || player.getServer() == null) return "";
         var plot = ContractInteriorSavedData.get(player.getServer()).getOrCreate(binding);
         if (!plot.hasTerrainTheme() || plot.generatedStage() == 0) return "";
-        int radius = ContractInteriorTerrainBuilder.radiusForStage(plot.generatedStage());
-        double x = Math.abs(player.blockPosition().getX() - ContractInteriorSavedData.originX(plot)) / (double) radius;
-        double z = Math.abs(player.blockPosition().getZ() - ContractInteriorSavedData.originZ(plot)) / (double) radius;
-        if (Math.pow(x, 6) + Math.pow(z, 6) > 1.0) return "";
+        if (!insidePlot(player.blockPosition(), plot)) return "";
         return binding;
+    }
+
+    private static boolean insidePlot(BlockPos position, ContractInteriorSavedData.Plot plot) {
+        int radius = ContractInteriorTerrainBuilder.radiusForStage(plot.generatedStage());
+        double x = Math.abs(position.getX() - ContractInteriorSavedData.originX(plot)) / (double) radius;
+        double z = Math.abs(position.getZ() - ContractInteriorSavedData.originZ(plot)) / (double) radius;
+        return Math.pow(x, 6) + Math.pow(z, 6) <= 1.0D;
     }
 
     public static void resumeHome(ServerPlayer player) {

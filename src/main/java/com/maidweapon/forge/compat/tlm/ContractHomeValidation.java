@@ -86,6 +86,9 @@ public final class ContractHomeValidation {
         player.setPos(origin.getX() + 15.5, origin.getY(), origin.getZ() + 15.5);
         check(com.maidweapon.forge.system.interior.ContractInteriorService.activeOwnedBinding(player).isEmpty(),
                 "rounded footprint excludes corner outside land");
+        player.setPos(origin.getX() + 100.5, origin.getY(), origin.getZ() + .5);
+        com.maidweapon.forge.system.interior.ContractInteriorService.recoverFromVoid(player);
+        check(player.blockPosition().closerThan(origin, 2.0), "same-dimension plot escape is recovered");
         player.setPos(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
         for (int x = -4; x <= 4; x++) for (int z = -4; z <= 4; z++)
             level.setBlockAndUpdate(origin.offset(x, -1, z), Blocks.STONE.defaultBlockState());

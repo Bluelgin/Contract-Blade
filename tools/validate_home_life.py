@@ -38,6 +38,7 @@ service = (JAVA / 'system/interior/ContractInteriorService.java').read_text()
 assert 'resumeHome' in service and 'ContractLifecycleService.manifest' in service
 assert 'ContractHomeRuntime.prepareCapture(maid)' in service and 'homeReleased' in service
 assert 'player.containerMenu.getCarried()' in service and 'player.containerMenu.slots' in service
+assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPosition(), plot)' in service
 care = (JAVA / 'system/MaidCareTaskSystem.java').read_text()
 assert 'ContractInteriorService.INTERIOR_LEVEL' in care
 print('Home Life authority, loaded-only indexing, cadence, terrain and save boundaries validated.')
