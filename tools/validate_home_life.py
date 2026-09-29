@@ -51,6 +51,8 @@ assert 'resumeHome' in service and 'ContractLifecycleService.manifest' in servic
 assert 'ContractHomeRuntime.prepareCapture(maid)' in service and 'homeReleased' in service
 assert 'player.containerMenu.getCarried()' in service and 'player.containerMenu.slots' in service
 assert 'rescueActiveContractFromContainer' in service
+assert 'player.containerMenu.setCarried(ItemStack.EMPTY)' in service
+assert 'player.containerMenu.setCarried(displaced)' in service
 assert 'ContractInteriorService.rescueActiveContractFromContainer(serverPlayer)' in deployment
 container_close = deployment.split('public static void onContainerClose', 1)[1].split('private static boolean deliverEmergencyFilm', 1)[0]
 assert 'ContractInteriorService.INTERIOR_LEVEL' in container_close and 'return;' in container_close

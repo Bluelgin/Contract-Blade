@@ -461,6 +461,25 @@ public final class ContractInteriorService {
         String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
         if (binding.isEmpty() || !findPlayerContractByBinding(player, binding).isEmpty()) return false;
 
+        ItemStack carried = player.containerMenu.getCarried();
+        if (binding.equals(MaidWeaponItem.getBindingId(carried))) {
+            ItemStack contract = carried.copy();
+            int free = player.getInventory().getFreeSlot();
+            if (free >= 0) {
+                player.containerMenu.setCarried(ItemStack.EMPTY);
+                player.getInventory().setItem(free, contract);
+            } else {
+                int selected = player.getInventory().selected;
+                ItemStack displaced = player.getInventory().getItem(selected);
+                player.getInventory().setItem(selected, contract);
+                player.containerMenu.setCarried(displaced);
+            }
+            player.containerMenu.broadcastChanges();
+            player.displayClientMessage(Component.translatable(
+                    "maid_weapon.message.interior.contract_container_blocked"), true);
+            return true;
+        }
+
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
             if (slot.container == player.getInventory()) continue;
             ItemStack stack = slot.getItem();
