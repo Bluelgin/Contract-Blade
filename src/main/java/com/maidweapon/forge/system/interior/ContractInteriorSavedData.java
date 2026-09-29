@@ -32,6 +32,10 @@ public final class ContractInteriorSavedData extends SavedData {
         private int generatedStage;
         private String terrainTheme;
         private long terrainSeed;
+        private com.maidweapon.forge.system.interior.home.ContractHomeOfflineState home =
+                new com.maidweapon.forge.system.interior.home.ContractHomeOfflineState();
+
+        public com.maidweapon.forge.system.interior.home.ContractHomeOfflineState home() { return home; }
 
         private Plot(
                 int index,
@@ -146,6 +150,7 @@ public final class ContractInteriorSavedData extends SavedData {
                     binding,
                     new Plot(index, generated, theme, seed)
             );
+            data.plots.get(binding).home = com.maidweapon.forge.system.interior.home.ContractHomeOfflineState.load(entry.getCompound("HomeLife"));
             data.nextIndex = Math.max(data.nextIndex, index + 1);
         }
         return data;
@@ -161,6 +166,7 @@ public final class ContractInteriorSavedData extends SavedData {
             CompoundTag plot = new CompoundTag();
             plot.putString("Binding", entry.getKey());
             plot.putInt("Index", value.index);
+            plot.put("HomeLife", value.home.save());
             plot.putInt("GeneratedStage", value.generatedStage);
             // Keep the legacy field for downgrade/debug readability.
             plot.putInt("BuiltSpaceStage", value.generatedStage);

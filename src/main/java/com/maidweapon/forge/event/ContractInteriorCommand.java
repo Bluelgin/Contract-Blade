@@ -30,8 +30,25 @@ public final class ContractInteriorCommand {
                     ) ? 1 : 0));
         }
 
-        dispatcher.register(Commands.literal("contractinterior")
-                .then(choose));
+        var root = Commands.literal("contractinterior").then(choose);
+        com.maidweapon.forge.system.interior.home.ContractHomeCommands.addTo(root);
+        if (Boolean.getBoolean("contractblade.home.validation")) {
+            root.then(Commands.literal("validate-home").requires(source -> source.hasPermission(2))
+                    .executes(ctx -> {
+                        try {
+                            var level = ctx.getSource().getServer().getLevel(
+                                    com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL);
+                            com.maidweapon.forge.compat.tlm.ContractHomeValidation.run(level);
+                            ctx.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal("HOME_VALIDATION_PASSED"), false);
+                            return 1;
+                        } catch (Exception failure) {
+                            failure.printStackTrace();
+                            ctx.getSource().sendFailure(net.minecraft.network.chat.Component.literal("HOME_VALIDATION_FAILED: " + failure));
+                            return 0;
+                        }
+                    }));
+        }
+        dispatcher.register(root);
     }
 
     private ContractInteriorCommand() {

@@ -1,12 +1,19 @@
 name: Contract Interior Preview
 
 on:
+  push:
+    branches:
+      - codex/unified-contract-interior-land
   workflow_dispatch:
   pull_request:
     branches:
       - master
     paths:
       - "src/main/java/com/maidweapon/forge/system/interior/**"
+      - "src/main/java/com/maidweapon/forge/compat/tlm/**"
+      - "src/main/resources/assets/maid_weapon/lang/**"
+      - "tools/validate_home_life.py"
+      - "tools/tests/HomeClockResolverTest.java"
       - "src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java"
       - "src/main/resources/data/maid_weapon/dimension/**"
       - "src/main/resources/data/maid_weapon/dimension_type/**"
@@ -56,6 +63,14 @@ jobs:
             "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
             -o libs/tacz-1.20.1-1.1.8-release.jar
 
+      - name: Validate Home Life and prepare native fixture
+        run: |
+          python tools/validate_home_life.py
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://github.com/TartaricAcid/TouhouLittleMaid/releases/download/snapshot-2026-05-09-05-17-04/touhoulittlemaid-1.5.3-forge%2Bmc1.20.1-snapshot.jar" \
+            -o 'libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar'
+          echo '8c341567e57aa3c006f9fa85c7a5e3bc36a53b1cca4e3538c3db705eeeea1bbc  libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar' | sha256sum -c -
+
       - name: Prepare preview server
         run: |
           mkdir -p run-preview
@@ -79,9 +94,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          gradle --no-daemon runServer \
+          gradle --no-daemon runServer -x downloadAssets \
             -Pci=true \
             -PgalleryPreview=true \
+            -PhomeLifeTest=true \
             -PcompatRunDir=run-preview \
             > run-preview/preview-server.log 2>&1 &
           SERVER_PID=$!
@@ -113,6 +129,11 @@ jobs:
           python tools/rcon_command.py \
             --password contract-blade-preview \
             "maidweapon interior terrain-preview generate"
+
+          python tools/rcon_command.py \
+            --password contract-blade-preview \
+            "contractinterior validate-home" | tee run-preview/home-validation.txt
+          grep -q 'HOME_VALIDATION_PASSED' run-preview/home-validation.txt
 
           sleep 2
 
@@ -232,5 +253,6 @@ jobs:
           path: |
             interior-preview/*.png
             run-preview/preview-server.log
+            run-preview/home-validation.txt
             run-preview/logs/latest.log
           if-no-files-found: error

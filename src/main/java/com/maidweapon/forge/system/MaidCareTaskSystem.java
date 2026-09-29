@@ -44,6 +44,8 @@ public final class MaidCareTaskSystem {
                 || !MaidWeaponConfig.ENABLE_SAFE_FEEDING.get()) return;
 
         Player player = event.player;
+        if (player.level().dimension().equals(
+                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
         ItemStack weapon = player.getMainHandItem();
         if (!MaidInfusion.isContractBlade(weapon)
                 || !MaidInfusion.isInfused(weapon)

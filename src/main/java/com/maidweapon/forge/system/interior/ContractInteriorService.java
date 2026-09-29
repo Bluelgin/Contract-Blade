@@ -1,6 +1,9 @@
 package com.maidweapon.forge.system.interior;
 
 import com.maidweapon.common.MaidWeaponConstants;
+import com.maidweapon.forge.system.interior.home.ContractHomeRuntime;
+import com.maidweapon.forge.system.interior.home.ContractInteriorGuideService;
+import net.minecraft.world.entity.Mob;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.maidweapon.forge.item.ContractInteriorKeyItem;
@@ -152,6 +155,7 @@ public final class ContractInteriorService {
             );
         }
 
+        attachHome(player, bindingId, maid, saved, plot);
         message(player, "maid_weapon.message.interior.entered");
         return true;
     }
@@ -231,8 +235,8 @@ public final class ContractInteriorService {
                 returnState(player).getString(TAG_ACTIVE_BINDING)
         );
         if (!contract.isEmpty()) {
-            recallInteriorMaid(player, contract);
-        }
+            if (!recallInteriorMaid(player, contract)) pauseUncaptured(player, contract);
+        } else ContractHomeRuntime.pause(player);
     }
 
     public static void prepareForDeath(ServerPlayer player) {
@@ -242,8 +246,8 @@ public final class ContractInteriorService {
                 returnState(player).getString(TAG_ACTIVE_BINDING)
         );
         if (!contract.isEmpty()) {
-            recallInteriorMaid(player, contract);
-        }
+            if (!recallInteriorMaid(player, contract)) pauseUncaptured(player, contract);
+        } else ContractHomeRuntime.pause(player);
         clearReturn(player);
     }
 
@@ -317,6 +321,7 @@ public final class ContractInteriorService {
     }
 
     private static boolean recallInteriorMaid(ServerPlayer player, ItemStack contract) {
+        ContractHomeRuntime.stop(player);
         String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
         if (maidId == null || maidId.isEmpty()) return true;
 
@@ -324,7 +329,16 @@ public final class ContractInteriorService {
         if (maid == null) {
             return MaidWeaponItem.hasMaidEntityData(contract);
         }
-        return ContractLifecycleService.capture(player, maid, contract, false);
+        ContractHomeRuntime.prepareCapture(maid);
+        boolean captured = ContractLifecycleService.capture(player, maid, contract, false);
+        if (!captured) ContractHomeRuntime.pauseUncaptured(maid, MaidWeaponItem.getBindingId(contract));
+        return captured;
+    }
+
+    private static void pauseUncaptured(ServerPlayer player, ItemStack contract) {
+        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        if (maidId != null) ContractHomeRuntime.pauseUncaptured(
+                ContractWeaponLocator.findManifestedMaid(player, maidId), MaidWeaponItem.getBindingId(contract));
     }
 
     private static ItemStack findContractByBinding(ServerPlayer player, String bindingId) {
@@ -341,9 +355,61 @@ public final class ContractInteriorService {
     private static BlockPos origin(ContractInteriorSavedData.Plot plot) {
         return new BlockPos(
                 ContractInteriorSavedData.originX(plot),
-                ContractInteriorBuilder.ORIGIN_Y,
+                ContractInteriorTerrainBuilder.ORIGIN_Y,
                 ContractInteriorSavedData.originZ(plot)
         );
+    }
+
+    /** Owner/binding validation shared by lifecycle resume and Home Clock commands. */
+    public static String activeOwnedBinding(ServerPlayer player) {
+        if (!isInside(player) || isGallerySession(player)) return "";
+        String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
+        ItemStack contract = findContractByBinding(player, binding);
+        if (contract.isEmpty() || !MaidInfusion.isInfused(contract)
+                || !MaidWeaponItem.isOwner(contract, player)
+                || MaidWeaponItem.isContractSuperseded(contract) || player.getServer() == null) return "";
+        var plot = ContractInteriorSavedData.get(player.getServer()).getOrCreate(binding);
+        if (!plot.hasTerrainTheme() || plot.generatedStage() == 0) return "";
+        int radius = ContractInteriorTerrainBuilder.radiusForStage(plot.generatedStage());
+        double x = Math.abs(player.blockPosition().getX() - ContractInteriorSavedData.originX(plot)) / (double) radius;
+        double z = Math.abs(player.blockPosition().getZ() - ContractInteriorSavedData.originZ(plot)) / (double) radius;
+        if (Math.pow(x, 6) + Math.pow(z, 6) > 1.0) return "";
+        return binding;
+    }
+
+    public static void resumeHome(ServerPlayer player) {
+        if (ContractHomeRuntime.attached(player)) return;
+        String binding = activeOwnedBinding(player);
+        if (binding.isEmpty() || player.getServer() == null) return;
+        var saved = ContractInteriorSavedData.get(player.getServer());
+        var plot = saved.getOrCreate(binding);
+        if (!plot.hasTerrainTheme() || plot.generatedStage() == 0) return;
+        ItemStack contract = findContractByBinding(player, binding);
+        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        Entity maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
+        if (maid == null && MaidWeaponItem.hasMaidEntityData(contract)) {
+            // No new storage path: the same lifecycle service consumes the same stored authority.
+            if (!ContractLifecycleService.manifest(player, contract, false)) return;
+            maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
+        }
+        if (maid == null || maid.level() != player.level() || !binding.equals(
+                maid.getPersistentData().getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID))) return;
+        attachHome(player, binding, maid, saved, plot);
+    }
+
+    private static void attachHome(ServerPlayer player, String binding, Entity maid,
+                                   ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
+        if (maid instanceof Mob mob) ContractHomeRuntime.start(player, binding, mob, saved, plot);
+        ContractInteriorGuideService.give(player, saved, plot);
+    }
+
+    /** Commands/portals must not strand a live maid when bypassing the Heart Key exit. */
+    public static void leaveUnexpectedly(ServerPlayer player) {
+        String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
+        if (binding.isEmpty()) return;
+        ItemStack contract = findContractByBinding(player, binding);
+        if (!contract.isEmpty() && recallInteriorMaid(player, contract)) clearReturn(player);
+        else ContractHomeRuntime.pause(player);
     }
 
     private static void saveReturn(ServerPlayer player, String bindingId) {

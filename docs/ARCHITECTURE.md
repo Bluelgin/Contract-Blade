@@ -78,7 +78,14 @@ The interior stack is split into focused responsibilities:
 - `ContractInteriorTerrainBuilder`: deterministic incremental land generation and invisible boundary;
 - `ContractInteriorBuilder`: developer/example Japanese home only; never the real player-home generator;
 - `ContractInteriorGallery`: optional example-home/design workspace;
-- `ContractInteriorEvents`: logout/death/void/drop safety only.
+- `ContractInteriorEvents`: lifecycle safety and thin Home Life event dispatch.
+- `interior.home`: clock, deterministic activity policy, loaded furniture index and online runtime;
+- `compat.tlm.TlmHome*`: genuine TLM furniture interaction and reversible behavior scope;
+- `ContractInteriorGuideService`: one guide receipt per binding after real entry.
+
+Home Life is a behavior client of the existing lifecycle, never a storage authority.
+It resolves only the current life slot on return and retains no offline chunk tickets.
+See [HOME_LIFE.md](HOME_LIFE.md) for supported furniture, budgets and validation.
 
 Built-in terrain themes keep a build-friendly central clearing while changing
 the atmosphere of later land: plains, sakura, bamboo, lake islet and low hills.

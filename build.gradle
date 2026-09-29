@@ -13,6 +13,8 @@ def compatTestMode = providers.gradleProperty('compatTest').orElse('vanilla').ge
 def compatWorld = providers.gradleProperty('compatWorld').orNull
 def tlmTestMode = providers.gradleProperty('tlmTest').orElse('latest').get()
 def compatRunDir = providers.gradleProperty('compatRunDir').orNull
+def homeLifeTestMode = providers.gradleProperty('homeLifeTest').map { it.toBoolean() }.orElse(false).get()
+
 def ciMode = providers.gradleProperty('ci').map { it.toBoolean() }.orElse(false).get()
 def galleryPreviewMode = providers.gradleProperty('galleryPreview')
         .map { it.toBoolean() }
@@ -74,6 +76,8 @@ minecraft {
         configureEach {
             workingDirectory project.file(compatRunDir ?: 'run')
             property 'forge.logging.markers', 'REGISTRIES'
+            property 'contractblade.home.validation', galleryPreviewMode.toString()
+            property 'contractblade.home.nativeValidation', homeLifeTestMode.toString()
             property 'forge.logging.console.level', 'debug'
             // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
             property 'mixin.env.remapRefMap', 'true'
@@ -116,7 +120,7 @@ dependencies {
 
     // Mandatory Touhou Little Maid runtime for launch profiles. CI compiles the
     // version-tolerant reflection boundary without resolving a local runtime jar.
-    if (!ciMode) {
+    if (!ciMode || homeLifeTestMode) {
         if (tlmTestMode == 'old') {
             runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
         } else if (tlmTestMode == 'pack') {

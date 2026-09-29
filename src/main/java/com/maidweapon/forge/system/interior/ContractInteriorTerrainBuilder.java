@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
  * during normal progression, so player construction remains authoritative.</p>
  */
 public final class ContractInteriorTerrainBuilder {
-    public static final int ORIGIN_Y = ContractInteriorBuilder.ORIGIN_Y;
+    public static final int ORIGIN_Y = 80;
 
     public static int radiusForStage(int stage) {
         return switch (Math.max(1, Math.min(stage, ContractInteriorProfile.MAX_SPACE_STAGE))) {
