@@ -212,6 +212,8 @@ public final class ContractHomeValidation {
             var index = new ContractHomeFurnitureRegistry(origin, 16);
             index.refresh(level, level.getGameTime());
             check(index.find(sleep.key()).isPresent(), "loaded block entity index discovers bed");
+            // As with picnic, runtime approaches the selected furniture before start().
+            maid.moveTo(bedPos.getX() + 0.5, bedPos.getY() + 0.2, bedPos.getZ() + 0.5);
             check(adapter.start(level, sleep, maid), "native maid sleeping API");
             tickBrain(level, maid);
             check(adapter.running(level, sleep, maid), "home sleep survives native world-time mismatch");
