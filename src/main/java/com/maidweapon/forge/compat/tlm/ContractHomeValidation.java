@@ -171,6 +171,10 @@ public final class ContractHomeValidation {
             var picnicAdapter = new TlmHomePicnicAdapter();
             var meal = picnicAdapter.blockTarget(level, picnicPos).orElseThrow();
             check(meal.activity() == ContractHomeActivity.MEAL, "picnic indexed as MEAL");
+            // Runtime only calls adapter.start after pathing within two blocks.
+            // Earlier furniture leaves the fixture maid at its seat position, so
+            // reproduce that real precondition rather than testing an impossible jump.
+            maid.moveTo(picnicPos.getX() + 0.5, picnicPos.getY() + 0.2, picnicPos.getZ() + 0.5);
             check(picnicAdapter.start(level, meal, maid), "native picnic sit");
             Entity picnicSeat = maid.getVehicle();
             check(picnicSeat != null, "picnic EntitySit created");
