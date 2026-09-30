@@ -46,6 +46,7 @@ public final class IntrinsicSpiritApi {
             "OwnerUUID",
             "OwnerName",
             "MaidInfusionOriginalTask",
+            "MaidInfusionOriginalSchedule",
             "MaidDeploymentLocation",
             "MaidDeploymentRecoveryFailed",
             "MaidInfusionMagicTaskFailure",

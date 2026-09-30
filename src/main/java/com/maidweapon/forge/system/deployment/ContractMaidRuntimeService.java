@@ -23,6 +23,9 @@ public final class ContractMaidRuntimeService {
     }
 
     public static void maintain(Player player, ItemStack weapon, Entity maid) {
+        // Adoption of an already-live maid must snapshot runtime settings before
+        // ALL schedule/combat policy can overwrite the player's original choices.
+        MaidCareTaskSystem.rememberOriginalTask(weapon, maid);
         if (player.tickCount % 20 == 0) {
             TouhouLittleMaidHelper.syncFavorabilityFromMaid(maid, weapon);
         }
@@ -43,6 +46,7 @@ public final class ContractMaidRuntimeService {
     }
 
     public static void selectCombatTask(Player player, ItemStack weapon, Entity maid) {
+        MaidCareTaskSystem.rememberOriginalTask(weapon, maid);
         if (!(maid instanceof LivingEntity)) return;
         if (!MaidCareTaskSystem.applySafeTask(player, weapon, maid)) {
             ContractCombatTaskRouter.configure(player, weapon, maid);

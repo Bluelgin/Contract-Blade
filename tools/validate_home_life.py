@@ -80,3 +80,12 @@ assert 'TlmEntityAdapter.scheduleName(maid)' in care and 'TlmEntityAdapter.setSc
 assert 'public static String scheduleName(Entity entity)' in entity_adapter
 assert 'deployment original schedule restored' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 print('Home Life authority, loaded-only indexing, cadence, terrain and save boundaries validated.')
+
+# Contract runtime settings are temporary and must not leak into copied/cleared contracts.
+runtime_service = (JAVA / 'system/deployment/ContractMaidRuntimeService.java').read_text()
+weapon_item = (JAVA / 'item/MaidWeaponItem.java').read_text()
+intrinsic = (JAVA / 'api/IntrinsicSpiritApi.java').read_text()
+maintain_body = runtime_service.split('public static void maintain', 1)[1].split('public static void selectCombatTask', 1)[0]
+assert maintain_body.index('MaidCareTaskSystem.rememberOriginalTask(weapon, maid)') < maintain_body.index('setAllDaySchedule(maid)')
+assert 'MaidInfusionOriginalSchedule' in weapon_item
+assert 'MaidInfusionOriginalSchedule' in intrinsic

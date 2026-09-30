@@ -129,6 +129,7 @@ public class MaidWeaponItem extends SwordItem {
         tag.remove(NBT_OWNER_UUID);
         tag.remove(NBT_OWNER_NAME);
         tag.remove("MaidInfusionOriginalTask");
+        tag.remove("MaidInfusionOriginalSchedule");
         tag.remove("MaidDeploymentLocation");
         tag.remove("MaidDeploymentRecoveryFailed");
         tag.remove("MaidInfusionTaczTaskFailure");
