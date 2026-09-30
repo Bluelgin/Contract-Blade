@@ -53,6 +53,7 @@ public final class ContractHomeValidation {
         }
         check(TlmEntityAdapter.maidClass() != null, "native validation requires TLM");
         ContractCarrierValidation.dedicatedDeployment(level);
+        ContractHomeSafetyValidation.run(level);
         var player = net.minecraftforge.common.util.FakePlayerFactory.get(level,
                 new com.mojang.authlib.GameProfile(java.util.UUID.fromString("ff372890-6a64-4ab7-a6f8-76fe3131f3a2"), "HomeFixture"));
         var contract = new net.minecraft.world.item.ItemStack(com.maidweapon.forge.init.ModItems.MAID_SWORD.get());

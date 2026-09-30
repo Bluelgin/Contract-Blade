@@ -15,11 +15,30 @@ import net.minecraft.world.item.Items;
 /** Receipt belongs to the binding's plot. A full inventory retries later instead of losing the book. */
 public final class ContractInteriorGuideService {
     public static void give(ServerPlayer player, ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
+        // Upgrade the already-delivered guide in place, without giving another
+        // copy on every entry or touching unrelated player-written books.
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack existing = player.getInventory().getItem(i);
+            if (existing.is(Items.WRITTEN_BOOK) && existing.hasTag()
+                    && "关于我们的契约内景".equals(existing.getTag().getString("title"))
+                    && ("与你缔约的女仆".equals(existing.getTag().getString("author"))
+                    || existing.getTag().getBoolean("ContractInteriorGuide"))
+                    && existing.getTag().getInt("ContractInteriorGuideVersion") < 2) write(existing);
+        }
         if (!plot.hasTerrainTheme() || plot.generatedStage() == 0 || plot.home().guideReceived) return;
         ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
+        write(book);
+        if (player.getInventory().add(book)) {
+            plot.home().guideReceived = true;
+            saved.setDirty();
+        }
+    }
+    private static void write(ItemStack book) {
         var tag = book.getOrCreateTag();
         tag.putString("title", "关于我们的契约内景");
-        tag.putString("author", "与你缔约的女仆");
+        tag.putString("author", "契约内景指引");
+        tag.putBoolean("ContractInteriorGuide", true);
+        tag.putInt("ContractInteriorGuideVersion", 2);
         var pages = new ListTag();
         for (int page = 1; page <= 10; page++) {
             pages.add(StringTag.valueOf(Component.Serializer.toJson(page(page))));
@@ -27,10 +46,6 @@ public final class ContractInteriorGuideService {
         tag.put("pages", pages);
         // Keep translatable pages unresolved so the client uses its own language.
         tag.putBoolean("resolved", true);
-        if (player.getInventory().add(book)) {
-            plot.home().guideReceived = true;
-            saved.setDirty();
-        }
     }
     private static Component page(int page) {
         MutableComponent text = Component.translatable("maid_weapon.home.guide.page." + page);

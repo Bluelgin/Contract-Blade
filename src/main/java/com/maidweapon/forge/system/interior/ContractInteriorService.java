@@ -147,15 +147,7 @@ public final class ContractInteriorService {
         Entity maid = resumeInteriorMaid
                 ? existingMaid
                 : (maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId));
-        if (maid != null) {
-            maid.moveTo(
-                    origin.getX() + 2.5D,
-                    origin.getY() + 1.1D,
-                    origin.getZ() + 0.5D,
-                    maid.getYRot(),
-                    maid.getXRot()
-            );
-        }
+        if (maid != null && !resumeInteriorMaid) ContractResidentPositionService.restore(maid, plot);
 
         attachHome(player, bindingId, maid, saved, plot);
         message(player, "maid_weapon.message.interior.entered");
@@ -587,6 +579,7 @@ public final class ContractInteriorService {
             // No new storage path: the same lifecycle service consumes the same stored authority.
             if (!ContractLifecycleService.manifest(player, contract, false)) return;
             maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
+            if (maid != null) ContractResidentPositionService.restore(maid, plot);
         }
         if (maid == null || maid.level() != player.level() || !binding.equals(
                 maid.getPersistentData().getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID))) return;
@@ -595,6 +588,10 @@ public final class ContractInteriorService {
 
     private static void attachHome(ServerPlayer player, String binding, Entity maid,
                                    ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
+        if (maid instanceof net.minecraft.world.entity.LivingEntity living) {
+            com.maidweapon.forge.compat.TaczCompat.clear(player, living, findContractByBinding(player, binding));
+            com.maidweapon.forge.compat.TripleMagicCompat.clearPhantoms(living, findContractByBinding(player, binding));
+        }
         if (maid instanceof Mob mob) ContractHomeRuntime.start(player, binding, mob, saved, plot);
         ContractInteriorGuideService.give(player, saved, plot);
     }

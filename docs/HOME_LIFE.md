@@ -24,6 +24,30 @@ The native `contractinterior validate-home` fixture covers real inventory PICKUP
 clicks, creative-cursor absence, cursor-close rescue, direct dedicated binding,
 automatic manifestation and switch-away recall using a real TLM maid.
 
+## Resident continuity and equipment
+
+Home checkpoints store only the real maid's UUID, position and rotation in the
+plot's `HomeLife` state, never a second entity or inventory archive. Reentry
+restores that position, with a collision/plot-boundary fallback if building edits
+make it unsafe. An already-live resident is not moved to the entry point.
+Activity choices are refreshed on return; unattended plots still have no AI or
+chunk tickets. Waking activities may change after two minutes, and wandering or
+near-player movement updates every five seconds while the main choice cadence
+remains thirty seconds.
+
+Interior manifestation/maintenance bypasses combat projections. Existing leaked
+projections are released before Home Life starts. TLM equipment slots are locked
+while the contracted maid is inside; backpack slots reject weapons/armor but keep
+ordinary food and items usable. Real menu PICKUP, QUICK_MOVE and SWAP tests assert
+that rejected items remain with the player and original gear survives recall.
+
+The sky no longer has a fixed-noon dimension setting. Each interior viewer gets
+time updates for their plot's clock, after the server's normal time updates;
+the shared world clock and other plots are not modified. Minecraft mode follows
+exact overworld ticks, while real/server modes use the same zone calculation as
+activity selection. System settings in the guide are explicitly labeled system
+instructions; existing guides are upgraded in place without redelivery.
+
 ## First supported interactions
 
 - TLM **maid bed**, head half: real `startSleeping`/`stopSleeping`, as used by

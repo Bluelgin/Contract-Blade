@@ -23,6 +23,12 @@ public class HomeClockResolverTest {
         check(ContractHomeClock.read(real, "invalid-zone", Instant.EPOCH, 0).minute() == 0,
                 "invalid persisted zone safely defaults UTC");
         var minecraft = ContractHomeClock.Mode.MINECRAFT_TIME;
+        check(ContractHomeClock.skyTime(minecraft, "UTC", Instant.EPOCH, 18000) == 18000,
+                "minecraft sky follows exact overworld midnight, not fixed noon");
+        check(ContractHomeClock.skyTime(real, "+08:00", Instant.parse("2026-09-28T16:00:00Z"), 6000) == 18000,
+                "real-time midnight sky matches routine despite overworld noon");
+        check(ContractHomeClock.skyTime(real, "UTC", Instant.parse("2026-09-28T12:00:00Z"), 18000) == 6000,
+                "independent home noon does not change other home clock");
         check(ContractHomeClock.read(minecraft, "UTC", Instant.EPOCH, 0).minute() == 360, "MC dawn");
         check(ContractHomeClock.read(minecraft, "UTC", Instant.EPOCH, 18000).minute() == 0, "MC midnight");
         check(ContractHomeClock.read(minecraft, "UTC", Instant.EPOCH, -1).minute() == 359, "negative MC time");

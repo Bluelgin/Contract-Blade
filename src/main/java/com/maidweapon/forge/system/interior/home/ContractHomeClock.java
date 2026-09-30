@@ -36,5 +36,12 @@ public final class ContractHomeClock {
                 : hour < 10 ? Phase.MORNING : hour < 17 ? Phase.DAY : Phase.EVENING;
         return new Reading(day, minute, day * 48L + minute / SLOT_MINUTES, phase);
     }
+
+    /** Per-viewer sky time; never changes the shared dimension's clock. */
+    public static long skyTime(Mode mode, String zone, Instant now, long overworldDayTime) {
+        if (mode == Mode.MINECRAFT_TIME) return overworldDayTime;
+        Reading reading = read(mode, zone, now, overworldDayTime);
+        return Math.floorMod(reading.minute() * 24000L / 1440L - 6000L, 24000L);
+    }
     private ContractHomeClock() {}
 }

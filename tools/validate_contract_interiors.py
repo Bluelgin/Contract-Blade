@@ -21,8 +21,8 @@ if dimension.get("type") != "maid_weapon:contract_interior":
     raise SystemExit("contract interior does not use its dedicated dimension type")
 if dimension.get("generator", {}).get("type") != "minecraft:flat":
     raise SystemExit("contract interior must remain a bounded void-style flat dimension")
-if dimension_type.get("fixed_time") != 6000 or dimension_type.get("natural") is not False:
-    raise SystemExit("contract interior lost its calm fixed-time environment")
+if "fixed_time" in dimension_type or dimension_type.get("natural") is not False:
+    raise SystemExit("contract interior must allow the selected home clock to control the sky")
 if dimension_type.get("bed_works") is not False or dimension_type.get("has_raids") is not False:
     raise SystemExit("contract interior regained normal-world respawn/raid behavior")
 

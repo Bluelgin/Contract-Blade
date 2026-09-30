@@ -23,6 +23,8 @@ public final class ContractMaidRuntimeService {
     }
 
     public static void maintain(Player player, ItemStack weapon, Entity maid) {
+        if (maid.level().dimension().equals(
+                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
         // Adoption of an already-live maid must snapshot runtime settings before
         // ALL schedule/combat policy can overwrite the player's original choices.
         MaidCareTaskSystem.rememberOriginalTask(weapon, maid);

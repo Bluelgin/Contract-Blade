@@ -79,6 +79,14 @@ assert 'ORIGINAL_SCHEDULE_TAG' in care
 assert 'TlmEntityAdapter.scheduleName(maid)' in care and 'TlmEntityAdapter.setSchedule(maid, schedule)' in care
 assert 'public static String scheduleName(Entity entity)' in entity_adapter
 assert 'deployment original schedule restored' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
+equipment = (JAVA / 'compat/tlm/ContractHomeEquipmentGuard.java').read_text()
+assert 'mayPlace(ItemStack stack)' in equipment and 'mayPickup(Player player)' in equipment
+assert 'PlayerContainerEvent.Open' in equipment and 'EntityInteractSpecific' in equipment
+assert 'ContractResidentPositionService.remember(s.maid)' in runtime
+assert 'ContractResidentPositionService.restore(maid, plot)' in service
+assert 'ContractHomeClock.skyTime' in events and 'ClientboundSetTimePacket' in events
+assert 'setDayTime(' not in events, 'home clock must not mutate other players\' shared world clock'
+assert 'ContractInteriorGuideVersion' in guide and 'write(existing)' in guide
 # Contract runtime settings are temporary and must not leak into copied/cleared contracts.
 runtime_service = (JAVA / 'system/deployment/ContractMaidRuntimeService.java').read_text()
 weapon_item = (JAVA / 'item/MaidWeaponItem.java').read_text()

@@ -31,6 +31,7 @@ public final class ContractHomeRuntime {
         ContractHomeFurnitureRegistry.Entry target;
         long nextDecision;
         long approachDeadline;
+        long nextMovement;
         boolean active;
         boolean performing;
         Session(String binding, Mob maid, ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
@@ -69,6 +70,7 @@ public final class ContractHomeRuntime {
             stop(player); return;
         }
         long tick = player.level().getGameTime();
+        ContractResidentPositionService.remember(maid);
         // Return emergency behavior to TLM; no home path retries during combat/fire/drowning.
         if (maid.hurtTime > 0 || maid.isOnFire() || maid.getAirSupply() < 200
                 || maid.getTarget() != null || maid.isLeashed()) {
@@ -82,6 +84,17 @@ public final class ContractHomeRuntime {
             if (!s.active) { s.nextDecision = tick + DECISION_INTERVAL; return; }
         }
         s.registry.refresh((ServerLevel) maid.level(), tick);
+        if (s.target == null && tick >= s.nextMovement) {
+            s.nextMovement = tick + 100;
+            if (s.state.activity == ContractHomeActivity.STAY_NEAR_PLAYER && s.registry.contains(player.blockPosition())) {
+                if (maid.distanceToSqr(player) > 9 && maid.getNavigation().isDone()) approach(s, player.blockPosition(), tick);
+                maid.getLookControl().setLookAt(player);
+            } else if (s.state.activity == ContractHomeActivity.WANDER && maid.getNavigation().isDone()) {
+                var random = new SplittableRandom(s.state.seed ^ tick / 100);
+                BlockPos dest = maid.blockPosition().offset(random.nextInt(-6, 7), 0, random.nextInt(-6, 7));
+                if (s.registry.contains(dest)) approach(s, dest, tick);
+            }
+        }
         if (s.target != null) {
             var target = s.target.target();
             var adapter = s.target.adapter();
@@ -107,11 +120,16 @@ public final class ContractHomeRuntime {
                 player.getServer().overworld().getDayTime());
         boolean sameSlot = s.state.slot == reading.slot() && s.state.maidId.equals(s.maid.getStringUUID());
         if (!sameSlot) s.failed.clear();
+        // A half-hour real-time slot must not mean half an hour frozen in one
+        // idle pose. Keep sleep stable, but vary waking activities periodically.
+        if (s.state.activity != ContractHomeActivity.SLEEP
+                && now.toEpochMilli() - s.state.activityStartedAt >= 120000) sameSlot = false;
         var entries = s.registry.available((ServerLevel) s.maid.level(), s.maid, s.failed);
         var available = EnumSet.of(ContractHomeActivity.IDLE, ContractHomeActivity.WANDER,
                 ContractHomeActivity.STAY_NEAR_PLAYER);
         entries.forEach(e -> available.add(e.target().activity()));
         long seed = ContractHomeActivityResolver.seed(s.binding, s.maid.getUUID(), reading.slot());
+        if (!sameSlot) seed ^= tick / DECISION_INTERVAL;
         int favorability = TlmEntityAdapter.favorability(s.maid);
         var activity = sameSlot && available.contains(s.state.activity) ? s.state.activity
                 : ContractHomeActivityResolver.resolve(seed, reading.phase(), available, favorability, true);
@@ -202,6 +220,7 @@ public final class ContractHomeRuntime {
     public static boolean stop(ServerPlayer player) {
         Session s = SESSIONS.remove(player.getUUID());
         if (s == null) return true;
+        ContractResidentPositionService.remember(s.maid);
         // Persist the logical selection before stopping its real pose/navigation.
         s.state.lastSimulatedAt = Instant.now().toEpochMilli(); s.saved.setDirty();
         // Retain the marker until lifecycle capture; failed lookup must still pause unattended AI.
@@ -235,7 +254,8 @@ public final class ContractHomeRuntime {
         ContractInteriorSavedData.Plot plot = ContractInteriorSavedData.get(level.getServer()).find(binding);
         Session session = SESSIONS.values().stream().filter(s -> s.maid == maid).findFirst().orElse(null);
 
-        if (plot != null && plot.generatedStage() > 0 && !insidePlot(maid.blockPosition(), plot)) {
+        if (plot != null && plot.generatedStage() > 0
+                && (maid.getY() < 30 || !insidePlot(maid.blockPosition(), plot))) {
             BlockPos origin = new BlockPos(
                     ContractInteriorSavedData.originX(plot),
                     ContractInteriorTerrainBuilder.ORIGIN_Y,

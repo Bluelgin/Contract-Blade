@@ -23,6 +23,29 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber
 public final class ContractInteriorEvents {
     @SubscribeEvent
+    public static void onSkyClock(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+        var server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server == null || server.getTickCount() % 20 != 0) return;
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (!ContractInteriorService.isInside(player)) continue;
+            String binding = player.getPersistentData().getCompound("MaidWeaponInteriorReturn").getString("Binding");
+            var plot = ContractInteriorSavedData.get(server).find(binding);
+            long time = server.overworld().getDayTime();
+            boolean daylight = server.overworld().getGameRules().getBoolean(
+                    net.minecraft.world.level.GameRules.RULE_DAYLIGHT);
+            if (plot != null) {
+                var state = plot.home();
+                time = com.maidweapon.forge.system.interior.home.ContractHomeClock.skyTime(
+                        state.mode, state.zone, java.time.Instant.now(), time);
+                daylight = state.mode == com.maidweapon.forge.system.interior.home.ContractHomeClock.Mode.MINECRAFT_TIME
+                        && daylight;
+            }
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTimePacket(
+                    player.level().getGameTime(), time, daylight));
+        }
+    }
+    @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
         if (ContractInteriorService.isInside(player)
