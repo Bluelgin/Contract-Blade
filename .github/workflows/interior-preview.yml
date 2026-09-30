@@ -1,0 +1,189 @@
+name: Contract Interior Preview
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - "src/main/java/com/maidweapon/forge/system/interior/**"
+      - "src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java"
+      - "src/main/resources/data/maid_weapon/dimension/**"
+      - "src/main/resources/data/maid_weapon/dimension_type/**"
+      - "src/main/resources/META-INF/mods.toml"
+      - "tools/render_contract_interior_world.py"
+      - "tools/rcon_command.py"
+      - "build.gradle"
+      - ".github/workflows/interior-preview.yml"
+
+concurrency:
+  group: contract-interior-preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Prepare optional compile APIs
+        run: |
+          mkdir -p libs
+          curl -fL --retry 3 --retry-delay 2 \
+            "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
+            -o libs/tacz-1.20.1-1.1.8-release.jar
+
+      - name: Prepare preview server
+        run: |
+          mkdir -p run-preview
+          printf 'eula=true\n' > run-preview/eula.txt
+          cat > run-preview/server.properties <<'EOF'
+          level-name=preview_world
+          online-mode=false
+          spawn-protection=0
+          view-distance=2
+          simulation-distance=2
+          max-tick-time=-1
+          allow-flight=true
+          enable-rcon=true
+          rcon.password=contract-blade-preview
+          rcon.port=25575
+          motd=Contract Blade Interior Preview
+          EOF
+
+      - name: Generate real gallery save
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gradle --no-daemon runServer \
+            -Pci=true \
+            -PgalleryPreview=true \
+            -PcompatRunDir=run-preview \
+            > run-preview/preview-server.log 2>&1 &
+          SERVER_PID=$!
+
+          READY=0
+          for _ in $(seq 1 150); do
+            if grep -q "Done (" run-preview/logs/latest.log 2>/dev/null; then
+              READY=1
+              break
+            fi
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          if [[ "$READY" != "1" ]]; then
+            echo "Preview server did not become ready."
+            tail -n 250 run-preview/preview-server.log || true
+            tail -n 250 run-preview/logs/latest.log || true
+            kill "$SERVER_PID" 2>/dev/null || true
+            exit 1
+          fi
+
+          python tools/rcon_command.py \
+            --password contract-blade-preview \
+            "maidweapon interior gallery generate 4"
+
+          sleep 2
+
+          python tools/rcon_command.py \
+            --password contract-blade-preview \
+            "save-all flush"
+
+          sleep 2
+
+          python tools/rcon_command.py \
+            --password contract-blade-preview \
+            "stop" || true
+
+          for _ in $(seq 1 60); do
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+          if kill -0 "$SERVER_PID" 2>/dev/null; then
+            echo "Preview server did not stop cleanly."
+            kill "$SERVER_PID" || true
+            exit 1
+          fi
+
+          test -d run-preview/preview_world/dimensions/maid_weapon/contract_interior/region
+          find run-preview/preview_world/dimensions/maid_weapon/contract_interior/region \
+            -maxdepth 1 -type f -name '*.mca' -print
+
+      - name: Render gallery from Anvil files
+        run: |
+          mkdir -p interior-preview
+          for stage in 1 2 3 4 5; do
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage "$stage" \
+              --mode iso \
+              --format png \
+              --output "interior-preview/stage_${stage}_iso.png"
+
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage "$stage" \
+              --mode top \
+              --format png \
+              --output "interior-preview/stage_${stage}_top.png"
+          done
+
+          for rotation in 90 180 270; do
+            python tools/render_contract_interior_world.py \
+              run-preview/preview_world \
+              --stage 5 \
+              --mode iso \
+              --rotation "$rotation" \
+              --format png \
+              --output "interior-preview/stage_5_iso_r${rotation}.png"
+          done
+
+          sha256sum interior-preview/*.png
+
+      - name: Emit Stage 5 preview payload
+        shell: bash
+        run: |
+          echo "STAGE5_PNG_BASE64_BEGIN"
+          gzip -c interior-preview/stage_5_iso.png | base64 -w 0
+          echo
+          echo "STAGE5_PNG_BASE64_END"
+
+      - name: Upload interior previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-interior-preview
+          path: |
+            interior-preview/*.png
+            run-preview/preview-server.log
+            run-preview/logs/latest.log
+          if-no-files-found: error

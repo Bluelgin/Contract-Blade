@@ -31,12 +31,19 @@ saved = read("src/main/java/com/maidweapon/forge/system/interior/ContractInterio
 builder = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorBuilder.java")
 service = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorService.java")
 events = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorEvents.java")
+gallery = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorGallery.java")
+commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
 deployment = read("src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java")
 key_item = read("src/main/java/com/maidweapon/forge/item/ContractInteriorKeyItem.java")
 mod_items = read("src/main/java/com/maidweapon/forge/init/ModItems.java")
 creative = read("src/main/java/com/maidweapon/forge/init/ModCreativeTab.java")
 architecture = read("docs/ARCHITECTURE.md")
 assets = read("docs/INTERIOR_ASSETS.md")
+renderer = read("tools/render_contract_interior_world.py")
+mods_toml = read("src/main/resources/META-INF/mods.toml")
+build_gradle = read("build.gradle")
+preview_workflow = read(".github/workflows/interior-preview.yml")
+rcon = read("tools/rcon_command.py")
 
 for needle in [
     "MAX_SPACE_STAGE = 5",
@@ -63,9 +70,25 @@ for needle in [
     "buildGround(level, o, 12, 20)",
     "previousRadius",
     "buildBoundary",
+    "buildGabledRoof",
+    "Blocks.DEEPSLATE_TILE_STAIRS",
+    "Blocks.BAMBOO_MOSAIC",
+    "fillGableEndsZ",
+    "fillGableEndsX",
+    "for (int y = -4; y <= 20; y++)",
+    "placeNaturalPathBlock",
+    "clearGeneratedWallBlock",
+    "landscapeHash",
+    "paintOuterRingPatch",
+    "scatterOuterRingGroundCover",
+    "buildBambooGrove",
+    "buildOpenPavilion",
+    "buildPond",
 ]:
     if needle not in builder:
         raise SystemExit(f"interior builder lost staged/non-destructive behavior: {needle}")
+if "DEPSLATE_" in builder:
+    raise SystemExit("interior builder contains misspelled deepslate block constants")
 
 for needle in [
     "MaidWeaponItem.ensureBindingId(contract)",
@@ -85,6 +108,38 @@ if "InfusedMaidDeploymentSystem" in service + events + builder + saved + profile
 
 if "ContractInteriorService.INTERIOR_LEVEL" not in deployment:
     raise SystemExit("hotbar deployment can adopt/recall the maid while inside a contract interior")
+
+
+for needle in [
+    "BASE_X = -8192",
+    "BASE_Z = -4096",
+    "STAGE_SPACING = 144",
+    "ContractInteriorBuilder.buildSnapshot",
+    "if (isStageBuilt(level, origin)) continue;",
+    "public static boolean rebuild",
+]:
+    if needle not in gallery:
+        raise SystemExit(f"contract interior gallery invariant is missing: {needle}")
+
+if (
+    "clearFirst) {" not in builder
+    or "clearSnapshotArea(level, origin, safeStage)" not in builder
+    or "radiusForStage(stage) + 6" not in builder
+):
+    raise SystemExit("explicit gallery rebuild cannot reset a stage snapshot efficiently")
+if "ContractInteriorGallery.open" not in commands:
+    raise SystemExit("contract interior gallery command is missing")
+if "ContractInteriorGallery.visitStage" not in commands:
+    raise SystemExit("contract interior stage jump command is missing")
+if "ContractInteriorGallery.rebuild" not in commands:
+    raise SystemExit("contract interior rebuild command is missing")
+if "ContractInteriorService.isGallerySession" not in commands:
+    raise SystemExit("contract interior gallery leave command is missing")
+if 'TAG_GALLERY = "Gallery"' not in service:
+    raise SystemExit("gallery sessions are not isolated from real contract sessions")
+if "ContractInteriorGallery.overviewSpawn()" not in service:
+    raise SystemExit("gallery void recovery does not return to the gallery overview")
+
 
 if "placeItemBackInInventory(protectedStack)" not in events:
     raise SystemExit("cancelled interior contract toss can delete the contract stack")
@@ -115,6 +170,66 @@ if "## Contract interiors" not in architecture:
     raise SystemExit("contract interior architecture is undocumented")
 if "CC BY 4.0" not in assets or "Import policy" not in assets:
     raise SystemExit("external interior asset licensing/import policy is missing")
+
+
+compile(renderer, "tools/render_contract_interior_world.py", "exec")
+for needle in [
+    'dimensions" / "maid_weapon" / "contract_interior"',
+    'f"r.{region_x}.{region_z}.mca"',
+    '"block_states"',
+    "values_per_long = 64 // bits",
+    "def render_iso",
+    "def render_top",
+    "def render_iso_png",
+    "def render_top_png",
+    "class Raster",
+    "GALLERY_STAGE_RADII",
+    "default is stage radius + 2 blocks",
+    "name == \"minecraft:bamboo\"",
+    "choices=(0, 90, 180, 270)",
+    "def rotate_blocks",
+    "name.endswith(\"_slab\")",
+    "def block_visual_shape",
+]:
+    if needle not in renderer:
+        raise SystemExit(f"offline contract interior renderer is incomplete: {needle}")
+
+
+compile(rcon, "tools/rcon_command.py", "exec")
+for needle in [
+    "encode_packet",
+    "receive_packet",
+    "RCON authentication failed",
+]:
+    if needle not in rcon:
+        raise SystemExit(f"preview RCON helper is incomplete: {needle}")
+
+for needle in [
+    "Contract Interior Preview",
+    "-PgalleryPreview=true",
+    "maidweapon interior gallery generate 4",
+    "save-all flush",
+    "render_contract_interior_world.py",
+    "--format png",
+    "actions/upload-artifact@v4",
+    "stage_5_iso_r${rotation}.png",
+    "--rotation \"$rotation\"",
+]:
+    if needle not in preview_workflow:
+        raise SystemExit(f"real-save preview workflow is incomplete: {needle}")
+
+if "galleryPreviewMode" not in build_gradle or "tlm_mandatory" not in build_gradle:
+    raise SystemExit("gallery preview build mode is not wired through Gradle resources")
+if 'mandatory = ${tlm_mandatory}' not in mods_toml:
+    raise SystemExit("TLM preview-only mandatory override is missing")
+if (
+    "private static int generateInteriorGallery" not in commands
+    or "ContractInteriorGallery.rebuild(" not in commands
+    or "source.getServer()" not in commands
+):
+    raise SystemExit("server-console gallery generation command is missing")
+if "public static int rebuild(MinecraftServer server" not in gallery:
+    raise SystemExit("gallery cannot be generated headlessly by preview CI")
 
 for language in ["en_us", "zh_cn"]:
     payload = json.loads(

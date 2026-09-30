@@ -208,5 +208,10 @@
   "patchouli.maid_weapon.entry.contract_interior.page.3": "Favorability does not make the world larger. It changes how much the interior feels like $(thing)her actual home$(). The 0—384 range is divided into six warmth stages that gradually add carpets, flowers, books, lights, food and other signs of daily life.$(br2)Dynamic decoration only uses reserved positions and will not overwrite a block you already replaced.",
   "patchouli.maid_weapon.entry.contract_interior.page.4.title": "Safety and Boundaries",
   "patchouli.maid_weapon.entry.contract_interior.page.4": "Interiors live in one quiet dimension with contract plots spaced far apart. The garden boundary moves outward as the contract levels so a wandering maid does not walk into the void. The active contract weapon cannot be dropped inside.$(br2)Logout, death and abnormal travel prefer preserving the maid. If serialization fails, the live maid is not deleted; the same contract can re-enter later and recover her.",
-  "maid_weapon.message.manifested_maid_not_found": "§eThe manifested maid for this contract could not be located. Move closer to her and try again."
+  "maid_weapon.message.manifested_maid_not_found": "§eThe manifested maid for this contract could not be located. Move closer to her and try again.",
+  "maid_weapon.message.interior.gallery_entered": "§bEntered the Contract Interior design gallery. All five stages share one dimension for direct comparison and editing.",
+  "maid_weapon.message.interior.gallery_stage": "§bMoved to Contract Interior Stage %s",
+  "maid_weapon.message.interior.gallery_rebuilt": "§eDesign gallery rebuilt at warmth stage %s. Manual edits in the gallery were reset.",
+  "maid_weapon.message.interior.gallery_left": "§7Left the Contract Interior design gallery",
+  "maid_weapon.message.interior.gallery_busy": "§eLeave the active real contract interior before entering the design gallery."
 }
