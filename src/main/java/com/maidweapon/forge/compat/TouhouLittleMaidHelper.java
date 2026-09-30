@@ -7,6 +7,7 @@ import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
 import com.maidweapon.forge.compat.tlm.TlmFilmService;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
+import com.maidweapon.forge.system.contract.ContractInteractionService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -150,24 +151,10 @@ public final class TouhouLittleMaidHelper {
     /** Legacy facade retained for callers compiled against beta builds. */
     public static InteractionResult onPlayerShiftRightClick(
             Player player, InteractionHand hand) {
-        ItemStack heldItem = player.getItemInHand(hand);
-        if (!MaidInfusion.isWeapon(heldItem)
-                || !MaidWeaponItem.hasMaidData(heldItem)
-                || !player.isShiftKeyDown()) {
+        if (player == null || hand == null || !player.isShiftKeyDown()) {
             return InteractionResult.PASS;
         }
-        if (!MaidWeaponItem.isOwner(heldItem, player)) {
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.not_owner"), true);
-            return InteractionResult.FAIL;
-        }
-        if (!MaidWeaponItem.hasMaidEntityData(heldItem)) {
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.no_maid_data"), true);
-            return InteractionResult.PASS;
-        }
-        return convertWeaponToMaid(player, heldItem)
-                ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        return ContractInteractionService.toggleHeld(player, hand);
     }
 
     private TouhouLittleMaidHelper() {}

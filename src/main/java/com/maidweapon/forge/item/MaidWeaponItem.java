@@ -277,9 +277,11 @@ public class MaidWeaponItem extends SwordItem {
     // ==================== 右键使用（空气/方块） ====================
 
     /**
-     * 右键使用（空气/方块）：潜行时释放已捕获的女仆。
+     * 右键使用（空气/方块）：潜行时切换女仆的收纳/显现状态。
      *
-     * 玩家潜行 + 右键空气 → 从武器中释放女仆（保留武器等级/七罪/击杀数）
+     * 玩家潜行 + 右键空气：
+     * - 女仆在武器中：显现；
+     * - 女仆已显现：召回到同一份契约。
      */
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -302,13 +304,13 @@ public class MaidWeaponItem extends SwordItem {
             return InteractionResultHolder.fail(stack);
         }
 
-        // 潜行 + 右键空气：释放女仆（普通剑模式）
+        // 潜行 + 右键空气：切换显现/召回（普通剑模式）
         // 拔刀剑模式使用潜行+Q（见 MaidWeaponDropHandler）
         if (player.isShiftKeyDown() && hasMaidData(stack)) {
             // 拔刀剑模式使用潜行+Q释放（见 MaidWeaponDropHandler），这里跳过
             boolean isSlashBladeMode = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
             if (!isSlashBladeMode) {
-                InteractionResult result = ContractInteractionService.recallHeld(player, hand);
+                InteractionResult result = ContractInteractionService.toggleHeld(player, hand);
                 if (result.consumesAction()) {
                     return InteractionResultHolder.success(stack);
                 }

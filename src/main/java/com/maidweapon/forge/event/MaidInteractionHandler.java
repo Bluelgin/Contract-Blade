@@ -63,7 +63,7 @@ public class MaidInteractionHandler {
             return; // 客户端侧不做释放操作，仅放行数据包
         }
 
-        ContractInteractionService.recallHeld(event.getEntity(), InteractionHand.MAIN_HAND);
+        ContractInteractionService.toggleHeld(event.getEntity(), InteractionHand.MAIN_HAND);
     }
 
     private static boolean isSlashBladeMode(ItemStack stack) {
