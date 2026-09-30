@@ -250,6 +250,12 @@ public final class ContractHomeRuntime {
                 TlmHomeBehaviorController.clearWalk(maid);
                 maid.teleportTo(origin.getX() + 0.5D, origin.getY(), origin.getZ() + 0.5D);
                 maid.fallDistance = 0.0F;
+                if (session != null && maid.getPersistentData().getBoolean(PAUSED)) {
+                    // This PAUSED marker was set by the no-ticket containment fallback.
+                    // An attended session has made the home safely available again.
+                    maid.setNoAi(false);
+                    maid.getPersistentData().remove(PAUSED);
+                }
             } else {
                 TlmHomeBehaviorController.restore(maid);
                 if (!maid.isNoAi()) maid.setNoAi(true);
