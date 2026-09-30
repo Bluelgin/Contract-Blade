@@ -1,0 +1,69 @@
+package com.maidweapon.forge.system.interior.home;
+
+import net.minecraft.nbt.CompoundTag;
+
+/** Only logical state, never a second copy of maid entity NBT. Owned by one plot. */
+public final class ContractHomeOfflineState {
+    public ContractHomeClock.Mode mode = ContractHomeClock.Mode.MINECRAFT_TIME;
+    public String zone = "UTC";
+    public boolean guideReceived;
+    public long lastSimulatedAt;
+    public long departedAt;
+    public long activityStartedAt;
+    public long slot = Long.MIN_VALUE;
+    public long seed;
+    public String maidId = "";
+    public ContractHomeActivity activity = ContractHomeActivity.IDLE;
+    public String target = "";
+    public boolean hasResidentPosition;
+    public String positionMaidId = "";
+    public double residentX, residentY, residentZ;
+    public float residentYaw, residentPitch;
+
+    public static ContractHomeOfflineState load(CompoundTag tag) {
+        var state = new ContractHomeOfflineState();
+        try { state.mode = ContractHomeClock.Mode.valueOf(tag.getString("ClockMode")); }
+        catch (IllegalArgumentException ignored) { /* Old saves use Minecraft time. */ }
+        state.zone = ContractHomeClock.zone(tag.getString("Zone")).getId();
+        state.guideReceived = tag.getBoolean("GuideReceived");
+        state.lastSimulatedAt = tag.getLong("LastSimulatedAt");
+        state.departedAt = tag.contains("DepartedAt") ? tag.getLong("DepartedAt") : state.lastSimulatedAt;
+        state.activityStartedAt = tag.getLong("ActivityStartedAt");
+        state.slot = tag.contains("Slot") ? tag.getLong("Slot") : Long.MIN_VALUE;
+        state.seed = tag.getLong("Seed");
+        state.maidId = tag.getString("MaidId");
+        try { state.activity = ContractHomeActivity.valueOf(tag.getString("Activity")); }
+        catch (IllegalArgumentException ignored) { /* Safe migration. */ }
+        state.target = tag.getString("Target");
+        if (tag.contains("ResidentPosition", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
+            var pos = tag.getCompound("ResidentPosition");
+            state.hasResidentPosition = true;
+            state.positionMaidId = pos.getString("MaidId");
+            state.residentX = pos.getDouble("X"); state.residentY = pos.getDouble("Y"); state.residentZ = pos.getDouble("Z");
+            state.residentYaw = pos.getFloat("Yaw"); state.residentPitch = pos.getFloat("Pitch");
+        }
+        return state;
+    }
+    public CompoundTag save() {
+        var tag = new CompoundTag();
+        tag.putString("ClockMode", mode.name());
+        tag.putString("Zone", zone);
+        tag.putBoolean("GuideReceived", guideReceived);
+        tag.putLong("LastSimulatedAt", lastSimulatedAt);
+        tag.putLong("DepartedAt", departedAt);
+        tag.putLong("ActivityStartedAt", activityStartedAt);
+        tag.putLong("Slot", slot);
+        tag.putLong("Seed", seed);
+        tag.putString("MaidId", maidId);
+        tag.putString("Activity", activity.name());
+        tag.putString("Target", target);
+        if (hasResidentPosition) {
+            var pos = new CompoundTag();
+            pos.putString("MaidId", positionMaidId);
+            pos.putDouble("X", residentX); pos.putDouble("Y", residentY); pos.putDouble("Z", residentZ);
+            pos.putFloat("Yaw", residentYaw); pos.putFloat("Pitch", residentPitch);
+            tag.put("ResidentPosition", pos);
+        }
+        return tag;
+    }
+}

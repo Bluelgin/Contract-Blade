@@ -1,5 +1,6 @@
 package com.maidweapon.forge.system;
 
+import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.mojang.logging.LogUtils;
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
@@ -34,7 +35,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
 
-/** Automatically deploys maids from generic infused weapons while they are held. */
+/** Automatically deploys maids from all owned contract weapons while they are held. */
 @Mod.EventBusSubscriber
 public final class InfusedMaidDeploymentSystem {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -95,13 +96,12 @@ public final class InfusedMaidDeploymentSystem {
         }
 
         ItemStack held = player.getMainHandItem();
-        boolean ownedGenericContract = MaidInfusion.isInfused(held)
-                && !MaidInfusion.isContractBlade(held)
+        boolean ownedContract = MaidInfusion.isInfused(held)
                 && MaidWeaponItem.isOwner(held, player);
-        if (ownedGenericContract) {
+        if (ownedContract) {
             MaidWeaponItem.ensureBindingId(held);
         }
-        String heldMaid = ownedGenericContract
+        String heldMaid = ownedContract
                 ? MaidWeaponItem.getBoundMaidUUID(held) : null;
         String desiredBinding = isAutoWeapon(held, player) ? MaidWeaponItem.getBindingId(held) : null;
         String desiredMaid = desiredBinding == null ? null : heldMaid;
@@ -109,7 +109,7 @@ public final class InfusedMaidDeploymentSystem {
                 ? null : new DesiredDeployment(desiredMaid, desiredBinding);
         ActiveDeployment active = ACTIVE_WEAPONS.get(playerId);
 
-        if (active != null && ownedGenericContract
+        if (active != null && ownedContract
                 && (MaidInfusion.data(held).getResonance() <= 0
                 || EmbeddedSpiritApi.isDormant(held))) {
             forceRecall(player, active.maidId(), 300);
@@ -283,6 +283,15 @@ public final class InfusedMaidDeploymentSystem {
     public static void onContainerClose(PlayerContainerEvent.Close event) {
         Player player = event.getEntity();
         if (player.level().isClientSide) return;
+        // Contract Interior owns its own real-maid lifecycle. Keep the generic
+        // container-transfer recall path out of that dimension; only rescue stacks.
+        if (player.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) {
+            ContractTransferSafetyService.rescueSelfStoredContract(player);
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                ContractInteriorService.rescueActiveContractFromContainer(serverPlayer, true);
+            }
+            return;
+        }
         // A manifested maid must never serialize a contract weapon that is still
         // inside her own inventory. Move it back to the player's selected slot
         // before any recall can discard the inventory-owning entity.
@@ -457,7 +466,7 @@ public final class InfusedMaidDeploymentSystem {
             return false;
         }
 
-        if (!TouhouLittleMaidHelper.convertWeaponToMaid(player, weapon, false)) return false;
+        if (!ContractLifecycleService.manifest(player, weapon, false)) return false;
         maid = findManifestedMaid(player, desired.maidId());
         if (maid == null) return false;
 
@@ -477,7 +486,7 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     private static boolean isAutoWeapon(ItemStack stack, Player player) {
-        return MaidInfusion.isInfused(stack) && !MaidInfusion.isContractBlade(stack)
+        return MaidInfusion.isInfused(stack)
                 && MaidWeaponItem.isOwner(stack, player)
                 && !MaidWeaponItem.isContractSuperseded(stack)
                 && !EmbeddedSpiritApi.isDormant(stack)
@@ -514,7 +523,7 @@ public final class InfusedMaidDeploymentSystem {
         if (weapon.isEmpty() || maid == null) return false;
 
         ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
-        if (TouhouLittleMaidHelper.convertMaidToWeapon(player, maid, weapon, false)) {
+        if (ContractLifecycleService.capture(player, maid, weapon, false)) {
             MaidCareTaskSystem.clearOriginalTask(weapon);
             clearDeploymentLocation(weapon);
             return true;

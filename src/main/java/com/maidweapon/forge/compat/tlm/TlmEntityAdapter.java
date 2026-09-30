@@ -82,15 +82,31 @@ public final class TlmEntityAdapter {
         return TLM.playTaskVoice(entity, "touhou_little_maid:idle");
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static boolean setAllDaySchedule(Entity entity) {
+        return setSchedule(entity, "ALL");
+    }
+
+    public static String scheduleName(Entity entity) {
+        if (entity == null) return "";
         try {
-            Class<?> schedule = Class.forName(
-                    "com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.MaidSchedule");
-            Object all = Enum.valueOf((Class<? extends Enum>) schedule.asSubclass(Enum.class), "ALL");
-            entity.getClass().getMethod("setSchedule", schedule).invoke(entity, all);
-            return true;
-        } catch (ReflectiveOperationException ignored) {
+            Object value = entity.getClass().getMethod("getSchedule").invoke(entity);
+            return value instanceof Enum<?> schedule ? schedule.name() : "";
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            return "";
+        }
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static boolean setSchedule(Entity entity, String name) {
+        if (entity == null || name == null || name.isEmpty()) return false;
+        try {
+            Object current = entity.getClass().getMethod("getSchedule").invoke(entity);
+            if (!(current instanceof Enum<?>)) return false;
+            Class scheduleClass = current.getClass();
+            Object value = Enum.valueOf((Class) scheduleClass.asSubclass(Enum.class), name);
+            entity.getClass().getMethod("setSchedule", scheduleClass).invoke(entity, value);
+            return name.equals(scheduleName(entity));
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
             return false;
         }
     }

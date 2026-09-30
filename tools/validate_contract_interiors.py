@@ -21,14 +21,19 @@ if dimension.get("type") != "maid_weapon:contract_interior":
     raise SystemExit("contract interior does not use its dedicated dimension type")
 if dimension.get("generator", {}).get("type") != "minecraft:flat":
     raise SystemExit("contract interior must remain a bounded void-style flat dimension")
-if dimension_type.get("fixed_time") != 6000 or dimension_type.get("natural") is not False:
-    raise SystemExit("contract interior lost its calm fixed-time environment")
+if "fixed_time" in dimension_type or dimension_type.get("natural") is not False:
+    raise SystemExit("contract interior must allow the selected home clock to control the sky")
 if dimension_type.get("bed_works") is not False or dimension_type.get("has_raids") is not False:
     raise SystemExit("contract interior regained normal-world respawn/raid behavior")
 
 profile = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorProfile.java")
 saved = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorSavedData.java")
 builder = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorBuilder.java")
+terrain_builder = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorTerrainBuilder.java")
+terrain_theme = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorTerrainTheme.java")
+terrain_selection = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorSelectionService.java")
+terrain_preview = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorTerrainPreview.java")
+player_commands = read("src/main/java/com/maidweapon/forge/event/ContractInteriorCommand.java")
 service = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorService.java")
 events = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorEvents.java")
 gallery = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorGallery.java")
@@ -58,7 +63,11 @@ for needle in [
     'DATA_NAME = "maid_weapon_contract_interiors"',
     "CELL_SPACING = 1024",
     "getOrCreate(String bindingId)",
-    "markBuilt(String bindingId, int spaceStage)",
+    "TerrainTheme",
+    "TerrainSeed",
+    "GeneratedStage",
+    "chooseTerrain(String bindingId, String themeId)",
+    "markGenerated(String bindingId, int spaceStage)",
 ]:
     if needle not in saved:
         raise SystemExit(f"interior plot persistence is incomplete: {needle}")
@@ -90,20 +99,87 @@ for needle in [
 if "DEPSLATE_" in builder:
     raise SystemExit("interior builder contains misspelled deepslate block constants")
 
+
+for needle in [
+    "case 1 -> 16",
+    "case 2 -> 24",
+    "case 3 -> 32",
+    "case 4 -> 40",
+    "default -> 52",
+    "for (int stage = generated + 1; stage <= profile.spaceStage(); stage++)",
+    "saved.markGenerated(bindingId, stage)",
+    "previousRadius",
+    "Preserve anything a player somehow built beyond the old barrier",
+    "if (stage == 1)",
+    "Blocks.BARRIER",
+]:
+    if needle not in terrain_builder:
+        raise SystemExit(f"real contract terrain progression is incomplete: {needle}")
+
+inside_land_body = terrain_builder.split(
+    "private static boolean insideLand", 1
+)[1].split("private static void buildBoundary", 1)[0]
+if "hash(" in inside_land_body or "Math.floorMod" in inside_land_body:
+    raise SystemExit(
+        "interior stage footprints must stay strictly nested; "
+        "radius-dependent/random edge noise can reopen void seams"
+    )
+if "Math.pow(nx, 6.0D) + Math.pow(nz, 6.0D) <= 1.0D" not in inside_land_body:
+    raise SystemExit("interior expansion lost its monotonic rounded-square footprint")
+
+for theme in [
+    "PLAINS_GARDEN",
+    "SAKURA_GARDEN",
+    "BAMBOO_GROVE",
+    "LAKE_ISLET",
+    "HILL_GARDEN",
+]:
+    if theme not in terrain_theme:
+        raise SystemExit(f"built-in contract terrain theme is missing: {theme}")
+
+for needle in [
+    "/contractinterior choose ",
+    "ClickEvent.Action.RUN_COMMAND",
+    "saved.chooseTerrain(bindingId, theme.id())",
+]:
+    if needle not in terrain_selection:
+        raise SystemExit(f"first-entry terrain selection is incomplete: {needle}")
+
+for theme_id in [
+    "plains_garden",
+    "sakura_garden",
+    "bamboo_grove",
+    "lake_islet",
+    "hill_garden",
+]:
+    if theme_id not in player_commands:
+        raise SystemExit(f"player terrain selection command is missing: {theme_id}")
+
+if "ContractInteriorBuilder.buildSnapshot" not in gallery:
+    raise SystemExit("example-home gallery no longer owns the old house snapshots")
+
 for needle in [
     "MaidWeaponItem.ensureBindingId(contract)",
-    "ContractMaidLifecycleService.manifest(player, contract, false)",
-    "ContractMaidLifecycleService.capture(player, maid, contract, false)",
+    "ContractLifecycleService.manifest(player, contract, false)",
+    "ContractLifecycleService.capture(player, maid, contract, false)",
     "MaidWeaponItem.isOwner(contract, player)",
     "MaidWeaponItem.isContractSuperseded(contract)",
     "restoreReturn(player)",
     "resumeInteriorMaid",
     "existingMaid.level().dimension().equals(INTERIOR_LEVEL)",
+    "ContractInteriorSelectionService.prompt(player, contract)",
+    "ContractInteriorTerrainBuilder.ensureGenerated",
 ]:
     if needle not in service:
         raise SystemExit(f"interior lifecycle invariant is missing: {needle}")
+if "ContractInteriorBuilder.ensureBuilt" in service:
+    raise SystemExit("real player interiors regressed to the generated example-home builder")
+if "contractForSelection(ServerPlayer player)" not in service:
+    raise SystemExit("terrain selection lost the Heart Key contract resolver")
+if service.count("instanceof ContractInteriorKeyItem") < 2:
+    raise SystemExit("terrain selection can bypass the Heart Key hand pairing")
 
-if "InfusedMaidDeploymentSystem" in service + events + builder + saved + profile:
+if "InfusedMaidDeploymentSystem" in service + events + builder + terrain_builder + saved + profile:
     raise SystemExit("contract interior depends on the hotbar deployment state machine")
 
 if "ContractInteriorService.INTERIOR_LEVEL" not in deployment:
@@ -185,6 +261,9 @@ for needle in [
     "class Raster",
     "GALLERY_STAGE_RADII",
     "default is stage radius + 2 blocks",
+    "--center-x",
+    "--center-z",
+    "def centered_bounds",
     "name == \"minecraft:bamboo\"",
     "choices=(0, 90, 180, 270)",
     "def rotate_blocks",
@@ -208,6 +287,9 @@ for needle in [
     "Contract Interior Preview",
     "-PgalleryPreview=true",
     "maidweapon interior gallery generate 4",
+    "maidweapon interior terrain-preview generate",
+    "terrain_sakura_stage_5_iso.png",
+    "--center-x",
     "save-all flush",
     "render_contract_interior_world.py",
     "--format png",
@@ -240,6 +322,8 @@ for language in ["en_us", "zh_cn"]:
         "maid_weapon.tooltip.interior_key.use",
         "maid_weapon.message.interior.entered",
         "maid_weapon.message.interior.left",
+        "maid_weapon.message.interior.choose_theme_title",
+        "maid_weapon.interior.theme.sakura_garden",
     ]:
         if key not in payload:
             raise SystemExit(f"{language} is missing {key}")

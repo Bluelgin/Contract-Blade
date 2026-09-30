@@ -47,24 +47,64 @@ if "hasDeployedMaid" not in deployment or "deployed_contract_transfer_blocked" n
 
 weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
 interaction = read("src/main/java/com/maidweapon/forge/system/contract/ContractInteractionService.java")
+lifecycle = read("src/main/java/com/maidweapon/forge/system/contract/ContractLifecycleService.java")
+binding_table = read("src/main/java/com/maidweapon/forge/menu/MaidInjectorMenu.java")
+maid_interaction = read("src/main/java/com/maidweapon/forge/event/MaidInteractionHandler.java")
 commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java")
-gui_gate = "hasMaidData(stack) && !player.isShiftKeyDown()"
+gui_gate = "if (hasMaidData(stack)) return InteractionResult.PASS;"
 if gui_gate not in weapon:
-    raise SystemExit("Normal right-click must pass through to TLM's manifested-maid GUI")
+    raise SystemExit("Bound Contract Blade right-click must pass through to TLM/deployment")
 if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner" not in interaction:
     raise SystemExit("Contract interaction authority is not centralized")
 
-if "ContractInteractionService.toggleHeld" not in weapon:
-    raise SystemExit("Dedicated contract sneak-right-click no longer uses the unified toggle")
+if "ContractInteractionService.toggleHeld" in weapon:
+    raise SystemExit("Dedicated Contract Blade regained a second manual summon/recall gesture")
+if "if (hasMaidData(stack)) return InteractionResult.PASS;" not in weapon:
+    raise SystemExit("Bound Contract Blade right-click must belong to TLM/deployment, not capture")
+if "MaidInfusion.isContractBlade(" in deployment:
+    raise SystemExit("Dedicated Contract Blades are still excluded from Contract Table deployment behavior")
 for needle in [
-    "public static InteractionResult toggleHeld",
-    "MaidWeaponItem.hasMaidEntityData(weapon)",
-    "TouhouLittleMaidCompat.convertWeaponToMaid(player, weapon)",
-    "ContractWeaponLocator.findManifestedMaid(player, maidId)",
-    "return capture(player, maid, weapon);",
+    "ContractLifecycleService.capture",
+    "ContractLifecycleService.toggle",
 ]:
     if needle not in interaction:
-        raise SystemExit(f"Dedicated contract toggle is incomplete: {needle}")
+        raise SystemExit(f"Contract interaction no longer delegates lifecycle authority: {needle}")
+for forbidden in [
+    "ContractWeaponLocator",
+    "convertWeaponToMaid",
+    "convertMaidToWeapon",
+]:
+    if forbidden in interaction:
+        raise SystemExit(f"Contract interaction regained a second lifecycle implementation: {forbidden}")
+
+for needle in [
+    "MaidInfusion.containsMaid(contract)",
+    "ContractWeaponLocator.findManifestedMaid",
+    "TouhouLittleMaidHelper.convertWeaponToMaid",
+    "TouhouLittleMaidHelper.convertMaidToWeapon",
+    "TouhouLittleMaidHelper.infuseFromFilm",
+    "TouhouLittleMaidHelper.extractMaidToFilm",
+]:
+    if needle not in lifecycle:
+        raise SystemExit(f"Unified contract lifecycle is incomplete: {needle}")
+
+for needle in [
+    "ContractLifecycleService.extractToFilm",
+    "ContractLifecycleService.infuseFromFilm",
+]:
+    if needle not in binding_table:
+        raise SystemExit(f"Contract Table bypasses unified lifecycle: {needle}")
+
+if "if (MaidInfusion.isInfused(mainHand)) {" not in maid_interaction:
+    raise SystemExit("Bound weapon attacks can still bypass generic deployment recall")
+if "ContractInteractionService.toggleHeld" in maid_interaction:
+    raise SystemExit("Bound SlashBlade regained a second manual summon/recall path")
+if "PlayerInteractEvent.LeftClickEmpty" in maid_interaction:
+    raise SystemExit("Bound SlashBlade still owns a manual empty-space recall gesture")
+if "ContractLifecycleService.manifest(player, weapon, false)" not in deployment:
+    raise SystemExit("Generic deployment bypasses unified contract manifest lifecycle")
+if "ContractLifecycleService.capture(player, maid, weapon, false)" not in deployment:
+    raise SystemExit("Generic deployment bypasses unified contract recall lifecycle")
 
 if "instanceof MaidWeaponItem" in commands:
     raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")

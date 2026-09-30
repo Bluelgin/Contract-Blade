@@ -6,6 +6,7 @@ import com.maidweapon.forge.init.ModBlocks;
 import com.maidweapon.forge.init.ModMenus;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
+import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
@@ -83,7 +84,7 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
         ItemStack weapon = slotsContainer.getItem(0);
         ItemStack film = slotsContainer.getItem(1);
         if (isExtracting()) {
-            ItemStack filledFilm = TouhouLittleMaidHelper.extractMaidToFilm(player, weapon, film);
+            ItemStack filledFilm = ContractLifecycleService.extractToFilm(player, weapon, film);
             if (filledFilm.isEmpty()) return false;
             ItemStack cleanWeapon = weapon.copy();
             MaidWeaponItem.clearMaidContract(cleanWeapon);
@@ -94,7 +95,7 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
             broadcastChanges();
             return true;
         }
-        boolean result = TouhouLittleMaidHelper.infuseFromFilm(player, film, weapon);
+        boolean result = ContractLifecycleService.infuseFromFilm(player, film, weapon);
         if (result) {
             ItemStack emptyFilm = TouhouLittleMaidHelper.createEmptyMaidStoreItem(film);
             slotsContainer.setItem(2, weapon.copy());

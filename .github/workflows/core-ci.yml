@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - codex/unified-contract-interior-land
   pull_request:
     branches:
       - master
@@ -57,6 +58,7 @@ jobs:
           python tools/validate_emergency_film_recovery.py
           python tools/validate_patchouli.py
           python tools/validate_contract_interiors.py
+          python tools/validate_home_life.py
 
       - name: Build
         run: gradle --no-daemon clean build -Pci=true

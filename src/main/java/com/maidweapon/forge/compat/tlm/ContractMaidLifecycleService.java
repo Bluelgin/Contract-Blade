@@ -99,6 +99,7 @@ public final class ContractMaidLifecycleService {
 
         String entityBinding = entity.getPersistentData().getString(
                 ContractMaidKeys.ENTITY_BINDING_ID);
+        com.maidweapon.forge.system.interior.ContractResidentPositionService.remember(entity);
         String originalEntityBinding = entityBinding;
         String weaponBinding = MaidWeaponItem.getBindingId(weaponStack);
         if (!entityBinding.isEmpty()
@@ -230,6 +231,8 @@ public final class ContractMaidLifecycleService {
 
     public static void prepareManifestedMaid(Player player, ItemStack weaponStack, Entity maid) {
         if (!(maid instanceof LivingEntity living)) return;
+        if (maid.level().dimension().equals(
+                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
         MaidCareTaskSystem.rememberOriginalTask(weaponStack, living);
         TlmEntityAdapter.setAllDaySchedule(living);
         TripleMagicCompat.equipPhantoms(player, living, weaponStack);

@@ -1,7 +1,9 @@
 # Contract Interior Design Gallery
 
-The gallery is a development workspace inside `maid_weapon:contract_interior`.
-It is intentionally separate from real player contract plots.
+The gallery is a development/example workspace inside
+`maid_weapon:contract_interior`. It is intentionally separate from real player
+contract plots. The generated Japanese estate is now a reference/optional
+blueprint only; real interiors begin as selectable terrain that players build on.
 
 ## Commands
 
@@ -108,11 +110,12 @@ require Touhou Little Maid.
 The workflow:
 
 1. starts a headless Forge server;
-2. runs `maidweapon interior gallery generate 4` through RCON;
+2. generates both the example-home gallery and the real terrain preview region through RCON;
 3. flushes and stops the server cleanly;
 4. reads the resulting `.mca` files with
    `tools/render_contract_interior_world.py`;
-5. produces top-down and isometric PNGs for all five stages;
+5. produces the old example-home PNGs, Sakura terrain progression PNGs, and
+   maximum-stage comparison PNGs for every selectable terrain theme;
 6. uploads them as the `contract-interior-preview` Actions artifact.
 
 This gives a repeatable review image derived from the real saved world after

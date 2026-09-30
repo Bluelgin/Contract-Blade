@@ -7,6 +7,7 @@ import com.maidweapon.forge.system.ContractNbtAudit;
 import com.maidweapon.forge.system.ContractNbtGuard;
 import com.maidweapon.forge.system.interior.ContractInteriorGallery;
 import com.maidweapon.forge.system.interior.ContractInteriorService;
+import com.maidweapon.forge.system.interior.ContractInteriorTerrainPreview;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -91,6 +92,10 @@ public class MaidWeaponCommand {
                                                                 "warmth")))))
                                 .then(Commands.literal("leave")
                                         .executes(ctx -> leaveInteriorGallery(
+                                                ctx.getSource()))))
+                        .then(Commands.literal("terrain-preview")
+                                .then(Commands.literal("generate")
+                                        .executes(ctx -> generateInteriorTerrainPreview(
                                                 ctx.getSource())))))
         );
     }
@@ -201,6 +206,25 @@ public class MaidWeaponCommand {
         } catch (Exception exception) {
             source.sendFailure(Component.literal(
                     "§c无法生成契约内景画廊: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int generateInteriorTerrainPreview(CommandSourceStack source) {
+        try {
+            boolean generated = ContractInteriorTerrainPreview.generate(source.getServer());
+            if (!generated) {
+                source.sendFailure(Component.literal("§c契约内景维度没有加载"));
+                return 0;
+            }
+            source.sendSuccess(
+                    () -> Component.literal("§a已生成正式契约地形离线预览区域"),
+                    true
+            );
+            return 1;
+        } catch (Exception exception) {
+            source.sendFailure(Component.literal(
+                    "§c无法生成契约地形预览: " + exception.getMessage()));
             return 0;
         }
     }

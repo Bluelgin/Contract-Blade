@@ -85,6 +85,11 @@ BLOCK_COLORS = {
     "minecraft:potted_dandelion": "#ceb35b",
     "minecraft:potted_azalea_bush": "#668755",
     "minecraft:lily_pad": "#46733f",
+    "minecraft:dandelion": "#e2c74d",
+    "minecraft:poppy": "#c7443f",
+    "minecraft:blue_orchid": "#6ca8d9",
+    "minecraft:fern": "#4f8247",
+    "minecraft:azalea": "#5f8e50",
     "minecraft:lodestone": "#6c7883",
 }
 
@@ -469,6 +474,14 @@ def block_visual_shape(name: str) -> tuple[float, float]:
         return 0.82, 0.04
     if name == "minecraft:bamboo":
         return 0.24, 1.0
+    if name in {
+        "minecraft:dandelion",
+        "minecraft:poppy",
+        "minecraft:blue_orchid",
+        "minecraft:fern",
+        "minecraft:azalea",
+    }:
+        return 0.32, 0.55
     if name.endswith("_fence"):
         return 0.30, 1.0
     if name.endswith("_wall"):
@@ -779,13 +792,13 @@ def gallery_origin(stage: int) -> tuple[int, int]:
 
 def rotate_blocks(
     blocks: dict[tuple[int, int, int], str],
-    stage: int,
+    center_x: int,
+    center_z: int,
     rotation: int,
 ) -> dict[tuple[int, int, int], str]:
     if rotation == 0:
         return blocks
 
-    center_x, center_z = gallery_origin(stage)
     rotated: dict[tuple[int, int, int], str] = {}
     for (x, y, z), name in blocks.items():
         dx = x - center_x
@@ -820,6 +833,19 @@ def gallery_bounds(
     )
 
 
+def centered_bounds(
+    center_x: int,
+    center_z: int,
+    radius: int,
+) -> tuple[int, int, int, int]:
+    return (
+        center_x - radius,
+        center_x + radius,
+        center_z - radius,
+        center_z + radius,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Render Contract Blade's contract-interior Anvil data offline."
@@ -832,10 +858,22 @@ def main() -> int:
         type=int,
         choices=(0, 90, 180, 270),
         default=0,
-        help="rotate the stage around its gallery origin before rendering",
+        help="rotate around the selected gallery or explicit center before rendering",
     )
     parser.add_argument("--format", choices=("svg", "png"), default=None)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--center-x",
+        type=int,
+        default=None,
+        help="render around an explicit world X instead of the built-in gallery stage origin",
+    )
+    parser.add_argument(
+        "--center-z",
+        type=int,
+        default=None,
+        help="render around an explicit world Z instead of the built-in gallery stage origin",
+    )
     parser.add_argument(
         "--radius",
         type=int,
@@ -848,7 +886,28 @@ def main() -> int:
 
     world = args.world.expanduser().resolve()
     dimension = dimension_path(world)
-    min_x, max_x, min_z, max_z = gallery_bounds(args.stage, args.radius)
+
+    explicit_center = args.center_x is not None or args.center_z is not None
+    if explicit_center and (args.center_x is None or args.center_z is None):
+        parser.error("--center-x and --center-z must be supplied together")
+
+    if explicit_center:
+        center_x = args.center_x
+        center_z = args.center_z
+        effective_radius = (
+            args.radius
+            if args.radius is not None
+            else GALLERY_STAGE_RADII[args.stage] + 2
+        )
+        min_x, max_x, min_z, max_z = centered_bounds(
+            center_x,
+            center_z,
+            effective_radius,
+        )
+    else:
+        center_x, center_z = gallery_origin(args.stage)
+        min_x, max_x, min_z, max_z = gallery_bounds(args.stage, args.radius)
+
     blocks = load_area(
         dimension,
         min_x,
@@ -858,7 +917,7 @@ def main() -> int:
         args.y_min,
         args.y_max,
     )
-    blocks = rotate_blocks(blocks, args.stage, args.rotation)
+    blocks = rotate_blocks(blocks, center_x, center_z, args.rotation)
 
     output = args.output
     output_format = args.format

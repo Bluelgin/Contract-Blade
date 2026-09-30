@@ -129,6 +129,7 @@ public class MaidWeaponItem extends SwordItem {
         tag.remove(NBT_OWNER_UUID);
         tag.remove(NBT_OWNER_NAME);
         tag.remove("MaidInfusionOriginalTask");
+        tag.remove("MaidInfusionOriginalSchedule");
         tag.remove("MaidDeploymentLocation");
         tag.remove("MaidDeploymentRecoveryFailed");
         tag.remove("MaidInfusionTaczTaskFailure");
@@ -247,7 +248,7 @@ public class MaidWeaponItem extends SwordItem {
 
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.soul_slab_hint"));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.direct_bind_hint"));
     }
 
     // ==================== 实体交互（右键女仆） ====================
@@ -268,55 +269,26 @@ public class MaidWeaponItem extends SwordItem {
         if (player.level().isClientSide() || hand != InteractionHand.MAIN_HAND) {
             return InteractionResult.PASS;
         }
-        // A normal right-click on an already manifested contract belongs to TLM's GUI.
-        // Sneaking explicitly hands the gesture to the contract interaction authority.
-        if (hasMaidData(stack) && !player.isShiftKeyDown()) return InteractionResult.PASS;
+        // Once bound, this item behaves like every Contract Table carrier:
+        // deployment owns manifestation/recall and right-click belongs to TLM.
+        if (hasMaidData(stack)) return InteractionResult.PASS;
         return ContractInteractionService.capture(player, target, stack);
     }
 
     // ==================== 右键使用（空气/方块） ====================
 
     /**
-     * 右键使用（空气/方块）：潜行时切换女仆的收纳/显现状态。
-     *
-     * 玩家潜行 + 右键空气：
-     * - 女仆在武器中：显现；
-     * - 女仆已显现：召回到同一份契约。
+     * Bound Contract Blades deliberately do not own a manual summon/recall
+     * gesture. They participate in the same main-hand deployment state machine
+     * as weapons created through the Contract Table.
      */
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (level.isClientSide) {
-            boolean sneak = player.isShiftKeyDown();
-            boolean hasData = hasMaidData(stack);
-            if (sneak && hasData) {
-                return InteractionResultHolder.success(stack);
-            }
-            return InteractionResultHolder.pass(stack);
-        }
-
-        LOGGER.info("[MaidWeapon] SERVER use() player={} hand={} shift={} hasData={}",
-                player.getScoreboardName(), hand, player.isShiftKeyDown(), hasMaidData(stack));
-
-        if (hasMaidData(stack) && !isOwner(stack, player)) {
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.not_owner"), true);
-            return InteractionResultHolder.fail(stack);
-        }
-
-        // 潜行 + 右键空气：切换显现/召回（普通剑模式）
-        // 拔刀剑模式使用潜行+Q（见 MaidWeaponDropHandler）
-        if (player.isShiftKeyDown() && hasMaidData(stack)) {
-            // 拔刀剑模式使用潜行+Q释放（见 MaidWeaponDropHandler），这里跳过
-            boolean isSlashBladeMode = stack.getTag() != null && stack.getTag().contains(MaidWeaponConstants.TAG_SLASHBLADE_MODE);
-            if (!isSlashBladeMode) {
-                InteractionResult result = ContractInteractionService.toggleHeld(player, hand);
-                if (result.consumesAction()) {
-                    return InteractionResultHolder.success(stack);
-                }
-            }
-        }
-        return InteractionResultHolder.pass(stack);
+    public InteractionResultHolder<ItemStack> use(
+            Level level,
+            Player player,
+            InteractionHand hand
+    ) {
+        return InteractionResultHolder.pass(player.getItemInHand(hand));
     }
 
     // ==================== 工具属性 ====================
