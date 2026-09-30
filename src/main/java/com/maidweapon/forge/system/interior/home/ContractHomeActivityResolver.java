@@ -37,11 +37,16 @@ public final class ContractHomeActivityResolver {
     }
     public static ContractHomeActivity resolve(long seed, ContractHomeClock.Phase phase,
             Set<ContractHomeActivity> available, int favorability, boolean playerPresent) {
+        return resolve(seed, phase, available, favorability, playerPresent, null);
+    }
+    public static ContractHomeActivity resolve(long seed, ContractHomeClock.Phase phase,
+            Set<ContractHomeActivity> available, int favorability, boolean playerPresent, ContractHomeActivity favorite) {
         var weights = new EnumMap<ContractHomeActivity, Integer>(ContractHomeActivity.class);
         int total = 0;
         for (var activity : ContractHomeActivity.values()) {
             if (!available.contains(activity)) continue;
             int weight = weight(activity, phase, favorability, playerPresent);
+            if (activity == favorite) weight *= 2;
             if (weight > 0) { weights.put(activity, weight); total += weight; }
         }
         if (total == 0) return ContractHomeActivity.IDLE;

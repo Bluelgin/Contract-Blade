@@ -41,6 +41,31 @@ public class HomeClockResolverTest {
         check(seed != ContractHomeActivityResolver.seed("binding-b", maid, b.slot()), "binding isolation");
         check(seed != ContractHomeActivityResolver.seed("binding-a", new UUID(0, 1), b.slot()), "maid isolation");
         var available = EnumSet.of(ContractHomeActivity.IDLE, ContractHomeActivity.WANDER);
+        var night = ContractHomeClock.read(real, "UTC", Instant.parse("2026-09-28T23:00:00Z"), 0);
+        var furniture = EnumSet.of(ContractHomeActivity.SLEEP, ContractHomeActivity.READ, ContractHomeActivity.SIT, ContractHomeActivity.PLAY);
+        check(ContractHomeArrivalPlanner.choose("binding-a", maid, night, furniture,
+                ContractHomeActivity.SLEEP, true, 1000000, 1010000, 0) == ContractHomeActivity.SLEEP,
+                "short absence preserves sleep");
+        check(ContractHomeArrivalPlanner.preference(maid) == ContractHomeArrivalPlanner.preference(maid), "stable maid personality");
+        check(ContractHomeArrivalPlanner.weight(ContractHomeActivity.READ, ContractHomeActivity.READ,
+                ContractHomeActivity.IDLE, true, ContractHomeClock.Phase.DAY, 0)
+                > ContractHomeArrivalPlanner.weight(ContractHomeActivity.READ, ContractHomeActivity.SIT,
+                ContractHomeActivity.IDLE, true, ContractHomeClock.Phase.DAY, 0), "reading personality preference");
+        check(ContractHomeArrivalPlanner.weight(ContractHomeActivity.READ, ContractHomeActivity.READ,
+                ContractHomeActivity.READ, true, ContractHomeClock.Phase.DAY, 0)
+                < ContractHomeArrivalPlanner.weight(ContractHomeActivity.READ, ContractHomeActivity.READ,
+                ContractHomeActivity.IDLE, true, ContractHomeClock.Phase.DAY, 0), "avoid repeated waking activity");
+        check(!ContractHomeArrivalPlanner.continuePrevious(true, 1000000, 5000000,
+                ContractHomeActivity.READ, ContractHomeClock.Phase.DAY), "long absence re-evaluates scene");
+        check(!ContractHomeArrivalPlanner.continuePrevious(true, 2000000, 1000000,
+                ContractHomeActivity.READ, ContractHomeClock.Phase.DAY), "clock rollback does not preserve stale scene");
+        for (int i = 0; i < 10000; i++) {
+            var identity = new UUID(0, i);
+            var choice = ContractHomeArrivalPlanner.choose("home-" + i, identity, night,
+                    Set.of(ContractHomeActivity.MEAL), ContractHomeActivity.MEAL, true, 1000, 1000000, 384);
+            check(choice == ContractHomeActivity.IDLE || choice == ContractHomeActivity.WANDER,
+                    "arrival does not invent missing furniture, food costs or player-follow activity");
+        }
         for (int i = 0; i < 10000; i++) {
             var choice = ContractHomeActivityResolver.resolve(i, a.phase(), available, 384, true);
             check(available.contains(choice), "missing furniture removed from pool");

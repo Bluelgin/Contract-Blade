@@ -48,6 +48,25 @@ exact overworld ticks, while real/server modes use the same zone calculation as
 activity selection. System settings in the guide are explicitly labeled system
 instructions; existing guides are upgraded in place without redelivery.
 
+## Arrival life scenes
+
+Only fresh interior manifestation uses the arrival planner, before the next
+entity-tracking tick. An existing live resident or an ordinary session reattach
+never gets a staged teleport. A short absence (up to two minutes) retains a
+compatible prior activity and prefers its furniture. Longer absences use the
+current home-clock phase, stable UUID-based personality weights and a penalty
+on repeating the previous waking activity. High favorability slightly favors a
+chair near the returning player, not perpetual door guarding.
+
+The first scene pool contains native bed/chair/bookshelf/computer/keyboard
+interactions plus idle/wander. Meals and board games remain attended activities;
+there is no offline food consumption, inventory mutation or reward calculation.
+At most four loaded furniture candidates are tried. A collision-free supported
+standing spot and a reachable path are checked before the same real maid uses
+the native furniture API. Invalid/missing/occupied furniture falls back to the
+safe checkpoint. Only loaded targets are considered; arrival does not load all
+plot chunks or keep unattended simulation sessions alive.
+
 ## First supported interactions
 
 - TLM **maid bed**, head half: real `startSleeping`/`stopSleeping`, as used by

@@ -273,6 +273,7 @@ public final class ContractHomeValidation {
             check(oldSchedule.equals(String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid))),
                     "original schedule restored");
             check(!maid.getPersistentData().contains("ContractHomeBehaviorSettings"), "behavior backup released");
+            validateArrival(level, player, binding, maid, runtimeSaved, plot, origin);
             System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game/Joy/picnic Home Meal, loaded index, managed-seat clock bridge, invalidation, brain scope, restore, NBT isolation");
         } finally {
             ContractHomeRuntime.stop(player);
@@ -288,6 +289,115 @@ public final class ContractHomeValidation {
     private static void tickBrain(ServerLevel level, Mob maid) {
         Brain brain = maid.getBrain();
         brain.tick(level, maid);
+    }
+    private static void validateArrival(ServerLevel level, net.minecraft.server.level.ServerPlayer player,
+            String binding, Mob maid, ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot,
+            BlockPos origin) throws ReflectiveOperationException {
+        var home = plot.home();
+        long oldDayTime = level.getServer().overworld().getDayTime();
+        var oldMode = home.mode;
+        java.util.UUID identity = maid.getUUID();
+        BlockPos pos = origin.offset(2, 0, -2);
+        Entity chair = null;
+        Mob occupant = null;
+        try {
+            level.getServer().overworld().setDayTime(18000);
+            home.mode = ContractHomeClock.Mode.MINECRAFT_TIME;
+            var bed = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "maid_bed"));
+            var head = bed.defaultBlockState().setValue(BedBlock.PART, BedPart.HEAD);
+            BlockPos foot = pos.relative(head.getValue(BedBlock.FACING).getOpposite());
+            level.setBlock(foot, head.setValue(BedBlock.PART, BedPart.FOOT), 2);
+            level.setBlock(pos, head, 2);
+            var sleep = new TlmHomeFurnitureAdapter().blockTarget(level, pos).orElseThrow();
+            arrivalState(home, maid, ContractHomeActivity.SLEEP, sleep.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(maid.isSleeping(), "entry immediately restores real sleep rather than walking from player spawn");
+            check(identity.equals(maid.getUUID()), "arrival keeps the same real maid UUID");
+            ContractHomeRuntime.stop(player);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                BlockPos wall = pos.offset(dx, 0, dz);
+                if (wall.equals(pos) || wall.equals(foot)) continue;
+                for (int dy = 0; dy <= 2; dy++) level.setBlockAndUpdate(wall.above(dy), Blocks.BARRIER.defaultBlockState());
+            }
+            arrivalState(home, maid, ContractHomeActivity.SLEEP, sleep.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            var blockedCheckpoint = maid.position();
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(!maid.isSleeping() && maid.position().equals(blockedCheckpoint), "blocked furniture cannot force unsafe staging");
+            ContractHomeRuntime.stop(player);
+            for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                BlockPos wall = pos.offset(dx, 0, dz);
+                if (wall.equals(pos) || wall.equals(foot)) continue;
+                for (int dy = 0; dy <= 2; dy++) level.setBlockAndUpdate(wall.above(dy), Blocks.AIR.defaultBlockState());
+            }
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+            level.setBlockAndUpdate(foot, Blocks.AIR.defaultBlockState());
+
+            var keyboard = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "keyboard"));
+            level.setBlockAndUpdate(pos, keyboard.defaultBlockState());
+            var joy = new TlmHomeJoyAdapter();
+            var play = joy.blockTarget(level, pos).orElseThrow();
+            arrivalState(home, maid, ContractHomeActivity.PLAY, play.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(joy.running(level, play, maid), "entry immediately uses native keyboard seat/animation");
+            var during = maid.position();
+            ContractHomeRuntime.start(player, binding, maid, saved, plot);
+            // TLM's native seat release can move the passenger beside its seat.
+            check(maid.position().distanceToSqr(during) < 4, "ordinary session resume stays beside the same furniture");
+            ContractHomeRuntime.stop(player);
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+
+            var bookshelf = ForgeRegistries.BLOCKS.getValue(new ResourceLocation("touhou_little_maid", "bookshelf"));
+            level.setBlockAndUpdate(pos, bookshelf.defaultBlockState());
+            var read = joy.blockTarget(level, pos).orElseThrow();
+            arrivalState(home, maid, ContractHomeActivity.READ, read.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(joy.running(level, read, maid), "entry restores native reading pose");
+            ContractHomeRuntime.stop(player);
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+
+            chair = (Entity) Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.item.EntityChair")
+                    .getConstructor(Level.class).newInstance(level);
+            chair.moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
+            check(level.addFreshEntity(chair), "arrival chair spawned");
+            var sit = new TlmHomeFurnitureAdapter().entityTarget(chair).orElseThrow();
+            arrivalState(home, maid, ContractHomeActivity.SIT, sit.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(maid.getVehicle() == chair, "entry restores sitting/waiting on real chair");
+            ContractHomeRuntime.stop(player);
+            occupant = (Mob) TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);
+            occupant.moveTo(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
+            check(level.addFreshEntity(occupant) && occupant.startRiding(chair, true), "fixture chair occupied");
+            arrivalState(home, maid, ContractHomeActivity.SIT, sit.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(!maid.isPassenger() && occupant.getVehicle() == chair, "arrival never steals an occupied chair");
+            ContractHomeRuntime.stop(player);
+            occupant.discard(); occupant = null;
+            chair.discard();
+            arrivalState(home, maid, ContractHomeActivity.SIT, sit.key());
+            maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+            var checkpoint = maid.position();
+            ContractHomeRuntime.start(player, binding, maid, saved, plot, true);
+            check(!maid.isPassenger() && maid.position().equals(checkpoint), "missing furniture falls back to safe checkpoint");
+            ContractHomeRuntime.stop(player);
+            System.out.println("CONTRACT_HOME_ARRIVAL_VALIDATION_PASSED: native sleep, keyboard, reading, chair, same UUID, no mid-session teleport, missing furniture fallback");
+        } finally {
+            ContractHomeRuntime.stop(player);
+            level.getServer().overworld().setDayTime(oldDayTime); home.mode = oldMode;
+            if (chair != null) chair.discard();
+            if (occupant != null) occupant.discard();
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
+        }
+    }
+    private static void arrivalState(ContractHomeOfflineState home, Mob maid, ContractHomeActivity activity, String target) {
+        home.maidId = maid.getStringUUID(); home.activity = activity; home.target = target;
+        home.departedAt = java.time.Instant.now().toEpochMilli() - 1000;
+        home.activityStartedAt = home.departedAt;
     }
     private static void check(boolean condition, String reason) {
         if (!condition) throw new IllegalStateException("Home validation: " + reason);

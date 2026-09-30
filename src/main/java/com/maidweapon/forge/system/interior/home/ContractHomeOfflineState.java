@@ -8,6 +8,7 @@ public final class ContractHomeOfflineState {
     public String zone = "UTC";
     public boolean guideReceived;
     public long lastSimulatedAt;
+    public long departedAt;
     public long activityStartedAt;
     public long slot = Long.MIN_VALUE;
     public long seed;
@@ -26,6 +27,7 @@ public final class ContractHomeOfflineState {
         state.zone = ContractHomeClock.zone(tag.getString("Zone")).getId();
         state.guideReceived = tag.getBoolean("GuideReceived");
         state.lastSimulatedAt = tag.getLong("LastSimulatedAt");
+        state.departedAt = tag.contains("DepartedAt") ? tag.getLong("DepartedAt") : state.lastSimulatedAt;
         state.activityStartedAt = tag.getLong("ActivityStartedAt");
         state.slot = tag.contains("Slot") ? tag.getLong("Slot") : Long.MIN_VALUE;
         state.seed = tag.getLong("Seed");
@@ -48,6 +50,7 @@ public final class ContractHomeOfflineState {
         tag.putString("Zone", zone);
         tag.putBoolean("GuideReceived", guideReceived);
         tag.putLong("LastSimulatedAt", lastSimulatedAt);
+        tag.putLong("DepartedAt", departedAt);
         tag.putLong("ActivityStartedAt", activityStartedAt);
         tag.putLong("Slot", slot);
         tag.putLong("Seed", seed);

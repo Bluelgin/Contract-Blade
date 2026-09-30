@@ -8,7 +8,7 @@ JAVA = ROOT / 'src/main/java/com/maidweapon/forge'
 HOME = JAVA / 'system/interior/home'
 with tempfile.TemporaryDirectory(prefix='contract-home-tests-') as out:
     subprocess.run(['javac', '-d', out, *[str(HOME / f'{name}.java') for name in
-        ('ContractHomeClock', 'ContractHomeActivity', 'ContractHomeActivityResolver')],
+        ('ContractHomeClock', 'ContractHomeActivity', 'ContractHomeActivityResolver', 'ContractHomeArrivalPlanner')],
         str(ROOT / 'tools/tests/HomeClockResolverTest.java')], check=True)
     subprocess.run(['java', '-cp', out, 'HomeClockResolverTest'], check=True)
 
@@ -87,6 +87,12 @@ assert 'ContractResidentPositionService.restore(maid, plot)' in service
 assert 'ContractHomeClock.skyTime' in events and 'ClientboundSetTimePacket' in events
 assert 'setDayTime(' not in events, 'home clock must not mutate other players\' shared world clock'
 assert 'ContractInteriorGuideVersion' in guide and 'write(existing)' in guide
+assert 'if (arrival) prepareArrival(session, player)' in runtime
+assert 'attempts++ < 4' in runtime and 'level.noCollision(s.maid, box)' in runtime
+assert 'ContractHomeArrivalPlanner.preference(s.maid.getUUID())' in runtime
+assert 'restored' in service and 'plot, !resumeInteriorMaid)' in service
+assert 'DepartedAt' in (HOME / 'ContractHomeOfflineState.java').read_text()
+assert 'arrival never steals an occupied chair' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 # Contract runtime settings are temporary and must not leak into copied/cleared contracts.
 runtime_service = (JAVA / 'system/deployment/ContractMaidRuntimeService.java').read_text()
 weapon_item = (JAVA / 'item/MaidWeaponItem.java').read_text()

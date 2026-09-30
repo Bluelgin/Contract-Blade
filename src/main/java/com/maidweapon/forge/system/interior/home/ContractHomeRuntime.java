@@ -44,6 +44,10 @@ public final class ContractHomeRuntime {
     public static boolean attached(ServerPlayer player) { return SESSIONS.containsKey(player.getUUID()); }
     public static void start(ServerPlayer player, String binding, Mob maid,
                              ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
+        start(player, binding, maid, saved, plot, false);
+    }
+    public static void start(ServerPlayer player, String binding, Mob maid,
+                             ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot, boolean arrival) {
         stop(player);
         if (!plot.hasTerrainTheme() || !TlmEntityAdapter.isOwnedMaid(maid, player)
                 || !binding.equals(maid.getPersistentData().getString(
@@ -58,7 +62,91 @@ public final class ContractHomeRuntime {
         if (!session.active) return;
         maid.getPersistentData().putString(RESIDENT, binding);
         SESSIONS.put(player.getUUID(), session);
+        if (arrival) prepareArrival(session, player);
         tick(player);
+    }
+    private static void prepareArrival(Session s, ServerPlayer player) {
+        ServerLevel level = (ServerLevel) s.maid.level();
+        long tick = level.getGameTime();
+        Instant now = Instant.now();
+        var reading = ContractHomeClock.read(s.state.mode, s.state.zone, now, player.getServer().overworld().getDayTime());
+        boolean sameMaid = s.state.maidId.equals(s.maid.getStringUUID());
+        boolean continuing = ContractHomeArrivalPlanner.continuePrevious(sameMaid, s.state.departedAt,
+                now.toEpochMilli(), s.state.activity, reading.phase());
+        s.registry.refresh(level, tick);
+        var entries = s.registry.available(level, s.maid, Set.of()).stream()
+                // First arrival scenes use only proven bed/chair/Joy interactions.
+                // Board games and meals remain ordinary attended activities.
+                .filter(e -> e.adapter() instanceof com.maidweapon.forge.compat.tlm.TlmHomeFurnitureAdapter
+                        || e.adapter() instanceof com.maidweapon.forge.compat.tlm.TlmHomeJoyAdapter).toList();
+        var available = EnumSet.of(ContractHomeActivity.IDLE, ContractHomeActivity.WANDER);
+        entries.forEach(e -> available.add(e.target().activity()));
+        ContractHomeActivity activity = ContractHomeArrivalPlanner.choose(s.binding, s.maid.getUUID(), reading,
+                available, s.state.activity, sameMaid, s.state.departedAt, now.toEpochMilli(),
+                TlmEntityAdapter.favorability(s.maid));
+        long seed = ContractHomeActivityResolver.seed(s.binding, s.maid.getUUID(), reading.slot());
+        final var selectedActivity = activity;
+        var candidates = new ArrayList<>(entries.stream().filter(e -> e.target().activity() == selectedActivity).toList());
+        // Reuse the prior furniture on a short absence before trying alternatives.
+        if (continuing) candidates.sort(Comparator.comparing(e -> !e.target().key().equals(s.state.target)));
+        boolean posed = false;
+        int attempts = 0;
+        while (!candidates.isEmpty() && attempts++ < 4) {
+            var chosen = continuing && candidates.get(0).target().key().equals(s.state.target)
+                    ? candidates.get(0) : selectTarget(candidates, player, TlmEntityAdapter.favorability(s.maid), seed);
+            candidates.remove(chosen);
+            var before = s.maid.position();
+            float yaw = s.maid.getYRot(), pitch = s.maid.getXRot();
+            if (!stageAtFurniture(s, chosen, level)) {
+                chosen.adapter().stop(s.maid);
+                s.maid.moveTo(before.x, before.y, before.z, yaw, pitch);
+                continue;
+            }
+            s.target = chosen; s.performing = true; posed = true;
+            break;
+        }
+        // No target was safe: keep the checkpoint, not a random teleport or a
+        // phantom furniture animation. Normal online decisions can try later.
+        if (!posed && activity != ContractHomeActivity.WANDER) activity = ContractHomeActivity.IDLE;
+        s.state.slot = reading.slot(); s.state.seed = seed; s.state.maidId = s.maid.getStringUUID();
+        s.state.activity = activity; s.state.target = posed ? s.target.target().key() : "";
+        if (!continuing) s.state.activityStartedAt = now.toEpochMilli();
+        s.state.lastSimulatedAt = now.toEpochMilli();
+        s.nextDecision = tick + DECISION_INTERVAL;
+        s.nextMovement = tick + 100;
+        ContractResidentPositionService.remember(s.maid);
+        s.saved.setDirty();
+    }
+    private static boolean stageAtFurniture(Session s, ContractHomeFurnitureRegistry.Entry entry, ServerLevel level) {
+        BlockPos pos = entry.target().position();
+        if (!s.registry.contains(pos) || !level.hasChunkAt(pos) || !entry.adapter().valid(level, entry.target(), s.maid)) return false;
+        // Validate a real approach route and a collision-free standing location
+        // beside the furniture before calling its native seat/sleep API.
+        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+            if (dx == 0 && dz == 0) continue;
+            BlockPos stand = pos.offset(dx, 0, dz);
+            if (!s.registry.contains(stand) || !level.hasChunkAt(stand)
+                    || level.getBlockState(stand.below()).isAir()) continue;
+            var box = s.maid.getBoundingBox().move(stand.getX() + .5 - s.maid.getX(),
+                    stand.getY() - s.maid.getY(), stand.getZ() + .5 - s.maid.getZ());
+            if (!level.noCollision(s.maid, box)) continue;
+            // Freshly deserialized mobs have not had a physics tick yet. Probe
+            // navigation without treating their stale OnGround flag as proof
+            // that all furniture is unreachable; restore it before any action.
+            boolean grounded = s.maid.onGround();
+            net.minecraft.world.level.pathfinder.Path path;
+            try {
+                s.maid.setOnGround(true);
+                path = s.maid.getNavigation().createPath(stand, 1);
+            } finally { s.maid.setOnGround(grounded); }
+            if (path == null || !path.canReach()) continue;
+            s.maid.moveTo(stand.getX() + .5, stand.getY(), stand.getZ() + .5);
+            try { TlmHomeBehaviorController.center(s.maid, pos); }
+            catch (ReflectiveOperationException unsupported) { return false; }
+            return entry.adapter().start(level, entry.target(), s.maid)
+                    && entry.adapter().running(level, entry.target(), s.maid);
+        }
+        return false;
     }
     public static void tick(ServerPlayer player) {
         Session s = SESSIONS.get(player.getUUID());
@@ -132,7 +220,8 @@ public final class ContractHomeRuntime {
         if (!sameSlot) seed ^= tick / DECISION_INTERVAL;
         int favorability = TlmEntityAdapter.favorability(s.maid);
         var activity = sameSlot && available.contains(s.state.activity) ? s.state.activity
-                : ContractHomeActivityResolver.resolve(seed, reading.phase(), available, favorability, true);
+                : ContractHomeActivityResolver.resolve(seed, reading.phase(), available, favorability, true,
+                        ContractHomeArrivalPlanner.preference(s.maid.getUUID()));
         ContractHomeFurnitureRegistry.Entry chosen = null;
         final var selectedActivity = activity;
         var candidates = entries.stream().filter(e -> e.target().activity() == selectedActivity).toList();
@@ -223,6 +312,7 @@ public final class ContractHomeRuntime {
         ContractResidentPositionService.remember(s.maid);
         // Persist the logical selection before stopping its real pose/navigation.
         s.state.lastSimulatedAt = Instant.now().toEpochMilli(); s.saved.setDirty();
+        s.state.departedAt = s.state.lastSimulatedAt;
         // Retain the marker until lifecycle capture; failed lookup must still pause unattended AI.
         endAction(s);
         return TlmHomeBehaviorController.restore(s.maid);

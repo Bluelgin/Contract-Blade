@@ -149,7 +149,7 @@ public final class ContractInteriorService {
                 : (maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId));
         if (maid != null && !resumeInteriorMaid) ContractResidentPositionService.restore(maid, plot);
 
-        attachHome(player, bindingId, maid, saved, plot);
+        attachHome(player, bindingId, maid, saved, plot, !resumeInteriorMaid);
         message(player, "maid_weapon.message.interior.entered");
         return true;
     }
@@ -575,24 +575,26 @@ public final class ContractInteriorService {
         ItemStack contract = findContractByBinding(player, binding);
         String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
         Entity maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
+        boolean restored = false;
         if (maid == null && MaidWeaponItem.hasMaidEntityData(contract)) {
             // No new storage path: the same lifecycle service consumes the same stored authority.
             if (!ContractLifecycleService.manifest(player, contract, false)) return;
             maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
             if (maid != null) ContractResidentPositionService.restore(maid, plot);
+            restored = maid != null;
         }
         if (maid == null || maid.level() != player.level() || !binding.equals(
                 maid.getPersistentData().getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID))) return;
-        attachHome(player, binding, maid, saved, plot);
+        attachHome(player, binding, maid, saved, plot, restored);
     }
 
     private static void attachHome(ServerPlayer player, String binding, Entity maid,
-                                   ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
+                                   ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot, boolean arrival) {
         if (maid instanceof net.minecraft.world.entity.LivingEntity living) {
             com.maidweapon.forge.compat.TaczCompat.clear(player, living, findContractByBinding(player, binding));
             com.maidweapon.forge.compat.TripleMagicCompat.clearPhantoms(living, findContractByBinding(player, binding));
         }
-        if (maid instanceof Mob mob) ContractHomeRuntime.start(player, binding, mob, saved, plot);
+        if (maid instanceof Mob mob) ContractHomeRuntime.start(player, binding, mob, saved, plot, arrival);
         ContractInteriorGuideService.give(player, saved, plot);
     }
 
