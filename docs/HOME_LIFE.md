@@ -64,7 +64,11 @@ from `snapshot-2026-05-09-05-17-04`, SHA-256
   crash recovery; `refreshBrain` restores TLM behavior on release. Restore
   failure is observable at the lifecycle boundary: capture is refused rather
   than serializing a temporary Home Life brain/task/schedule into the weapon.
-  Inventory/entity NBT is never copied. Fire, injury, drowning, combat or a leash yields to TLM.
+  The wider contract runtime also snapshots the maid's pre-contract TLM task
+  **and schedule** before forcing combat-time `ALL`, restores both before
+  capture/emergency-film serialization, and strips those temporary tags from
+  cleared or projected contracts. Inventory/entity NBT is never duplicated.
+  Fire, injury, drowning, combat or a leash yields to TLM immediately.
 - `ContractInteriorGuideService`: a localized written book after successful
   real entry; receipt belongs to the plot. Full inventory defers delivery and
   retries every 30 seconds while at home.
@@ -107,9 +111,14 @@ per second. Removed/moved/occupied furniture cannot hold stale navigation foreve
 
 On normal absence the real maid is captured by the existing lifecycle, and the
 session/index is discarded. A crash-restored or uncaptured home resident is
-paused while unattended without loading any additional chunks. On return the
-current slot is resolved directly, preserving a valid same-slot selection.
-Twelve hours away means one resolution, not twelve hours of simulation.
+paused while unattended without loading any additional chunks. The physical
+active contract is also kept out of the maid's own inventory, cursor and external
+container slots while the home is active; menu-close handling is a second safety
+boundary, not the only one. If the carrier itself is destroyed in the interior,
+the existing TLM emergency resurrection-film format is used and film delivery is
+committed before the live maid is discarded. On return the current slot is
+resolved directly, preserving a valid same-slot selection. Twelve hours away
+means one resolution, not twelve hours of simulation.
 
 ## Verification
 
@@ -133,6 +142,12 @@ An active home session is bound to its own generated plot footprint. Cross-dimen
 travel is handled by the normal lifecycle event, while same-dimension teleports
 (such as a waystone inside the shared Contract Interior dimension) are checked on
 the regular safety tick. A teleport outside the active binding's plot returns the
-owner to that plot's origin instead of exposing another binding's cell. This check
-is horizontal only, so vertical player builds inside the owned footprint remain
-usable.
+owner to that plot's origin instead of exposing another binding's cell.
+
+The **resident maid** is contained by the same horizontal footprint. Home Life
+normally never paths outside it; if combat AI, a teleporting mod or another force
+moves the live resident outside, the safety guard ends the stale furniture pose
+and returns her to the binding origin only when that origin chunk is already
+loaded. It never creates a chunk ticket merely to recover an unattended resident;
+otherwise she is paused until recovery is safe. Both checks are horizontal, so
+vertical player builds inside the owned footprint remain usable.

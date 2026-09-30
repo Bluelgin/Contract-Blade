@@ -587,8 +587,13 @@ public final class ContractInteriorService {
         String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
         if (binding.isEmpty()) return;
         ItemStack contract = findContractByBinding(player, binding);
-        if (!contract.isEmpty() && recallInteriorMaid(player, contract)) clearReturn(player);
-        else ContractHomeRuntime.pause(player);
+        if (contract.isEmpty() || !recallInteriorMaid(player, contract)) {
+            ContractHomeRuntime.pause(player);
+        }
+        // The player is already outside the interior. A failed capture keeps the
+        // resident frozen under its binding and may be resumed by a later re-entry;
+        // the old return marker must not survive as a stale cross-dimension session.
+        clearReturn(player);
     }
 
     private static void saveReturn(ServerPlayer player, String bindingId) {

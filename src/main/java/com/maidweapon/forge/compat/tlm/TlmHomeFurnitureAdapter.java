@@ -11,8 +11,8 @@ import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraftforge.registries.ForgeRegistries;
 import java.util.Optional;
 
-/** Confirmed against TLM MaidBedTask and MaidFindSitTask (1.20 branch).
- * Entertainment is deliberately unsupported: EntitySit enforces TLM's world-time schedule.
+/** Native TLM bed + rideable chair/cushion adapter (1.20 branch).
+ * Joy blocks and picnic Home Meal use their own focused adapters.
  */
 public final class TlmHomeFurnitureAdapter implements ContractHomeFurnitureAdapter {
     private static final ResourceLocation BED = new ResourceLocation("touhou_little_maid", "maid_bed");
