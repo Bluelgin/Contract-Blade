@@ -97,8 +97,12 @@ public final class ContractHomeValidation {
         player.setPos(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
         ContractCarrierValidation.inventoryClicks(player, contract);
         contract = player.getInventory().getItem(0);
-        for (int x = -4; x <= 4; x++) for (int z = -4; z <= 4; z++)
+        for (int x = -4; x <= 4; x++) for (int z = -4; z <= 4; z++) {
             level.setBlockAndUpdate(origin.offset(x, -1, z), Blocks.STONE.defaultBlockState());
+            // This isolated fixture room must not inherit random terrain-tree
+            // obstacles when asserting that native furniture is reachable.
+            for (int y = 0; y <= 3; y++) level.setBlockAndUpdate(origin.offset(x, y, z), Blocks.AIR.defaultBlockState());
+        }
         Mob maid = (Mob) TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);
         maid.moveTo(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
         check(level.addFreshEntity(maid), "real maid spawn");

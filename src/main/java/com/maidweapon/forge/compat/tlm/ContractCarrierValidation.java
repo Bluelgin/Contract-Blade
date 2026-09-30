@@ -70,7 +70,10 @@ public final class ContractCarrierValidation {
                         java.util.UUID.fromString("32de43a6-4bde-4b7d-8259-e2e45d6f815"), "CarrierFixture"));
         player.getInventory().clearContent();
         player.getInventory().selected = 0;
-        player.setPos(0.5, 80, 0.5);
+        // Fake players do not create player chunk tickets. Use the already-loaded
+        // spawn region, not (0, 0), which can be inactive on random CI world seeds.
+        var spawn = level.getSharedSpawnPos();
+        player.setPos(spawn.getX() + .5, Math.max(80, spawn.getY()) + 3, spawn.getZ() + .5);
         ItemStack weapon = new ItemStack(ModItems.MAID_SWORD.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, weapon);
         Entity maid = (Entity) TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);
