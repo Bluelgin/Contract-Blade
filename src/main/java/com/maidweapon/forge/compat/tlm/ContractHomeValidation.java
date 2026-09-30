@@ -250,6 +250,9 @@ public final class ContractHomeValidation {
             ContractHomeRuntime.guardResident(maid);
             check(maid.blockPosition().closerThan(origin, 2.0), "resident maid plot escape is recovered");
             check(!maid.isSleeping(), "resident containment releases stale furniture pose");
+            // First tick reselects/approaches the retained target; the next tick
+            // executes adapter.start(), matching the normal runtime cadence.
+            ContractHomeRuntime.tick(player);
             ContractHomeRuntime.tick(player);
             check(maid.isSleeping() && sameSlotSeed == home.seed,
                     "resident containment resumes deterministic home selection");
