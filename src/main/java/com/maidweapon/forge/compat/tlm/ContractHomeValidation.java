@@ -234,6 +234,15 @@ public final class ContractHomeValidation {
             ContractHomeRuntime.start(player, binding, maid, runtimeSaved, plot);
             ContractHomeRuntime.tick(player);
             check(!maid.isNoAi() && maid.isSleeping() && sameSlotSeed == home.seed, "same-slot reentry preserves selection");
+
+            maid.moveTo(origin.getX() + 100.5, origin.getY(), origin.getZ() + 0.5);
+            ContractHomeRuntime.guardResident(maid);
+            check(maid.blockPosition().closerThan(origin, 2.0), "resident maid plot escape is recovered");
+            check(!maid.isSleeping(), "resident containment releases stale furniture pose");
+            ContractHomeRuntime.tick(player);
+            check(maid.isSleeping() && sameSlotSeed == home.seed,
+                    "resident containment resumes deterministic home selection");
+
             level.setBlockAndUpdate(bedPos, Blocks.AIR.defaultBlockState());
             ContractHomeRuntime.tick(player);
             check(!maid.isSleeping() && home.activity == ContractHomeActivity.IDLE, "removed target safely ends activity");

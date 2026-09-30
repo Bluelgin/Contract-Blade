@@ -93,6 +93,11 @@ public final class ContractInteriorSavedData extends SavedData {
         return created;
     }
 
+    /** Read-only lookup for lifecycle guards that must never allocate stale bindings. */
+    public Plot find(String bindingId) {
+        return bindingId == null || bindingId.isEmpty() ? null : plots.get(bindingId);
+    }
+
     public boolean chooseTerrain(String bindingId, String themeId) {
         Plot plot = getOrCreate(bindingId);
         if (plot.hasTerrainTheme()) return false;

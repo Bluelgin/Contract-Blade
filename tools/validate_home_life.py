@@ -27,6 +27,8 @@ for path in HOME.glob('*.java'):
 assert 'getChunkNow' in registry and 'getChunk(' not in registry.replace('getChunk(),', '')
 assert 'getBlockEntities()' in registry and 'MAX_BLOCK_ENTITIES' in registry
 assert 'DECISION_INTERVAL = 600' in runtime and 'PATH_TIMEOUT = 400' in runtime
+assert 'getChunkNow(origin.getX() >> 4, origin.getZ() >> 4)' in runtime
+assert 'resident maid plot escape' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 assert 's.failed.add' in runtime and 'adapter.valid' in runtime
 assert 'new TlmHomeBoardGameAdapter()' in registry
 assert 'new TlmHomeJoyAdapter()' in registry
@@ -46,6 +48,7 @@ terrain = (JAVA / 'system/interior/ContractInteriorTerrainBuilder.java').read_te
 assert 'ContractInteriorBuilder' not in terrain and 'Favorability' not in terrain
 saved = (JAVA / 'system/interior/ContractInteriorSavedData.java').read_text()
 assert 'HomeLife' in saved and 'value.home.save()' in saved
+assert 'public Plot find(String bindingId)' in saved
 service = (JAVA / 'system/interior/ContractInteriorService.java').read_text()
 deployment = (JAVA / 'system/InfusedMaidDeploymentSystem.java').read_text()
 assert 'resumeHome' in service and 'ContractLifecycleService.manifest' in service

@@ -228,8 +228,37 @@ public final class ContractHomeRuntime {
     /** Crash/restart and failed-recall safety. Never load a chunk to find an absent maid. */
     public static void guardResident(Mob maid) {
         if (!maid.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)
-                || !maid.getPersistentData().contains(RESIDENT)) return;
-        boolean attended = SESSIONS.values().stream().anyMatch(s -> s.maid == maid);
+                || !maid.getPersistentData().contains(RESIDENT)
+                || !(maid.level() instanceof ServerLevel level)) return;
+
+        String binding = maid.getPersistentData().getString(RESIDENT);
+        ContractInteriorSavedData.Plot plot = ContractInteriorSavedData.get(level.getServer()).find(binding);
+        Session session = SESSIONS.values().stream().filter(s -> s.maid == maid).findFirst().orElse(null);
+
+        if (plot != null && plot.generatedStage() > 0 && !insidePlot(maid.blockPosition(), plot)) {
+            BlockPos origin = new BlockPos(
+                    ContractInteriorSavedData.originX(plot),
+                    ContractInteriorTerrainBuilder.ORIGIN_Y,
+                    ContractInteriorSavedData.originZ(plot));
+            // getChunkNow is containment-only: never create a ticket for an unattended home.
+            if (level.getChunkSource().getChunkNow(origin.getX() >> 4, origin.getZ() >> 4) != null) {
+                if (session != null) {
+                    endAction(session);
+                    session.failed.clear();
+                    session.nextDecision = 0;
+                }
+                TlmHomeBehaviorController.clearWalk(maid);
+                maid.teleportTo(origin.getX() + 0.5D, origin.getY(), origin.getZ() + 0.5D);
+                maid.fallDistance = 0.0F;
+            } else {
+                TlmHomeBehaviorController.restore(maid);
+                if (!maid.isNoAi()) maid.setNoAi(true);
+                maid.getPersistentData().putBoolean(PAUSED, true);
+                return;
+            }
+        }
+
+        boolean attended = session != null;
         if (!attended && !maid.getPersistentData().getBoolean(PAUSED)) {
             TlmHomeBehaviorController.restore(maid);
             if (!maid.isNoAi()) {
@@ -237,6 +266,13 @@ public final class ContractHomeRuntime {
                 maid.getPersistentData().putBoolean(PAUSED, true);
             }
         }
+    }
+
+    private static boolean insidePlot(BlockPos position, ContractInteriorSavedData.Plot plot) {
+        int radius = ContractInteriorTerrainBuilder.radiusForStage(plot.generatedStage());
+        double x = Math.abs(position.getX() - ContractInteriorSavedData.originX(plot)) / (double) radius;
+        double z = Math.abs(position.getZ() - ContractInteriorSavedData.originZ(plot)) / (double) radius;
+        return Math.pow(x, 6) + Math.pow(z, 6) <= 1.0D;
     }
     public static void pauseUncaptured(net.minecraft.world.entity.Entity entity, String binding) {
         if (!(entity instanceof Mob maid)) return;
