@@ -39,6 +39,8 @@ assert 'MaidHomeMealTask' in behavior and 'homeMealSupported' in behavior
 for block_id in ('bookshelf', 'computer', 'keyboard'):
     assert block_id in joy
 assert 'holdManagedSeat' in behavior and 'shouldKeepManagedSeat' in behavior
+assert 'maid.hurtTime <= 0' in behavior and 'maid.getAirSupply() >= 200' in behavior
+assert 'managed seat yields immediately to emergency behavior' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 assert 'onManagedSeatDismount' in events and 'EntityMountEvent' in events
 assert 'public static boolean restore(Mob maid)' in behavior
 assert 'beginBoardGame' in behavior and 'touhou_little_maid:board_games' in behavior

@@ -151,6 +151,10 @@ public final class ContractHomeValidation {
             check(joyAdapter.start(level, reading, maid), "native bookshelf sit");
             Entity joySeat = maid.getVehicle();
             check(joySeat != null, "bookshelf EntitySit created");
+            maid.hurtTime = 5;
+            check(!TlmHomeBehaviorController.shouldKeepManagedSeat(maid, joySeat),
+                    "managed seat yields immediately to emergency behavior");
+            maid.hurtTime = 0;
             for (int i = 0; i < 25; i++) joySeat.tick();
             check(joyAdapter.running(level, reading, maid),
                     "managed bookshelf survives world-time schedule mismatch");

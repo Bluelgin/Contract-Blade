@@ -160,11 +160,18 @@ public final class TlmHomeBehaviorController {
     }
 
     public static boolean shouldKeepManagedSeat(Mob maid, Entity seat) {
-        return seat != null
-                && maid.level().dimension().equals(
+        if (seat == null || !seat.isAlive()
+                || !maid.level().dimension().equals(
                         com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
-                && maid.getPersistentData().hasUUID(MANAGED_SEAT)
-                && maid.getPersistentData().getUUID(MANAGED_SEAT).equals(seat.getUUID());
+                || !maid.getPersistentData().hasUUID(MANAGED_SEAT)
+                || !maid.getPersistentData().getUUID(MANAGED_SEAT).equals(seat.getUUID())) {
+            return false;
+        }
+        // Only bridge TLM's world-time schedule mismatch. Emergency behavior must
+        // be able to dismount immediately instead of waiting for the 1-second
+        // Home Runtime safety tick.
+        return maid.hurtTime <= 0 && !maid.isOnFire() && maid.getAirSupply() >= 200
+                && maid.getTarget() == null && !maid.isLeashed();
     }
 
     public static void releaseManagedSeat(Mob maid) {
