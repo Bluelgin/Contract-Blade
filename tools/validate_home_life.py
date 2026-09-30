@@ -73,5 +73,10 @@ guide = (HOME / 'ContractInteriorGuideService.java').read_text()
 assert 'ClickEvent.Action.RUN_COMMAND' in guide
 assert '/contractinterior clock minecraft' in guide and '/contractinterior timezone +08:00' in guide
 care = (JAVA / 'system/MaidCareTaskSystem.java').read_text()
+entity_adapter = (JAVA / 'compat/tlm/TlmEntityAdapter.java').read_text()
 assert 'ContractInteriorService.INTERIOR_LEVEL' in care
+assert 'ORIGINAL_SCHEDULE_TAG' in care
+assert 'TlmEntityAdapter.scheduleName(maid)' in care and 'TlmEntityAdapter.setSchedule(maid, schedule)' in care
+assert 'public static String scheduleName(Entity entity)' in entity_adapter
+assert 'deployment original schedule restored' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 print('Home Life authority, loaded-only indexing, cadence, terrain and save boundaries validated.')

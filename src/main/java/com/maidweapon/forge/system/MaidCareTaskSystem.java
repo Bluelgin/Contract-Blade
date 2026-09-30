@@ -2,6 +2,7 @@ package com.maidweapon.forge.system;
 
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
+import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -27,6 +28,7 @@ import java.util.UUID;
 @Mod.EventBusSubscriber
 public final class MaidCareTaskSystem {
     public static final String ORIGINAL_TASK_TAG = "MaidInfusionOriginalTask";
+    public static final String ORIGINAL_SCHEDULE_TAG = "MaidInfusionOriginalSchedule";
     public static final String ATTACK_TASK = "touhou_little_maid:attack";
     public static final String FEED_TASK = "touhou_little_maid:feed";
 
@@ -81,6 +83,12 @@ public final class MaidCareTaskSystem {
             weapon.getOrCreateTag().putString(ORIGINAL_TASK_TAG,
                     TouhouLittleMaidHelper.getMaidTaskId(maid));
         }
+        if (!weapon.getOrCreateTag().contains(ORIGINAL_SCHEDULE_TAG)) {
+            String schedule = TlmEntityAdapter.scheduleName(maid);
+            if (!schedule.isEmpty()) {
+                weapon.getOrCreateTag().putString(ORIGINAL_SCHEDULE_TAG, schedule);
+            }
+        }
     }
 
     /**
@@ -104,11 +112,14 @@ public final class MaidCareTaskSystem {
         if (weapon.isEmpty() || maid == null || weapon.getTag() == null) return;
         String original = weapon.getTag().getString(ORIGINAL_TASK_TAG);
         if (!original.isEmpty()) switchIfNeeded(maid, original);
+        String schedule = weapon.getTag().getString(ORIGINAL_SCHEDULE_TAG);
+        if (!schedule.isEmpty()) TlmEntityAdapter.setSchedule(maid, schedule);
     }
 
     public static void clearOriginalTask(ItemStack weapon) {
         if (!weapon.isEmpty() && weapon.getTag() != null) {
             weapon.getTag().remove(ORIGINAL_TASK_TAG);
+            weapon.getTag().remove(ORIGINAL_SCHEDULE_TAG);
         }
     }
 

@@ -110,6 +110,13 @@ public final class ContractHomeValidation {
         try {
             String oldTask = TlmEntityAdapter.taskId(maid);
             String oldSchedule = String.valueOf(maid.getClass().getMethod("getSchedule").invoke(maid));
+            com.maidweapon.forge.system.MaidCareTaskSystem.rememberOriginalTask(contract, maid);
+            check(TlmEntityAdapter.setAllDaySchedule(maid), "deployment schedule override");
+            check("ALL".equals(TlmEntityAdapter.scheduleName(maid)), "deployment schedule set to ALL");
+            com.maidweapon.forge.system.MaidCareTaskSystem.restoreOriginalTask(contract, maid);
+            check(oldSchedule.equals(TlmEntityAdapter.scheduleName(maid)),
+                    "deployment original schedule restored");
+            com.maidweapon.forge.system.MaidCareTaskSystem.clearOriginalTask(contract);
             check(TlmHomeBehaviorController.begin(maid), "behavior scope install");
             chair = (Entity) Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.item.EntityChair")
                     .getConstructor(Level.class).newInstance(level);
