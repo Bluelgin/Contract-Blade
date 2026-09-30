@@ -248,7 +248,7 @@ public class MaidWeaponItem extends SwordItem {
 
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.soul_slab_hint"));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.direct_bind_hint"));
     }
 
     // ==================== 实体交互（右键女仆） ====================

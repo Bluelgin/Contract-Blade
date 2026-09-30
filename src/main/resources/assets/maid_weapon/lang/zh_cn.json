@@ -90,6 +90,7 @@
   "maid_weapon.tooltip.sin_slot": "§7罪恶槽位: §8空 §7(铁砧嵌入罪恶物品)",
   "maid_weapon.tooltip.sin_slot_used": "§7罪恶槽位: %d/%d",
   "maid_weapon.tooltip.soul_slab_hint": "§7这个物品似乎可以发挥魂符的作用",
+  "maid_weapon.tooltip.direct_bind_hint": "§7主手持此武器，右键自己驯服的女仆即可缔结；绑定后持于主手自动显形",
   "maid_weapon.tooltip.superseded_contract": "§c契约已转移：此武器不再召唤女仆",
   "maid_weapon.tooltip.title": "§d§l═══ 契约武器 ═══",
   "maid_weapon.tooltip.true_power_slashblade": "§5工作模式：真正的力量·拔刀剑攻击",

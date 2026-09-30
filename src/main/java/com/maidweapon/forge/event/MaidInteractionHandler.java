@@ -7,6 +7,9 @@ import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -19,6 +22,22 @@ import net.minecraftforge.fml.common.Mod;
  */
 @Mod.EventBusSubscriber
 public class MaidInteractionHandler {
+
+    /** Bind an empty dedicated blade before TLM consumes the click to open its GUI. */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
+        ItemStack weapon = event.getItemStack();
+        if (event.getHand() != InteractionHand.MAIN_HAND
+                || !(weapon.getItem() instanceof MaidWeaponItem)
+                || MaidInfusion.isInfused(weapon)
+                || !TouhouLittleMaidCompat.isMaidEntity(event.getTarget())) return;
+
+        InteractionResult result = event.getLevel().isClientSide
+                ? InteractionResult.SUCCESS
+                : ContractInteractionService.capture(event.getEntity(), event.getTarget(), weapon);
+        event.setCancellationResult(result);
+        event.setCanceled(true);
+    }
 
     /** 检查物品是否为女仆武器（普通版或拔刀剑版） */
     private static boolean isMaidWeapon(ItemStack stack) {

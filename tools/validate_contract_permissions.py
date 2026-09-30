@@ -61,7 +61,7 @@ if "ContractInteractionService.toggleHeld" in weapon:
     raise SystemExit("Dedicated Contract Blade regained a second manual summon/recall gesture")
 if "if (hasMaidData(stack)) return InteractionResult.PASS;" not in weapon:
     raise SystemExit("Bound Contract Blade right-click must belong to TLM/deployment, not capture")
-if "!MaidInfusion.isContractBlade(stack)" in deployment:
+if "MaidInfusion.isContractBlade(" in deployment:
     raise SystemExit("Dedicated Contract Blades are still excluded from Contract Table deployment behavior")
 for needle in [
     "ContractLifecycleService.capture",

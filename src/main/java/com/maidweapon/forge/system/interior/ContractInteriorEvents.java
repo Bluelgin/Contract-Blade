@@ -34,6 +34,7 @@ public final class ContractInteriorEvents {
         }
         ContractInteriorService.recoverFromVoid(player);
         if (player.tickCount % 20 != 0) return;
+        if (!ContractHomeRuntime.attached(player)) ContractInteriorService.resumeHome(player);
         if (player.tickCount % 600 == 0) {
             ContractInteriorService.resumeHome(player);
             String binding = ContractInteriorService.activeOwnedBinding(player);

@@ -6,6 +6,24 @@ furniture, or owns a chunk ticket. `ContractInteriorService` alone resumes the
 same maid through `ContractLifecycleService` on entry/login and captures her on
 exit/logout. The gallery remains separate.
 
+## Carrier interaction safety
+
+Dedicated Contract Blades bind directly by main-hand right-click on the owner's
+tamed maid; a Contract Table is optional for these items. The same deployment
+state machine manifests the real maid while held and recalls her when switched away.
+
+Picking up the active carrier in the inventory is not an interior exit. Normal
+mouse cursors remain untouched until the menu closes. Creative inventory cursors
+are client-only, so temporary server-side absence preserves the established plot
+session instead of teleporting the player or creating a replacement carrier.
+Home activity resumes once the real carrier returns. External-container rescue
+and cursor-close rescue preserve the original carrier NBT; projection phantoms
+never authorize these operations.
+
+The native `contractinterior validate-home` fixture covers real inventory PICKUP
+clicks, creative-cursor absence, cursor-close rescue, direct dedicated binding,
+automatic manifestation and switch-away recall using a real TLM maid.
+
 ## First supported interactions
 
 - TLM **maid bed**, head half: real `startSleeping`/`stopSleeping`, as used by

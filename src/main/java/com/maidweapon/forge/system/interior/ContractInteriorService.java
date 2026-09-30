@@ -10,6 +10,7 @@ import com.maidweapon.forge.item.ContractInteriorKeyItem;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
+import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -281,9 +282,9 @@ public final class ContractInteriorService {
         if (server == null) return;
 
         ItemStack contract = findContractByBinding(player, bindingId);
-        if (contract.isEmpty() || !MaidInfusion.isInfused(contract)
+        if (!contract.isEmpty() && (!MaidInfusion.isInfused(contract)
                 || !MaidWeaponItem.isOwner(contract, player)
-                || MaidWeaponItem.isContractSuperseded(contract)) {
+                || MaidWeaponItem.isContractSuperseded(contract))) {
             // A stale/invalid session must not leave a player stranded in the shared
             // interior dimension. Preserve a live resident by pausing it, then return.
             ContractHomeRuntime.pause(player);
@@ -300,6 +301,10 @@ public final class ContractInteriorService {
             clearReturn(player);
             return;
         }
+
+        // Inventory clicks are not lifecycle exits. The creative cursor is only
+        // client-side, so the carrier can be temporarily absent on the server.
+        // Keep the established session instead of teleporting and closing it.
 
         // Same-dimension teleport mods do not fire PlayerChangedDimensionEvent.
         // Keep each active binding inside its own horizontal plot so a Waystone or
@@ -431,10 +436,12 @@ public final class ContractInteriorService {
         // The active contract may be on the cursor or in an open/modded container.
         // Resolve that real stack instead of creating a recovery copy.
         ItemStack carried = player.containerMenu.getCarried();
-        if (bindingId.equals(MaidWeaponItem.getBindingId(carried))) return carried;
+        if (!ContractTransferSafetyService.isProjectionPhantom(carried)
+                && bindingId.equals(MaidWeaponItem.getBindingId(carried))) return carried;
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
             ItemStack stack = slot.getItem();
-            if (bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
+            if (!ContractTransferSafetyService.isProjectionPhantom(stack)
+                    && bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
         }
         return ItemStack.EMPTY;
     }
@@ -443,10 +450,12 @@ public final class ContractInteriorService {
         if (bindingId == null || bindingId.isEmpty()) return ItemStack.EMPTY;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
+            if (!ContractTransferSafetyService.isProjectionPhantom(stack)
+                    && bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
         }
         ItemStack offhand = player.getOffhandItem();
-        if (bindingId.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
+        if (!ContractTransferSafetyService.isProjectionPhantom(offhand)
+                && bindingId.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
         return ItemStack.EMPTY;
     }
 
@@ -457,12 +466,19 @@ public final class ContractInteriorService {
      * capture the interior maid or leaving the owner locked out of the home.
      */
     public static boolean rescueActiveContractFromContainer(ServerPlayer player) {
+        return rescueActiveContractFromContainer(player, false);
+    }
+
+    public static boolean rescueActiveContractFromContainer(ServerPlayer player, boolean closingMenu) {
         if (!isInside(player) || isGallerySession(player)) return false;
         String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
         if (binding.isEmpty() || !findPlayerContractByBinding(player, binding).isEmpty()) return false;
 
         ItemStack carried = player.containerMenu.getCarried();
-        if (binding.equals(MaidWeaponItem.getBindingId(carried))) {
+        if (!ContractTransferSafetyService.isProjectionPhantom(carried)
+                && binding.equals(MaidWeaponItem.getBindingId(carried))) {
+            // Keep normal mouse pickups on the cursor until the menu closes.
+            if (!closingMenu) return false;
             ItemStack contract = carried.copy();
             int free = player.getInventory().getFreeSlot();
             if (free >= 0) {
@@ -483,6 +499,7 @@ public final class ContractInteriorService {
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
             if (slot.container == player.getInventory()) continue;
             ItemStack stack = slot.getItem();
+            if (ContractTransferSafetyService.isProjectionPhantom(stack)) continue;
             if (!binding.equals(MaidWeaponItem.getBindingId(stack))) continue;
 
             ItemStack contract = stack.copy();

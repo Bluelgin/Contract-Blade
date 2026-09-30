@@ -52,6 +52,7 @@ public final class ContractHomeValidation {
             return;
         }
         check(TlmEntityAdapter.maidClass() != null, "native validation requires TLM");
+        ContractCarrierValidation.dedicatedDeployment(level);
         var player = net.minecraftforge.common.util.FakePlayerFactory.get(level,
                 new com.mojang.authlib.GameProfile(java.util.UUID.fromString("ff372890-6a64-4ab7-a6f8-76fe3131f3a2"), "HomeFixture"));
         var contract = new net.minecraft.world.item.ItemStack(com.maidweapon.forge.init.ModItems.MAID_SWORD.get());
@@ -93,6 +94,8 @@ public final class ContractHomeValidation {
         // is not a faithful recovery assertion here. validate_home_life.py keeps a source
         // tripwire on recoverFromVoid's same-dimension containment branch.
         player.setPos(origin.getX() + .5, origin.getY(), origin.getZ() + .5);
+        ContractCarrierValidation.inventoryClicks(player, contract);
+        contract = player.getInventory().getItem(0);
         for (int x = -4; x <= 4; x++) for (int z = -4; z <= 4; z++)
             level.setBlockAndUpdate(origin.offset(x, -1, z), Blocks.STONE.defaultBlockState());
         Mob maid = (Mob) TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);

@@ -88,6 +88,7 @@
   "maid_weapon.tooltip.sin_slot": "§7Sin Slot: §8Empty §7(Embed sin via anvil)",
   "maid_weapon.tooltip.sin_slot_used": "§7Sin Slot: %d/%d",
   "maid_weapon.tooltip.soul_slab_hint": "§7This item seems to function like a soul talisman",
+  "maid_weapon.tooltip.direct_bind_hint": "§7Hold this weapon in your main hand and right-click your tamed maid to bind; hold it to manifest her automatically",
   "maid_weapon.tooltip.superseded_contract": "§cContract transferred: this weapon can no longer summon the maid",
   "maid_weapon.tooltip.title": "§d§l═══ Contract Weapon ═══",
   "maid_weapon.tooltip.true_power_slashblade": "§5Task: True POWER SlashBlade Attack",

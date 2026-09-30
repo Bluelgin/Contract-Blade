@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
 
-/** Automatically deploys maids from generic infused weapons while they are held. */
+/** Automatically deploys maids from all owned contract weapons while they are held. */
 @Mod.EventBusSubscriber
 public final class InfusedMaidDeploymentSystem {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -96,13 +96,12 @@ public final class InfusedMaidDeploymentSystem {
         }
 
         ItemStack held = player.getMainHandItem();
-        boolean ownedGenericContract = MaidInfusion.isInfused(held)
-                && !MaidInfusion.isContractBlade(held)
+        boolean ownedContract = MaidInfusion.isInfused(held)
                 && MaidWeaponItem.isOwner(held, player);
-        if (ownedGenericContract) {
+        if (ownedContract) {
             MaidWeaponItem.ensureBindingId(held);
         }
-        String heldMaid = ownedGenericContract
+        String heldMaid = ownedContract
                 ? MaidWeaponItem.getBoundMaidUUID(held) : null;
         String desiredBinding = isAutoWeapon(held, player) ? MaidWeaponItem.getBindingId(held) : null;
         String desiredMaid = desiredBinding == null ? null : heldMaid;
@@ -110,7 +109,7 @@ public final class InfusedMaidDeploymentSystem {
                 ? null : new DesiredDeployment(desiredMaid, desiredBinding);
         ActiveDeployment active = ACTIVE_WEAPONS.get(playerId);
 
-        if (active != null && ownedGenericContract
+        if (active != null && ownedContract
                 && (MaidInfusion.data(held).getResonance() <= 0
                 || EmbeddedSpiritApi.isDormant(held))) {
             forceRecall(player, active.maidId(), 300);
@@ -289,7 +288,7 @@ public final class InfusedMaidDeploymentSystem {
         if (player.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) {
             ContractTransferSafetyService.rescueSelfStoredContract(player);
             if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                ContractInteriorService.rescueActiveContractFromContainer(serverPlayer);
+                ContractInteriorService.rescueActiveContractFromContainer(serverPlayer, true);
             }
             return;
         }
