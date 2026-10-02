@@ -27,6 +27,8 @@ public final class ContractHomeArrivalPlanner {
         var pool = EnumSet.of(ContractHomeActivity.IDLE, ContractHomeActivity.WANDER);
         for (var activity : PREFERENCES) if (available.contains(activity)) pool.add(activity);
         if (available.contains(ContractHomeActivity.SLEEP)) pool.add(ContractHomeActivity.SLEEP);
+        // No supported furniture: wandering is the normal scene, never permanent idle.
+        if (pool.size() == 2) return ContractHomeActivity.WANDER;
         if (continuePrevious(sameMaid, departedAt, now, previous, clock.phase()) && pool.contains(previous)) return previous;
         int total = 0;
         for (var activity : pool) total += weight(activity, preference(maid), previous, sameMaid, clock.phase(), favorability);

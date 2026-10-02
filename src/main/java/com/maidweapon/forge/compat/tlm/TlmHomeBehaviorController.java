@@ -25,6 +25,7 @@ public final class TlmHomeBehaviorController {
     private static final String BACKUP = "ContractHomeBehaviorSettings";
     private static final String BOARD_GAME_MODE = "ContractHomeBoardGame";
     private static final String MANAGED_SEAT = "ContractHomeManagedSeat";
+    private static final String NATIVE_LIVING = "ContractHomeNativeLiving";
     private static final Activity HOME = new Activity("contract_blade_home");
 
     public static boolean begin(Mob maid) {
@@ -110,6 +111,39 @@ public final class TlmHomeBehaviorController {
         }
     }
 
+    /** Retain TLM's real CORE/IDLE/REST goals, sensors and random strolling.
+     * Only its schedule is bridged to this resident's clock; never change world time. */
+    public static boolean enableNativeLiving(Mob maid, BlockPos homeCenter) {
+        if (!maid.getPersistentData().contains(BACKUP)) return false;
+        try {
+            if (!TlmEntityAdapter.switchTask(maid, "touhou_little_maid:idle")) return false;
+            maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, true);
+            center(maid, homeCenter);
+            maid.getClass().getMethod("refreshBrain", ServerLevel.class).invoke(maid, (ServerLevel) maid.level());
+            maid.getPersistentData().putBoolean(NATIVE_LIVING, true);
+            return true;
+        } catch (ReflectiveOperationException | RuntimeException unsupported) {
+            com.mojang.logging.LogUtils.getLogger().warn("[ContractHome] Native living unavailable for {}", maid.getUUID(), unsupported);
+            return false;
+        }
+    }
+
+    public static void syncNativeClock(Mob maid, boolean night) {
+        Activity activity = night ? Activity.REST : Activity.IDLE;
+        // A constant per-brain schedule lets the native updater run unchanged,
+        // without reading a different plot's shared dimension day/night.
+        maid.getBrain().setSchedule(new net.minecraft.world.entity.schedule.ScheduleBuilder(
+                new net.minecraft.world.entity.schedule.Schedule()).changeActivityAt(0, activity).build());
+        if (!night && maid.isSleeping()) maid.stopSleeping();
+        if (night && maid.isPassenger()) {
+            releaseManagedSeat(maid);
+            maid.stopRiding();
+        }
+        if (!maid.isPassenger()) maid.getBrain().setActiveActivityIfPossible(activity);
+    }
+
+    public static boolean isNativeLiving(Mob maid) { return maid.getPersistentData().getBoolean(NATIVE_LIVING); }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static boolean installHomeBrain(Mob maid) throws ReflectiveOperationException {
         Brain brain = maid.getBrain();
@@ -163,8 +197,9 @@ public final class TlmHomeBehaviorController {
         if (seat == null || !seat.isAlive()
                 || !maid.level().dimension().equals(
                         com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
-                || !maid.getPersistentData().hasUUID(MANAGED_SEAT)
-                || !maid.getPersistentData().getUUID(MANAGED_SEAT).equals(seat.getUUID())) {
+                || (!com.maidweapon.forge.system.interior.home.ContractHomeRuntime.bridgeNativeSeat(maid, seat)
+                    && (!maid.getPersistentData().hasUUID(MANAGED_SEAT)
+                        || !maid.getPersistentData().getUUID(MANAGED_SEAT).equals(seat.getUUID())))) {
             return false;
         }
         // Only bridge TLM's world-time schedule mismatch. Emergency behavior must
@@ -189,6 +224,7 @@ public final class TlmHomeBehaviorController {
         if (maid.isRemoved()) return false;
         CompoundTag backup = maid.getPersistentData().getCompound(BACKUP);
         if (backup.isEmpty()) {
+            maid.getPersistentData().remove(NATIVE_LIVING);
             maid.getPersistentData().remove(BOARD_GAME_MODE);
             maid.getPersistentData().remove(MANAGED_SEAT);
             return true;
@@ -214,6 +250,7 @@ public final class TlmHomeBehaviorController {
             maid.getPersistentData().remove(BOARD_GAME_MODE);
             maid.getPersistentData().remove(MANAGED_SEAT);
             maid.getPersistentData().remove(BACKUP);
+            maid.getPersistentData().remove(NATIVE_LIVING);
             return true;
         } catch (ReflectiveOperationException | RuntimeException unsupported) {
             if (Boolean.getBoolean("contractblade.home.validation")) unsupported.printStackTrace();

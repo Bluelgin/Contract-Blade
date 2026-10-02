@@ -128,6 +128,11 @@ public final class TouhouLittleMaidHelper {
                 player, weaponStack, notifyPlayer);
     }
 
+    public static boolean convertWeaponToMaid(Player player, ItemStack weaponStack, boolean notifyPlayer,
+                                              java.util.function.Consumer<Entity> beforeSpawn) {
+        return ContractMaidLifecycleService.manifest(player, weaponStack, notifyPlayer, beforeSpawn);
+    }
+
     public static void prepareManifestedMaid(
             Player player, ItemStack weaponStack, Entity maid) {
         ContractMaidLifecycleService.prepareManifestedMaid(

@@ -1,0 +1,10 @@
+{
+  "name": "patchouli.maid_weapon.entry.companion.name",
+  "category": "maid_weapon:basics",
+  "icon": "maid_weapon:maid_sword",
+  "pages": [
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.companion.page.1"},
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.companion.page.2"},
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.companion.page.3"}
+  ]
+}

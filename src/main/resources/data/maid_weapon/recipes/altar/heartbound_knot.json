@@ -1,0 +1,10 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {"type": "minecraft:item", "nbt": {"Item": {"id": "maid_weapon:heartbound_knot", "Count": 1}}},
+  "power": 0.3,
+  "ingredients": [
+    {"item": "maid_weapon:resonance_sword_tassel"}, {"item": "maid_weapon:guardian_ribbon"},
+    {"item": "minecraft:diamond"}, {"item": "minecraft:gold_ingot"},
+    {"item": "minecraft:amethyst_shard"}, {"item": "maid_weapon:spirit_crystal"}
+  ]
+}

@@ -125,6 +125,43 @@ Focused services own independent responsibilities:
 Future systems such as a weapon interior/home dimension should depend on
 contract identity/storage APIs, not on the hotbar deployment state machine.
 
+## Companion intent and input
+
+`ContractCompanionKeys` registers client-only input. An empty, serverbound
+`ContractCompanionNetwork.Call` carries intent, not an item, position or entity
+chosen by the client. The server validates ownership, main hand, menus, cooldown,
+dimension and range in `ContractCompanionService`.
+
+`ContractCompanionState` persists MANUAL/GUARD/RESIDENT intent and guard expiry
+on the real carrier and entity; it never contains another entity/inventory copy.
+`TlmResidenceAdapter` reads native home mode or ordered sitting, not temporary
+furniture seating. Only loaded entities are consulted; ordinary requests never
+use recovery tickets. `InfusedMaidDeploymentSystem` still owns lifecycle and
+emergency film safety, but its tick loop no longer requests hotbar manifestation.
+`ContractCompanionDialogue` provides rate-limited owner-only text, without healing.
+
+## Native maid baubles and projection
+
+`ContractBaubleExtension` registers items through TLM's public extension API.
+`TlmProjectionBaubles` reads only native maid bauble slots and resolves one
+exclusive `ContractProjectionMode`; it never reads player accessories. The knot's
+combined mode enables both capabilities through the same policy, with no second
+projection engine or task authority. All bauble recipes use TLM's native altar
+serializer and normal item outputs; no custom altar logic is introduced.
+
+`ContractMaidRuntimeService` coordinates three separate responsibilities:
+
+- `ContractEquipmentProjection`: slot-scoped original equipment snapshots,
+  projection/restore transactions and migration of legacy copied attributes;
+- `ContractWorkPolicy`: remember/restore original work only while weapon
+  resonance is active; without it, manual work remains authoritative;
+- `ContractCombatTaskRouter`: select optional combat integrations only for
+  active weapon resonance.
+
+`TlmEquipmentReturns` returns displaced originals to the native backpack.
+Contract-home handling takes priority over all projection and combat policies.
+No projection copies player base attributes or redistributes third-party assets.
+
 ## Legacy Part data
 
 Old `EmbeddedSins` data is preserved when old weapons are loaded and rewritten,

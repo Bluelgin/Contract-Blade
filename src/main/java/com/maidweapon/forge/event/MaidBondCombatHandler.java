@@ -26,6 +26,9 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 /** Combat and recovery rules for the short-term contract resonance resource. */
 @Mod.EventBusSubscriber
@@ -41,9 +44,7 @@ public final class MaidBondCombatHandler {
         Entity attacker = event.getSource().getEntity();
 
         if (event.getEntity() instanceof Player owner) {
-            ItemStack weapon = owner.getMainHandItem();
-            if (isActiveContract(owner, weapon)
-                    && InfusedMaidDeploymentSystem.hasDeployedMaid(owner, weapon)) {
+            if (!followingContracts(owner).isEmpty()) {
                 markCombat(owner, owner.level().getGameTime());
             }
         }
@@ -77,10 +78,10 @@ public final class MaidBondCombatHandler {
                 || event.player.tickCount % 20 != 0) return;
 
         Player player = event.player;
-        ItemStack weapon = player.getMainHandItem();
-        if (!isActiveContract(player, weapon)
-                || !InfusedMaidDeploymentSystem.hasDeployedMaid(player, weapon)) return;
+        for (ItemStack weapon : followingContracts(player)) tickResonance(player, weapon);
+    }
 
+    private static void tickResonance(Player player, ItemStack weapon) {
         MaidWeaponData data = MaidInfusion.data(weapon);
         long time = player.level().getGameTime();
         long lastCombat = LAST_COMBAT.getOrDefault(player.getUUID(), Long.MIN_VALUE / 2);
@@ -112,14 +113,16 @@ public final class MaidBondCombatHandler {
     }
 
     private static void recordPlayerHit(Player player, LivingEntity target) {
-        ItemStack weapon = player.getMainHandItem();
-        if (!isActiveContract(player, weapon)) return;
+        List<ItemStack> contracts = followingContracts(player);
+        if (contracts.isEmpty()) return;
         long time = player.level().getGameTime();
         markCombat(player, time);
         String key = key(player.getUUID(), target.getUUID());
         PLAYER_HITS.put(key, time);
         Long maidHit = MAID_HITS.get(key);
-        if (maidHit != null && time - maidHit <= 60) rewardCooperation(player, time, weapon);
+        if (maidHit != null && time - maidHit <= 60) {
+            for (ItemStack weapon : contracts) rewardCooperation(player, time, weapon);
+        }
     }
 
     private static void handleMaidAttack(Entity maid, LivingEntity target) {
@@ -182,6 +185,21 @@ public final class MaidBondCombatHandler {
         return !weapon.isEmpty() && MaidInfusion.isInfused(weapon)
                 && MaidWeaponItem.isOwner(weapon, player)
                 && !MaidWeaponItem.isContractSuperseded(weapon);
+    }
+
+    /** Resolve actual following companions, not the player's current selection. */
+    private static List<ItemStack> followingContracts(Player player) {
+        List<ItemStack> result = new ArrayList<>();
+        var seen = new HashSet<String>();
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack weapon = player.getInventory().getItem(slot);
+            if (!isActiveContract(player, weapon)
+                    || com.maidweapon.forge.system.deployment.ContractTransferSafetyService.isProjectionPhantom(weapon)
+                    || !InfusedMaidDeploymentSystem.hasDeployedMaid(player, weapon)
+                    || com.maidweapon.forge.system.deployment.ContractCompanionService.isResident(player, weapon)) continue;
+            if (seen.add(MaidWeaponItem.ensureBindingId(weapon))) result.add(weapon);
+        }
+        return result;
     }
 
     private static Player getOwner(Entity maid) {

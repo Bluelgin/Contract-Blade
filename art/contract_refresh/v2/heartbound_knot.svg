@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+ <title>同心结 · 双绳花结</title>
+ <!-- Interwoven round loops and a central heart distinguish this from a second bow. -->
+ <path fill="#5b354e" d="M11 2h4v1h2V2h4v2h3v3h3v6h-2v3h-3v2h-3v2h-6v-2h-3v-2H7v-3H5V7h3V4h3z"/>
+ <path fill="#d6608c" d="M11 3h4v2h2v3h-2v3h-3V9h1V6h-2v1H9v5h3v2H8v-2H6V8h3V5h2z"/>
+ <path fill="#ffb6cf" d="M11 3h3v1h-3v2H9v2H7v4H6V8h3V5h2zM12 9h1v2h-1z"/>
+ <path fill="#399fb6" d="M18 3h3v2h2v3h3v4h-2v2h-4v-2h3V7h-2V6h-2v3h1v2h-3V8h-1V5h2z"/>
+ <path fill="#a5ece7" d="M18 3h3v1h-3v2h-1V5h1zM23 8h2v3h-1V9h-1z"/>
+ <path fill="#254f72" d="M20 10h1v2h3v2h-4z"/>
+ <path fill="#b14574" d="M10 14h3v2h2v2h-3v-2h-2z"/>
+ <path fill="#64c4cd" d="M19 14h3v2h-2v2h-3v-2h2z"/>
+ <g id="tail-left"><path fill="#5b354e" d="M12 18h4v4h-1v4h-1v4H8v-3H7v-4h3v-2h2z"/><path fill="#d6608c" d="M12 19h3v3h-1v4h-1v3H9v-2H8v-3h3v-2h1z"/><path fill="#ffb6cf" d="M12 20h1v3h-1v3h-2v2H9v-3h2v-3h1z"/><path fill="#eab664" d="M8 24h6v2H8z"/><path fill="#fff0b9" d="M8 24h5v1H8z"/><path fill="#913650" d="M11 27h1v2h-1z"/></g>
+ <g id="tail-right"><path fill="#354b65" d="M17 18h4v3h2v2h2v4h-1v3h-6v-4h-1v-4h-1v-2h1z"/><path fill="#399fb6" d="M18 19h2v3h2v2h2v3h-1v2h-4v-3h-1v-4h-1v-2h1z"/><path fill="#a5ece7" d="M18 20h1v3h1v3h-1v-2h-1zM20 27h1v2h-1z"/><path fill="#eab664" d="M18 24h6v2h-6z"/><path fill="#fff0b9" d="M18 24h5v1h-5z"/></g>
+ <path fill="#9f683e" d="M13 9h3v1h1V9h3v2h1v4h-2v2h-2v2h-2v-2h-2v-2h-2v-4h1z"/>
+ <path fill="#f2c572" d="M13 10h2v1h3v-1h2v4h-2v2h-2v2h-1v-2h-2v-2h-1v-3h1z"/>
+ <path fill="#914963" d="M14 12h2v1h1v-1h2v2h-2v2h-2v-2h-1z"/><path fill="#ff92b1" d="M14 12h1v2h2v-1h1v1h-2v1h-1v-1h-1z"/>
+ <path fill="#fff1bb" d="M13 10h2v1h-2v2h-1v-2h1z"/>
+ <g id="glint" fill="#fff9eb"><path d="M14 12h1v1h-1z"/></g>
+</svg>

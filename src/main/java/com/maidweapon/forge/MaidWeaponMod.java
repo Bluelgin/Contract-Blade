@@ -37,6 +37,7 @@ public final class MaidWeaponMod {
         ModMenus.MENUS.register(modBus);
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
         ModCreativeTab.TABS.register(modBus);
+        com.maidweapon.forge.network.ContractCompanionNetwork.register();
         TaczCompat.bootstrap(modBus);
 
         modBus.addListener(this::commonSetup);

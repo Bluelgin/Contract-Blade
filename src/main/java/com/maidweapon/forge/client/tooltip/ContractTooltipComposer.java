@@ -151,15 +151,9 @@ public final class ContractTooltipComposer {
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.usage"));
 
-        if (dedicated) {
-            tooltip.add(Component.translatable(stored
-                    ? "maid_weapon.tooltip.release_hint"
-                    : "maid_weapon.tooltip.recapture_hint"));
-            return;
-        }
-
-        tooltip.add(Component.translatable("maid_weapon.tooltip.generic_manifest_hint"));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.auto_deploy"));
+        tooltip.add(Component.translatable(stored ? "maid_weapon.tooltip.call_companion" : "maid_weapon.tooltip.recall_companion",
+                com.maidweapon.forge.client.ContractCompanionKeys.CALL.getTranslatedKeyMessage()));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.protect_companion"));
 
         if (SlashBladeCompat.usesMaidSlashBladeTask(stack)) {
             tooltip.add(Component.translatable(

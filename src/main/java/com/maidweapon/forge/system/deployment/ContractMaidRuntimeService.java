@@ -3,6 +3,7 @@ package com.maidweapon.forge.system.deployment;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.compat.TripleMagicCompat;
+import com.maidweapon.forge.compat.tlm.TlmProjectionBaubles;
 import com.maidweapon.forge.system.MaidCareTaskSystem;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,18 +28,12 @@ public final class ContractMaidRuntimeService {
                 com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
         // Adoption of an already-live maid must snapshot runtime settings before
         // ALL schedule/combat policy can overwrite the player's original choices.
-        MaidCareTaskSystem.rememberOriginalTask(weapon, maid);
         if (player.tickCount % 20 == 0) {
             TouhouLittleMaidHelper.syncFavorabilityFromMaid(maid, weapon);
         }
-        TouhouLittleMaidHelper.setAllDaySchedule(maid);
         if (!(maid instanceof LivingEntity living)) return;
-
-        TripleMagicCompat.equipPhantoms(player, living, weapon);
-        TripleMagicCompat.syncMaidSpellLoadout(player, living, weapon);
-        if (TaczCompat.isGun(weapon)) {
-            TaczCompat.maintain(player, living, weapon);
-        }
+        ContractProjectionMode mode = prepare(player, weapon, living);
+        if (!mode.weapon()) return; // Manual work, schedule and combat remain authoritative.
 
         boolean safeTask = MaidCareTaskSystem.applySafeTask(player, weapon, maid);
         if (!safeTask) {
@@ -48,19 +43,39 @@ public final class ContractMaidRuntimeService {
     }
 
     public static void selectCombatTask(Player player, ItemStack weapon, Entity maid) {
-        MaidCareTaskSystem.rememberOriginalTask(weapon, maid);
-        if (!(maid instanceof LivingEntity)) return;
+        if (maid.level().dimension().equals(
+                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
+        if (!(maid instanceof LivingEntity living) || !prepare(player, weapon, living).weapon()) return;
         if (!MaidCareTaskSystem.applySafeTask(player, weapon, maid)) {
             ContractCombatTaskRouter.configure(player, weapon, maid);
         }
     }
 
     public static void cleanupBeforeRecall(Player player, ItemStack weapon, Entity maid) {
-        MaidCareTaskSystem.restoreOriginalTask(weapon, maid);
+        ContractWorkPolicy.release(weapon, maid);
         if (maid instanceof LivingEntity living) {
             TaczCompat.clear(player, living, weapon);
             TripleMagicCompat.clearPhantoms(living, weapon);
         }
+    }
+
+    /** Shared pre-spawn and live preparation; no independent task-selection path. */
+    public static ContractProjectionMode prepare(Player player, ItemStack weapon, LivingEntity maid) {
+        if (maid.level().dimension().equals(
+                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return ContractProjectionMode.NONE;
+        ContractProjectionMode mode = com.maidweapon.forge.compat.tlm.TlmResidenceAdapter.isResident(maid)
+                ? ContractProjectionMode.NONE : TlmProjectionBaubles.mode(maid);
+        ContractWorkPolicy.prepare(weapon, maid, mode);
+        if (mode.weapon()) TouhouLittleMaidHelper.setAllDaySchedule(maid);
+        if (mode == ContractProjectionMode.NONE) TripleMagicCompat.clearPhantoms(maid, weapon);
+        else TripleMagicCompat.equipPhantoms(player, maid, weapon);
+        if (mode.weapon()) {
+            TripleMagicCompat.syncMaidSpellLoadout(player, maid, weapon);
+            if (TaczCompat.isGun(weapon)) TaczCompat.maintain(player, maid, weapon);
+        } else {
+            TaczCompat.clear(player, maid, weapon);
+        }
+        return mode;
     }
 
     private ContractMaidRuntimeService() {}

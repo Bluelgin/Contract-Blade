@@ -1,0 +1,9 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {"type": "minecraft:item", "nbt": {"Item": {"id": "maid_weapon:guardian_ribbon", "Count": 1}}},
+  "power": 0.15,
+  "ingredients": [
+    {"item": "minecraft:string"}, {"item": "minecraft:string"}, {"item": "minecraft:string"},
+    {"item": "minecraft:leather"}, {"item": "minecraft:leather"}, {"item": "minecraft:amethyst_shard"}
+  ]
+}

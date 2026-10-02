@@ -1,0 +1,10 @@
+{
+  "name": "patchouli.maid_weapon.entry.projection_baubles.name",
+  "category": "maid_weapon:basics",
+  "icon": "maid_weapon:heartbound_knot",
+  "pages": [
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.projection_baubles.page.1"},
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.projection_baubles.page.2"},
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.projection_baubles.page.3"}
+  ]
+}

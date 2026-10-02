@@ -63,7 +63,7 @@ public class HomeClockResolverTest {
             var identity = new UUID(0, i);
             var choice = ContractHomeArrivalPlanner.choose("home-" + i, identity, night,
                     Set.of(ContractHomeActivity.MEAL), ContractHomeActivity.MEAL, true, 1000, 1000000, 384);
-            check(choice == ContractHomeActivity.IDLE || choice == ContractHomeActivity.WANDER,
+            check(choice == ContractHomeActivity.WANDER,
                     "arrival does not invent missing furniture, food costs or player-follow activity");
         }
         for (int i = 0; i < 10000; i++) {

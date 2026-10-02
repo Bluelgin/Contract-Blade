@@ -278,6 +278,7 @@ public final class ContractHomeValidation {
                     "original schedule restored");
             check(!maid.getPersistentData().contains("ContractHomeBehaviorSettings"), "behavior backup released");
             validateArrival(level, player, binding, maid, runtimeSaved, plot, origin);
+            validateNativeOnline(level, player, binding, maid, runtimeSaved, plot, origin);
             System.out.println("CONTRACT_HOME_NATIVE_VALIDATION_PASSED: real TLM bed/chair/board-game/Joy/picnic Home Meal, loaded index, managed-seat clock bridge, invalidation, brain scope, restore, NBT isolation");
         } finally {
             ContractHomeRuntime.stop(player);
@@ -397,6 +398,59 @@ public final class ContractHomeValidation {
             if (occupant != null) occupant.discard();
             level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
         }
+    }
+    private static void validateNativeOnline(ServerLevel level, net.minecraft.server.level.ServerPlayer player,
+            String binding, Mob maid, ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot,
+            BlockPos origin) throws ReflectiveOperationException {
+        long previousTime = level.getServer().overworld().getDayTime();
+        var previousMode = plot.home().mode;
+        String originalTask = TlmEntityAdapter.taskId(maid);
+        var identity = maid.getUUID();
+        try {
+            plot.home().mode = ContractHomeClock.Mode.MINECRAFT_TIME;
+            level.getServer().overworld().setDayTime(6000);
+            maid.moveTo(origin.getX() + 7.5, origin.getY(), origin.getZ() + 5.5);
+            var position = maid.position();
+            ContractHomeRuntime.startOnVisit(player, binding, maid, saved, plot, false);
+            check(TlmHomeBehaviorController.isNativeLiving(maid), "production resume hands online living to native TLM");
+            check(maid.getBrain().isActive(net.minecraft.world.entity.schedule.Activity.CORE), "native CORE remains active");
+            check(maid.getBrain().isActive(net.minecraft.world.entity.schedule.Activity.IDLE), "native idle, not replacement HOME activity");
+            check(maid.getBrain().getSchedule().getActivityAt(18000) == net.minecraft.world.entity.schedule.Activity.IDLE,
+                    "personal daytime schedule does not inherit shared dimension night");
+            check(hasNativeGoal(maid.getBrain(), "MaidJoyTask") && hasNativeGoal(maid.getBrain(), "MaidRunOne")
+                    && hasNativeGoal(maid.getBrain(), "MaidBedTask"), "native furniture, random look/walk and bed goals registered");
+            tickBrain(level, maid);
+            check(maid.position().equals(position) && identity.equals(maid.getUUID()), "native handoff does not teleport or duplicate resident");
+            level.getServer().overworld().setDayTime(18000);
+            ContractHomeRuntime.clockChanged(player);
+            check(maid.getBrain().isActive(net.minecraft.world.entity.schedule.Activity.REST), "personal night selects native REST");
+            ContractHomeRuntime.stop(player);
+            check(!TlmHomeBehaviorController.isNativeLiving(maid) && originalTask.equals(TlmEntityAdapter.taskId(maid)),
+                    "leaving releases native home scope and restores original task");
+            System.out.println("CONTRACT_HOME_NATIVE_ONLINE_VALIDATION_PASSED: production handoff, native CORE/joy/random-walk/bed, personal clock, identity, original task restoration");
+        } finally {
+            ContractHomeRuntime.stop(player);
+            level.getServer().overworld().setDayTime(previousTime);
+            plot.home().mode = previousMode;
+        }
+    }
+    private static boolean hasNativeGoal(Brain<?> brain, String name) throws ReflectiveOperationException {
+        for (var field : Brain.class.getDeclaredFields()) {
+            if (!java.util.Map.class.isAssignableFrom(field.getType())) continue;
+            field.setAccessible(true);
+            if (containsGoal(field.get(brain), name, 5)) return true;
+        }
+        return false;
+    }
+    private static boolean containsGoal(Object object, String name, int depth) {
+        if (object == null || depth == 0) return false;
+        if (object instanceof net.minecraft.world.entity.ai.behavior.BehaviorControl<?>)
+            return object.getClass().getSimpleName().equals(name);
+        if (object instanceof java.util.Map<?, ?> map)
+            return map.values().stream().anyMatch(value -> containsGoal(value, name, depth - 1));
+        if (object instanceof Iterable<?> values)
+            for (Object value : values) if (containsGoal(value, name, depth - 1)) return true;
+        return false;
     }
     private static void arrivalState(ContractHomeOfflineState home, Mob maid, ContractHomeActivity activity, String target) {
         home.maidId = maid.getStringUUID(); home.activity = activity; home.target = target;

@@ -136,8 +136,9 @@ public final class ContractInteriorService {
         );
         player.fallDistance = 0.0F;
 
+        Entity[] manifested = new Entity[1];
         if (!resumeInteriorMaid
-                && !ContractLifecycleService.manifest(player, contract, false)) {
+                && !ContractLifecycleService.manifest(player, contract, false, entity -> manifested[0] = entity)) {
             restoreReturn(player);
             clearReturn(player);
             message(player, "maid_weapon.message.interior.maid_restore_failed");
@@ -146,8 +147,7 @@ public final class ContractInteriorService {
 
         Entity maid = resumeInteriorMaid
                 ? existingMaid
-                : (maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId));
-        if (maid != null && !resumeInteriorMaid) ContractResidentPositionService.restore(maid, plot);
+                : manifested[0];
 
         attachHome(player, bindingId, maid, saved, plot, !resumeInteriorMaid);
         message(player, "maid_weapon.message.interior.entered");
@@ -578,9 +578,9 @@ public final class ContractInteriorService {
         boolean restored = false;
         if (maid == null && MaidWeaponItem.hasMaidEntityData(contract)) {
             // No new storage path: the same lifecycle service consumes the same stored authority.
-            if (!ContractLifecycleService.manifest(player, contract, false)) return;
-            maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
-            if (maid != null) ContractResidentPositionService.restore(maid, plot);
+            Entity[] manifested = new Entity[1];
+            if (!ContractLifecycleService.manifest(player, contract, false, entity -> manifested[0] = entity)) return;
+            maid = manifested[0];
             restored = maid != null;
         }
         if (maid == null || maid.level() != player.level() || !binding.equals(
@@ -594,7 +594,7 @@ public final class ContractInteriorService {
             com.maidweapon.forge.compat.TaczCompat.clear(player, living, findContractByBinding(player, binding));
             com.maidweapon.forge.compat.TripleMagicCompat.clearPhantoms(living, findContractByBinding(player, binding));
         }
-        if (maid instanceof Mob mob) ContractHomeRuntime.start(player, binding, mob, saved, plot, arrival);
+        if (maid instanceof Mob mob) ContractHomeRuntime.startOnVisit(player, binding, mob, saved, plot, arrival);
         ContractInteriorGuideService.give(player, saved, plot);
     }
 

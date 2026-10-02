@@ -1,6 +1,7 @@
 package com.maidweapon.forge.system.deployment;
 
 import com.mojang.logging.LogUtils;
+import com.maidweapon.forge.compat.EpicFightCompat;
 import com.maidweapon.forge.compat.SlashBladeCompat;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
@@ -23,15 +24,22 @@ public final class ContractCombatTaskRouter {
     private static final String MAGIC_TASK_FAILURE = "MaidInfusionMagicTaskFailure";
     private static final String SLASHBLADE_TASK_FAILURE = "MaidInfusionSlashBladeTaskFailure";
     private static final String TACZ_TASK_FAILURE = "MaidInfusionTaczTaskFailure";
+    private static final String EPIC_FIGHT_TASK_FAILURE = "MaidInfusionEpicFightTaskFailure";
 
     public static void configure(Player owner, ItemStack weapon, Entity maid) {
+        if (!com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(maid).weapon()) return;
         boolean slashBladeMode = SlashBladeCompat.usesMaidSlashBladeTask(weapon);
         boolean magicMode = !slashBladeMode && TripleMagicCompat.usesMaidSpellTask(weapon);
         boolean taczMode = !slashBladeMode && !magicMode && TaczCompat.isGun(weapon);
+        boolean epicFightMode = !slashBladeMode && !magicMode && !taczMode
+                && !SlashBladeCompat.isSlashBlade(weapon)
+                && !TripleMagicCompat.isMagicCatalyst(weapon)
+                && EpicFightCompat.usesMaidFightTask(weapon, maid);
         String desired = slashBladeMode
                 ? SlashBladeCompat.getMaidSlashBladeTaskId()
                 : magicMode ? TripleMagicCompat.getMaidSpellRangedTaskId()
-                : taczMode ? TaczCompat.GUN_TASK : MaidCareTaskSystem.ATTACK_TASK;
+                : taczMode ? TaczCompat.GUN_TASK
+                : epicFightMode ? EpicFightCompat.FIGHT_TASK : MaidCareTaskSystem.ATTACK_TASK;
         String current = TouhouLittleMaidHelper.getMaidTaskId(maid);
         if (!desired.equals(current)) {
             TouhouLittleMaidHelper.switchMaidTask(maid, desired);
@@ -54,6 +62,11 @@ public final class ContractCombatTaskRouter {
                     "TACZ", desired, current,
                     "maid_weapon.message.tacz_task_unavailable");
             fallback(maid, current);
+        } else if (epicFightMode && !desired.equals(current)) {
+            reportFailure(owner, weapon, EPIC_FIGHT_TASK_FAILURE,
+                    "Epic Fight", desired, current,
+                    "maid_weapon.message.epicfight_task_unavailable");
+            fallback(maid, current);
         } else {
             clearFailures(weapon);
         }
@@ -69,6 +82,7 @@ public final class ContractCombatTaskRouter {
         weapon.getOrCreateTag().remove(MAGIC_TASK_FAILURE);
         weapon.getOrCreateTag().remove(SLASHBLADE_TASK_FAILURE);
         weapon.getOrCreateTag().remove(TACZ_TASK_FAILURE);
+        weapon.getOrCreateTag().remove(EPIC_FIGHT_TASK_FAILURE);
     }
 
     private static void reportFailure(Player owner, ItemStack weapon, String failureTag,

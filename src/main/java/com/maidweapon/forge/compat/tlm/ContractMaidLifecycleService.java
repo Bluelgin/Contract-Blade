@@ -162,6 +162,7 @@ public final class ContractMaidLifecycleService {
 
         entity.getPersistentData().remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
         entity.discard();
+        com.maidweapon.forge.system.deployment.ContractCompanionState.clear(weaponStack);
         MaidCareTaskSystem.clearOriginalTask(weaponStack);
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(
                 new ContractMaidCapturedEvent(player, entity, weaponStack, firstCapture));
@@ -174,6 +175,11 @@ public final class ContractMaidLifecycleService {
     }
 
     public static boolean manifest(Player player, ItemStack weaponStack, boolean notifyPlayer) {
+        return manifest(player, weaponStack, notifyPlayer, maid -> {});
+    }
+
+    public static boolean manifest(Player player, ItemStack weaponStack, boolean notifyPlayer,
+                                   java.util.function.Consumer<Entity> beforeSpawn) {
         if (weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)
                 || !MaidWeaponItem.hasMaidData(weaponStack)
@@ -202,8 +208,20 @@ public final class ContractMaidLifecycleService {
             TlmEntityAdapter.load(maid, maidEntityTag);
             String bindingId = MaidWeaponItem.ensureBindingId(weaponStack);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
-            maid.setPos(player.getX(), player.getY(), player.getZ());
             TlmEntityAdapter.tame(maid, player);
+            if (player.level().dimension().equals(
+                    com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
+                    && player.level() instanceof net.minecraft.server.level.ServerLevel level) {
+                var saved = com.maidweapon.forge.system.interior.ContractInteriorSavedData.get(level.getServer());
+                var plot = saved.find(bindingId);
+                // Decide the resident location before publishing a spawn packet.
+                // Never expose the ordinary combat manifestation at the player's feet.
+                if (plot == null || !plot.hasTerrainTheme()) return false;
+                com.maidweapon.forge.system.interior.ContractResidentPositionService.restore(maid, plot);
+            } else {
+                maid.setPos(player.getX(), player.getY(), player.getZ());
+            }
+            beforeSpawn.accept(maid);
 
             if (!player.level().isClientSide && !player.level().addFreshEntity(maid)) {
                 LOGGER.warn("[MaidWeapon] Maid entity {} could not be added; keeping weapon data for retry",
@@ -233,11 +251,7 @@ public final class ContractMaidLifecycleService {
         if (!(maid instanceof LivingEntity living)) return;
         if (maid.level().dimension().equals(
                 com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
-        MaidCareTaskSystem.rememberOriginalTask(weaponStack, living);
-        TlmEntityAdapter.setAllDaySchedule(living);
-        TripleMagicCompat.equipPhantoms(player, living, weaponStack);
-        TripleMagicCompat.syncMaidSpellLoadout(player, living, weaponStack);
-        TaczCompat.maintain(player, living, weaponStack);
+        com.maidweapon.forge.system.deployment.ContractMaidRuntimeService.prepare(player, weaponStack, living);
     }
 
     public static void syncFavorabilityFromMaid(Entity maid, ItemStack weaponStack) {

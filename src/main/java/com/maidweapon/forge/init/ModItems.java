@@ -3,6 +3,8 @@ package com.maidweapon.forge.init;
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.item.ContractInteriorKeyItem;
+import com.maidweapon.forge.item.ContractProjectionBaubleItem;
+import com.maidweapon.forge.system.deployment.ContractProjectionMode;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.item.PetWeaponItem;
@@ -24,6 +26,13 @@ import net.minecraftforge.registries.RegistryObject;
 public final class ModItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, MaidWeaponConstants.MOD_ID);
+
+    public static final RegistryObject<Item> RESONANCE_SWORD_TASSEL = ITEMS.register(
+            "resonance_sword_tassel", () -> new ContractProjectionBaubleItem(ContractProjectionMode.WEAPON));
+    public static final RegistryObject<Item> GUARDIAN_RIBBON = ITEMS.register(
+            "guardian_ribbon", () -> new ContractProjectionBaubleItem(ContractProjectionMode.ARMOR));
+    public static final RegistryObject<Item> HEARTBOUND_KNOT = ITEMS.register(
+            "heartbound_knot", () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED));
 
     public static final RegistryObject<Item> MAID_SWORD = ITEMS.register(
             "maid_sword", () -> new MaidWeaponItem(new Item.Properties()

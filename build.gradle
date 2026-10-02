@@ -74,6 +74,9 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'contractblade.home.validation', galleryPreviewMode.toString()
             property 'contractblade.home.nativeValidation', homeLifeTestMode.toString()
+            property 'contractblade.epicfight.validation', providers.gradleProperty('epicFightTest').orElse('false').get()
+            property 'contractblade.projection.validation', providers.gradleProperty('projectionTest').orElse('false').get()
+            property 'contractblade.companion.validation', providers.gradleProperty('companionTest').orElse('false').get()
             property 'forge.logging.console.level', 'debug'
             // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
             property 'mixin.env.remapRefMap', 'true'
@@ -87,7 +90,7 @@ minecraft {
 
         client {
             property 'forge.enabledGameTestNamespaces', mod_id
-            jvmArgs '-Xms384m', '-Xmx1280m'
+            jvmArgs '-Xms384m', compatTestMode == 'epicfight' ? '-Xmx3072m' : '-Xmx1280m'
         }
 
         server {
@@ -114,8 +117,15 @@ dependencies {
     // Minecraft Forge
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    // Mandatory Touhou Little Maid runtime for launch profiles. CI compiles the
-    // version-tolerant reflection boundary without resolving a local runtime jar.
+    // Only the native extension API is linked. TLM itself is never bundled.
+    if (ciMode) {
+        compileOnly fg.deobf("curse.maven:touhou-little-maid-355044:8061847")
+    } else {
+        compileOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
+    }
+
+    // Native bauble extension compiles against the public TLM API. Runtime-only
+    // launch profiles use the local jar; other integrations stay version-tolerant.
     if (!ciMode || homeLifeTestMode) {
         if (tlmTestMode == 'old') {
             runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
@@ -143,6 +153,11 @@ dependencies {
     }
 
     // Optional local launch matrix. These are runtime-only and never bundled.
+    if (compatTestMode == 'epicfight' && !ciMode) {
+        runtimeOnly fg.deobf("compat:epic-fight:20.14.17-mc1.20.1-forge")
+        runtimeOnly fg.deobf("compat:EpicFight_TouhouLittleMaid:1.20.1-1.3.4")
+        runtimeOnly fg.deobf("compat:epic-fight-avalon:7619938")
+    }
     if (compatTestMode in ['goety', 'both', 'maidspell-goety', 'maidspell-both']) {
         runtimeOnly fg.deobf("compat:goety:2.5.55.4")
         runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")

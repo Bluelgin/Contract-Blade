@@ -1,5 +1,20 @@
 # Asset sources
 
+`contract_interior_key.png`, `resonance_sword_tassel.png`, `guardian_ribbon.png`
+and `heartbound_knot.png` are original 32 × 32 pixel-art item textures. The approved
+editable SVG sources are in `art/contract_refresh/v2/`; they contain no third-party
+artwork. The visual reference was the user-provided Touhou Little Maid item screenshots;
+no textures from that mod are redistributed. Earlier concepts remain in
+`art/contract_baubles/` and `art/contract_interior/` for reference, not as shipping sources.
+
+`art/contract_refresh/v2/preview_motion.cjs --install` renders the same approved
+frames used by the GIF previews into native Minecraft vertical PNG strips.
+Each texture has 80 frames, two game ticks per frame (eight seconds), without
+interpolation. The key has an occasional metal-edge highlight; the tassel's
+two strands bend with a slight delay, while the ribbon and knot have occasional
+tip movement and long rests. Attachment points stay fixed. Running the script
+without `--install` writes only previews under `art/contract_refresh/v2/motion/`.
+
 The textures and models distributed by Contract Blade are original project
 assets and do not redistribute files from optional integrations.
 

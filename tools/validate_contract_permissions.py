@@ -101,7 +101,7 @@ if "ContractInteractionService.toggleHeld" in maid_interaction:
     raise SystemExit("Bound SlashBlade regained a second manual summon/recall path")
 if "PlayerInteractEvent.LeftClickEmpty" in maid_interaction:
     raise SystemExit("Bound SlashBlade still owns a manual empty-space recall gesture")
-if "ContractLifecycleService.manifest(player, weapon, false)" not in deployment:
+if "ContractLifecycleService.manifest(player, weapon, false," not in deployment:
     raise SystemExit("Generic deployment bypasses unified contract manifest lifecycle")
 if "ContractLifecycleService.capture(player, maid, weapon, false)" not in deployment:
     raise SystemExit("Generic deployment bypasses unified contract recall lifecycle")
@@ -217,7 +217,8 @@ if "getRefine" not in slashblade or "getDamage" not in slashblade or "isBroken" 
     raise SystemExit("SlashBlade refine, durability, or broken state synchronization is missing")
 if "MaidWeaponItem.clearMaidContract(copy)" not in magic:
     raise SystemExit("Combat phantoms still carry a second serialized maid contract")
-if "SlashBladeCompat.isMatchingPhantom(source, current)" not in magic:
+projection = read("src/main/java/com/maidweapon/forge/compat/ContractEquipmentProjection.java")
+if "SlashBladeCompat.isMatchingPhantom(source, current)" not in projection:
     raise SystemExit("SlashBlade phantoms are still replaced instead of preserving combat progress")
 
 print("Validated contract ownership, TLM GUI pass-through, magic/SlashBlade tasks, progress sync, and optional bridges")

@@ -19,9 +19,6 @@ import java.lang.reflect.Method;
 /** Optional bridge enabled only when Iron's Spells, Goety and TLM Spell are all loaded. */
 public final class TripleMagicCompat {
     public static final String PHANTOM_TAG = "MaidWeaponPhantomCopy";
-    private static final String ORIGINAL_ATTACK = "MaidWeaponOriginalAttack";
-    private static final String ORIGINAL_ARMOR = "MaidWeaponOriginalArmor";
-    private static final String ORIGINAL_GEAR = "MaidWeaponOriginalGear";
     private static final String MAGIC_LOADOUT = "MaidWeaponMagicLoadout";
     private static final String MAID_SPELL = "touhou_little_maid_spell";
     private static final String IRONS = "irons_spellbooks";
@@ -92,70 +89,17 @@ public final class TripleMagicCompat {
     }
 
     public static void equipPhantoms(Player owner, LivingEntity maid, ItemStack source) {
-        boolean firstEquip = !maid.getPersistentData().contains(ORIGINAL_GEAR);
-        saveOriginalStats(maid);
-        // TLM temporarily moves a whole food stack into a hand while eating. Replacing that
-        // stack here would remove it before TLM can consume and return the remainder.
-        if (!maid.isUsingItem()) {
-            if (SlashBladeCompat.isSlashBlade(source)) {
-                syncSlashBladePhantom(owner, maid, source, firstEquip);
-            } else {
-                syncPhantomSlot(maid, EquipmentSlot.MAINHAND,
-                        phantom(source, owner), firstEquip);
-            }
-            ItemStack catalyst = usesMaidSpellTask(source)
-                    ? equippedMagicAccessory(owner) : ItemStack.EMPTY;
-            syncPhantomSlot(maid, EquipmentSlot.OFFHAND,
-                    catalyst.isEmpty() ? ItemStack.EMPTY : phantom(catalyst, owner), firstEquip);
-        }
-        for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST,
-                EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
-            ItemStack armor = owner.getItemBySlot(slot);
-            syncPhantomSlot(maid, slot,
-                    armor.isEmpty() ? ItemStack.EMPTY : phantom(armor, owner), firstEquip);
-        }
-        if (maid.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
-            maid.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(
-                    Math.max(1, owner.getAttributeValue(Attributes.ATTACK_DAMAGE) * .5));
-        }
-        if (maid.getAttribute(Attributes.ARMOR) != null) {
-            maid.getAttribute(Attributes.ARMOR).setBaseValue(
-                    Math.max(0, owner.getAttributeValue(Attributes.ARMOR) * .5));
-        }
+        ContractEquipmentProjection.maintain(owner, maid, source,
+                com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(maid));
     }
 
     public static void clearPhantoms(LivingEntity maid) {
         clearPhantoms(maid, ItemStack.EMPTY);
     }
 
-    /**
-     * Flushes SlashBlade progress before removing visual equipment. Recall must
-     * call this overload so a kill on the final deployment tick is not lost.
-     */
     public static void clearPhantoms(LivingEntity maid, ItemStack source) {
         restoreTlmEatingHand(maid);
-        syncSlashBladeProgress(maid, source);
-        net.minecraft.nbt.CompoundTag gear = maid.getPersistentData().getCompound(ORIGINAL_GEAR);
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (isPhantom(maid.getItemBySlot(slot))) {
-                String key = slot.getName();
-                maid.setItemSlot(slot, gear.contains(key)
-                        ? ItemStack.of(gear.getCompound(key)) : ItemStack.EMPTY);
-            }
-        }
-        if (maid.getPersistentData().contains(ORIGINAL_ATTACK)
-                && maid.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
-            maid.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(
-                    maid.getPersistentData().getDouble(ORIGINAL_ATTACK));
-        }
-        if (maid.getPersistentData().contains(ORIGINAL_ARMOR)
-                && maid.getAttribute(Attributes.ARMOR) != null) {
-            maid.getAttribute(Attributes.ARMOR).setBaseValue(
-                    maid.getPersistentData().getDouble(ORIGINAL_ARMOR));
-        }
-        maid.getPersistentData().remove(ORIGINAL_ATTACK);
-        maid.getPersistentData().remove(ORIGINAL_ARMOR);
-        maid.getPersistentData().remove(ORIGINAL_GEAR);
+        ContractEquipmentProjection.clear(maid, source);
         maid.getPersistentData().remove(MAGIC_LOADOUT);
     }
 
@@ -165,26 +109,6 @@ public final class TripleMagicCompat {
         ItemStack phantom = maid.getMainHandItem();
         return isPhantom(phantom)
                 && SlashBladeCompat.syncPhantomProgress(source, phantom);
-    }
-
-    private static void syncSlashBladePhantom(Player owner, LivingEntity maid,
-                                              ItemStack source, boolean firstEquip) {
-        ItemStack current = maid.getMainHandItem();
-        if (!firstEquip && !current.isEmpty() && !isPhantom(current)) return;
-        if (isPhantom(current) && SlashBladeCompat.isMatchingPhantom(source, current)) {
-            SlashBladeCompat.syncPhantomProgress(source, current);
-            return;
-        }
-        maid.setItemSlot(EquipmentSlot.MAINHAND, phantom(source, owner));
-        if (maid instanceof Mob mob) mob.setDropChance(EquipmentSlot.MAINHAND, 0);
-    }
-
-    private static void syncPhantomSlot(LivingEntity maid, EquipmentSlot slot,
-                                        ItemStack replacement, boolean firstEquip) {
-        ItemStack current = maid.getItemBySlot(slot);
-        if (!firstEquip && !current.isEmpty() && !isPhantom(current)) return;
-        maid.setItemSlot(slot, replacement);
-        if (maid instanceof Mob mob) mob.setDropChance(slot, 0);
     }
 
     /** Cancels a TLM meal without losing the temporary hand stack before the maid is stored. */
@@ -285,13 +209,14 @@ public final class TripleMagicCompat {
         return false;
     }
 
-    private static ItemStack phantom(ItemStack original, Player owner) {
+    public static ItemStack createProjection(ItemStack original, Player owner) {
         String binding = MaidWeaponItem.getBindingId(original);
         ItemStack copy = original.copy();
         copy.setCount(1);
         // A combat projection must never carry a second serialized maid or a
         // second usable contract. Weapon-native NBT/capabilities remain intact.
         MaidWeaponItem.clearMaidContract(copy);
+        com.maidweapon.forge.system.deployment.ContractCompanionState.clear(copy);
         copy.getOrCreateTag().remove("MaidInfusionMagicTaskFailure");
         copy.getOrCreateTag().remove("MaidInfusionSlashBladeTaskFailure");
         copy.getOrCreateTag().putBoolean(PHANTOM_TAG, true);
@@ -305,6 +230,10 @@ public final class TripleMagicCompat {
     public static boolean isPhantom(ItemStack stack) {
         return !stack.isEmpty() && stack.getTag() != null && stack.getTag().getBoolean(PHANTOM_TAG);
     }
+    public static ItemStack projectionAccessory(Player owner, ItemStack source) {
+        return usesMaidSpellTask(source) ? equippedMagicAccessory(owner) : ItemStack.EMPTY;
+    }
+
     private static ItemStack equippedMagicAccessory(Player player) {
         try {
             Class<?> api = Class.forName("top.theillusivec4.curios.api.CuriosApi");
@@ -358,24 +287,6 @@ public final class TripleMagicCompat {
             ironIsSpellContainerMethod = null;
             return false;
         }
-    }
-    private static void saveOriginalStats(LivingEntity maid) {
-        if (!maid.getPersistentData().contains(ORIGINAL_GEAR)) {
-            net.minecraft.nbt.CompoundTag gear = new net.minecraft.nbt.CompoundTag();
-            for (EquipmentSlot slot : EquipmentSlot.values()) {
-                ItemStack stack = maid.getItemBySlot(slot);
-                if (!stack.isEmpty()) gear.put(slot.getName(), stack.save(new net.minecraft.nbt.CompoundTag()));
-            }
-            maid.getPersistentData().put(ORIGINAL_GEAR, gear);
-        }
-        if (!maid.getPersistentData().contains(ORIGINAL_ATTACK)
-                && maid.getAttribute(Attributes.ATTACK_DAMAGE) != null)
-            maid.getPersistentData().putDouble(ORIGINAL_ATTACK,
-                    maid.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue());
-        if (!maid.getPersistentData().contains(ORIGINAL_ARMOR)
-                && maid.getAttribute(Attributes.ARMOR) != null)
-            maid.getPersistentData().putDouble(ORIGINAL_ARMOR,
-                    maid.getAttribute(Attributes.ARMOR).getBaseValue());
     }
     private TripleMagicCompat() {}
 }

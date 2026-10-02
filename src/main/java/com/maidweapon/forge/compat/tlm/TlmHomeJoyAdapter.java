@@ -89,7 +89,8 @@ public final class TlmHomeJoyAdapter implements ContractHomeFurnitureAdapter {
         if (!valid(level, target, maid)) return false;
         Entity sit = maid.getVehicle();
         return matchesSeat(sit, target.position()) && sit.hasPassenger(maid)
-                && TlmHomeBehaviorController.shouldKeepManagedSeat(maid, sit);
+                && (TlmHomeBehaviorController.isNativeLiving(maid)
+                    || TlmHomeBehaviorController.shouldKeepManagedSeat(maid, sit));
     }
 
     @Override

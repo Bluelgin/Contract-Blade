@@ -70,8 +70,19 @@ assert 'PlayerDestroyItemEvent' in interior_events
 assert 'ContractTransferSafetyService.rescueSelfStoredContract(player)' in interior_events
 assert 'ContractInteriorService.rescueActiveContractFromContainer(player)' in interior_events
 guide = (HOME / 'ContractInteriorGuideService.java').read_text()
-assert 'ClickEvent.Action.RUN_COMMAND' in guide
-assert '/contractinterior clock minecraft' in guide and '/contractinterior timezone +08:00' in guide
+assert 'ClickEvent' not in guide and 'RUN_COMMAND' not in guide
+assert 'public static final int GUIDE_VERSION = 4' in guide
+assert 'public static final int PAGE_COUNT = 7' in guide
+import json
+for language in ('zh_cn', 'en_us'):
+    translations = json.loads((ROOT / f'src/main/resources/assets/maid_weapon/lang/{language}.json').read_text())
+    pages = [translations[f'maid_weapon.home.guide.page.{page}'] for page in range(1, 8)]
+    assert all(len(page) <= 280 for page in pages), 'letter pages must stay readable'
+    assert 'maid_weapon.home.guide.page.8' not in translations
+    if language == 'zh_cn':
+        assert '这里就是我们的家' in ''.join(pages)
+        assert '灵体显现' in ''.join(pages)
+        assert not any(word in ''.join(pages) for word in ('系统说明', '时区', '幻化', '开发者', '契约等级'))
 care = (JAVA / 'system/MaidCareTaskSystem.java').read_text()
 entity_adapter = (JAVA / 'compat/tlm/TlmEntityAdapter.java').read_text()
 assert 'ContractInteriorService.INTERIOR_LEVEL' in care
@@ -83,11 +94,18 @@ equipment = (JAVA / 'compat/tlm/ContractHomeEquipmentGuard.java').read_text()
 assert 'mayPlace(ItemStack stack)' in equipment and 'mayPickup(Player player)' in equipment
 assert 'PlayerContainerEvent.Open' in equipment and 'EntityInteractSpecific' in equipment
 assert 'ContractResidentPositionService.remember(s.maid)' in runtime
-assert 'ContractResidentPositionService.restore(maid, plot)' in service
+lifecycle = (JAVA / 'compat/tlm/ContractMaidLifecycleService.java').read_text()
+assert lifecycle.index('ContractResidentPositionService.restore(maid, plot)') < lifecycle.index('!player.level().addFreshEntity(maid)')
+assert 'beforeSpawn.accept(maid)' in lifecycle and 'manifested[0]' in service
+assert 'ContractHomeRuntime.startOnVisit' in service and 'session.arrivalAt' in runtime
 assert 'ContractHomeClock.skyTime' in events and 'ClientboundSetTimePacket' in events
 assert 'setDayTime(' not in events, 'home clock must not mutate other players\' shared world clock'
 assert 'ContractInteriorGuideVersion' in guide and 'write(existing)' in guide
 assert 'if (arrival) prepareArrival(session, player)' in runtime
+assert 'enableNativeLiving' in behavior and 'refreshBrain' in behavior
+assert 'Never run the custom online activity resolver after handoff' in runtime
+assert 'syncNativeClock' in behavior and 'ScheduleBuilder' in behavior
+assert 'Anchor native home range to the restored resident' in runtime
 assert 'attempts++ < 4' in runtime and 'level.noCollision(s.maid, box)' in runtime
 assert 'ContractHomeArrivalPlanner.preference(s.maid.getUUID())' in runtime
 assert 'restored' in service and 'plot, !resumeInteriorMaid)' in service
@@ -97,8 +115,8 @@ assert 'arrival never steals an occupied chair' in (JAVA / 'compat/tlm/ContractH
 runtime_service = (JAVA / 'system/deployment/ContractMaidRuntimeService.java').read_text()
 weapon_item = (JAVA / 'item/MaidWeaponItem.java').read_text()
 intrinsic = (JAVA / 'api/IntrinsicSpiritApi.java').read_text()
-maintain_body = runtime_service.split('public static void maintain', 1)[1].split('public static void selectCombatTask', 1)[0]
-assert maintain_body.index('MaidCareTaskSystem.rememberOriginalTask(weapon, maid)') < maintain_body.index('setAllDaySchedule(maid)')
+prepare_body = runtime_service.split('public static ContractProjectionMode prepare', 1)[1]
+assert prepare_body.index('ContractWorkPolicy.prepare(weapon, maid, mode)') < prepare_body.index('setAllDaySchedule(maid)')
 assert 'MaidInfusionOriginalSchedule' in weapon_item
 assert 'MaidInfusionOriginalSchedule' in intrinsic
 print('Home Life authority, loaded-only indexing, cadence, terrain, runtime restoration and save boundaries validated.')

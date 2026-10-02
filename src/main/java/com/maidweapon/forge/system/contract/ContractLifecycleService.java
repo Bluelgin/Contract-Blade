@@ -56,6 +56,11 @@ public final class ContractLifecycleService {
             ItemStack contract,
             boolean notifyPlayer
     ) {
+        return manifest(player, contract, notifyPlayer, maid -> {});
+    }
+
+    public static boolean manifest(Player player, ItemStack contract, boolean notifyPlayer,
+                                   java.util.function.Consumer<Entity> beforeSpawn) {
         if (player == null || contract.isEmpty()
                 || !MaidInfusion.isInfused(contract)
                 || !MaidWeaponItem.isOwner(contract, player)
@@ -65,7 +70,8 @@ public final class ContractLifecycleService {
         return TouhouLittleMaidHelper.convertWeaponToMaid(
                 player,
                 contract,
-                notifyPlayer
+                notifyPlayer,
+                beforeSpawn
         );
     }
 

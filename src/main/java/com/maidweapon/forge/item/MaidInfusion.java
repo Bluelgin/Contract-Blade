@@ -16,6 +16,7 @@ public final class MaidInfusion {
         if (com.maidweapon.forge.compat.SlashBladeCompat.isSlashBlade(stack)) return true;
         if (com.maidweapon.forge.compat.TripleMagicCompat.isMagicCatalyst(stack)) return true;
         if (com.maidweapon.forge.compat.TaczCompat.isGun(stack)) return true;
+        if (com.maidweapon.forge.compat.EpicFightCompat.isMeleeWeapon(stack)) return true;
         if (stack.getItem() instanceof net.minecraft.world.item.BlockItem blockItem
                 && blockItem.getBlock() == com.maidweapon.forge.init.ModBlocks.MAID_INJECTOR.get()) return false;
         if (stack.getItem() instanceof BowItem

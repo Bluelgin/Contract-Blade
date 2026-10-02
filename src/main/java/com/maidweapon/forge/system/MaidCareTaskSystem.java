@@ -3,15 +3,12 @@ package com.maidweapon.forge.system;
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
-import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -33,38 +30,6 @@ public final class MaidCareTaskSystem {
     public static final String FEED_TASK = "touhou_little_maid:feed";
 
     private static final Map<UUID, Long> LAST_DANGER = new HashMap<>();
-
-    /**
-     * Dedicated Contract Blades are manifested manually, so they are not part
-     * of the generic weapon deployment state machine. Maintain their temporary
-     * care/combat task here while the blade remains in the owner's main hand.
-     */
-    @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide
-                || event.player.tickCount % 10 != 0
-                || !MaidWeaponConfig.ENABLE_SAFE_FEEDING.get()) return;
-
-        Player player = event.player;
-        if (player.level().dimension().equals(
-                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
-        ItemStack weapon = player.getMainHandItem();
-        if (!MaidInfusion.isContractBlade(weapon)
-                || !MaidInfusion.isInfused(weapon)
-                || !MaidWeaponItem.isOwner(weapon, player)
-                || MaidWeaponItem.isContractSuperseded(weapon)) return;
-
-        String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
-        if (maidId == null || maidId.isEmpty()) return;
-        Entity maid = InfusedMaidDeploymentSystem.findManifestedMaid(player, maidId);
-        if (maid == null) return;
-
-        // 与自动显形路径保持一致的周期性维护：作息、装备幻影、法术与 TACZ。
-        TouhouLittleMaidHelper.prepareManifestedMaid(player, weapon, maid);
-        if (!applySafeTask(player, weapon, maid)) {
-            switchIfNeeded(maid, ATTACK_TASK);
-        }
-    }
 
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -96,6 +61,8 @@ public final class MaidCareTaskSystem {
      * must not suppress a weapon-specific combat task such as Native POWER.
      */
     public static boolean applySafeTask(Player owner, ItemStack weapon, Entity maid) {
+        if (maid.level().dimension().equals(
+                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return false;
         if (!MaidWeaponConfig.ENABLE_SAFE_FEEDING.get() || !isSafe(owner, maid)) {
             return false;
         }

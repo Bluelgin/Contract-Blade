@@ -109,12 +109,15 @@ public final class ContractHomeSafetyValidation {
             menu.removed(player); menu = null;
 
             check(ContractLifecycleService.capture(player, maid, carrier, false), "resident recall");
-            check(ContractLifecycleService.manifest(player, carrier, false), "resident reentry");
+            check(ContractLifecycleService.manifest(player, carrier, false, resident -> {
+                check(level.getEntity(resident.getUUID()) == null, "placement callback runs before entity publication");
+                check(Math.abs(resident.getX() - x) < .01 && Math.abs(resident.getZ() - z) < .01,
+                        "spawn packet starts at checkpoint rather than player coordinates");
+            }), "resident reentry");
             maid = (Mob) level.getEntity(maidId);
             check(maid != null, "same UUID after reentry");
-            ContractResidentPositionService.restore(maid, plot);
             check(Math.abs(maid.getX() - x) < .01 && Math.abs(maid.getZ() - z) < .01,
-                    "reentry uses last home position, not player spawn");
+                    "lifecycle itself restores last home position before publication, without a later restore call");
             check(armor.equals(maid.getItemBySlot(EquipmentSlot.HEAD).save(new CompoundTag()))
                     && hand.equals(maid.getMainHandItem().save(new CompoundTag())), "original gear survives recall/reentry");
 
@@ -124,8 +127,40 @@ public final class ContractHomeSafetyValidation {
             book.getOrCreateTag().remove("ContractInteriorGuideVersion");
             int books = player.getInventory().countItem(Items.WRITTEN_BOOK);
             ContractInteriorGuideService.give(player, saved, plot);
-            check(book.getTag().getInt("ContractInteriorGuideVersion") == 2
+            check(book.getTag().getInt("ContractInteriorGuideVersion") == ContractInteriorGuideService.GUIDE_VERSION
                     && books == player.getInventory().countItem(Items.WRITTEN_BOOK), "legacy guide upgrades without duplication");
+            var letterPages = book.getTag().getList("pages", net.minecraft.nbt.Tag.TAG_STRING);
+            check(letterPages.size() == ContractInteriorGuideService.PAGE_COUNT
+                    && letterPages.stream().noneMatch(page -> page.getAsString().contains("run_command")),
+                    "personal letter contains no settings buttons");
+            check("写给主人的小册子".equals(book.getTag().getString("title"))
+                    && "与你缔约的女仆".equals(book.getTag().getString("author")), "letter title and maid author");
+            check(level.dimensionType().bedWorks(), "ordinary beds cannot explode in this dimension");
+            var spawnEvent = new net.minecraftforge.event.entity.player.PlayerSetSpawnEvent(player,
+                    level.dimension(), origin, false);
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(spawnEvent);
+            check(spawnEvent.isCanceled(), "bed cannot set an interior respawn point");
+            var skipEvent = new net.minecraftforge.event.level.SleepFinishedTimeEvent(level,
+                    level.getDayTime() + 24000, level.getDayTime());
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(skipEvent);
+            check(skipEvent.getNewTime() == level.getDayTime(), "rest does not skip shared interior time");
+            BlockPos normalBed = origin.offset(10, 0, -10);
+            var bedState = net.minecraft.world.level.block.Blocks.RED_BED.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.HEAD);
+            BlockPos bedFoot = normalBed.relative(bedState.getValue(net.minecraft.world.level.block.BedBlock.FACING).getOpposite());
+            level.setBlockAndUpdate(normalBed, bedState);
+            level.setBlockAndUpdate(bedFoot, bedState.setValue(net.minecraft.world.level.block.BedBlock.PART,
+                    net.minecraft.world.level.block.state.properties.BedPart.FOOT));
+            try {
+                bedState.getBlock().use(bedState, level, normalBed, player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                        new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(normalBed),
+                                net.minecraft.core.Direction.UP, normalBed, false));
+                check(level.getBlockState(normalBed).is(net.minecraft.world.level.block.Blocks.RED_BED)
+                        && level.getBlockState(bedFoot).is(net.minecraft.world.level.block.Blocks.RED_BED), "real bed click leaves both halves intact");
+            } finally {
+                level.setBlockAndUpdate(normalBed, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                level.setBlockAndUpdate(bedFoot, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            }
             System.out.println("CONTRACT_HOME_SAFETY_VALIDATION_PASSED: resident position, no projection, real TLM pickup/shift/swap, food, gear NBT, guide upgrade");
         } finally {
             if (menu != null) { menu.setCarried(ItemStack.EMPTY); menu.removed(player); }

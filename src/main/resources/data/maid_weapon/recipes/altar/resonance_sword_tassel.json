@@ -1,0 +1,9 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {"type": "minecraft:item", "nbt": {"Item": {"id": "maid_weapon:resonance_sword_tassel", "Count": 1}}},
+  "power": 0.15,
+  "ingredients": [
+    {"item": "minecraft:string"}, {"item": "minecraft:string"}, {"item": "minecraft:string"},
+    {"item": "minecraft:gold_nugget"}, {"item": "minecraft:amethyst_shard"}, {"item": "minecraft:red_dye"}
+  ]
+}

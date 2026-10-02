@@ -117,7 +117,13 @@ public final class MaidAttentionSystem {
         tag.remove(WANTS_ATTENTION);
         tag.remove(ATTENTION_NOTIFIED);
 
-        if (!wantedAttention || !MaidWeaponConfig.ENABLE_ATTENTION_REMINDERS.get()) return;
+        // A rescue manifestation still resets stored time, but combat is not
+        // the place for an attention response or an idle voice.
+        PENDING_VOICES.remove(owner.getUUID());
+        if (!wantedAttention || !MaidWeaponConfig.ENABLE_ATTENTION_REMINDERS.get()
+                || com.maidweapon.forge.system.deployment.ContractCompanionState.mode(maid)
+                    == com.maidweapon.forge.system.deployment.ContractCompanionState.Mode.GUARD
+                || !isSafeToNotify(owner)) return;
 
         MaidWeaponData data = MaidInfusion.data(weapon);
         int variant = owner.getRandom().nextInt(3);
@@ -136,7 +142,8 @@ public final class MaidAttentionSystem {
         PendingVoice pending = PENDING_VOICES.get(owner.getUUID());
         if (pending == null || owner.level().getGameTime() < pending.playAt()) return;
         PENDING_VOICES.remove(owner.getUUID());
-        if (!MaidWeaponConfig.ATTENTION_VOICE_ON_MANIFEST.get()) return;
+        if (!MaidWeaponConfig.ATTENTION_VOICE_ON_MANIFEST.get()
+                || !isSafeToNotify(owner)) return;
 
         Entity maid = InfusedMaidDeploymentSystem.findManifestedMaid(
                 owner, pending.maidId().toString());

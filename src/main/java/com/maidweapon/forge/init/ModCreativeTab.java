@@ -21,6 +21,9 @@ public final class ModCreativeTab {
                         output.accept(ModItems.MAID_INJECTOR.get());
                         output.accept(ModItems.SPIRIT_CRYSTAL.get());
                         output.accept(ModItems.CONTRACT_INTERIOR_KEY.get());
+                        output.accept(ModItems.RESONANCE_SWORD_TASSEL.get());
+                        output.accept(ModItems.GUARDIAN_RIBBON.get());
+                        output.accept(ModItems.HEARTBOUND_KNOT.get());
                         output.accept(ModItems.MAID_HEAVY.get());
                         output.accept(ModItems.MAID_FAST.get());
                         output.accept(ModItems.DOG_BLADE.get());

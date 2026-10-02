@@ -27,6 +27,8 @@ third_party_prefixes = (
     "import io.redspace.",
     "import com.Polarice3.",
     "import com.github.tartaricacid.",
+    "import yesman.epicfight.",
+    "import net.EFTLM.",
 )
 for path in JAVA.rglob("*.java"):
     rel = path.relative_to(JAVA).as_posix()

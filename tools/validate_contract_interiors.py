@@ -23,8 +23,11 @@ if dimension.get("generator", {}).get("type") != "minecraft:flat":
     raise SystemExit("contract interior must remain a bounded void-style flat dimension")
 if "fixed_time" in dimension_type or dimension_type.get("natural") is not False:
     raise SystemExit("contract interior must allow the selected home clock to control the sky")
-if dimension_type.get("bed_works") is not False or dimension_type.get("has_raids") is not False:
-    raise SystemExit("contract interior regained normal-world respawn/raid behavior")
+if dimension_type.get("bed_works") is not True or dimension_type.get("has_raids") is not False:
+    raise SystemExit("contract interior beds must be safe without enabling raids")
+bed_safety = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorBedSafety.java")
+assert 'PlayerSetSpawnEvent' in bed_safety and 'event.setCanceled(true)' in bed_safety
+assert 'SleepFinishedTimeEvent' in bed_safety and 'event.setTimeAddition(level.getDayTime())' in bed_safety
 
 profile = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorProfile.java")
 saved = read("src/main/java/com/maidweapon/forge/system/interior/ContractInteriorSavedData.java")
@@ -160,7 +163,7 @@ if "ContractInteriorBuilder.buildSnapshot" not in gallery:
 
 for needle in [
     "MaidWeaponItem.ensureBindingId(contract)",
-    "ContractLifecycleService.manifest(player, contract, false)",
+    "ContractLifecycleService.manifest(player, contract, false, entity -> manifested[0] = entity)",
     "ContractLifecycleService.capture(player, maid, contract, false)",
     "MaidWeaponItem.isOwner(contract, player)",
     "MaidWeaponItem.isContractSuperseded(contract)",

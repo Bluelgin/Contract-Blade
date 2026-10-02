@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/ender_eye"
+    "layer0": "maid_weapon:item/contract_interior_key"
   }
 }
