@@ -1,6 +1,7 @@
 package com.maidweapon.forge.compat.tlm;
 
-import com.maidweapon.forge.item.MaidWeaponItem;
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.system.ContractNbtAudit;
 import com.maidweapon.forge.system.ContractNbtGuard;
 import com.maidweapon.forge.system.MaidEntityDataCodec;
@@ -87,8 +88,8 @@ public final class ContractMaidStorage {
         boolean retiredAny = false;
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (stack != target && maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack))) {
-                MaidWeaponItem.setContractSuperseded(stack, true);
+            if (stack != target && maidId.equals(ContractCarrierData.getBoundMaidUUID(stack))) {
+                ContractCarrierData.setContractSuperseded(stack, true);
                 retiredAny = true;
             }
         }

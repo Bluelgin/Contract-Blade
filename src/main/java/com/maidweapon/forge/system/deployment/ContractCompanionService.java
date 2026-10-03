@@ -1,8 +1,9 @@
 package com.maidweapon.forge.system.deployment;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.tlm.TlmResidenceAdapter;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.maidweapon.forge.system.interior.ContractInteriorService;
 import net.minecraft.network.chat.Component;
@@ -29,7 +30,7 @@ public final class ContractCompanionService {
         if (damage <= 0 || !(attacker instanceof LivingEntity) || attacker == owner || atHome(owner)) return;
         ItemStack held = owner.getMainHandItem();
         if (InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)) {
-            INJURIES.put(owner.getUUID(), new Injury(MaidWeaponItem.ensureBindingId(held), owner.getHealth()));
+            INJURIES.put(owner.getUUID(), new Injury(ContractCarrierData.ensureBindingId(held), owner.getHealth()));
         }
         prolongGuard(owner);
     }
@@ -51,7 +52,7 @@ public final class ContractCompanionService {
         if (atHome(owner)) { message(owner, "interior"); return; }
         ItemStack carrier = owner.getMainHandItem();
         if (!owned(owner, carrier)) { message(owner, "hold_contract"); return; }
-        if (MaidWeaponItem.isContractSuperseded(carrier)) { message(owner, "unavailable"); return; }
+        if (ContractCarrierData.isContractSuperseded(carrier)) { message(owner, "unavailable"); return; }
         Entity maid = loaded(owner, carrier);
         if (maid != null || !MaidInfusion.containsMaid(carrier)) {
             // A missing loaded entity is not permission to instantiate a replacement.
@@ -74,7 +75,7 @@ public final class ContractCompanionService {
         Injury injury = INJURIES.remove(owner.getUUID());
         ItemStack held = owner.getMainHandItem();
         if (injury != null && owner.isAlive() && owner.getHealth() < injury.health()
-                && injury.binding().equals(MaidWeaponItem.getBindingId(held))
+                && injury.binding().equals(ContractCarrierData.getBindingId(held))
                 && InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)
                 && MaidInfusion.containsMaid(held) && loaded(owner, held) == null && !hasFollowingCompanion(owner)) {
             summon(owner, held, ContractCompanionState.Mode.GUARD);
@@ -83,8 +84,8 @@ public final class ContractCompanionService {
         var seen = new HashSet<String>();
         for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
             ItemStack carrier = owner.getInventory().getItem(slot);
-            if (!owned(owner, carrier) || MaidWeaponItem.isContractSuperseded(carrier) || MaidInfusion.containsMaid(carrier)) continue;
-            String binding = MaidWeaponItem.getBindingId(carrier);
+            if (!owned(owner, carrier) || ContractCarrierData.isContractSuperseded(carrier) || MaidInfusion.containsMaid(carrier)) continue;
+            String binding = ContractCarrierData.getBindingId(carrier);
             if (binding == null || !seen.add(binding)) continue;
             Entity maid = loaded(owner, carrier);
             if (maid == null || maid.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) continue;
@@ -133,7 +134,7 @@ public final class ContractCompanionService {
     private static boolean hasFollowingCompanion(Player owner) {
         for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
             ItemStack carrier = owner.getInventory().getItem(slot);
-            if (owned(owner, carrier) && !MaidWeaponItem.isContractSuperseded(carrier)
+            if (owned(owner, carrier) && !ContractCarrierData.isContractSuperseded(carrier)
                     && !MaidInfusion.containsMaid(carrier) && !isResident(owner, carrier)) return true;
         }
         return false;
@@ -151,14 +152,14 @@ public final class ContractCompanionService {
                 .getString("Dimension").equals(owner.level().dimension().location().toString());
     }
     private static Entity loaded(Player owner, ItemStack carrier) {
-        String id = MaidWeaponItem.getBoundMaidUUID(carrier);
+        String id = ContractCarrierData.getBoundMaidUUID(carrier);
         Entity maid = id == null ? null : ContractWeaponLocator.findManifestedMaid(owner, id);
-        return maid != null && MaidWeaponItem.ensureBindingId(carrier).equals(maid.getPersistentData()
+        return maid != null && ContractCarrierData.ensureBindingId(carrier).equals(maid.getPersistentData()
                 .getString(com.maidweapon.forge.compat.TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID)) ? maid : null;
     }
     private static boolean owned(Player owner, ItemStack carrier) {
         return !ContractTransferSafetyService.isProjectionPhantom(carrier)
-                && MaidInfusion.isInfused(carrier) && MaidWeaponItem.isOwner(carrier, owner);
+                && MaidInfusion.isInfused(carrier) && ContractCarrierData.isOwner(carrier, owner);
     }
     private static boolean atHome(Player owner) { return owner.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL); }
     private static long now(Player owner) { return owner.getServer().overworld().getGameTime(); }

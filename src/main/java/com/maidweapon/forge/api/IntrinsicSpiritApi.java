@@ -1,7 +1,11 @@
 package com.maidweapon.forge.api;
 
+import static com.maidweapon.forge.system.contract.ContractChannelStorage.*;
+import static com.maidweapon.forge.compat.tlm.IntrinsicSpiritModels.*;
+
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.maidweapon.forge.system.MaidEntityDataCodec;
 import com.maidweapon.common.MaidWeaponConfig;
@@ -11,8 +15,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.Set;
 
 /**
  * Stores addon-defined blade spirits independently from the player's ordinary
@@ -30,33 +32,10 @@ public final class IntrinsicSpiritApi {
     private static final String EXTERNAL = "MaidWeaponExternalContract";
     private static final String PROJECTION = "MaidWeaponIntrinsicProjection";
     private static final String SCHEMA = "MaidWeaponIntrinsicSchema";
+    private static final String DETACHED = "MaidWeaponDetachedIntrinsicSpirits";
     private static final String CONTRACT = "Contract";
     private static final String SPIRIT_ID = "SpiritId";
     private static final String DISPLAY_NAME = "DisplayName";
-    private static final Set<String> CONTRACT_KEYS = Set.of(
-            "MaidData",
-            MaidEntityDataCodec.LEGACY_DATA,
-            MaidEntityDataCodec.COMPRESSED_DATA,
-            MaidEntityDataCodec.FORMAT,
-            MaidEntityDataCodec.UNCOMPRESSED_SIZE,
-            MaidEntityDataCodec.CHECKSUM,
-            "MaidUUID",
-            "MaidBindingId",
-            "MaidContractSuperseded",
-            "OwnerUUID",
-            "OwnerName",
-            "MaidInfusionOriginalTask",
-            "MaidInfusionOriginalSchedule",
-            "MaidDeploymentLocation",
-            "MaidDeploymentRecoveryFailed",
-            "MaidInfusionMagicTaskFailure",
-            "MaidInfusionSlashBladeTaskFailure",
-            "MaidInfusionTaczTaskFailure",
-            "MaidInfusionTaczAmmoLinkFailure",
-            EmbeddedSpiritApi.TAG_SPIRIT_ID,
-            EmbeddedSpiritApi.TAG_SPIRIT_NAME,
-            EmbeddedSpiritApi.TAG_DORMANT);
-
     /** Creates or safely migrates an intrinsic spirit without activating it. */
     public static boolean ensureIntrinsicSpirit(
             Player owner,
@@ -64,6 +43,7 @@ public final class IntrinsicSpiritApi {
             String spiritId,
             String displayName) {
         if (!valid(owner, weapon, spiritId)) return false;
+        if (weapon.hasTag() && weapon.getTag().getCompound(DETACHED).getBoolean(spiritId)) return false;
         migrateProjectedAuthority(weapon);
         if (hasIntrinsicSpirit(weapon, spiritId)) return true;
         CompoundTag existingRoot = weapon.getTag();
@@ -196,7 +176,7 @@ public final class IntrinsicSpiritApi {
         CompoundTag root = weapon.getOrCreateTag();
         boolean active = spiritId.equals(projection(weapon));
         if (active) {
-            if (MaidWeaponItem.hasMaidEntityData(weapon)
+            if (ContractCarrierData.hasMaidEntityData(weapon)
                     && !setStoredModel(root, modelId)) return false;
         } else {
             CompoundTag spirits = root.getCompound(ROOT);
@@ -209,7 +189,7 @@ public final class IntrinsicSpiritApi {
         }
 
         if (active) {
-            String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
+            String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
             Entity manifested = maidId == null || maidId.isBlank()
                     ? null
                     : InfusedMaidDeploymentSystem.findManifestedMaid(owner, maidId);
@@ -256,9 +236,9 @@ public final class IntrinsicSpiritApi {
         // MaidEntityData. Inspect the live entity first: recalling merely to
         // discover its model would cause callers that synchronize every tick
         // to alternate forever between recall and deployment.
-        if (MaidWeaponItem.hasMaidData(weapon)
-                && !MaidWeaponItem.hasMaidEntityData(weapon)) {
-            String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
+        if (ContractCarrierData.hasMaidData(weapon)
+                && !ContractCarrierData.hasMaidEntityData(weapon)) {
+            String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
             Entity manifested = maidId == null || maidId.isBlank()
                     ? null
                     : InfusedMaidDeploymentSystem.findManifestedMaid(owner, maidId);
@@ -277,6 +257,88 @@ public final class IntrinsicSpiritApi {
     public static boolean hasActiveProjection(ItemStack weapon) {
         migrateProjectedAuthority(weapon);
         return !projection(weapon).isEmpty();
+    }
+
+    /** Recall first, in the owner's dimension and within the ordinary 32-block range. */
+    public static boolean prepareSpiritTransfer(Player owner, ItemStack weapon, String spiritId) {
+        if (!valid(owner, weapon, spiritId)) return false;
+        CompoundTag contract = transferContract(weapon, spiritId);
+        if (contract.isEmpty()) return !hasIntrinsicSpirit(weapon, spiritId)
+                && !EmbeddedSpiritApi.isSpirit(weapon, spiritId)
+                && (!weapon.hasTag() || !weapon.getTag().getCompound(ROOT).contains(spiritId));
+        if (!validContract(contract) || !contract.hasUUID("OwnerUUID")
+                || !contract.getUUID("OwnerUUID").equals(owner.getUUID())) return false;
+        Entity maid = InfusedMaidDeploymentSystem.findManifestedMaid(owner, contract.getString("MaidUUID"));
+        if (maid != null) {
+            if (!maid.level().dimension().equals(owner.level().dimension())
+                    || maid.distanceToSqr(owner) > 32 * 32
+                    || !spiritId.equals(projection(weapon))
+                    && !EmbeddedSpiritApi.isSpirit(weapon, spiritId)) return false;
+            if (!InfusedMaidDeploymentSystem.forceRecall(owner, maid.getStringUUID(), 0)) return false;
+            contract = transferContract(weapon, spiritId);
+        }
+        if (!MaidEntityDataCodec.hasData(contract)) return false;
+        try { return MaidEntityDataCodec.read(contract) != null; }
+        catch (java.io.IOException failure) { return false; }
+    }
+
+    /** Operates on a prepared stack copy, never on a live entity or unrelated channel. */
+    public static CompoundTag detachStoredSpirit(ItemStack weapon, String spiritId) {
+        CompoundTag contract = transferContract(weapon, spiritId).copy();
+        if (!contract.isEmpty() && (!validContract(contract) || !MaidEntityDataCodec.hasData(contract))) return null;
+        if (!contract.isEmpty()) {
+            try { MaidEntityDataCodec.read(contract); }
+            catch (java.io.IOException failure) { return null; }
+        }
+        boolean projected = spiritId.equals(projection(weapon))
+                || EmbeddedSpiritApi.isSpirit(weapon, spiritId);
+        CompoundTag root = weapon.getOrCreateTag();
+        if (projected) {
+            clearContract(weapon);
+            root.remove(PROJECTION);
+        }
+        CompoundTag spirits = root.getCompound(ROOT);
+        spirits.remove(spiritId);
+        if (spirits.isEmpty()) root.remove(ROOT); else root.put(ROOT, spirits);
+        if (projected) restoreExternalArchive(weapon);
+        CompoundTag detached = root.getCompound(DETACHED);
+        detached.putBoolean(spiritId, true);
+        root.put(DETACHED, detached);
+        return contract;
+    }
+
+    /** Restore the exact spirit contract, including its binding/home identity. */
+    public static boolean attachStoredSpirit(ItemStack weapon, String spiritId, CompoundTag contract) {
+        if (weapon.isEmpty() || !validContract(contract) || !MaidEntityDataCodec.hasData(contract)
+                || ContractCarrierData.hasMaidData(weapon) || hasActiveProjection(weapon)
+                || ContractCarrierData.hasMaidEntityData(weapon)
+                || weapon.hasTag() && (weapon.getTag().contains(ROOT) || weapon.getTag().contains(EXTERNAL))) return false;
+        try { MaidEntityDataCodec.read(contract); }
+        catch (java.io.IOException failure) { return false; }
+        String name = contract.getString(EmbeddedSpiritApi.TAG_SPIRIT_NAME);
+        storeIntrinsic(weapon, spiritId, name.isBlank() ? spiritId : name, contract);
+        restoreContract(weapon, contract);
+        removeArchivedContract(weapon, spiritId);
+        CompoundTag root = weapon.getOrCreateTag();
+        root.putString(PROJECTION, spiritId);
+        CompoundTag detached = root.getCompound(DETACHED);
+        detached.remove(spiritId);
+        if (detached.isEmpty()) root.remove(DETACHED); else root.put(DETACHED, detached);
+        return true;
+    }
+
+    private static CompoundTag transferContract(ItemStack weapon, String spiritId) {
+        return spiritId.equals(projection(weapon)) || EmbeddedSpiritApi.isSpirit(weapon, spiritId)
+                ? captureContract(weapon) : intrinsicContract(weapon, spiritId);
+    }
+
+    /** A legitimately imported narrative identity may initialize after returning to an empty former carrier. */
+    public static void allowTransferredSpiritInitialization(ItemStack weapon, String spiritId) {
+        if (!weapon.hasTag()) return;
+        CompoundTag detached = weapon.getTag().getCompound(DETACHED);
+        detached.remove(spiritId);
+        if (detached.isEmpty()) weapon.getTag().remove(DETACHED);
+        else weapon.getTag().put(DETACHED, detached);
     }
 
     /** Explicit migration hook for addons that inspect stored weapons during world load. */
@@ -311,16 +373,16 @@ public final class IntrinsicSpiritApi {
     private static boolean ensureGenericContractStored(
             Player owner,
             ItemStack weapon) {
-        if (!MaidWeaponItem.hasMaidData(weapon)
-                || MaidWeaponItem.hasMaidEntityData(weapon)) {
+        if (!ContractCarrierData.hasMaidData(weapon)
+                || ContractCarrierData.hasMaidEntityData(weapon)) {
             return true;
         }
-        String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
+        String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
         if (maidId == null || maidId.isBlank()) return false;
         Entity manifested = InfusedMaidDeploymentSystem.findManifestedMaid(owner, maidId);
         if (manifested == null) return false;
         return InfusedMaidDeploymentSystem.forceRecall(owner, maidId, 0)
-                && MaidWeaponItem.hasMaidEntityData(weapon);
+                && ContractCarrierData.hasMaidEntityData(weapon);
     }
 
     private static void restoreExternalArchive(ItemStack weapon) {
@@ -408,115 +470,6 @@ public final class IntrinsicSpiritApi {
     private static String projection(ItemStack weapon) {
         CompoundTag tag = weapon.getTag();
         return tag == null ? "" : tag.getString(PROJECTION);
-    }
-
-    private static CompoundTag captureContract(ItemStack weapon) {
-        CompoundTag result = new CompoundTag();
-        CompoundTag root = weapon.getTag();
-        if (root == null) return result;
-        for (String key : new ArrayList<>(root.getAllKeys())) {
-            if (!isContractKey(key)) continue;
-            Tag value = root.get(key);
-            if (value != null) result.put(key, value.copy());
-        }
-        return result;
-    }
-
-    private static void restoreContract(ItemStack weapon, CompoundTag contract) {
-        clearContract(weapon);
-        if (contract == null || contract.isEmpty()) return;
-        CompoundTag root = weapon.getOrCreateTag();
-        for (String key : contract.getAllKeys()) {
-            Tag value = contract.get(key);
-            if (value != null && isContractKey(key)) root.put(key, value.copy());
-        }
-    }
-
-    private static void clearContract(ItemStack weapon) {
-        CompoundTag root = weapon.getTag();
-        if (root == null) return;
-        for (String key : new ArrayList<>(root.getAllKeys())) {
-            if (isContractKey(key)) root.remove(key);
-        }
-    }
-
-    private static boolean isContractKey(String key) {
-        return CONTRACT_KEYS.contains(key);
-    }
-
-    private static boolean validContract(CompoundTag contract) {
-        return contract != null
-                && contract.contains("MaidData", Tag.TAG_COMPOUND)
-                && contract.contains("MaidUUID", Tag.TAG_STRING)
-                && contract.contains("MaidBindingId", Tag.TAG_STRING);
-    }
-
-    private static boolean usableContract(CompoundTag contract) {
-        if (!validContract(contract) || !MaidEntityDataCodec.hasData(contract)) {
-            return validContract(contract);
-        }
-        try {
-            MaidEntityDataCodec.read(contract);
-            return true;
-        } catch (java.io.IOException ignored) {
-            return false;
-        }
-    }
-
-    private static boolean setStoredModel(CompoundTag contract, String modelId) {
-        return validContract(contract) && MaidEntityDataCodec.update(
-                contract, entityData -> entityData.putString("ModelId", modelId));
-    }
-
-    private static boolean clearStoredModelIfEquals(
-            CompoundTag contract,
-            String obsoleteModelId) {
-        if (!validContract(contract) || !MaidEntityDataCodec.hasData(contract)) return false;
-        final boolean[] changed = {false};
-        boolean updated = MaidEntityDataCodec.update(contract, entityData -> {
-            if (obsoleteModelId.equals(entityData.getString("ModelId"))) {
-                entityData.remove("ModelId");
-                changed[0] = true;
-            }
-        });
-        return updated && changed[0];
-    }
-
-    private static boolean clearProjectedModelIfEquals(
-            CompoundTag root,
-            String obsoleteModelId) {
-        if (!MaidEntityDataCodec.hasData(root)) return false;
-        final boolean[] changed = {false};
-        boolean updated = MaidEntityDataCodec.update(root, entityData -> {
-            if (obsoleteModelId.equals(entityData.getString("ModelId"))) {
-                entityData.remove("ModelId");
-                changed[0] = true;
-            }
-        });
-        return updated && changed[0];
-    }
-
-    private static boolean manifestedUsesModel(
-            Entity maid,
-            String modelId) {
-        try {
-            Object current = maid.getClass().getMethod("getModelId").invoke(maid);
-            return modelId.equals(current);
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            // Unknown TLM versions must never trigger a speculative recall.
-            return false;
-        }
-    }
-
-    private static void setManifestedModel(Entity maid, String modelId) {
-        try {
-            Object current = maid.getClass().getMethod("getModelId").invoke(maid);
-            if (modelId.equals(current)) return;
-            maid.getClass().getMethod("setModelId", String.class)
-                    .invoke(maid, modelId);
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
-            // Stored NBT remains authoritative and applies on the next deploy.
-        }
     }
 
     private static boolean valid(Player owner, ItemStack weapon, String spiritId) {

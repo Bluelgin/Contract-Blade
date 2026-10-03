@@ -1,10 +1,11 @@
 package com.maidweapon.forge.system;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -154,8 +155,8 @@ public final class MaidAttentionSystem {
 
     private static boolean isStoredOwnedContract(Player player, ItemStack weapon) {
         return MaidInfusion.containsMaid(weapon)
-                && MaidWeaponItem.isOwner(weapon, player)
-                && !MaidWeaponItem.isContractSuperseded(weapon);
+                && ContractCarrierData.isOwner(weapon, player)
+                && !ContractCarrierData.isContractSuperseded(weapon);
     }
 
     private static void markCombat(Player player) {

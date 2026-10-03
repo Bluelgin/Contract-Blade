@@ -1,9 +1,10 @@
 package com.maidweapon.forge.system.contract;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -36,11 +37,12 @@ public final class ContractLifecycleService {
         if (player == null || maid == null || contract.isEmpty()
                 || !MaidInfusion.isWeapon(contract)
                 || !TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()
-                || !TouhouLittleMaidCompat.isMaidEntity(maid)) {
+                || !TouhouLittleMaidCompat.isMaidEntity(maid)
+                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, contract)) {
             return false;
         }
-        if (MaidWeaponItem.hasMaidData(contract)
-                && !MaidWeaponItem.isOwner(contract, player)) {
+        if (ContractCarrierData.hasMaidData(contract)
+                && !ContractCarrierData.isOwner(contract, player)) {
             return false;
         }
         return TouhouLittleMaidHelper.convertMaidToWeapon(
@@ -63,8 +65,9 @@ public final class ContractLifecycleService {
                                    java.util.function.Consumer<Entity> beforeSpawn) {
         if (player == null || contract.isEmpty()
                 || !MaidInfusion.isInfused(contract)
-                || !MaidWeaponItem.isOwner(contract, player)
-                || MaidWeaponItem.isContractSuperseded(contract)) {
+                || !ContractCarrierData.isOwner(contract, player)
+                || ContractCarrierData.isContractSuperseded(contract)
+                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, contract)) {
             return false;
         }
         return TouhouLittleMaidHelper.convertWeaponToMaid(
@@ -86,10 +89,10 @@ public final class ContractLifecycleService {
         if (player == null || contract.isEmpty() || !MaidInfusion.isInfused(contract)) {
             return ToggleResult.NOT_CONTRACT;
         }
-        if (!MaidWeaponItem.isOwner(contract, player)) {
+        if (!ContractCarrierData.isOwner(contract, player)) {
             return ToggleResult.NOT_OWNER;
         }
-        if (MaidWeaponItem.isContractSuperseded(contract)) {
+        if (ContractCarrierData.isContractSuperseded(contract)) {
             return ToggleResult.SUPERSEDED;
         }
 
@@ -99,7 +102,7 @@ public final class ContractLifecycleService {
                     : ToggleResult.FAILED;
         }
 
-        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        String maidId = ContractCarrierData.getBoundMaidUUID(contract);
         Entity maid = maidId == null || maidId.isEmpty()
                 ? null
                 : ContractWeaponLocator.findManifestedMaid(player, maidId);

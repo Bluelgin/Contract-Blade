@@ -28,6 +28,9 @@ public final class MaidWeaponMod {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public MaidWeaponMod() {
+        com.maidweapon.forge.api.ContractAuthorization.register("maid_weapon:fox_spirit",
+                com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
+        com.maidweapon.forge.compat.fox.FoxModelPackBootstrap.install();
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
@@ -37,6 +40,7 @@ public final class MaidWeaponMod {
         ModMenus.MENUS.register(modBus);
         ModRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
         ModCreativeTab.TABS.register(modBus);
+        com.maidweapon.forge.worldgen.ShrineWorldgen.register(modBus);
         com.maidweapon.forge.network.ContractCompanionNetwork.register();
         TaczCompat.bootstrap(modBus);
 

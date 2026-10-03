@@ -1,8 +1,9 @@
 package com.maidweapon.forge.system.deployment;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -23,8 +24,8 @@ public final class ContractWeaponLocator {
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (!deployedBinding.isEmpty()
-                    && deployedBinding.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-            if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack))) {
+                    && deployedBinding.equals(ContractCarrierData.getBindingId(stack))) return stack;
+            if (maidId.equals(ContractCarrierData.getBoundMaidUUID(stack))) {
                 uuidCandidate = stack;
                 uuidMatches++;
             }
@@ -32,16 +33,16 @@ public final class ContractWeaponLocator {
 
         ItemStack offhand = player.getOffhandItem();
         if (!deployedBinding.isEmpty()
-                && deployedBinding.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
-        if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(offhand)) && offhand != uuidCandidate) {
+                && deployedBinding.equals(ContractCarrierData.getBindingId(offhand))) return offhand;
+        if (maidId.equals(ContractCarrierData.getBoundMaidUUID(offhand)) && offhand != uuidCandidate) {
             uuidCandidate = offhand;
             uuidMatches++;
         }
 
         ItemStack carried = player.containerMenu.getCarried();
         if (!deployedBinding.isEmpty()
-                && deployedBinding.equals(MaidWeaponItem.getBindingId(carried))) return carried;
-        if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(carried)) && carried != uuidCandidate) {
+                && deployedBinding.equals(ContractCarrierData.getBindingId(carried))) return carried;
+        if (maidId.equals(ContractCarrierData.getBoundMaidUUID(carried)) && carried != uuidCandidate) {
             uuidCandidate = carried;
             uuidMatches++;
         }
@@ -49,8 +50,8 @@ public final class ContractWeaponLocator {
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
             ItemStack stack = slot.getItem();
             if (!deployedBinding.isEmpty()
-                    && deployedBinding.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-            if (maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack)) && stack != uuidCandidate) {
+                    && deployedBinding.equals(ContractCarrierData.getBindingId(stack))) return stack;
+            if (maidId.equals(ContractCarrierData.getBoundMaidUUID(stack)) && stack != uuidCandidate) {
                 uuidCandidate = stack;
                 uuidMatches++;
             }
@@ -73,8 +74,8 @@ public final class ContractWeaponLocator {
     }
 
     public static boolean hasDeployedMaid(Player player, ItemStack weapon) {
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return false;
-        String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return false;
+        String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
         return maidId != null && !maidId.isEmpty()
                 && findManifestedMaid(player, maidId) != null;
     }

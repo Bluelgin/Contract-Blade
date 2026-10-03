@@ -73,6 +73,7 @@ public class MaidWeaponConfig {
     public static ForgeConfigSpec.IntValue RESONANCE_HUD_OFFSET_Y;
 
     public static final ForgeConfigSpec SPEC;
+    public static ForgeConfigSpec.IntValue SHRINE_WHITE_FOX_KILLS;
     static {
         Pair<MaidWeaponConfig, ForgeConfigSpec> pair =
                 new ForgeConfigSpec.Builder().configure(MaidWeaponConfig::new);
@@ -80,6 +81,11 @@ public class MaidWeaponConfig {
     }
 
     private MaidWeaponConfig(ForgeConfigSpec.Builder builder) {
+        builder.push("ShinkitsuShrine");
+        SHRINE_WHITE_FOX_KILLS = builder
+                .comment("Total kill count on carried SlashBlades required before offering one cake to White Fox")
+                .defineInRange("whiteFoxRequiredKills", 520, 0, Integer.MAX_VALUE);
+        builder.pop();
         builder.push("ContractResonance");
 
         RESONANCE_COMBAT_DRAIN_INTERVAL = builder

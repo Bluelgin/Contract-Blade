@@ -1,7 +1,8 @@
 package com.maidweapon.forge.compat;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -198,11 +199,11 @@ public final class TripleMagicCompat {
     }
 
     private static boolean pay(Player owner, ItemStack weapon, int resonanceCost) {
-        if (MaidInfusion.isInfused(weapon) && MaidWeaponItem.isOwner(weapon, owner)) {
+        if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, owner)) {
             var data = MaidInfusion.data(weapon);
             if (data.getResonance() >= resonanceCost) {
                 data.reduceResonance(resonanceCost);
-                MaidWeaponItem.setMaidData(weapon, data);
+                ContractCarrierData.setMaidData(weapon, data);
                 return true;
             }
         }
@@ -210,12 +211,12 @@ public final class TripleMagicCompat {
     }
 
     public static ItemStack createProjection(ItemStack original, Player owner) {
-        String binding = MaidWeaponItem.getBindingId(original);
+        String binding = ContractCarrierData.getBindingId(original);
         ItemStack copy = original.copy();
         copy.setCount(1);
         // A combat projection must never carry a second serialized maid or a
         // second usable contract. Weapon-native NBT/capabilities remain intact.
-        MaidWeaponItem.clearMaidContract(copy);
+        ContractCarrierData.clearMaidContract(copy);
         com.maidweapon.forge.system.deployment.ContractCompanionState.clear(copy);
         copy.getOrCreateTag().remove("MaidInfusionMagicTaskFailure");
         copy.getOrCreateTag().remove("MaidInfusionSlashBladeTaskFailure");

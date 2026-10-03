@@ -1,12 +1,15 @@
 package com.maidweapon.forge.menu;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.api.IntrinsicSpiritApi;
 import com.maidweapon.forge.init.ModBlocks;
 import com.maidweapon.forge.init.ModMenus;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
+import com.maidweapon.forge.system.fox.FoxSpiritState;
+import com.maidweapon.forge.system.fox.FoxSpiritTransferService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
@@ -39,7 +42,8 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
         addSlot(new Slot(slotsContainer, 1, 71, 35) {
             @Override public boolean mayPlace(ItemStack stack) {
                 return TouhouLittleMaidHelper.isFilledMaidFilm(stack)
-                        || TouhouLittleMaidHelper.isEmptyMaidFilm(stack);
+                        || TouhouLittleMaidHelper.isEmptyMaidFilm(stack)
+                        || FoxSpiritState.isSeal(stack) && FoxSpiritTransferService.isSoulItem(stack);
             }
             @Override public int getMaxStackSize() { return 1; }
         });
@@ -61,13 +65,17 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
 
     public boolean canInject() {
         ItemStack weapon = slotsContainer.getItem(0);
+        if (FoxSpiritTransferService.handles(weapon, slotsContainer.getItem(1))) {
+            return FoxSpiritTransferService.canTransfer(player, weapon, slotsContainer.getItem(1))
+                    && slotsContainer.getItem(2).isEmpty() && slotsContainer.getItem(3).isEmpty();
+        }
         if (IntrinsicSpiritApi.hasActiveProjection(weapon)) return false;
         ItemStack film = slotsContainer.getItem(1);
         boolean forward = MaidInfusion.isWeapon(weapon) && !MaidInfusion.isInfused(weapon)
                 && TouhouLittleMaidHelper.isFilledMaidFilm(film);
         boolean reverse = MaidInfusion.containsMaid(weapon)
                 && TouhouLittleMaidHelper.isEmptyMaidFilm(film)
-                && MaidWeaponItem.isOwner(weapon, player);
+                && ContractCarrierData.isOwner(weapon, player);
         return (forward || reverse)
                 && slotsContainer.getItem(2).isEmpty() && slotsContainer.getItem(3).isEmpty();
     }
@@ -78,16 +86,39 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
                 && TouhouLittleMaidHelper.isEmptyMaidFilm(slotsContainer.getItem(1));
     }
 
+    public boolean isFoxTransfer() {
+        return FoxSpiritTransferService.handles(slotsContainer.getItem(0), slotsContainer.getItem(1));
+    }
+
+    public boolean isFoxExtracting() {
+        return FoxSpiritState.hasResident(slotsContainer.getItem(0))
+                && !FoxSpiritState.isSeal(slotsContainer.getItem(1));
+    }
+
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (id != INJECT_BUTTON || player.level().isClientSide || !canInject()) return false;
         ItemStack weapon = slotsContainer.getItem(0);
         ItemStack film = slotsContainer.getItem(1);
+        if (isFoxTransfer()) {
+            var result = FoxSpiritTransferService.transfer((net.minecraft.server.level.ServerPlayer) player, weapon, film);
+            if (result == null) {
+                player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                        "maid_weapon.fox.transfer.unavailable"), true);
+                return false;
+            }
+            slotsContainer.setItem(2, result.weapon());
+            slotsContainer.setItem(3, result.seal());
+            slotsContainer.setItem(0, ItemStack.EMPTY);
+            slotsContainer.setItem(1, ItemStack.EMPTY);
+            broadcastChanges();
+            return true;
+        }
         if (isExtracting()) {
             ItemStack filledFilm = ContractLifecycleService.extractToFilm(player, weapon, film);
             if (filledFilm.isEmpty()) return false;
             ItemStack cleanWeapon = weapon.copy();
-            MaidWeaponItem.clearMaidContract(cleanWeapon);
+            ContractCarrierData.clearMaidContract(cleanWeapon);
             slotsContainer.setItem(2, cleanWeapon);
             slotsContainer.setItem(3, filledFilm);
             slotsContainer.setItem(0, ItemStack.EMPTY);
@@ -119,7 +150,8 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
         } else if (MaidInfusion.isWeapon(source)) {
             if (!moveItemStackTo(source, 0, 1, false)) return ItemStack.EMPTY;
         } else if (TouhouLittleMaidHelper.isFilledMaidFilm(source)
-                || TouhouLittleMaidHelper.isEmptyMaidFilm(source)) {
+                || TouhouLittleMaidHelper.isEmptyMaidFilm(source)
+                || FoxSpiritState.isSeal(source) && FoxSpiritTransferService.isSoulItem(source)) {
             if (!moveItemStackTo(source, 1, 2, false)) return ItemStack.EMPTY;
         } else {
             return ItemStack.EMPTY;

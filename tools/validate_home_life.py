@@ -26,10 +26,14 @@ for path in HOME.glob('*.java'):
         assert forbidden not in source, f'{path}: unexpected authority/loading API {forbidden}'
 assert 'getChunkNow' in registry and 'getChunk(' not in registry.replace('getChunk(),', '')
 assert 'getBlockEntities()' in registry and 'MAX_BLOCK_ENTITIES' in registry
-assert 'DECISION_INTERVAL = 600' in runtime and 'PATH_TIMEOUT = 400' in runtime
+assert 'SNAPSHOT_INTERVAL = 100' in runtime
+for removed in ('private static void resolve(', 'private static boolean approach(',
+                'private static void fail(', 'new WalkTarget(', 'nextMovement', 'nativeRequested'):
+    assert removed not in runtime, f'legacy online control returned: {removed}'
+assert 'installHomeBrain' not in behavior and 'new Activity("contract_blade_home")' not in behavior
 assert 'getChunkNow(origin.getX() >> 4, origin.getZ() >> 4)' in runtime
 assert 'resident maid plot escape' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
-assert 's.failed.add' in runtime and 'adapter.valid' in runtime
+assert 'entry.adapter().valid' in runtime
 assert 'new TlmHomeBoardGameAdapter()' in registry
 assert 'new TlmHomeJoyAdapter()' in registry
 assert 'new TlmHomePicnicAdapter()' in registry
@@ -40,10 +44,11 @@ for block_id in ('bookshelf', 'computer', 'keyboard'):
     assert block_id in joy
 assert 'holdManagedSeat' in behavior and 'shouldKeepManagedSeat' in behavior
 assert 'maid.hurtTime <= 0' in behavior and 'maid.getAirSupply() >= 200' in behavior
-assert 'managed seat yields immediately to emergency behavior' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
+assert 'usesCustomClock(maid)' in behavior, 'default native seats must not be forcibly retained'
 assert 'onManagedSeatDismount' in events and 'EntityMountEvent' in events
 assert 'public static boolean restore(Mob maid)' in behavior
-assert 'beginBoardGame' in behavior and 'touhou_little_maid:board_games' in behavior
+assert 'beginBoardGame' not in behavior, 'online board-game task hijacking must remain removed'
+assert 'public boolean start(' not in board and 'public boolean start(' not in picnic
 for block_id in ('gomoku', 'cchess', 'wchess'):
     assert block_id in board
 terrain = (JAVA / 'system/interior/ContractInteriorTerrainBuilder.java').read_text()
@@ -101,20 +106,24 @@ assert 'ContractHomeRuntime.startOnVisit' in service and 'session.arrivalAt' in 
 assert 'ContractHomeClock.skyTime' in events and 'ClientboundSetTimePacket' in events
 assert 'setDayTime(' not in events, 'home clock must not mutate other players\' shared world clock'
 assert 'ContractInteriorGuideVersion' in guide and 'write(existing)' in guide
-assert 'if (arrival) prepareArrival(session, player)' in runtime
+assert 'else if (arrival)' in runtime and 'prepareArrival(session, player)' in runtime
 assert 'enableNativeLiving' in behavior and 'refreshBrain' in behavior
-assert 'Never run the custom online activity resolver after handoff' in runtime
+assert 'Observation only: TLM owns walking' in runtime
 assert 'syncNativeClock' in behavior and 'ScheduleBuilder' in behavior
+assert 'if (s.state.mode != ContractHomeClock.Mode.MINECRAFT_TIME)' in runtime
+assert 's.customNight == null || s.customNight != night' in runtime
+assert 'Keep the actual native seat/sleep pose' in runtime
+assert 'default native schedule retains night' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 assert 'Anchor native home range to the restored resident' in runtime
 assert 'attempts++ < 4' in runtime and 'level.noCollision(s.maid, box)' in runtime
-assert 'ContractHomeArrivalPlanner.preference(s.maid.getUUID())' in runtime
+assert 'ContractHomeArrivalPlanner.choose' in runtime
 assert 'restored' in service and 'plot, !resumeInteriorMaid)' in service
 assert 'DepartedAt' in (HOME / 'ContractHomeOfflineState.java').read_text()
 assert 'arrival never steals an occupied chair' in (JAVA / 'compat/tlm/ContractHomeValidation.java').read_text()
 # Contract runtime settings are temporary and must not leak into copied/cleared contracts.
 runtime_service = (JAVA / 'system/deployment/ContractMaidRuntimeService.java').read_text()
-weapon_item = (JAVA / 'item/MaidWeaponItem.java').read_text()
-intrinsic = (JAVA / 'api/IntrinsicSpiritApi.java').read_text()
+weapon_item = (JAVA / 'system/contract/ContractCarrierData.java').read_text()
+intrinsic = (JAVA / 'system/contract/ContractChannelStorage.java').read_text()
 prepare_body = runtime_service.split('public static ContractProjectionMode prepare', 1)[1]
 assert prepare_body.index('ContractWorkPolicy.prepare(weapon, maid, mode)') < prepare_body.index('setAllDaySchedule(maid)')
 assert 'MaidInfusionOriginalSchedule' in weapon_item

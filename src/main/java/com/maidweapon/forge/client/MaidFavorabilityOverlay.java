@@ -1,9 +1,10 @@
 package com.maidweapon.forge.client;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
@@ -33,10 +34,10 @@ public final class MaidFavorabilityOverlay {
                 || minecraft.options.hideGui) return;
 
         ItemStack weapon = minecraft.player.getMainHandItem();
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, minecraft.player)) {
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, minecraft.player)) {
             weapon = minecraft.player.getOffhandItem();
         }
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, minecraft.player)) return;
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, minecraft.player)) return;
 
         MaidWeaponData data = MaidInfusion.data(weapon);
         int width = 81;

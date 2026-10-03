@@ -1,12 +1,13 @@
 package com.maidweapon.forge.system;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.mojang.logging.LogUtils;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractRecoveryService;
@@ -84,13 +85,13 @@ public final class InfusedMaidDeploymentSystem {
         if (player.level().isClientSide) return;
         ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
         ItemStack destroyed = event.getOriginal();
-        if (MaidInfusion.isInfused(destroyed) && MaidWeaponItem.isOwner(destroyed, player)
+        if (MaidInfusion.isInfused(destroyed) && ContractCarrierData.isOwner(destroyed, player)
                 && !MaidInfusion.containsMaid(destroyed)) {
-            active = new ActiveDeployment(MaidWeaponItem.getBoundMaidUUID(destroyed), MaidWeaponItem.getBindingId(destroyed));
+            active = new ActiveDeployment(ContractCarrierData.getBoundMaidUUID(destroyed), ContractCarrierData.getBindingId(destroyed));
         }
         if (active == null || destroyed.isEmpty()
-                || !active.maidId().equals(MaidWeaponItem.getBoundMaidUUID(destroyed))
-                || !active.bindingId().equals(MaidWeaponItem.getBindingId(destroyed))) return;
+                || !active.maidId().equals(ContractCarrierData.getBoundMaidUUID(destroyed))
+                || !active.bindingId().equals(ContractCarrierData.getBindingId(destroyed))) return;
 
         ACTIVE_CARRIERS.put(player.getUUID(), destroyed.copy());
         emergencyFilmRecovery(player, active, destroyed);
@@ -141,11 +142,11 @@ public final class InfusedMaidDeploymentSystem {
         Player player = event.getPlayer();
         if (player.level().isClientSide) return;
         ItemStack weapon = event.getEntity().getItem();
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return;
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
 
         ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
-        String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
-        String bindingId = MaidWeaponItem.getBindingId(weapon);
+        String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
+        String bindingId = ContractCarrierData.getBindingId(weapon);
         if (active == null || maidId == null || bindingId == null
                 || !active.maidId().equals(maidId)
                 || !active.bindingId().equals(bindingId)) return;
@@ -200,7 +201,7 @@ public final class InfusedMaidDeploymentSystem {
             if (ContractTransferSafetyService.isProjectionPhantom(stack)) continue;
             if (!hasDeployedMaid(player, stack)) continue;
             if (ContractCompanionService.isResident(player, stack)) continue;
-            String maidId = MaidWeaponItem.getBoundMaidUUID(stack);
+            String maidId = ContractCarrierData.getBoundMaidUUID(stack);
             if (maidId != null) forceRecall(player, maidId, 0);
         }
         // Merely closing a maid/Curios/inventory page is not a reason for an abrupt
@@ -226,9 +227,9 @@ public final class InfusedMaidDeploymentSystem {
     private static DesiredDeployment desiredDeployment(Player player) {
         ItemStack held = player.getMainHandItem();
         if (!isEligibleWeapon(held, player)) return null;
-        String maidId = MaidWeaponItem.getBoundMaidUUID(held);
+        String maidId = ContractCarrierData.getBoundMaidUUID(held);
         if (maidId == null || maidId.isEmpty()) return null;
-        return new DesiredDeployment(maidId, MaidWeaponItem.ensureBindingId(held));
+        return new DesiredDeployment(maidId, ContractCarrierData.ensureBindingId(held));
     }
 
     private static boolean sameDesired(DesiredDeployment left, DesiredDeployment right) {
@@ -290,14 +291,14 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     public static boolean recallRequested(Player player, ItemStack weapon) {
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return false;
-        String id = MaidWeaponItem.getBoundMaidUUID(weapon);
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return false;
+        String id = ContractCarrierData.getBoundMaidUUID(weapon);
         Entity maid = id == null ? null : findManifestedMaid(player, id);
-        if (maid == null || MaidWeaponItem.isContractSuperseded(weapon)
+        if (maid == null || ContractCarrierData.isContractSuperseded(weapon)
                 || player.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)
                 || maid.level() != player.level()
                 || maid.distanceToSqr(player) > 32.0 * 32.0
-                || !MaidWeaponItem.ensureBindingId(weapon).equals(maid.getPersistentData()
+                || !ContractCarrierData.ensureBindingId(weapon).equals(maid.getPersistentData()
                     .getString(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID))) return false;
         boolean result = recallIntoStack(player, id, weapon);
         if (result) {
@@ -310,7 +311,7 @@ public final class InfusedMaidDeploymentSystem {
 
     public static void maintainCompanion(Player player, ItemStack weapon, Entity maid, boolean resident) {
         if (!resident) {
-            ACTIVE_WEAPONS.put(player.getUUID(), new ActiveDeployment(maid.getStringUUID(), MaidWeaponItem.ensureBindingId(weapon)));
+            ACTIVE_WEAPONS.put(player.getUUID(), new ActiveDeployment(maid.getStringUUID(), ContractCarrierData.ensureBindingId(weapon)));
             ACTIVE_CARRIERS.put(player.getUUID(), weapon.copy());
         } else {
             ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
@@ -370,11 +371,11 @@ public final class InfusedMaidDeploymentSystem {
 
     public static boolean isEligibleWeapon(ItemStack stack, Player player) {
         return MaidInfusion.isInfused(stack)
-                && MaidWeaponItem.isOwner(stack, player)
-                && !MaidWeaponItem.isContractSuperseded(stack)
+                && ContractCarrierData.isOwner(stack, player)
+                && !ContractCarrierData.isContractSuperseded(stack)
                 && !EmbeddedSpiritApi.isDormant(stack)
                 && MaidInfusion.data(stack).getResonance() > 0
-                && !isCoolingDown(player, MaidWeaponItem.getBoundMaidUUID(stack));
+                && !isCoolingDown(player, ContractCarrierData.getBoundMaidUUID(stack));
     }
     public static boolean forceRecall(Player player, String maidId, int cooldownTicks) {
         clearTransitions(player);

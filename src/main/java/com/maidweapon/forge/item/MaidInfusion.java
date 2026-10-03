@@ -1,5 +1,7 @@
 package com.maidweapon.forge.item;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.data.MaidWeaponData;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -27,11 +29,11 @@ public final class MaidInfusion {
     }
 
     public static boolean isInfused(ItemStack stack) {
-        return isWeapon(stack) && MaidWeaponItem.hasMaidData(stack);
+        return isWeapon(stack) && ContractCarrierData.hasMaidData(stack);
     }
 
     public static boolean containsMaid(ItemStack stack) {
-        return isInfused(stack) && MaidWeaponItem.hasMaidEntityData(stack);
+        return isInfused(stack) && ContractCarrierData.hasMaidEntityData(stack);
     }
 
     public static boolean isContractBlade(ItemStack stack) {
@@ -39,7 +41,7 @@ public final class MaidInfusion {
     }
 
     public static MaidWeaponData data(ItemStack stack) {
-        return MaidWeaponItem.getMaidData(stack);
+        return ContractCarrierData.getMaidData(stack);
     }
 
     /** Generic weapons only gain damage; low favorability can never reduce base damage. */

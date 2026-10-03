@@ -11,27 +11,27 @@ def read(path: str) -> str:
 checks = {
     "combat owner gates": (
         "src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java",
-        "MaidWeaponItem.isOwner",
+        "ContractCarrierData.isOwner",
         5,
     ),
     "contract tooltip owner gate": (
         "src/main/java/com/maidweapon/forge/client/tooltip/ContractTooltipComposer.java",
-        "MaidWeaponItem.isOwner",
+        "ContractCarrierData.isOwner",
         1,
     ),
     "contract interior owner gate": (
         "src/main/java/com/maidweapon/forge/system/interior/ContractInteriorService.java",
-        "MaidWeaponItem.isOwner",
+        "ContractCarrierData.isOwner",
         1,
     ),
     "deployment owner gates": (
         "src/main/java/com/maidweapon/forge/system/InfusedMaidDeploymentSystem.java",
-        "MaidWeaponItem.isOwner",
+        "ContractCarrierData.isOwner",
         3,
     ),
     "binding-table owner gate": (
         "src/main/java/com/maidweapon/forge/menu/MaidInjectorMenu.java",
-        "MaidWeaponItem.isOwner",
+        "ContractCarrierData.isOwner",
         1,
     ),
 }
@@ -54,7 +54,7 @@ commands = read("src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java
 gui_gate = "if (hasMaidData(stack)) return InteractionResult.PASS;"
 if gui_gate not in weapon:
     raise SystemExit("Bound Contract Blade right-click must pass through to TLM/deployment")
-if "ContractInteractionService.capture" not in weapon or "MaidWeaponItem.isOwner" not in interaction:
+if "ContractInteractionService.capture" not in weapon or "ContractCarrierData.isOwner" not in interaction:
     raise SystemExit("Contract interaction authority is not centralized")
 
 if "ContractInteractionService.toggleHeld" in weapon:
@@ -110,7 +110,7 @@ if "instanceof MaidWeaponItem" in commands:
     raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")
 if commands.count("editableContract(source)") < 3:
     raise SystemExit("Level/favorability/resonance commands do not share the generic contract gate")
-if "MaidInfusion.isInfused(stack)" not in commands or "MaidWeaponItem.isOwner(stack, player)" not in commands:
+if "MaidInfusion.isInfused(stack)" not in commands or "ContractCarrierData.isOwner(stack, player)" not in commands:
     raise SystemExit("Debug contract command gate is missing generic contract/owner validation")
 
 if "favorability > 0" in deployment or "getFavorability() <= 0" in deployment:
@@ -215,7 +215,7 @@ if "getProudSoulCount" not in slashblade or "getKillCount" not in slashblade:
     raise SystemExit("SlashBlade ProudSoul and kill progress are not synchronized")
 if "getRefine" not in slashblade or "getDamage" not in slashblade or "isBroken" not in slashblade:
     raise SystemExit("SlashBlade refine, durability, or broken state synchronization is missing")
-if "MaidWeaponItem.clearMaidContract(copy)" not in magic:
+if "ContractCarrierData.clearMaidContract(copy)" not in magic:
     raise SystemExit("Combat phantoms still carry a second serialized maid contract")
 projection = read("src/main/java/com/maidweapon/forge/compat/ContractEquipmentProjection.java")
 if "SlashBladeCompat.isMatchingPhantom(source, current)" not in projection:

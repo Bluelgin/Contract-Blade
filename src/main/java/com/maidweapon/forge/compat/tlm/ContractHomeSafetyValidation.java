@@ -1,7 +1,8 @@
 package com.maidweapon.forge.compat.tlm;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.init.ModItems;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.maidweapon.forge.system.deployment.ContractMaidRuntimeService;
 import com.maidweapon.forge.system.interior.*;
@@ -26,7 +27,7 @@ public final class ContractHomeSafetyValidation {
                 new com.mojang.authlib.GameProfile(java.util.UUID.fromString("ea9b6090-e546-41d8-8c48-58cd16bfb92d"), "HomeSafetyFixture"));
         player.getInventory().clearContent();
         ItemStack carrier = new ItemStack(ModItems.MAID_SWORD.get());
-        String binding = MaidWeaponItem.ensureBindingId(carrier);
+        String binding = ContractCarrierData.ensureBindingId(carrier);
         var saved = ContractInteriorSavedData.get(level.getServer());
         saved.chooseTerrain(binding, "plains_garden");
         var plot = saved.getOrCreate(binding);

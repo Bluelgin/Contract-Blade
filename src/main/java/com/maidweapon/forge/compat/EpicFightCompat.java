@@ -1,7 +1,8 @@
 package com.maidweapon.forge.compat;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.mojang.logging.LogUtils;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -36,7 +37,7 @@ public final class EpicFightCompat {
 
     private record FightSelection(net.minecraft.world.item.Item item, String binding) {
         static FightSelection of(ItemStack source) {
-            return new FightSelection(source.getItem(), MaidWeaponItem.getBindingId(source));
+            return new FightSelection(source.getItem(), ContractCarrierData.getBindingId(source));
         }
     }
 

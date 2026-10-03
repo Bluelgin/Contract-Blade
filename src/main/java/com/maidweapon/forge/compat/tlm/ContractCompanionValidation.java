@@ -1,5 +1,7 @@
 package com.maidweapon.forge.compat.tlm;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.init.ModItems;
@@ -26,6 +28,7 @@ public final class ContractCompanionValidation {
         if (!Boolean.getBoolean("contractblade.companion.validation")) return;
         try {
             run(event);
+            ContractHandbookValidation.run(event.getServer());
             LogUtils.getLogger().info("[MaidWeapon] COMPANION_VALIDATION_PASS");
         } catch (Throwable error) {
             LogUtils.getLogger().error("[MaidWeapon] COMPANION_VALIDATION_FAIL", error);
@@ -67,7 +70,7 @@ public final class ContractCompanionValidation {
             check(level.getEntity(identity) == maid, "manual companion remains after switching items");
             var data = MaidInfusion.data(carrier);
             data.setResonance(20);
-            com.maidweapon.forge.item.MaidWeaponItem.setMaidData(carrier, data);
+            com.maidweapon.forge.system.contract.ContractCarrierData.setMaidData(carrier, data);
             var ownerTick = new net.minecraftforge.event.TickEvent.PlayerTickEvent(
                     net.minecraftforge.event.TickEvent.Phase.END, owner);
             com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);

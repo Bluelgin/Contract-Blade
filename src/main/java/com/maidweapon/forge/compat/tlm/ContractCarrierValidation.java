@@ -1,5 +1,7 @@
 package com.maidweapon.forge.compat.tlm;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.event.MaidInteractionHandler;
 import com.maidweapon.forge.init.ModItems;
 import com.maidweapon.forge.item.MaidInfusion;
@@ -24,12 +26,12 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 public final class ContractCarrierValidation {
     public static void inventoryClicks(ServerPlayer player, ItemStack contract) {
         check(Boolean.getBoolean("contractblade.home.nativeValidation"), "fixture disabled");
-        String binding = MaidWeaponItem.getBindingId(contract);
+        String binding = ContractCarrierData.getBindingId(contract);
         CompoundTag original = contract.save(new CompoundTag());
 
         // Real server-side PICKUP moves the original inventory stack to the cursor.
         player.inventoryMenu.clicked(36, 0, ClickType.PICKUP, player);
-        check(binding.equals(MaidWeaponItem.getBindingId(player.inventoryMenu.getCarried())),
+        check(binding.equals(ContractCarrierData.getBindingId(player.inventoryMenu.getCarried())),
                 "mouse pickup keeps contract on cursor");
         player.tickCount = 1;
         ContractInteriorEvents.onPlayerTick(new TickEvent.PlayerTickEvent(TickEvent.Phase.END, player));
@@ -68,6 +70,7 @@ public final class ContractCarrierValidation {
         var player = net.minecraftforge.common.util.FakePlayerFactory.get(level,
                 new com.mojang.authlib.GameProfile(
                         java.util.UUID.fromString("32de43a6-4bde-4b7d-8259-e2e45d6f815"), "CarrierFixture"));
+        metadataBoundaries(player);
         player.getInventory().clearContent();
         player.getInventory().selected = 0;
         // Fake players do not create player chunk tickets. Use the already-loaded
@@ -88,22 +91,28 @@ public final class ContractCarrierValidation {
                     "direct binding consumes TLM GUI click");
             check(MaidInfusion.containsMaid(weapon) && maid.isRemoved(),
                     "dedicated blade binds directly without Contract Table");
-            check(MaidWeaponItem.isOwner(weapon, player)
-                    && maidId.toString().equals(MaidWeaponItem.getBoundMaidUUID(weapon)),
+            check(ContractCarrierData.isOwner(weapon, player)
+                    && maidId.toString().equals(ContractCarrierData.getBoundMaidUUID(weapon)),
                     "direct binding preserves owner and real maid identity");
-            String binding = MaidWeaponItem.getBindingId(weapon);
+            String binding = ContractCarrierData.getBindingId(weapon);
             ticks(player, com.maidweapon.common.MaidWeaponConfig.MANIFEST_DEPLOY_DELAY.get() + 10);
+            check(MaidInfusion.containsMaid(weapon), "holding dedicated blade does not automatically manifest");
+            com.maidweapon.forge.system.deployment.ContractCompanionService.toggle(player);
             Entity live = level.getEntity(maidId);
             check(live != null && !live.isRemoved() && !MaidInfusion.containsMaid(weapon),
-                    "main-hand dedicated blade automatically manifests real maid");
+                    "manual call manifests the real bound maid");
             check(binding.equals(live.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID)),
-                    "automatic deployment keeps same binding");
+                    "manual deployment keeps same binding");
             player.getInventory().selected = 1;
             ticks(player, com.maidweapon.common.MaidWeaponConfig.MANIFEST_RECALL_DELAY.get() + 10);
             live = level.getEntity(maidId);
-            check(MaidInfusion.containsMaid(weapon) && (live == null || live.isRemoved()),
-                    "switching away captures maid into the same dedicated blade");
-            check(binding.equals(MaidWeaponItem.getBindingId(weapon)), "recall preserves binding");
+            check(!MaidInfusion.containsMaid(weapon) && live != null && !live.isRemoved(),
+                    "switching away preserves the manually called companion");
+            player.getInventory().selected = 0;
+            com.maidweapon.forge.system.deployment.ContractCompanionService.disconnect(player);
+            com.maidweapon.forge.system.deployment.ContractCompanionService.toggle(player);
+            check(MaidInfusion.containsMaid(weapon), "manual recall captures into the same dedicated blade");
+            check(binding.equals(ContractCarrierData.getBindingId(weapon)), "recall preserves binding");
             System.out.println("CONTRACT_CARRIER_DEPLOYMENT_VALIDATION_PASSED");
         } finally {
             InfusedMaidDeploymentSystem.onLogout(new PlayerEvent.PlayerLoggedOutEvent(player));
@@ -111,6 +120,55 @@ public final class ContractCarrierValidation {
             if (remaining != null) remaining.discard();
             player.getInventory().clearContent();
         }
+    }
+
+    private static boolean authorizationFixtureRegistered;
+
+    /** Real ItemStack/NBT regression checks for the extracted carrier/channel authorities. */
+    private static void metadataBoundaries(ServerPlayer player) {
+        ItemStack carrier = new ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+        carrier.getOrCreateTag().putString("ExternalWeaponState", "preserve-me");
+        ContractCarrierData.setMaidData(carrier, new com.maidweapon.common.data.MaidWeaponData("Carrier boundary"));
+        ContractCarrierData.setOwner(carrier, player);
+        ContractCarrierData.setBoundMaidUUID(carrier, "fixture-maid");
+        String binding = ContractCarrierData.ensureBindingId(carrier);
+        check(binding.equals(MaidWeaponItem.getBindingId(carrier)), "legacy item API sees shared binding");
+        check(MaidWeaponItem.getMaidData(carrier).getMaidName().equals("Carrier boundary"),
+                "legacy item API sees generic carrier data");
+        carrier.getTag().getCompound("MaidData").remove("ContractResonance");
+        check(ContractCarrierData.getMaidData(carrier).getResonance() == 200, "legacy resonance default unchanged");
+
+        var payload = com.maidweapon.forge.system.contract.ContractChannelStorage.captureContract(carrier);
+        check(!payload.contains("ExternalWeaponState"), "channel excludes external weapon state");
+        var before = carrier.getTag().copy();
+        com.maidweapon.forge.system.contract.ContractChannelStorage.clearContract(carrier);
+        check(carrier.getTag().getString("ExternalWeaponState").equals("preserve-me"),
+                "channel clear retains external weapon state");
+        com.maidweapon.forge.system.contract.ContractChannelStorage.restoreContract(carrier, payload);
+        check(before.equals(carrier.getTag()), "channel restoration preserves exact NBT");
+
+        if (!authorizationFixtureRegistered) {
+            com.maidweapon.forge.api.ContractAuthorization.register("maid_weapon:test_authorization", (owner, stack) -> {
+                if (stack.hasTag() && stack.getTag().getBoolean("FixtureRuleFailure"))
+                    throw new IllegalStateException("intentional authorization fixture failure");
+                return !stack.hasTag() || !stack.getTag().getBoolean("FixtureRuleDenied");
+            });
+            authorizationFixtureRegistered = true;
+        }
+        check(com.maidweapon.forge.api.ContractAuthorization.allows(player, carrier), "ordinary carrier allowed");
+        carrier.getTag().putBoolean("FixtureRuleDenied", true);
+        check(!com.maidweapon.forge.api.ContractAuthorization.allows(player, carrier), "registered rule denies");
+        carrier.getTag().remove("FixtureRuleDenied");
+        carrier.getTag().putBoolean("FixtureRuleFailure", true);
+        check(!com.maidweapon.forge.api.ContractAuthorization.allows(player, carrier), "rule failure denies safely");
+        carrier.getTag().remove("FixtureRuleFailure");
+        check(com.maidweapon.forge.api.ContractAuthorization.allows(player, carrier), "later valid actions still allowed");
+        check(!com.maidweapon.forge.api.ContractAuthorization.allows(player, ItemStack.EMPTY), "empty carrier denied");
+        try {
+            com.maidweapon.forge.api.ContractAuthorization.register("maid_weapon:test_authorization", (owner, stack) -> true);
+            throw new IllegalStateException("duplicate authorization registration accepted");
+        } catch (IllegalArgumentException expected) { }
+        System.out.println("CONTRACT_METADATA_BOUNDARY_VALIDATION_PASSED");
     }
 
     private static void ticks(ServerPlayer player, int count) {

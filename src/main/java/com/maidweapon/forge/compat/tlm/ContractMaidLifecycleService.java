@@ -1,11 +1,12 @@
 package com.maidweapon.forge.compat.tlm;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.api.event.ContractMaidCapturedEvent;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.MaidAttentionSystem;
 import com.maidweapon.forge.system.MaidCareTaskSystem;
 import com.mojang.logging.LogUtils;
@@ -30,7 +31,7 @@ public final class ContractMaidLifecycleService {
             Player player, ItemStack weaponStack, String spiritId, String displayName) {
         if (player == null || player.level().isClientSide || weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)
-                || MaidWeaponItem.hasMaidData(weaponStack)) {
+                || ContractCarrierData.hasMaidData(weaponStack)) {
             return false;
         }
         CompoundTag originalWeaponTag = weaponStack.getTag() == null
@@ -46,17 +47,17 @@ public final class ContractMaidLifecycleService {
             maid.moveTo(player.getX(), player.getY(), player.getZ(),
                     player.getYRot(), player.getXRot());
 
-            String bindingId = MaidWeaponItem.ensureBindingId(weaponStack);
+            String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
             maid.getPersistentData().putString("MaidWeaponEmbeddedSpirit", spiritId);
-            MaidWeaponItem.setOwner(weaponStack, player);
-            MaidWeaponItem.setBoundMaidUUID(weaponStack, maid.getStringUUID());
-            MaidWeaponItem.setContractSuperseded(weaponStack, false);
+            ContractCarrierData.setOwner(weaponStack, player);
+            ContractCarrierData.setBoundMaidUUID(weaponStack, maid.getStringUUID());
+            ContractCarrierData.setContractSuperseded(weaponStack, false);
 
             MaidWeaponData data = new MaidWeaponData(displayName);
             data.setFavorability(MaidWeaponData.MAX_FAVORABILITY / 2);
             data.setResonance(MaidWeaponData.MAX_RESONANCE);
-            MaidWeaponItem.setMaidData(weaponStack, data);
+            ContractCarrierData.setMaidData(weaponStack, data);
             if (!ContractMaidStorage.commit(player, weaponStack, TlmEntityAdapter.save(maid))) {
                 weaponStack.setTag(originalWeaponTag);
                 return false;
@@ -76,12 +77,12 @@ public final class ContractMaidLifecycleService {
                 || !MaidInfusion.isWeapon(weaponStack)) {
             return false;
         }
-        if (MaidWeaponItem.isContractSuperseded(weaponStack)) {
+        if (ContractCarrierData.isContractSuperseded(weaponStack)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.superseded_contract"), true);
             return false;
         }
-        if (MaidWeaponItem.hasMaidEntityData(weaponStack)) {
+        if (ContractCarrierData.hasMaidEntityData(weaponStack)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.already_bound"), true);
             return false;
@@ -91,7 +92,7 @@ public final class ContractMaidLifecycleService {
                     Component.translatable("maid_weapon.message.maid_not_tamed"), true);
             return false;
         }
-        if (!MaidWeaponItem.isBoundMaid(weaponStack, entity)) {
+        if (!ContractCarrierData.isBoundMaid(weaponStack, entity)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.wrong_maid"), true);
             return false;
@@ -101,7 +102,7 @@ public final class ContractMaidLifecycleService {
                 ContractMaidKeys.ENTITY_BINDING_ID);
         com.maidweapon.forge.system.interior.ContractResidentPositionService.remember(entity);
         String originalEntityBinding = entityBinding;
-        String weaponBinding = MaidWeaponItem.getBindingId(weaponStack);
+        String weaponBinding = ContractCarrierData.getBindingId(weaponStack);
         if (!entityBinding.isEmpty()
                 && (weaponBinding == null || !entityBinding.equals(weaponBinding))) {
             player.displayClientMessage(
@@ -111,7 +112,7 @@ public final class ContractMaidLifecycleService {
 
         CompoundTag rootTag = weaponStack.getTag();
         CompoundTag originalWeaponTag = rootTag == null ? null : rootTag.copy();
-        weaponBinding = MaidWeaponItem.ensureBindingId(weaponStack);
+        weaponBinding = ContractCarrierData.ensureBindingId(weaponStack);
         entity.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, weaponBinding);
 
         MaidCareTaskSystem.restoreOriginalTask(weaponStack, entity);
@@ -129,7 +130,7 @@ public final class ContractMaidLifecycleService {
             maidEntityTag.put("ForgeData", storedForgeData);
         }
 
-        boolean firstCapture = !MaidWeaponItem.hasMaidData(weaponStack);
+        boolean firstCapture = !ContractCarrierData.hasMaidData(weaponStack);
         MaidWeaponData data;
         if (firstCapture) {
             if (emergencyProgress.isEmpty()) {
@@ -137,17 +138,17 @@ public final class ContractMaidLifecycleService {
             } else {
                 ItemStack progressCarrier = new ItemStack(net.minecraft.world.item.Items.STICK);
                 progressCarrier.getOrCreateTag().put("MaidData", emergencyProgress.copy());
-                data = MaidWeaponItem.getMaidData(progressCarrier);
+                data = ContractCarrierData.getMaidData(progressCarrier);
             }
-            MaidWeaponItem.setOwner(weaponStack, player);
-            MaidWeaponItem.setBoundMaidUUID(weaponStack, entity.getStringUUID());
+            ContractCarrierData.setOwner(weaponStack, player);
+            ContractCarrierData.setBoundMaidUUID(weaponStack, entity.getStringUUID());
         } else {
-            data = MaidWeaponItem.getMaidData(weaponStack);
+            data = ContractCarrierData.getMaidData(weaponStack);
         }
         data.setMaidName(entity.getName().getString());
         data.setFavorability(Math.min(MaidWeaponData.MAX_FAVORABILITY,
                 Math.max(0, TlmEntityAdapter.favorability(entity))));
-        MaidWeaponItem.setMaidData(weaponStack, data);
+        ContractCarrierData.setMaidData(weaponStack, data);
 
         if (!ContractMaidStorage.commit(player, weaponStack, maidEntityTag)) {
             weaponStack.setTag(originalWeaponTag);
@@ -182,11 +183,11 @@ public final class ContractMaidLifecycleService {
                                    java.util.function.Consumer<Entity> beforeSpawn) {
         if (weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)
-                || !MaidWeaponItem.hasMaidData(weaponStack)
-                || MaidWeaponItem.isContractSuperseded(weaponStack)) {
+                || !ContractCarrierData.hasMaidData(weaponStack)
+                || ContractCarrierData.isContractSuperseded(weaponStack)) {
             return false;
         }
-        if (!MaidWeaponItem.hasMaidEntityData(weaponStack)) {
+        if (!ContractCarrierData.hasMaidEntityData(weaponStack)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.no_maid_data"), true);
             return false;
@@ -206,7 +207,7 @@ public final class ContractMaidLifecycleService {
                     .newInstance(player.level());
 
             TlmEntityAdapter.load(maid, maidEntityTag);
-            String bindingId = MaidWeaponItem.ensureBindingId(weaponStack);
+            String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
             TlmEntityAdapter.tame(maid, player);
             if (player.level().dimension().equals(
@@ -256,14 +257,14 @@ public final class ContractMaidLifecycleService {
 
     public static void syncFavorabilityFromMaid(Entity maid, ItemStack weaponStack) {
         if (!TlmEntityAdapter.isMaidEntity(maid)
-                || !MaidWeaponItem.hasMaidData(weaponStack)) return;
-        MaidWeaponData data = MaidWeaponItem.getMaidData(weaponStack);
+                || !ContractCarrierData.hasMaidData(weaponStack)) return;
+        MaidWeaponData data = ContractCarrierData.getMaidData(weaponStack);
         int actual = Math.min(MaidWeaponData.MAX_FAVORABILITY,
                 Math.max(MaidWeaponData.MIN_FAVORABILITY,
                         TlmEntityAdapter.favorability(maid)));
         if (data.getFavorability() == actual) return;
         data.setFavorability(actual);
-        MaidWeaponItem.setMaidData(weaponStack, data);
+        ContractCarrierData.setMaidData(weaponStack, data);
     }
 
     private ContractMaidLifecycleService() {}

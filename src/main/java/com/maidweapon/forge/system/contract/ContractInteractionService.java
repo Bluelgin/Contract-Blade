@@ -1,8 +1,9 @@
 package com.maidweapon.forge.system.contract;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -25,7 +26,7 @@ public final class ContractInteractionService {
                 || !MaidInfusion.isWeapon(weapon)) {
             return InteractionResult.PASS;
         }
-        if (MaidWeaponItem.hasMaidData(weapon) && !MaidWeaponItem.isOwner(weapon, player)) {
+        if (ContractCarrierData.hasMaidData(weapon) && !ContractCarrierData.isOwner(weapon, player)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.not_owner"),
                     true

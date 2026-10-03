@@ -1,11 +1,8 @@
 package com.maidweapon.forge.system.interior.home;
 
-import java.util.EnumMap;
-import java.util.Set;
-import java.util.SplittableRandom;
 import java.util.UUID;
 
-/** Stable weighted choices in enum order; missing/unsupported targets never enter the pool. */
+/** Seeds and weights for one-shot offline arrival inference, never online AI. */
 public final class ContractHomeActivityResolver {
     public static long seed(String binding, UUID maid, long slot) {
         long hash = 0xcbf29ce484222325L;
@@ -34,28 +31,6 @@ public final class ContractHomeActivityResolver {
             case IDLE -> 5;
             default -> 0; // Future adapters must also define an intentional activity policy.
         };
-    }
-    public static ContractHomeActivity resolve(long seed, ContractHomeClock.Phase phase,
-            Set<ContractHomeActivity> available, int favorability, boolean playerPresent) {
-        return resolve(seed, phase, available, favorability, playerPresent, null);
-    }
-    public static ContractHomeActivity resolve(long seed, ContractHomeClock.Phase phase,
-            Set<ContractHomeActivity> available, int favorability, boolean playerPresent, ContractHomeActivity favorite) {
-        var weights = new EnumMap<ContractHomeActivity, Integer>(ContractHomeActivity.class);
-        int total = 0;
-        for (var activity : ContractHomeActivity.values()) {
-            if (!available.contains(activity)) continue;
-            int weight = weight(activity, phase, favorability, playerPresent);
-            if (activity == favorite) weight *= 2;
-            if (weight > 0) { weights.put(activity, weight); total += weight; }
-        }
-        if (total == 0) return ContractHomeActivity.IDLE;
-        int roll = new SplittableRandom(seed).nextInt(total);
-        for (var entry : weights.entrySet()) {
-            roll -= entry.getValue();
-            if (roll < 0) return entry.getKey();
-        }
-        return ContractHomeActivity.IDLE;
     }
     private ContractHomeActivityResolver() {}
 }

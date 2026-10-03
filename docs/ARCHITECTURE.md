@@ -38,6 +38,21 @@ owned by `ContractMaidLifecycleService`. Core callers use
 `ContractLifecycleService`, so the Contract Table, dedicated Contract Blade
 items and other interaction entry points request the same stored/live lifecycle.
 
+`ContractCarrierData` owns shared metadata access for any carrier. The static
+methods on `MaidWeaponItem` remain compatibility forwarders for existing addons;
+Core services must not use the concrete item class as their metadata authority.
+NBT keys and legacy defaults are unchanged.
+
+`ContractAuthorization` accepts named additional authorization rules during mod
+setup. Normal owner/identity checks still apply. Fox rules are registered by the
+bootstrap, not hard-coded into the shared lifecycle. Every rule must allow an
+action; an exception denies it and emits one diagnostic warning.
+
+`IntrinsicSpiritApi` remains the public channel/transfer facade. Exact active
+payload selection belongs to `ContractChannelStorage`; stored/live model changes
+belong to `compat.tlm.IntrinsicSpiritModels`. Neither changes the save schema or
+introduces another stored maid authority.
+
 ## Player interaction
 
 Input handlers only decide which gesture owns an action. Permission and
@@ -72,6 +87,7 @@ boundary can never expose a one-block void seam.
 The interior stack is split into focused responsibilities:
 
 - `ContractInteriorService`: enter/exit authority, return position and maid lifecycle;
+- `ContractInteriorCarrierLocator`: locate the real inventory/cursor/menu carrier without copying it;
 - `ContractInteriorSavedData`: binding-to-plot allocation, terrain theme/seed and generated stage;
 - `ContractInteriorProfile`: maps contract level to the five usable-area stages;
 - `ContractInteriorSelectionService`: one-time player terrain choice;
@@ -79,7 +95,7 @@ The interior stack is split into focused responsibilities:
 - `ContractInteriorBuilder`: developer/example Japanese home only; never the real player-home generator;
 - `ContractInteriorGallery`: optional example-home/design workspace;
 - `ContractInteriorEvents`: lifecycle safety and thin Home Life event dispatch.
-- `interior.home`: clock, deterministic activity policy, loaded furniture index and online runtime;
+- `interior.home`: clock, offline arrival policy, loaded furniture index and native activity observation;
 - `compat.tlm.TlmHome*`: genuine TLM furniture interaction and reversible behavior scope;
 - `ContractInteriorGuideService`: one guide receipt per binding after real entry.
 
@@ -107,11 +123,12 @@ terrain progression or maid lifecycle.
 
 ## Deployment
 
-`InfusedMaidDeploymentSystem` is the single main-hand manifestation/recall
-state machine for **all** infused carriers, including the dedicated Contract
-Blade items. Contract Blades no longer own a sneak-right-click recall path;
-drawing/putting away the carrier follows the same rules as a weapon created by
-the Contract Table.
+`InfusedMaidDeploymentSystem` maintains the shared live lifecycle and recovery
+for **all** infused carriers, including dedicated Contract Blades. It does not
+summon merely because a carrier is held. Manual input and protective damage
+requests go through `ContractCompanionService`; switching held items does not
+dismiss a manually called companion. Contract Blades have no separate
+sneak-right-click recall path.
 
 Focused services own independent responsibilities:
 
@@ -122,7 +139,7 @@ Focused services own independent responsibilities:
 - `ContractTransferSafetyService`: inventory/self-storage transfer invariants;
 - `ContractMaidRuntimeService`: manifested-maid task and optional-mod projection maintenance.
 
-Future systems such as a weapon interior/home dimension should depend on
+Other systems, including the existing interior/home dimension, depend on
 contract identity/storage APIs, not on the hotbar deployment state machine.
 
 ## Companion intent and input
@@ -169,6 +186,10 @@ but it is archival metadata only. Core combat, resonance and progression must
 not read it. `SinFragmentSystem` remains an inert compatibility shim.
 
 ## Guardrails
+
+`CompatDiagnostics` reports reflective capability failures once per process,
+preserving existing safe fallbacks without flooding tick logs. Missing optional
+mods remain normal; failed capability invocations are not silently hidden.
 
 `tools/validate_architecture.py` protects dependency boundaries and god-class
 size. Other validators cover NBT safety, permissions, resonance, emergency film

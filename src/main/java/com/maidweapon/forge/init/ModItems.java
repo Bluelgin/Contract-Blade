@@ -1,5 +1,7 @@
 package com.maidweapon.forge.init;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.item.ContractInteriorKeyItem;
@@ -70,19 +72,19 @@ public final class ModItems {
                         }
                     }
                     if (level.isClientSide) return InteractionResultHolder.success(crystal);
-                    if (!MaidWeaponItem.isOwner(weapon, player)) {
+                    if (!ContractCarrierData.isOwner(weapon, player)) {
                         player.displayClientMessage(
                                 Component.translatable("maid_weapon.message.not_owner"), true);
                         return InteractionResultHolder.fail(crystal);
                     }
-                    MaidWeaponData data = MaidWeaponItem.getMaidData(weapon);
+                    MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
                     if (data.getResonance() >= MaidWeaponData.MAX_RESONANCE) {
                         player.displayClientMessage(
                                 Component.translatable("maid_weapon.message.resonance_full"), true);
                         return InteractionResultHolder.fail(crystal);
                     }
                     data.addResonance(50);
-                    MaidWeaponItem.setMaidData(weapon, data);
+                    ContractCarrierData.setMaidData(weapon, data);
                     crystal.shrink(1);
                     player.displayClientMessage(Component.translatable(
                             "maid_weapon.message.resonance_restored", 50), true);

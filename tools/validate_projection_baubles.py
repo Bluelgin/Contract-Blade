@@ -24,7 +24,7 @@ assert 'MaidWeaponOriginalAttack' in projection and 'MaidWeaponOriginalArmor' in
 assert 'mode.weapon() : mode.armor()' in projection
 assert 'returnOriginal(maid, original)' in projection
 assert 'isUsingItem()) return' in projection
-assert 'MaidWeaponItem.clearMaidContract(copy)' in read('compat/TripleMagicCompat.java')
+assert 'ContractCarrierData.clearMaidContract(copy)' in read('compat/TripleMagicCompat.java')
 for item in ('resonance_sword_tassel', 'guardian_ribbon', 'heartbound_knot'):
     assets = root / 'src/main/resources/assets/maid_weapon'
     assert (assets / f'textures/item/{item}.png').is_file()

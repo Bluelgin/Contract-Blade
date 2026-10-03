@@ -1,9 +1,10 @@
 package com.maidweapon.forge.compat.tacz;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
@@ -65,7 +66,7 @@ public final class TaczLoadedCompat {
 
     public static boolean maintain(Player owner, LivingEntity maid, ItemStack source) {
         if (!isGun(source) || owner.level().isClientSide) return false;
-        String binding = MaidWeaponItem.getBindingId(source);
+        String binding = ContractCarrierData.getBindingId(source);
         if (binding == null || binding.isEmpty()) return false;
 
         maid.getPersistentData().putUUID(TaczCompat.ENTITY_OWNER_TAG, owner.getUUID());
@@ -157,8 +158,8 @@ public final class TaczLoadedCompat {
         ItemStack source = InfusedMaidDeploymentSystem.findBoundWeapon(
                 owner, maid.getStringUUID());
         ItemStack gun = maid.getMainHandItem();
-        if (source.isEmpty() || !MaidWeaponItem.isOwner(source, owner)
-                || !binding.equals(MaidWeaponItem.getBindingId(source))
+        if (source.isEmpty() || !ContractCarrierData.isOwner(source, owner)
+                || !binding.equals(ContractCarrierData.getBindingId(source))
                 || !isGun(source) || !isMatchingProjection(gun, ownerId, binding)) {
             return null;
         }
@@ -303,7 +304,7 @@ public final class TaczLoadedCompat {
     private static ItemStack createProjection(ItemStack source, UUID owner, String binding) {
         ItemStack copy = source.copy();
         copy.setCount(1);
-        MaidWeaponItem.clearMaidContract(copy);
+        ContractCarrierData.clearMaidContract(copy);
         CompoundTag tag = copy.getOrCreateTag();
         tag.putBoolean(TaczCompat.PROJECTION_TAG, true);
         tag.putUUID("MaidWeaponPhantomOwner", owner);

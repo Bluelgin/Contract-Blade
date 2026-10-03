@@ -1,8 +1,9 @@
 package com.maidweapon.forge.event;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.ContractNbtAudit;
 import com.maidweapon.forge.system.ContractNbtGuard;
 import com.maidweapon.forge.system.interior.ContractInteriorGallery;
@@ -107,7 +108,7 @@ public class MaidWeaponCommand {
 
             MaidWeaponData data = MaidInfusion.data(stack);
             data.setLevel(level);
-            MaidWeaponItem.setMaidData(stack, data);
+            ContractCarrierData.setMaidData(stack, data);
 
             source.sendSuccess(() -> Component.literal("§a已将契约等级设为 Lv." + level), true);
             return 1;
@@ -124,7 +125,7 @@ public class MaidWeaponCommand {
 
             MaidWeaponData data = MaidInfusion.data(stack);
             data.setFavorability(value);
-            MaidWeaponItem.setMaidData(stack, data);
+            ContractCarrierData.setMaidData(stack, data);
             source.sendSuccess(() -> Component.literal("§a已将契约好感度设为 " + value + "/384"), true);
             return 1;
         } catch (Exception e) {
@@ -140,7 +141,7 @@ public class MaidWeaponCommand {
 
             MaidWeaponData data = MaidInfusion.data(stack);
             data.setResonance(value);
-            MaidWeaponItem.setMaidData(stack, data);
+            ContractCarrierData.setMaidData(stack, data);
             source.sendSuccess(() -> Component.literal(
                     "§b已将契约共鸣设为 " + value + "/" + MaidWeaponData.MAX_RESONANCE), true);
             return 1;
@@ -252,7 +253,7 @@ public class MaidWeaponCommand {
             source.sendFailure(Component.literal("§c请手持已有契约的武器"));
             return ItemStack.EMPTY;
         }
-        if (!MaidWeaponItem.isOwner(stack, player)) {
+        if (!ContractCarrierData.isOwner(stack, player)) {
             source.sendFailure(Component.literal("§c只有契约原主人可以修改契约数据"));
             return ItemStack.EMPTY;
         }

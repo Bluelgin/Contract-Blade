@@ -63,6 +63,8 @@ jobs:
           python tools/validate_item_models.py
           python tools/validate_projection_baubles.py
           python tools/validate_companion.py
+          python tools/validate_shrine.py
+          python tools/validate_fox_models.py
 
       - name: Build
         run: gradle --no-daemon clean build -Pci=true

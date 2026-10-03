@@ -1,11 +1,12 @@
 package com.maidweapon.forge.event;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.system.ResonanceSystem;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.maidweapon.forge.system.MaidCareTaskSystem;
 import net.minecraft.network.chat.Component;
@@ -93,10 +94,10 @@ public final class MaidBondCombatHandler {
         } else {
             ResonanceSystem.recover(data, MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get());
         }
-        MaidWeaponItem.setMaidData(weapon, data);
+        ContractCarrierData.setMaidData(weapon, data);
 
         if (data.getResonance() <= 0) {
-            String maidId = MaidWeaponItem.getBoundMaidUUID(weapon);
+            String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
             if (maidId != null) InfusedMaidDeploymentSystem.forceRecall(player, maidId, 300);
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.resonance_depleted"), true);
@@ -166,14 +167,14 @@ public final class MaidBondCombatHandler {
         if (time - last < 20) return;
         MaidWeaponData data = MaidInfusion.data(weapon);
         ResonanceSystem.recover(data, MaidWeaponConfig.RESONANCE_COOP_REWARD.get());
-        MaidWeaponItem.setMaidData(weapon, data);
+        ContractCarrierData.setMaidData(weapon, data);
         LAST_COOP_REWARD.put(player.getUUID(), time);
     }
 
     private static void spend(ItemStack weapon, int amount) {
         MaidWeaponData data = MaidInfusion.data(weapon);
         data.reduceResonance(amount);
-        MaidWeaponItem.setMaidData(weapon, data);
+        ContractCarrierData.setMaidData(weapon, data);
     }
 
     private static void markCombat(Player player, long time) {
@@ -183,8 +184,8 @@ public final class MaidBondCombatHandler {
 
     private static boolean isActiveContract(Player player, ItemStack weapon) {
         return !weapon.isEmpty() && MaidInfusion.isInfused(weapon)
-                && MaidWeaponItem.isOwner(weapon, player)
-                && !MaidWeaponItem.isContractSuperseded(weapon);
+                && ContractCarrierData.isOwner(weapon, player)
+                && !ContractCarrierData.isContractSuperseded(weapon);
     }
 
     /** Resolve actual following companions, not the player's current selection. */
@@ -197,7 +198,7 @@ public final class MaidBondCombatHandler {
                     || com.maidweapon.forge.system.deployment.ContractTransferSafetyService.isProjectionPhantom(weapon)
                     || !InfusedMaidDeploymentSystem.hasDeployedMaid(player, weapon)
                     || com.maidweapon.forge.system.deployment.ContractCompanionService.isResident(player, weapon)) continue;
-            if (seen.add(MaidWeaponItem.ensureBindingId(weapon))) result.add(weapon);
+            if (seen.add(ContractCarrierData.ensureBindingId(weapon))) result.add(weapon);
         }
         return result;
     }

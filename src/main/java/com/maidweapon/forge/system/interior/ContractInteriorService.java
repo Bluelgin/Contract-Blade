@@ -1,5 +1,10 @@
 package com.maidweapon.forge.system.interior;
 
+import static com.maidweapon.forge.system.interior.ContractInteriorCarrierLocator.findContractByBinding;
+import static com.maidweapon.forge.system.interior.ContractInteriorCarrierLocator.findPlayerContractByBinding;
+
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.system.interior.home.ContractHomeRuntime;
 import com.maidweapon.forge.system.interior.home.ContractInteriorGuideService;
@@ -8,7 +13,6 @@ import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.maidweapon.forge.item.ContractInteriorKeyItem;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
@@ -75,17 +79,17 @@ public final class ContractInteriorService {
             message(player, "maid_weapon.message.interior.need_contract");
             return false;
         }
-        if (!MaidWeaponItem.isOwner(contract, player)) {
+        if (!ContractCarrierData.isOwner(contract, player)) {
             message(player, "maid_weapon.message.not_owner");
             return false;
         }
-        if (MaidWeaponItem.isContractSuperseded(contract)) {
+        if (ContractCarrierData.isContractSuperseded(contract)) {
             message(player, "maid_weapon.message.superseded_contract");
             return false;
         }
 
-        String bindingId = MaidWeaponItem.ensureBindingId(contract);
-        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        String bindingId = ContractCarrierData.ensureBindingId(contract);
+        String maidId = ContractCarrierData.getBoundMaidUUID(contract);
         Entity existingMaid = maidId == null ? null
                 : ContractWeaponLocator.findManifestedMaid(player, maidId);
         boolean resumeInteriorMaid = existingMaid != null
@@ -93,7 +97,7 @@ public final class ContractInteriorService {
                 && bindingId.equals(existingMaid.getPersistentData().getString(
                         com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID));
 
-        if (!MaidWeaponItem.hasMaidEntityData(contract) && !resumeInteriorMaid) {
+        if (!ContractCarrierData.hasMaidEntityData(contract) && !resumeInteriorMaid) {
             message(player, "maid_weapon.message.interior.recall_first");
             return false;
         }
@@ -275,8 +279,8 @@ public final class ContractInteriorService {
 
         ItemStack contract = findContractByBinding(player, bindingId);
         if (!contract.isEmpty() && (!MaidInfusion.isInfused(contract)
-                || !MaidWeaponItem.isOwner(contract, player)
-                || MaidWeaponItem.isContractSuperseded(contract))) {
+                || !ContractCarrierData.isOwner(contract, player)
+                || ContractCarrierData.isContractSuperseded(contract))) {
             // A stale/invalid session must not leave a player stranded in the shared
             // interior dimension. Preserve a live resident by pausing it, then return.
             ContractHomeRuntime.pause(player);
@@ -343,7 +347,7 @@ public final class ContractInteriorService {
     public static boolean isActiveContract(ServerPlayer player, ItemStack stack) {
         if (!isInside(player) || stack.isEmpty()) return false;
         String active = returnState(player).getString(TAG_ACTIVE_BINDING);
-        String binding = MaidWeaponItem.getBindingId(stack);
+        String binding = ContractCarrierData.getBindingId(stack);
         return binding != null && !binding.isEmpty() && binding.equals(active);
     }
 
@@ -356,10 +360,10 @@ public final class ContractInteriorService {
         if (player == null || destroyed.isEmpty() || isGallerySession(player)
                 || !isActiveContract(player, destroyed)
                 || !MaidInfusion.isInfused(destroyed)
-                || !MaidWeaponItem.isOwner(destroyed, player)) return false;
+                || !ContractCarrierData.isOwner(destroyed, player)) return false;
 
-        String binding = MaidWeaponItem.getBindingId(destroyed);
-        String maidId = MaidWeaponItem.getBoundMaidUUID(destroyed);
+        String binding = ContractCarrierData.getBindingId(destroyed);
+        String maidId = ContractCarrierData.getBoundMaidUUID(destroyed);
         Entity maid = maidId == null || maidId.isEmpty()
                 ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
 
@@ -398,57 +402,26 @@ public final class ContractInteriorService {
 
     private static boolean recallInteriorMaid(ServerPlayer player, ItemStack contract) {
         boolean homeReleased = ContractHomeRuntime.stop(player);
-        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        String maidId = ContractCarrierData.getBoundMaidUUID(contract);
         if (maidId == null || maidId.isEmpty()) return homeReleased;
 
         Entity maid = ContractWeaponLocator.findManifestedMaid(player, maidId);
         if (maid == null) {
-            return homeReleased && MaidWeaponItem.hasMaidEntityData(contract);
+            return homeReleased && ContractCarrierData.hasMaidEntityData(contract);
         }
         if (!homeReleased || !ContractHomeRuntime.prepareCapture(maid)) {
-            ContractHomeRuntime.pauseUncaptured(maid, MaidWeaponItem.getBindingId(contract));
+            ContractHomeRuntime.pauseUncaptured(maid, ContractCarrierData.getBindingId(contract));
             return false;
         }
         boolean captured = ContractLifecycleService.capture(player, maid, contract, false);
-        if (!captured) ContractHomeRuntime.pauseUncaptured(maid, MaidWeaponItem.getBindingId(contract));
+        if (!captured) ContractHomeRuntime.pauseUncaptured(maid, ContractCarrierData.getBindingId(contract));
         return captured;
     }
 
     private static void pauseUncaptured(ServerPlayer player, ItemStack contract) {
-        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        String maidId = ContractCarrierData.getBoundMaidUUID(contract);
         if (maidId != null) ContractHomeRuntime.pauseUncaptured(
-                ContractWeaponLocator.findManifestedMaid(player, maidId), MaidWeaponItem.getBindingId(contract));
-    }
-
-    private static ItemStack findContractByBinding(ServerPlayer player, String bindingId) {
-        ItemStack carriedByPlayer = findPlayerContractByBinding(player, bindingId);
-        if (!carriedByPlayer.isEmpty()) return carriedByPlayer;
-        if (bindingId == null || bindingId.isEmpty()) return ItemStack.EMPTY;
-
-        // The active contract may be on the cursor or in an open/modded container.
-        // Resolve that real stack instead of creating a recovery copy.
-        ItemStack carried = player.containerMenu.getCarried();
-        if (!ContractTransferSafetyService.isProjectionPhantom(carried)
-                && bindingId.equals(MaidWeaponItem.getBindingId(carried))) return carried;
-        for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
-            ItemStack stack = slot.getItem();
-            if (!ContractTransferSafetyService.isProjectionPhantom(stack)
-                    && bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-        }
-        return ItemStack.EMPTY;
-    }
-
-    private static ItemStack findPlayerContractByBinding(ServerPlayer player, String bindingId) {
-        if (bindingId == null || bindingId.isEmpty()) return ItemStack.EMPTY;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (!ContractTransferSafetyService.isProjectionPhantom(stack)
-                    && bindingId.equals(MaidWeaponItem.getBindingId(stack))) return stack;
-        }
-        ItemStack offhand = player.getOffhandItem();
-        if (!ContractTransferSafetyService.isProjectionPhantom(offhand)
-                && bindingId.equals(MaidWeaponItem.getBindingId(offhand))) return offhand;
-        return ItemStack.EMPTY;
+                ContractWeaponLocator.findManifestedMaid(player, maidId), ContractCarrierData.getBindingId(contract));
     }
 
     /**
@@ -468,7 +441,7 @@ public final class ContractInteriorService {
 
         ItemStack carried = player.containerMenu.getCarried();
         if (!ContractTransferSafetyService.isProjectionPhantom(carried)
-                && binding.equals(MaidWeaponItem.getBindingId(carried))) {
+                && binding.equals(ContractCarrierData.getBindingId(carried))) {
             // Keep normal mouse pickups on the cursor until the menu closes.
             if (!closingMenu) return false;
             ItemStack contract = carried.copy();
@@ -492,7 +465,7 @@ public final class ContractInteriorService {
             if (slot.container == player.getInventory()) continue;
             ItemStack stack = slot.getItem();
             if (ContractTransferSafetyService.isProjectionPhantom(stack)) continue;
-            if (!binding.equals(MaidWeaponItem.getBindingId(stack))) continue;
+            if (!binding.equals(ContractCarrierData.getBindingId(stack))) continue;
 
             ItemStack contract = stack.copy();
             int selected = player.getInventory().selected;
@@ -550,8 +523,8 @@ public final class ContractInteriorService {
         String binding = returnState(player).getString(TAG_ACTIVE_BINDING);
         ItemStack contract = findContractByBinding(player, binding);
         if (contract.isEmpty() || !MaidInfusion.isInfused(contract)
-                || !MaidWeaponItem.isOwner(contract, player)
-                || MaidWeaponItem.isContractSuperseded(contract) || player.getServer() == null) return "";
+                || !ContractCarrierData.isOwner(contract, player)
+                || ContractCarrierData.isContractSuperseded(contract) || player.getServer() == null) return "";
         var plot = ContractInteriorSavedData.get(player.getServer()).getOrCreate(binding);
         if (!plot.hasTerrainTheme() || plot.generatedStage() == 0) return "";
         if (!insidePlot(player.blockPosition(), plot)) return "";
@@ -573,10 +546,10 @@ public final class ContractInteriorService {
         var plot = saved.getOrCreate(binding);
         if (!plot.hasTerrainTheme() || plot.generatedStage() == 0) return;
         ItemStack contract = findContractByBinding(player, binding);
-        String maidId = MaidWeaponItem.getBoundMaidUUID(contract);
+        String maidId = ContractCarrierData.getBoundMaidUUID(contract);
         Entity maid = maidId == null ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
         boolean restored = false;
-        if (maid == null && MaidWeaponItem.hasMaidEntityData(contract)) {
+        if (maid == null && ContractCarrierData.hasMaidEntityData(contract)) {
             // No new storage path: the same lifecycle service consumes the same stored authority.
             Entity[] manifested = new Entity[1];
             if (!ContractLifecycleService.manifest(player, contract, false, entity -> manifested[0] = entity)) return;

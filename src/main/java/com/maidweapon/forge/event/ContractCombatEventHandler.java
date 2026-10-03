@@ -1,12 +1,13 @@
 package com.maidweapon.forge.event;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.compat.ModCompatManager;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.system.MonsterTierRegistry;
 import com.maidweapon.common.system.ResonanceSystem;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.ChallengeTracker;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -31,7 +32,7 @@ public final class ContractCombatEventHandler {
     public static void onLivingDamage(LivingDamageEvent event) {
         if (!(event.getSource().getEntity() instanceof Player player)) return;
         ItemStack weapon = player.getMainHandItem();
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return;
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
 
         String targetId = entityId(event.getEntity());
         int tier = MonsterTierRegistry.getTier(targetId);
@@ -53,7 +54,7 @@ public final class ContractCombatEventHandler {
     public static void onLivingDeath(LivingDeathEvent event) {
         if (!(event.getSource().getEntity() instanceof Player player)) return;
         ItemStack weapon = player.getMainHandItem();
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return;
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
 
         UUID playerId = player.getUUID();
         Integer tier = ChallengeTracker.getTier(playerId);
@@ -63,7 +64,7 @@ public final class ContractCombatEventHandler {
             return;
         }
 
-        MaidWeaponData data = MaidWeaponItem.getMaidData(weapon);
+        MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
         data.addKill();
         data.addResonance(5);
         int oldLevel = data.getLevel();
@@ -84,7 +85,7 @@ public final class ContractCombatEventHandler {
         String targetId = entityId(event.getEntity());
         ModCompatManager.notifyMonsterKilled("maid_sword", targetId, tier,
                 ChallengeTracker.hasBoss(playerId));
-        MaidWeaponItem.setMaidData(weapon, data);
+        ContractCarrierData.setMaidData(weapon, data);
         ChallengeTracker.clear(playerId);
     }
 
@@ -94,10 +95,10 @@ public final class ContractCombatEventHandler {
         UUID playerId = player.getUUID();
         if (ChallengeTracker.getTier(playerId) == null) return;
         ItemStack weapon = player.getMainHandItem();
-        if (MaidInfusion.isInfused(weapon) && MaidWeaponItem.isOwner(weapon, player)) {
-            MaidWeaponData data = MaidWeaponItem.getMaidData(weapon);
+        if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, player)) {
+            MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
             data.reduceResonance(MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
-            MaidWeaponItem.setMaidData(weapon, data);
+            ContractCarrierData.setMaidData(weapon, data);
         }
         ModCompatManager.notifyChallengeFailed("maid_sword", "unknown");
         ChallengeTracker.clear(playerId);
@@ -113,18 +114,18 @@ public final class ContractCombatEventHandler {
         if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) return;
         Player player = event.player;
         ItemStack weapon = player.getMainHandItem();
-        if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) {
+        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) {
             weapon = player.getOffhandItem();
-            if (!MaidInfusion.isInfused(weapon) || !MaidWeaponItem.isOwner(weapon, player)) return;
+            if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
         }
 
         UUID playerId = player.getUUID();
-        MaidWeaponData data = MaidWeaponItem.getMaidData(weapon);
+        MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
         int food = player.getFoodData().getFoodLevel();
         Integer lastFood = ChallengeTracker.getLastFoodLevel(playerId);
         if (lastFood != null && food > lastFood) {
             ResonanceSystem.onEat(data, food - lastFood);
-            MaidWeaponItem.setMaidData(weapon, data);
+            ContractCarrierData.setMaidData(weapon, data);
         }
         ChallengeTracker.setFoodLevel(playerId, food);
 
@@ -132,10 +133,10 @@ public final class ContractCombatEventHandler {
         Float lastHealth = ChallengeTracker.getLastHealth(playerId);
         if (lastHealth != null && health > lastHealth) {
             ResonanceSystem.onHeal(data, health - lastHealth);
-            MaidWeaponItem.setMaidData(weapon, data);
+            ContractCarrierData.setMaidData(weapon, data);
         } else if (lastHealth != null && health < lastHealth) {
             ResonanceSystem.onOwnerHurt(data, lastHealth - health);
-            MaidWeaponItem.setMaidData(weapon, data);
+            ContractCarrierData.setMaidData(weapon, data);
         }
         ChallengeTracker.setHealth(playerId, health);
     }

@@ -1,10 +1,11 @@
 package com.maidweapon.forge.compat.tlm;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.compat.TaczCompat;
 import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.MaidCareTaskSystem;
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,12 +30,13 @@ public final class TlmFilmService {
     }
 
     public static boolean isFilledMaidFilm(ItemStack stack) {
-        return isMaidFilm(stack) && stack.getTag() != null
+        return !com.maidweapon.forge.system.fox.FoxSpiritState.isSeal(stack)
+                && isMaidFilm(stack) && stack.getTag() != null
                 && stack.getTag().contains("MaidInfo");
     }
 
     public static boolean isEmptyMaidFilm(ItemStack stack) {
-        if (stack.isEmpty()) return false;
+        if (stack.isEmpty() || com.maidweapon.forge.system.fox.FoxSpiritState.isSeal(stack)) return false;
         String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
         return itemId.equals("touhou_little_maid:smart_slab_empty")
                 || (itemId.equals("touhou_little_maid:film")
@@ -70,11 +72,11 @@ public final class TlmFilmService {
                 return false;
             }
 
-            String bindingId = MaidWeaponItem.ensureBindingId(weaponStack);
-            MaidWeaponItem.setContractSuperseded(weaponStack, false);
+            String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
+            ContractCarrierData.setContractSuperseded(weaponStack, false);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
-            MaidWeaponItem.setOwner(weaponStack, player);
-            MaidWeaponItem.setBoundMaidUUID(weaponStack, maid.getStringUUID());
+            ContractCarrierData.setOwner(weaponStack, player);
+            ContractCarrierData.setBoundMaidUUID(weaponStack, maid.getStringUUID());
             if (film.getTag().contains(ContractMaidKeys.FILM_PROGRESS)) {
                 weaponStack.getOrCreateTag().put("MaidData",
                         film.getTag().getCompound(ContractMaidKeys.FILM_PROGRESS).copy());
@@ -82,7 +84,7 @@ public final class TlmFilmService {
                 MaidWeaponData data = new MaidWeaponData(maid.getName().getString());
                 data.setFavorability(Math.min(MaidWeaponData.MAX_FAVORABILITY,
                         Math.max(0, TlmEntityAdapter.favorability(maid))));
-                MaidWeaponItem.setMaidData(weaponStack, data);
+                ContractCarrierData.setMaidData(weaponStack, data);
             }
             if (!ContractMaidStorage.commit(player, weaponStack, TlmEntityAdapter.save(maid))) {
                 weaponStack.setTag(originalWeaponTag);
@@ -100,7 +102,7 @@ public final class TlmFilmService {
 
     public static ItemStack extractMaidToFilm(Player player, ItemStack weapon, ItemStack emptyFilm) {
         if (!MaidInfusion.containsMaid(weapon) || !isEmptyMaidFilm(emptyFilm)
-                || !MaidWeaponItem.isOwner(weapon, player)) return ItemStack.EMPTY;
+                || !ContractCarrierData.isOwner(weapon, player)) return ItemStack.EMPTY;
         try {
             CompoundTag weaponTag = weapon.getTag();
             if (weaponTag == null) return ItemStack.EMPTY;
@@ -139,12 +141,12 @@ public final class TlmFilmService {
     public static ItemStack createEmergencyResurrectionFilm(
             Player player, ItemStack contract, Entity liveMaid) {
         if (contract.isEmpty() || !MaidInfusion.isInfused(contract)
-                || !MaidWeaponItem.isOwner(contract, player)) return ItemStack.EMPTY;
+                || !ContractCarrierData.isOwner(contract, player)) return ItemStack.EMPTY;
         try {
             CompoundTag maidData;
             if (liveMaid != null) {
                 if (!TlmEntityAdapter.isOwnedMaid(liveMaid, player)
-                        || !MaidWeaponItem.isBoundMaid(contract, liveMaid)) {
+                        || !ContractCarrierData.isBoundMaid(contract, liveMaid)) {
                     return ItemStack.EMPTY;
                 }
                 MaidCareTaskSystem.restoreOriginalTask(contract, liveMaid);

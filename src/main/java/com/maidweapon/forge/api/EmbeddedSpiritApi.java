@@ -1,8 +1,9 @@
 package com.maidweapon.forge.api;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
@@ -34,7 +35,7 @@ public final class EmbeddedSpiritApi {
             setDormant(weapon, false);
             return true;
         }
-        if (MaidWeaponItem.hasMaidData(weapon)) {
+        if (ContractCarrierData.hasMaidData(weapon)) {
             return false;
         }
         String safeName = displayName == null || displayName.isBlank()

@@ -1,6 +1,7 @@
 package com.maidweapon.forge.compat;
 
-import com.maidweapon.forge.item.MaidWeaponItem;
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -187,7 +188,7 @@ public final class SlashBladeCompat {
      */
     public static void initializePhantom(ItemStack original, ItemStack phantom) {
         if (!isSlashBlade(original) || !isSlashBlade(phantom)) return;
-        String binding = MaidWeaponItem.getBindingId(original);
+        String binding = ContractCarrierData.getBindingId(original);
         if (binding == null || binding.isEmpty()) return;
         phantom.getOrCreateTag().putString(PHANTOM_BINDING, binding);
         BladeProgress progress = readProgress(phantom);
@@ -197,7 +198,7 @@ public final class SlashBladeCompat {
     public static boolean isMatchingPhantom(ItemStack original, ItemStack phantom) {
         if (!isSlashBlade(original) || !isSlashBlade(phantom)
                 || phantom.getTag() == null) return false;
-        String binding = MaidWeaponItem.getBindingId(original);
+        String binding = ContractCarrierData.getBindingId(original);
         return binding != null && !binding.isEmpty()
                 && binding.equals(phantom.getTag().getString(PHANTOM_BINDING));
     }
@@ -270,6 +271,30 @@ public final class SlashBladeCompat {
             }
             classLookupDone = true;
             return slashBladeItemClass;
+        }
+    }
+
+    /** Reads the named blade's state identity, never its player-editable display name. */
+    public static boolean isNamedBlade(ItemStack stack, String translationKey) {
+        if (!isSlashBlade(stack)) return false;
+        Object state = resolveBladeState(stack);
+        if (state == null) return false;
+        try {
+            return translationKey.equals(state.getClass().getMethod("getTranslationKey").invoke(state));
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
+            return false;
+        }
+    }
+
+    /** Read-only progress access; never count contract projections as additional blades. */
+    public static int getKillCount(ItemStack stack) {
+        if (!isSlashBlade(stack) || stack.hasTag() && stack.getTag().contains(PHANTOM_BINDING)) return 0;
+        Object state = resolveBladeState(stack);
+        if (state == null) return 0;
+        try {
+            return Math.max(0, ((Number) state.getClass().getMethod("getKillCount").invoke(state)).intValue());
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) {
+            return 0;
         }
     }
 

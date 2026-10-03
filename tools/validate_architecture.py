@@ -86,4 +86,30 @@ for path in (JAVA / "com/maidweapon/forge/compat").rglob("*.java"):
     if "TODO:" in read(path):
         raise SystemExit(f"unfinished compatibility stub remains: {path}")
 
+carrier = read(JAVA / "com/maidweapon/forge/system/contract/ContractCarrierData.java")
+for method in ("getMaidData", "setMaidData", "getBindingId", "ensureBindingId",
+               "getOwnerUUID", "isOwner", "hasMaidEntityData", "clearMaidContract"):
+    if f"ContractCarrierData.{method}(" not in item_source:
+        raise SystemExit(f"Legacy item API stopped forwarding {method}")
+for path in JAVA.rglob("*.java"):
+    # The opt-in runtime fixture explicitly verifies legacy addon forwarders.
+    if path.name in ("MaidWeaponItem.java", "ContractCarrierValidation.java"):
+        continue
+    if "MaidWeaponItem." in read(path):
+        raise SystemExit(f"Concrete item class regained shared contract authority: {path}")
+if "MaidWeaponItem" in carrier:
+    raise SystemExit("Shared carrier data depends on the concrete weapon item")
+lifecycle = read(JAVA / "com/maidweapon/forge/system/contract/ContractLifecycleService.java")
+if "FoxSpirit" in lifecycle or lifecycle.count("ContractAuthorization.allows(") != 2:
+    raise SystemExit("Contract lifecycle bypasses pluggable authorization")
+authorization = read(JAVA / "com/maidweapon/forge/api/ContractAuthorization.java")
+if "CompatDiagnostics.warnOnce" not in authorization or "return false; // A broken" not in authorization:
+    raise SystemExit("Authorization rule failures must deny access with a diagnostic")
+channel = read(JAVA / "com/maidweapon/forge/system/contract/ContractChannelStorage.java")
+for key in ("MaidData", "MaidUUID", "MaidBindingId", "OwnerUUID", "MaidInfusionOriginalSchedule"):
+    if f'"{key}"' not in channel:
+        raise SystemExit(f"Active channel payload lost a legacy contract key: {key}")
+intrinsic = read(JAVA / "com/maidweapon/forge/api/IntrinsicSpiritApi.java")
+if "getMethod(" in intrinsic or len(intrinsic.splitlines()) > 500:
+    raise SystemExit("Intrinsic spirit facade regained model reflection or payload implementation")
 print("Architecture boundaries validated.")

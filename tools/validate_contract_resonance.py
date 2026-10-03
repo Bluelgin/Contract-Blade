@@ -10,7 +10,7 @@ def read(path: str) -> str:
 
 data = read("src/main/java/com/maidweapon/common/data/MaidWeaponData.java")
 serializer = read("src/main/java/com/maidweapon/common/data/MaidWeaponDataSerializer.java")
-weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
+weapon = read("src/main/java/com/maidweapon/forge/system/contract/ContractCarrierData.java")
 config = read("src/main/java/com/maidweapon/common/MaidWeaponConfig.java")
 bond = read("src/main/java/com/maidweapon/forge/event/MaidBondCombatHandler.java")
 combat = read("src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java")

@@ -1,7 +1,8 @@
 package com.maidweapon.forge.system.interior;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -54,7 +55,7 @@ public final class ContractInteriorSelectionService {
             );
             return false;
         }
-        if (!MaidWeaponItem.isOwner(contract, player)) {
+        if (!ContractCarrierData.isOwner(contract, player)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.not_owner"),
                     true
@@ -75,7 +76,7 @@ public final class ContractInteriorSelectionService {
         net.minecraft.server.MinecraftServer server = player.getServer();
         if (server == null) return false;
 
-        String bindingId = MaidWeaponItem.ensureBindingId(contract);
+        String bindingId = ContractCarrierData.ensureBindingId(contract);
         ContractInteriorSavedData saved =
                 ContractInteriorSavedData.get(server);
         ContractInteriorSavedData.Plot plot = saved.getOrCreate(bindingId);

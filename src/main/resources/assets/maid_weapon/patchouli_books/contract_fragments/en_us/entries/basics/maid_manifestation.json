@@ -1,7 +1,7 @@
 {
   "sortnum": 3,
   "name": "patchouli.maid_weapon.entry.maid_manifestation.name",
-  "icon": "maid_weapon:contract_fragments",
+  "icon": "maid_weapon:textures/item/contract_fragments.png",
   "category": "maid_weapon:basics",
   "pages": [
     {

@@ -1,0 +1,7 @@
+{
+  "type": "maid_weapon:shinkitsu_shrine",
+  "biomes": "#maid_weapon:has_shinkitsu_shrine",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_box"
+}

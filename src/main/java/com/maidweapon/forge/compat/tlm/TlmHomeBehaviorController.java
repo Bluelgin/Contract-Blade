@@ -1,22 +1,13 @@
 package com.maidweapon.forge.compat.tlm;
 
-import com.google.common.collect.ImmutableList;
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.ai.Brain;
-import net.minecraft.world.entity.ai.behavior.BehaviorControl;
-import net.minecraft.world.entity.ai.behavior.LookAtTargetSink;
-import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
-import net.minecraft.world.entity.ai.behavior.Swim;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.schedule.Activity;
-import java.util.ArrayList;
-import java.util.Set;
 
 /** Temporary behavior scope on the SAME maid/brain; refreshBrain restores TLM on release.
  * Only settings are saved for crash recovery, never entity/inventory NBT or a maid copy.
@@ -26,7 +17,6 @@ public final class TlmHomeBehaviorController {
     private static final String BOARD_GAME_MODE = "ContractHomeBoardGame";
     private static final String MANAGED_SEAT = "ContractHomeManagedSeat";
     private static final String NATIVE_LIVING = "ContractHomeNativeLiving";
-    private static final Activity HOME = new Activity("contract_blade_home");
 
     public static boolean begin(Mob maid) {
         if (!TlmEntityAdapter.isMaidEntity(maid)) return false;
@@ -51,41 +41,14 @@ public final class TlmHomeBehaviorController {
                 tame.setInSittingPose(false);
                 tame.setOrderedToSit(false);
             }
-            center(maid, maid.blockPosition());
-            return installHomeBrain(maid);
+            if (enableNativeLiving(maid, maid.blockPosition())) return true;
+            restore(maid);
+            return false;
         } catch (ReflectiveOperationException | RuntimeException unsupported) {
             if (Boolean.getBoolean("contractblade.home.validation")) unsupported.printStackTrace();
             restore(maid);
             return false;
         }
-    }
-
-    public static boolean beginBoardGame(Mob maid) {
-        if (!maid.getPersistentData().contains(BACKUP)) return false;
-        try {
-            if (!setSchedule(maid, "ALL")
-                    || !TlmEntityAdapter.switchTask(maid, "touhou_little_maid:board_games")) {
-                restoreHomeScope(maid);
-                return false;
-            }
-            if (!installHomeBrain(maid)) {
-                restoreHomeScope(maid);
-                return false;
-            }
-            maid.getPersistentData().putBoolean(BOARD_GAME_MODE, true);
-            return true;
-        } catch (ReflectiveOperationException | RuntimeException unsupported) {
-            if (Boolean.getBoolean("contractblade.home.validation")) unsupported.printStackTrace();
-            restoreHomeScope(maid);
-            return false;
-        }
-    }
-
-    public static boolean endBoardGame(Mob maid) {
-        if (!maid.getPersistentData().getBoolean(BOARD_GAME_MODE)) return true;
-        boolean restored = restoreHomeScope(maid);
-        if (restored) maid.getPersistentData().remove(BOARD_GAME_MODE);
-        return restored;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -98,28 +61,15 @@ public final class TlmHomeBehaviorController {
         return true;
     }
 
-    private static boolean restoreHomeScope(Mob maid) {
-        CompoundTag backup = maid.getPersistentData().getCompound(BACKUP);
-        if (backup.isEmpty() || maid.isRemoved()) return false;
-        try {
-            if (backup.contains("Schedule") && !setSchedule(maid, backup.getString("Schedule"))) return false;
-            if (!TlmEntityAdapter.switchTask(maid, "touhou_little_maid:idle")) return false;
-            return installHomeBrain(maid);
-        } catch (ReflectiveOperationException | RuntimeException unsupported) {
-            if (Boolean.getBoolean("contractblade.home.validation")) unsupported.printStackTrace();
-            return false;
-        }
-    }
-
     /** Retain TLM's real CORE/IDLE/REST goals, sensors and random strolling.
-     * Only its schedule is bridged to this resident's clock; never change world time. */
+     * Minecraft time uses the native schedule; custom clocks are explicitly opt-in. */
     public static boolean enableNativeLiving(Mob maid, BlockPos homeCenter) {
         if (!maid.getPersistentData().contains(BACKUP)) return false;
         try {
             if (!TlmEntityAdapter.switchTask(maid, "touhou_little_maid:idle")) return false;
             maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, true);
             center(maid, homeCenter);
-            maid.getClass().getMethod("refreshBrain", ServerLevel.class).invoke(maid, (ServerLevel) maid.level());
+            if (!setSchedule(maid, "DAY") || !refreshNativeBrain(maid)) return false;
             maid.getPersistentData().putBoolean(NATIVE_LIVING, true);
             return true;
         } catch (ReflectiveOperationException | RuntimeException unsupported) {
@@ -144,29 +94,9 @@ public final class TlmHomeBehaviorController {
 
     public static boolean isNativeLiving(Mob maid) { return maid.getPersistentData().getBoolean(NATIVE_LIVING); }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    private static boolean installHomeBrain(Mob maid) throws ReflectiveOperationException {
-        Brain brain = maid.getBrain();
-        brain.stopAll((ServerLevel) maid.level(), maid);
-        clearWalk(maid);
-        BehaviorControl doors = (BehaviorControl) Class.forName(
-                "com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidInteractWithDoor")
-                .getMethod("create").invoke(null);
-        var behaviors = new ArrayList<Pair<Integer, BehaviorControl>>();
-        behaviors.add(Pair.of(0, new Swim(0.8f)));
-        behaviors.add(Pair.of(1, new LookAtTargetSink(45, 90)));
-        behaviors.add(Pair.of(2, new MoveToTargetSink()));
-        behaviors.add(Pair.of(3, doors));
-        if (homeMealSupported()) {
-            BehaviorControl meal = (BehaviorControl) Class.forName(
-                    "com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidHomeMealTask")
-                    .getConstructor().newInstance();
-            behaviors.add(Pair.of(4, meal));
-        }
-        brain.addActivity(HOME, ImmutableList.copyOf(behaviors));
-        brain.setCoreActivities(Set.of(HOME));
-        brain.setDefaultActivity(HOME);
-        brain.setActiveActivityIfPossible(HOME);
+    private static boolean refreshNativeBrain(Mob maid) throws ReflectiveOperationException {
+        maid.getClass().getMethod("refreshBrain", ServerLevel.class)
+                .invoke(maid, (ServerLevel) maid.level());
         return true;
     }
 
@@ -198,7 +128,7 @@ public final class TlmHomeBehaviorController {
                 || !maid.level().dimension().equals(
                         com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
                 || (!com.maidweapon.forge.system.interior.home.ContractHomeRuntime.bridgeNativeSeat(maid, seat)
-                    && (!maid.getPersistentData().hasUUID(MANAGED_SEAT)
+                    && (!usesCustomClock(maid) || !maid.getPersistentData().hasUUID(MANAGED_SEAT)
                         || !maid.getPersistentData().getUUID(MANAGED_SEAT).equals(seat.getUUID())))) {
             return false;
         }
@@ -207,6 +137,10 @@ public final class TlmHomeBehaviorController {
         // Home Runtime safety tick.
         return maid.hurtTime <= 0 && !maid.isOnFire() && maid.getAirSupply() >= 200
                 && maid.getTarget() == null && !maid.isLeashed();
+    }
+
+    private static boolean usesCustomClock(Mob maid) {
+        return com.maidweapon.forge.system.interior.home.ContractHomeRuntime.usesCustomClock(maid);
     }
 
     public static void releaseManagedSeat(Mob maid) {

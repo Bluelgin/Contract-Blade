@@ -1,9 +1,10 @@
 package com.maidweapon.forge.compat.tlm;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.init.ModItems;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
 import com.maidweapon.forge.system.deployment.ContractCombatTaskRouter;
 import com.maidweapon.forge.system.deployment.ContractMaidRuntimeService;
@@ -76,7 +77,7 @@ public final class ContractProjectionValidation {
             baubles.setStackInSlot(0, tassel.copy());
             ContractMaidRuntimeService.maintain(player, carrier, maid);
             check(TripleMagicCompat.isPhantom(maid.getMainHandItem()), "tassel enables weapon projection");
-            check(!MaidWeaponItem.hasMaidData(maid.getMainHandItem()), "projection has no duplicate growth contract");
+            check(!ContractCarrierData.hasMaidData(maid.getMainHandItem()), "projection has no duplicate growth contract");
             check(ItemStack.isSameItemSameTags(ownHelmet, maid.getItemBySlot(EquipmentSlot.HEAD)), "tassel does not project armor");
             check(!"touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "tassel enables automatic work");
             baubles.setStackInSlot(1, ribbon.copy());

@@ -1,6 +1,23 @@
 # Changelog
 
+## 1.1.0
+
+- Added the Shinkitsu Shrine integration with SlashBlade, found in newly generated snowy plains, with an enshrined White Fox blade.
+- Claiming the blade requires a combined kill count of 520 across carried SlashBlades. Right-click the offering stand while holding a cake, then right-click again with an empty hand to take the blade.
+- The shrine's White Fox has her own spirit and forms a contract when claimed, supporting calling, recall, protection and life together.
+- White Fox can move between supported weapons through the Contract Table using an empty Soul Talisman. Her exclusive dialogue resumes upon returning to her original shrine blade.
+- Protected spirit carriers against consumption in standard crafting, anvil material use and grindstone processing.
+- Added Black and White Fox maid models and a pixel-art dual-fox icon, with native Touhou Little Maid animations and furniture interactions. Automatic model preparation requires Touhou Little Maid 1.5.3 or newer.
+- Added BladeTetra encounter dialogue and responses to existing divine-domain progress. With SlashBlade alone, White Fox remains available without divine-domain story progression.
+- Updated White Fox dialogue, offering hints and model descriptions.
+- Maids in Contract Interiors now use Touhou Little Maid's native roaming, pathfinding, schedules and furniture interactions, including ordinary wandering when no furniture is available.
+- Improved continuity of the maid's position and activity when returning home. Once inside, she follows native behavior without repeated activity reassignment.
+- Fixed interrupted furniture interactions and overwritten manually selected schedules. Leaving the interior restores the maid's previous work and schedule settings.
+- With the default Minecraft clock, the interior's day-night cycle stays consistent with the maid's schedule.
+
 ## 1.0.8
+
+- Making any item from this mod awards the tutorial handbook once per player, including altar baubles. Updated calling, protection, residence, bauble and integration instructions, removing outdated guidance.
 
 - Updated the Contract Heart Key, Resonance Sword Tassel, Guardian Ribbon and Heartbound Knot textures with subtle animations and resting intervals.
 - Fixed following companions' resonance drain, recovery and cooperation tracking stopping when the player switched held items.

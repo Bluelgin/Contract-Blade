@@ -4,6 +4,7 @@ build/
 *.class
 *.jar
 *.log
+__pycache__/
 *.zip
 
 # IDE
@@ -45,3 +46,8 @@ build/downloadMcpConfig/
 
 # Backup
 src_backup*/
+
+# Credited native fox model pack shipped with the mod (not a build/download archive).
+!src/main/resources/modelpacks/contract-fox-1.0.0.zip
+!src/main/resources/modelpacks/contract-fox-1.0.1.zip
+!src/main/resources/modelpacks/contract-bladesmith-1.0.0.zip

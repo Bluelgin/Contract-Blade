@@ -67,12 +67,15 @@ public class HomeClockResolverTest {
                     "arrival does not invent missing furniture, food costs or player-follow activity");
         }
         for (int i = 0; i < 10000; i++) {
-            var choice = ContractHomeActivityResolver.resolve(i, a.phase(), available, 384, true);
+            var choice = ContractHomeArrivalPlanner.choose("home-" + i, new UUID(0, i), a, available,
+                    ContractHomeActivity.IDLE, false, 0, 1000000, 384);
             check(available.contains(choice), "missing furniture removed from pool");
-            check(choice == ContractHomeActivityResolver.resolve(i, a.phase(), available, 384, true), "determinism");
+            check(choice == ContractHomeArrivalPlanner.choose("home-" + i, new UUID(0, i), a, available,
+                    ContractHomeActivity.IDLE, false, 0, 1000000, 384), "determinism");
         }
-        check(ContractHomeActivityResolver.resolve(seed, a.phase(), Set.of(), 0, false)
-                == ContractHomeActivity.IDLE, "empty pool fallback");
+        check(ContractHomeArrivalPlanner.choose("empty", maid, a, Set.of(),
+                ContractHomeActivity.IDLE, false, 0, 1000000, 0)
+                == ContractHomeActivity.WANDER, "empty arrival pool leaves walking to native AI");
         check(ContractHomeActivityResolver.weight(ContractHomeActivity.STAY_NEAR_PLAYER, a.phase(), 384, true)
                 > ContractHomeActivityResolver.weight(ContractHomeActivity.STAY_NEAR_PLAYER, a.phase(), 0, true), "affection weight");
         check(ContractHomeActivityResolver.weight(ContractHomeActivity.STAY_NEAR_PLAYER, a.phase(), 384, false) == 0, "absent player");

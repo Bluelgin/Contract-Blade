@@ -1,5 +1,7 @@
 package com.maidweapon.forge.event;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.system.contract.ContractInteractionService;
@@ -61,7 +63,7 @@ public class MaidInteractionHandler {
         // Cancel attacks against its own maid, but never turn attack input into
         // a second recall path.
         if (MaidInfusion.isInfused(mainHand)) {
-            if (MaidWeaponItem.isBoundMaid(mainHand, event.getTarget())) {
+            if (ContractCarrierData.isBoundMaid(mainHand, event.getTarget())) {
                 event.setCanceled(true);
             }
             return;

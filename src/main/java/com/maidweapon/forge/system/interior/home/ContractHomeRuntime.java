@@ -7,18 +7,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.behavior.BlockPosTracker;
-import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.ai.memory.WalkTarget;
 import java.time.Instant;
 import java.util.*;
 
-/** Online behavior only. Maid manifestation/capture remains in ContractInteriorService. */
+/** Native living observation plus one-shot arrival staging; never an online AI scheduler. */
 public final class ContractHomeRuntime {
     private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger();
     private static final Map<UUID, Session> SESSIONS = new HashMap<>();
-    public static final int DECISION_INTERVAL = 600;
-    public static final int PATH_TIMEOUT = 400;
+    private static final int SNAPSHOT_INTERVAL = 100;
     private static final String PAUSED = "ContractHomePaused";
     private static final String RESIDENT = "ContractHomeResident";
 
@@ -29,16 +25,10 @@ public final class ContractHomeRuntime {
         final ContractInteriorSavedData saved;
         final ContractHomeFurnitureRegistry registry;
         final BlockPos homeCenter;
-        final Set<String> failed = new HashSet<>();
         ContractHomeFurnitureRegistry.Entry target;
-        long nextDecision;
-        long approachDeadline;
-        long nextMovement;
-        boolean active;
-        boolean performing;
+        long nextSnapshot;
+        Boolean customNight;
         long arrivalAt = -1;
-        boolean nativeRequested;
-        boolean nativeOnline;
         ServerPlayer owner;
         Session(String binding, Mob maid, ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
             this.binding = binding; this.maid = maid; this.saved = saved; this.state = plot.home();
@@ -50,22 +40,22 @@ public final class ContractHomeRuntime {
         }
     }
     public static boolean attached(ServerPlayer player) { return SESSIONS.containsKey(player.getUUID()); }
-    /** Production entry waits for fresh entity/chunk registration, not a UUID re-lookup. */
+    /** Wait for fresh entity/chunk registration only when an arrival scene is needed. */
     public static void startOnVisit(ServerPlayer player, String binding, Mob maid,
                                     ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot, boolean arrival) {
-        start(player, binding, maid, saved, plot, false, arrival, true);
+        start(player, binding, maid, saved, plot, arrival, arrival);
     }
     public static void start(ServerPlayer player, String binding, Mob maid,
                              ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot) {
-        start(player, binding, maid, saved, plot, false);
+        start(player, binding, maid, saved, plot, false, false);
     }
     public static void start(ServerPlayer player, String binding, Mob maid,
                              ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot, boolean arrival) {
-        start(player, binding, maid, saved, plot, arrival, false, false);
+        start(player, binding, maid, saved, plot, arrival, false);
     }
     private static void start(ServerPlayer player, String binding, Mob maid,
                               ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot,
-                              boolean arrival, boolean deferred, boolean nativeRequested) {
+                              boolean arrival, boolean deferred) {
         stop(player);
         if (!plot.hasTerrainTheme() || !TlmEntityAdapter.isOwnedMaid(maid, player)
                 || !binding.equals(maid.getPersistentData().getString(
@@ -73,14 +63,11 @@ public final class ContractHomeRuntime {
         if (maid.getPersistentData().getBoolean(PAUSED)) {
             maid.setNoAi(false); maid.getPersistentData().remove(PAUSED);
         }
-        // Respect a player's pre-existing NoAI setting.
         if (maid.isNoAi()) return;
         var session = new Session(binding, maid, saved, plot);
-        session.nativeRequested = nativeRequested;
         session.owner = player;
-        session.active = TlmHomeBehaviorController.begin(maid);
-        if (!session.active) {
-            LOGGER.warn("[ContractHome] Home AI takeover failed: binding={}, maid={}, position={}", binding, maid.getUUID(), maid.position());
+        if (!TlmHomeBehaviorController.begin(maid)) {
+            LOGGER.warn("[ContractHome] Native home setup unavailable; original AI preserved for {}", binding);
             return;
         }
         maid.getPersistentData().putString(RESIDENT, binding);
@@ -88,10 +75,10 @@ public final class ContractHomeRuntime {
         if (deferred) {
             loadArrivalChunks(session);
             session.arrivalAt = maid.level().getGameTime() + 2;
-            session.nextDecision = session.arrivalAt + DECISION_INTERVAL;
+        } else if (arrival) {
+            prepareArrival(session, player);
+            handoffToNative(session);
         }
-        if (arrival) prepareArrival(session, player);
-        if (nativeRequested && !deferred) handoffToNative(session, player);
         tick(player);
     }
     private static void prepareArrival(Session s, ServerPlayer player) {
@@ -134,7 +121,7 @@ public final class ContractHomeRuntime {
                 s.maid.moveTo(before.x, before.y, before.z, yaw, pitch);
                 continue;
             }
-            s.target = chosen; s.performing = true; posed = true;
+            s.target = chosen; posed = true;
             break;
         }
         // No target was safe: keep the checkpoint, not a random teleport or a
@@ -144,8 +131,6 @@ public final class ContractHomeRuntime {
         s.state.activity = activity; s.state.target = posed ? s.target.target().key() : "";
         if (!continuing) s.state.activityStartedAt = now.toEpochMilli();
         s.state.lastSimulatedAt = now.toEpochMilli();
-        s.nextDecision = tick + DECISION_INTERVAL;
-        s.nextMovement = tick + 100;
         ContractResidentPositionService.remember(s.maid);
         s.saved.setDirty();
         LOGGER.info("[ContractHome] Arrival binding={}, maid={}, candidates={}, activity={}, posed={}, target={}, position={}",
@@ -198,75 +183,25 @@ public final class ContractHomeRuntime {
                 || !ContractInteriorService.isInside(player) || ContractInteriorService.isGallerySession(player)) {
             stop(player); return;
         }
-        long tick = player.level().getGameTime();
+        long tick = maid.level().getGameTime();
         if (s.arrivalAt >= 0) {
             if (tick < s.arrivalAt) return;
             s.arrivalAt = -1;
             prepareArrival(s, player);
+            handoffToNative(s);
         }
+        // Observation only: TLM owns walking, furniture choice, combat and emergency behavior.
         ContractResidentPositionService.remember(maid);
-        // Return emergency behavior to TLM; no home path retries during combat/fire/drowning.
-        if (maid.hurtTime > 0 || maid.isOnFire() || maid.getAirSupply() < 200
-                || maid.getTarget() != null || maid.isLeashed()) {
-            if (s.active) { endAction(s); TlmHomeBehaviorController.restore(maid); s.active = false; }
-            s.nextDecision = tick + DECISION_INTERVAL;
-            return;
-        }
-        if (!s.active) {
-            if (tick < s.nextDecision) return;
-            s.active = TlmHomeBehaviorController.begin(maid);
-            if (!s.active) { s.nextDecision = tick + DECISION_INTERVAL; return; }
-            if (s.nativeRequested) {
-                s.nativeOnline = false;
-                handoffToNative(s, player);
-            }
-        }
-        if (s.nativeRequested && !s.nativeOnline && s.arrivalAt < 0 && tick >= s.nextDecision)
-            handoffToNative(s, player);
-        if (s.nativeOnline) {
-            syncNativeState(s, player);
-            return; // Never run the custom online activity resolver after handoff.
-        }
-        s.registry.refresh((ServerLevel) maid.level(), tick);
-        if (s.target == null && tick >= s.nextMovement) {
-            s.nextMovement = tick + 100;
-            if (s.state.activity == ContractHomeActivity.STAY_NEAR_PLAYER && s.registry.contains(player.blockPosition())) {
-                if (maid.distanceToSqr(player) > 9 && maid.getNavigation().isDone()) approach(s, player.blockPosition(), tick);
-                maid.getLookControl().setLookAt(player);
-            } else if (s.state.activity == ContractHomeActivity.WANDER && maid.getNavigation().isDone()) {
-                var random = new SplittableRandom(s.state.seed ^ tick / 100);
-                BlockPos dest = maid.blockPosition().offset(random.nextInt(-6, 7), 0, random.nextInt(-6, 7));
-                if (s.registry.contains(dest)) approach(s, dest, tick);
-            }
-        }
-        if (s.target != null) {
-            var target = s.target.target();
-            var adapter = s.target.adapter();
-            if (!adapter.valid((ServerLevel) maid.level(), target, maid)) fail(s, tick);
-            else if (s.performing) {
-                if (!adapter.running((ServerLevel) maid.level(), target, maid)) fail(s, tick);
-            } else if (target.position().distToCenterSqr(maid.position()) <= 4.0) {
-                TlmHomeBehaviorController.clearWalk(maid);
-                if (adapter.start((ServerLevel) maid.level(), target, maid)) s.performing = true;
-                else fail(s, tick);
-            } else if (tick >= s.approachDeadline) fail(s, tick);
-        }
-        if (s.target == null && s.approachDeadline > 0 && tick >= s.approachDeadline) {
-            TlmHomeBehaviorController.clearWalk(maid); s.approachDeadline = 0;
-        }
-        if (tick < s.nextDecision) return;
-        s.nextDecision = tick + DECISION_INTERVAL;
-        resolve(s, player, tick);
+        if (tick < s.nextSnapshot) return;
+        s.nextSnapshot = tick + SNAPSHOT_INTERVAL;
+        syncNativeState(s, player);
     }
-    private static void handoffToNative(Session s, ServerPlayer player) {
-        endAction(s);
-        s.nativeOnline = TlmHomeBehaviorController.enableNativeLiving(s.maid, s.homeCenter);
-        if (s.nativeOnline) {
-            syncNativeState(s, player);
-            LOGGER.info("[ContractHome] Online living handed to native TLM brain: binding={}, maid={}", s.binding, s.maid.getUUID());
-        } else {
-            s.nextDecision = s.maid.level().getGameTime() + DECISION_INTERVAL;
-            LOGGER.warn("[ContractHome] Native handoff failed; bounded legacy fallback for {}", s.binding);
+    private static void handoffToNative(Session s) {
+        // Keep the actual native seat/sleep pose; do not stop it merely to hand over.
+        s.target = null;
+        TlmHomeBehaviorController.releaseManagedSeat(s.maid);
+        if (!TlmHomeBehaviorController.enableNativeLiving(s.maid, s.homeCenter)) {
+            LOGGER.warn("[ContractHome] Native arrival refresh failed; no replacement AI installed for {}", s.binding);
         }
     }
     private static boolean night(Session s, ServerPlayer player) {
@@ -274,7 +209,17 @@ public final class ContractHomeRuntime {
                 player.getServer().overworld().getDayTime()).phase() == ContractHomeClock.Phase.NIGHT;
     }
     private static void syncNativeState(Session s, ServerPlayer player) {
-        TlmHomeBehaviorController.syncNativeClock(s.maid, night(s, player));
+        // Default Minecraft mode uses the original TLM schedule unchanged.
+        if (s.state.mode != ContractHomeClock.Mode.MINECRAFT_TIME) {
+            boolean night = night(s, player);
+            if (s.customNight == null || s.customNight != night) {
+                TlmHomeBehaviorController.syncNativeClock(s.maid, night);
+                s.customNight = night;
+            }
+        } else if (s.customNight != null) {
+            TlmHomeBehaviorController.enableNativeLiving(s.maid, s.homeCenter);
+            s.customNight = null;
+        }
         s.registry.refresh((ServerLevel) s.maid.level(), s.maid.level().getGameTime());
         var activity = s.maid.isSleeping() ? ContractHomeActivity.SLEEP
                 : s.maid.isPassenger() ? ContractHomeActivity.SIT : ContractHomeActivity.WANDER;
@@ -289,11 +234,16 @@ public final class ContractHomeRuntime {
         s.state.lastSimulatedAt = Instant.now().toEpochMilli();
         s.saved.setDirty();
     }
-    /** Only compensate native joy seats consulting shared world time, not routine dismounts. */
+    public static boolean usesCustomClock(Mob maid) {
+        return SESSIONS.values().stream().anyMatch(s -> s.maid == maid
+                && s.state.mode != ContractHomeClock.Mode.MINECRAFT_TIME);
+    }
+    /** Only bridge explicitly selected custom clocks, never default native dismounts. */
     public static boolean bridgeNativeSeat(Mob maid, net.minecraft.world.entity.Entity seat) {
         if (!"com.github.tartaricacid.touhoulittlemaid.entity.item.EntitySit".equals(seat.getClass().getName())) return false;
-        Session s = SESSIONS.values().stream().filter(value -> value.maid == maid && value.nativeOnline).findFirst().orElse(null);
-        if (s == null || !s.active) return false;
+        Session s = SESSIONS.values().stream().filter(value -> value.maid == maid && TlmHomeBehaviorController.isNativeLiving(maid)
+                && value.state.mode != ContractHomeClock.Mode.MINECRAFT_TIME).findFirst().orElse(null);
+        if (s == null) return false;
         if (night(s, s.owner) || !seat.hasPassenger(maid)) return false;
         try {
             if (net.minecraft.world.entity.schedule.Activity.IDLE.equals(
@@ -303,61 +253,6 @@ public final class ContractHomeRuntime {
             var target = adapter.blockTarget((ServerLevel) maid.level(), pos);
             return target.isPresent() && adapter.valid((ServerLevel) maid.level(), target.get(), maid);
         } catch (ReflectiveOperationException unsupported) { return false; }
-    }
-    private static void resolve(Session s, ServerPlayer player, long tick) {
-        Instant now = Instant.now();
-        var reading = ContractHomeClock.read(s.state.mode, s.state.zone, now,
-                player.getServer().overworld().getDayTime());
-        boolean sameSlot = s.state.slot == reading.slot() && s.state.maidId.equals(s.maid.getStringUUID());
-        if (!sameSlot) s.failed.clear();
-        // A half-hour real-time slot must not mean half an hour frozen in one
-        // idle pose. Keep sleep stable, but vary waking activities periodically.
-        if (s.state.activity != ContractHomeActivity.SLEEP
-                && now.toEpochMilli() - s.state.activityStartedAt >= 120000) sameSlot = false;
-        var entries = s.registry.available((ServerLevel) s.maid.level(), s.maid, s.failed);
-        var available = EnumSet.of(ContractHomeActivity.IDLE, ContractHomeActivity.WANDER,
-                ContractHomeActivity.STAY_NEAR_PLAYER);
-        entries.forEach(e -> available.add(e.target().activity()));
-        long seed = ContractHomeActivityResolver.seed(s.binding, s.maid.getUUID(), reading.slot());
-        if (!sameSlot) seed ^= tick / DECISION_INTERVAL;
-        int favorability = TlmEntityAdapter.favorability(s.maid);
-        var activity = sameSlot && available.contains(s.state.activity) ? s.state.activity
-                : ContractHomeActivityResolver.resolve(seed, reading.phase(), available, favorability, true,
-                        ContractHomeArrivalPlanner.preference(s.maid.getUUID()));
-        ContractHomeFurnitureRegistry.Entry chosen = null;
-        final var selectedActivity = activity;
-        var candidates = entries.stream().filter(e -> e.target().activity() == selectedActivity).toList();
-        if (!candidates.isEmpty()) {
-            if (sameSlot) chosen = candidates.stream().filter(e -> e.target().key().equals(s.state.target)).findFirst().orElse(null);
-            if (chosen == null) chosen = selectTarget(candidates, player, favorability, seed);
-        }
-        boolean unchanged = sameSlot && activity == s.state.activity
-                && Objects.equals(chosen == null ? "" : chosen.target().key(), s.state.target);
-        if (!unchanged || (chosen != null && s.target == null)) {
-            endAction(s);
-            s.target = chosen;
-            if (chosen != null && !approach(s, chosen.target().position(), tick)) {
-                s.failed.add(chosen.target().key()); s.target = null;
-                activity = ContractHomeActivity.IDLE;
-            }
-        }
-        if (chosen == null && s.target == null) {
-            if (activity == ContractHomeActivity.STAY_NEAR_PLAYER && s.registry.contains(player.blockPosition())) {
-                if (s.maid.distanceToSqr(player) > 9) approach(s, player.blockPosition(), tick);
-                s.maid.getLookControl().setLookAt(player);
-            } else if (activity == ContractHomeActivity.WANDER && s.maid.getNavigation().isDone()) {
-                var random = new SplittableRandom(seed ^ tick / DECISION_INTERVAL);
-                // One bounded attempt per decision; rejected locations never cause a tight retry loop.
-                BlockPos dest = s.maid.blockPosition().offset(random.nextInt(-6, 7), 0, random.nextInt(-6, 7));
-                if (s.registry.contains(dest)) approach(s, dest, tick);
-            }
-        }
-        if (!unchanged) s.state.activityStartedAt = now.toEpochMilli();
-        s.state.lastSimulatedAt = now.toEpochMilli();
-        s.state.slot = reading.slot(); s.state.seed = seed; s.state.maidId = s.maid.getStringUUID();
-        s.state.activity = activity;
-        s.state.target = s.target == null ? "" : s.target.target().key();
-        s.saved.setDirty();
     }
     private static ContractHomeFurnitureRegistry.Entry selectTarget(List<ContractHomeFurnitureRegistry.Entry> entries,
             ServerPlayer player, int favorability, long seed) {
@@ -374,29 +269,9 @@ public final class ContractHomeRuntime {
         return Math.max(1, Math.min(100, target.weight())) +
                 (target.position().distToCenterSqr(player.position()) < 64 ? Math.max(0, Math.min(384, favorability)) / 64 : 0);
     }
-    private static boolean approach(Session s, BlockPos dest, long tick) {
-        if (!s.registry.contains(dest) || !s.maid.level().hasChunkAt(dest)) return false;
-        if (dest.distToCenterSqr(s.maid.position()) <= 4) { s.approachDeadline = tick + PATH_TIMEOUT; return true; }
-        var path = s.maid.getNavigation().createPath(dest, 1);
-        if (path == null || !path.canReach()) return false;
-        try { TlmHomeBehaviorController.center(s.maid, dest); }
-        catch (ReflectiveOperationException unsupported) { return false; }
-        s.maid.getBrain().setMemory(MemoryModuleType.WALK_TARGET, new WalkTarget(dest, 0.5f, 1));
-        s.maid.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new BlockPosTracker(dest));
-        s.approachDeadline = tick + PATH_TIMEOUT;
-        return true;
-    }
-    private static void fail(Session s, long tick) {
-        if (s.target != null) s.failed.add(s.target.target().key());
-        endAction(s);
-        s.state.target = ""; s.state.activity = ContractHomeActivity.IDLE;
-        // No immediate retry loop: wait for the next low-frequency decision.
-        s.nextDecision = tick + DECISION_INTERVAL;
-        s.saved.setDirty();
-    }
     private static void endAction(Session s) {
         if (s.target != null && !s.maid.isRemoved()) s.target.adapter().stop(s.maid);
-        s.target = null; s.performing = false;
+        s.target = null;
         TlmHomeBehaviorController.clearWalk(s.maid);
     }
     public static void invalidate(ServerLevel level, BlockPos pos) {
@@ -405,13 +280,12 @@ public final class ContractHomeRuntime {
     public static void clockChanged(ServerPlayer player) {
         Session s = SESSIONS.get(player.getUUID());
         if (s == null) return;
-        if (s.nativeOnline) { syncNativeState(s, player); return; }
-        endAction(s); s.state.slot = Long.MIN_VALUE; s.failed.clear(); s.nextDecision = 0;
-        tick(player);
+        syncNativeState(s, player);
     }
     public static boolean stop(ServerPlayer player) {
         Session s = SESSIONS.remove(player.getUUID());
         if (s == null) return true;
+        if (s.maid.isAlive()) syncNativeState(s, player);
         ContractResidentPositionService.remember(s.maid);
         // Persist the logical selection before stopping its real pose/navigation.
         s.state.lastSimulatedAt = Instant.now().toEpochMilli(); s.saved.setDirty();
@@ -457,8 +331,7 @@ public final class ContractHomeRuntime {
             if (level.getChunkSource().getChunkNow(origin.getX() >> 4, origin.getZ() >> 4) != null) {
                 if (session != null) {
                     endAction(session);
-                    session.failed.clear();
-                    session.nextDecision = 0;
+                    session.nextSnapshot = 0;
                 }
                 TlmHomeBehaviorController.clearWalk(maid);
                 maid.teleportTo(origin.getX() + 0.5D, origin.getY(), origin.getZ() + 0.5D);

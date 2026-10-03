@@ -1,11 +1,12 @@
 package com.maidweapon.forge.client.tooltip;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.legacy.LegacySinArchive;
 import com.maidweapon.common.system.LoyaltySystem;
 import com.maidweapon.forge.compat.SlashBladeCompat;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -27,8 +28,8 @@ public final class ContractTooltipComposer {
         MaidWeaponData data = MaidInfusion.data(stack);
         boolean dedicated = MaidInfusion.isContractBlade(stack);
         boolean stored = MaidInfusion.containsMaid(stack);
-        boolean superseded = MaidWeaponItem.isContractSuperseded(stack);
-        boolean ownerAccess = viewer == null || MaidWeaponItem.isOwner(stack, viewer);
+        boolean superseded = ContractCarrierData.isContractSuperseded(stack);
+        boolean ownerAccess = viewer == null || ContractCarrierData.isOwner(stack, viewer);
         boolean expanded = Screen.hasShiftDown();
 
         tooltip.add(Component.empty());
@@ -65,7 +66,7 @@ public final class ContractTooltipComposer {
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.contract"));
 
-        String owner = MaidWeaponItem.getOwnerName(stack);
+        String owner = ContractCarrierData.getOwnerName(stack);
         if (owner != null) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.owner", owner));
         }

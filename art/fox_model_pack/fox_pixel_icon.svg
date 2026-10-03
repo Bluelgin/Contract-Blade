@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>相伴的黑白双狐</title>
+  <g transform="translate(0 6)">
+    <path fill="#737087" d="M1 0h2v2h2v2h6V2h2V0h2v10h1v5h-2v2h-2v2H4v-2H2v-2H0v-5h1z"/>
+    <path fill="#e5e7ef" d="M2 2h1v2h2v2h6V4h2V2h1v8h1v4h-2v2h-2v2H5v-2H3v-2H1v-4h1z"/>
+    <path fill="#d59aab" d="M2 4h1v5H2zm11 0h1v5h-1z"/>
+    <path fill="#bbc0d3" d="M5 6h6v2H5zM1 11h2v3H1zm12 0h2v3h-2z"/>
+    <path fill="#a43e58" d="M3 10h3v1H3zm7 0h3v1h-3z"/>
+    <path fill="#fff7e9" d="M3 12h3v1h4v-1h3v3h-2v2H5v-2H3z"/>
+    <path fill="#4a4055" d="M7 12h2v2H7zm0 3h2v1H7z"/>
+    <path fill="#dddfe8" d="M4 18h8v2H4z"/>
+  </g>
+  <g transform="translate(16 6)">
+    <path fill="#211d30" d="M1 0h2v2h2v2h6V2h2V0h2v10h1v5h-2v2h-2v2H4v-2H2v-2H0v-5h1z"/>
+    <path fill="#494157" d="M2 2h1v2h2v2h6V4h2V2h1v8h1v4h-2v2h-2v2H5v-2H3v-2H1v-4h1z"/>
+    <path fill="#a373a4" d="M2 4h1v5H2zm11 0h1v5h-1z"/>
+    <path fill="#655875" d="M5 6h6v2H5zM1 11h2v3H1zm12 0h2v3h-2z"/>
+    <path fill="#d9a2ec" d="M3 10h3v1H3zm7 0h3v1h-3z"/>
+    <path fill="#afa0ba" d="M3 12h3v1h4v-1h3v3h-2v2H5v-2H3z"/>
+    <path fill="#292335" d="M7 12h2v2H7zm0 3h2v1H7z"/>
+    <path fill="#494157" d="M4 18h8v2H4z"/>
+  </g>
+</svg>

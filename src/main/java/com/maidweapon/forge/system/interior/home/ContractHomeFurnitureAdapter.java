@@ -11,7 +11,8 @@ public interface ContractHomeFurnitureAdapter {
     Optional<ActivityTarget> blockTarget(ServerLevel level, BlockPos position);
     Optional<ActivityTarget> entityTarget(Entity entity);
     boolean valid(ServerLevel level, ActivityTarget target, Mob maid);
-    boolean start(ServerLevel level, ActivityTarget target, Mob maid);
+    /** Observation-only adapters cannot be used to stage an arrival scene. */
+    default boolean start(ServerLevel level, ActivityTarget target, Mob maid) { return false; }
     boolean running(ServerLevel level, ActivityTarget target, Mob maid);
-    void stop(Mob maid);
+    default void stop(Mob maid) { }
 }

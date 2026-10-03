@@ -162,11 +162,11 @@ if "ContractInteriorBuilder.buildSnapshot" not in gallery:
     raise SystemExit("example-home gallery no longer owns the old house snapshots")
 
 for needle in [
-    "MaidWeaponItem.ensureBindingId(contract)",
+    "ContractCarrierData.ensureBindingId(contract)",
     "ContractLifecycleService.manifest(player, contract, false, entity -> manifested[0] = entity)",
     "ContractLifecycleService.capture(player, maid, contract, false)",
-    "MaidWeaponItem.isOwner(contract, player)",
-    "MaidWeaponItem.isContractSuperseded(contract)",
+    "ContractCarrierData.isOwner(contract, player)",
+    "ContractCarrierData.isContractSuperseded(contract)",
     "restoreReturn(player)",
     "resumeInteriorMaid",
     "existingMaid.level().dimension().equals(INTERIOR_LEVEL)",

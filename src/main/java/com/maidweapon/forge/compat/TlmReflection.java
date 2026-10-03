@@ -14,10 +14,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 
 /**
- * TLM 反射实现 — 集中管理所有对 TLM 的反射调用。
- *
- * 设计原因：TLM 不是编译期依赖，所有类名/方法名只能通过反射访问。
- * 集中到此类后，TLM 版本升级只需改此处，不影响业务逻辑。
+ * Version-tolerant facade for selected TLM capabilities.
+ * Native extension APIs are linked separately under compat.tlm; reflective
+ * fallbacks here tolerate older releases and report failures once per capability.
  */
 public final class TlmReflection {
 
@@ -66,6 +65,7 @@ public final class TlmReflection {
         return "maid=" + (tlm.tlmLoaded && tlm.maidEntityClass != null)
                 + ", favorability=" + (tlm.getFavorabilityMethod != null && tlm.setFavorabilityMethod != null)
                 + ", tasks=" + (tlm.getTaskMethod != null && tlm.setTaskMethod != null)
+                + ", model=" + (tlm.getModelIdMethod != null)
                 + ", refreshBrain=" + (tlm.refreshBrainMethod != null);
     }
 
@@ -90,6 +90,7 @@ public final class TlmReflection {
         try {
             return (int) getFavorabilityMethod.invoke(maid);
         } catch (Exception e) {
+            CompatDiagnostics.warnOnce("tlm:read-favorability", e);
             return 0;
         }
     }
@@ -98,7 +99,9 @@ public final class TlmReflection {
         if (setFavorabilityMethod == null) return;
         try {
             setFavorabilityMethod.invoke(maid, value);
-        } catch (Exception ignored) {}
+        } catch (Exception failure) {
+            CompatDiagnostics.warnOnce("tlm:write-favorability", failure);
+        }
     }
 
     public Class<?> getMaidEntityClass() {
@@ -117,7 +120,9 @@ public final class TlmReflection {
                 if (id instanceof String modelId && !modelId.isBlank()) {
                     appearance.putString("ModelId", modelId);
                 }
-            } catch (ReflectiveOperationException ignored) { }
+            } catch (ReflectiveOperationException failure) {
+                CompatDiagnostics.warnOnce("tlm:read-model", failure);
+            }
         }
         appearance.putInt("MaidFavorability", getMaidFavorability(maid));
         return appearance;
@@ -154,7 +159,8 @@ public final class TlmReflection {
                 }
             }
             return maid;
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
+        } catch (ReflectiveOperationException | RuntimeException failure) {
+            CompatDiagnostics.warnOnce("tlm:appearance-preview", failure);
             return null;
         }
     }
@@ -169,7 +175,8 @@ public final class TlmReflection {
             Object task = getTaskMethod.invoke(maid);
             Method getUid = task.getClass().getMethod("getUid");
             return getUid.invoke(task).toString();
-        } catch (Exception ignored) {
+        } catch (Exception failure) {
+            CompatDiagnostics.warnOnce("tlm:read-task", failure);
             return "touhou_little_maid:idle";
         }
     }
@@ -187,7 +194,8 @@ public final class TlmReflection {
                 refreshBrainMethod.invoke(maid, serverLevel);
             }
             return true;
-        } catch (Exception ignored) {
+        } catch (Exception failure) {
+            CompatDiagnostics.warnOnce("tlm:switch-task", failure);
             return false;
         }
     }
@@ -216,7 +224,8 @@ public final class TlmReflection {
 
             maid.playSound(sound, 0.65f, 1.0f);
             return true;
-        } catch (ReflectiveOperationException | RuntimeException ignored) {
+        } catch (ReflectiveOperationException | RuntimeException failure) {
+            CompatDiagnostics.warnOnce("tlm:task-voice", failure);
             return false;
         }
     }

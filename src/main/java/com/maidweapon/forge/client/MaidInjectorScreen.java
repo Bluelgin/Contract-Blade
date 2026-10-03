@@ -32,8 +32,9 @@ public class MaidInjectorScreen extends AbstractContainerScreen<MaidInjectorMenu
     public void containerTick() {
         super.containerTick();
         injectButton.active = menu.canInject();
-        injectButton.setMessage(Component.translatable(menu.isExtracting()
-                ? "button.maid_weapon.extract" : "button.maid_weapon.inject"));
+        injectButton.setMessage(Component.translatable(menu.isFoxTransfer()
+                ? (menu.isFoxExtracting() ? "maid_weapon.fox.button.seal" : "maid_weapon.fox.button.migrate")
+                : (menu.isExtracting() ? "button.maid_weapon.extract" : "button.maid_weapon.inject")));
     }
 
     @Override

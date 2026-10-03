@@ -1,9 +1,10 @@
 package com.maidweapon.forge.system.deployment;
 
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.item.MaidInfusion;
-import com.maidweapon.forge.item.MaidWeaponItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -39,12 +40,12 @@ public final class ContractTransferSafetyService {
             ItemStack stack = slot.getItem();
             if (TripleMagicCompat.isPhantom(stack)) continue;
             if (!MaidInfusion.isInfused(stack)
-                    || !MaidWeaponItem.isOwner(stack, player)) continue;
+                    || !ContractCarrierData.isOwner(stack, player)) continue;
 
-            String weaponBinding = MaidWeaponItem.getBindingId(stack);
+            String weaponBinding = ContractCarrierData.getBindingId(stack);
             boolean exactBinding = !entityBinding.isEmpty()
                     && entityBinding.equals(weaponBinding);
-            boolean legacyBinding = maidId.equals(MaidWeaponItem.getBoundMaidUUID(stack));
+            boolean legacyBinding = maidId.equals(ContractCarrierData.getBoundMaidUUID(stack));
             if (!exactBinding && !legacyBinding) continue;
 
             ItemStack rescued = stack.copy();
