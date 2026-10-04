@@ -32,6 +32,8 @@ resolver = deployment[
     : deployment.index("public static boolean manifestRequested")
 ]
 assert "ContractLifecycleService.manifest(player, transientCarrier, false)" in resolver
+assert "ContractMaidKeys.EMERGENCY_FILM_PROGRESS" in resolver
+assert 'snapshot.getTag().getCompound("MaidData").copy()' in resolver
 assert "ContractMaidRuntimeService.cleanupBeforeRecall(player, snapshot, maid)" in resolver
 assert "remove(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID)" in resolver
 assert "ContractCompanionState.clear(maid)" in resolver
