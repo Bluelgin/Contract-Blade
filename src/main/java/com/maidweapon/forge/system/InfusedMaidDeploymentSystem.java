@@ -341,6 +341,12 @@ public final class InfusedMaidDeploymentSystem {
             return false;
         }
 
+        if (!snapshot.isEmpty() && snapshot.getTag() != null
+                && snapshot.getTag().contains("MaidData")) {
+            maid.getPersistentData().put(
+                    com.maidweapon.forge.compat.tlm.ContractMaidKeys.EMERGENCY_FILM_PROGRESS,
+                    snapshot.getTag().getCompound("MaidData").copy());
+        }
         ContractMaidRuntimeService.cleanupBeforeRecall(player, snapshot, maid);
         maid.getPersistentData().remove(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
         ContractCompanionState.clear(maid);
