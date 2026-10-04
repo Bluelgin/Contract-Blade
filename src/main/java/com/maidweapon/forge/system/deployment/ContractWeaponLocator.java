@@ -13,6 +13,27 @@ import java.util.UUID;
 
 /** Resolves the concrete contract stack and its currently manifested maid. */
 public final class ContractWeaponLocator {
+    public static ItemStack findBoundWeaponByBinding(Player player, String bindingId) {
+        if (player == null || bindingId == null || bindingId.isEmpty()) return ItemStack.EMPTY;
+
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (bindingId.equals(ContractCarrierData.getBindingId(stack))) return stack;
+        }
+
+        ItemStack offhand = player.getOffhandItem();
+        if (bindingId.equals(ContractCarrierData.getBindingId(offhand))) return offhand;
+
+        ItemStack carried = player.containerMenu.getCarried();
+        if (bindingId.equals(ContractCarrierData.getBindingId(carried))) return carried;
+
+        for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
+            ItemStack stack = slot.getItem();
+            if (bindingId.equals(ContractCarrierData.getBindingId(stack))) return stack;
+        }
+        return ItemStack.EMPTY;
+    }
+
     public static ItemStack findBoundWeapon(Player player, String maidId) {
         Entity deployed = findManifestedMaid(player, maidId);
         String deployedBinding = deployed == null ? ""
