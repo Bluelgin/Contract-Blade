@@ -2,6 +2,7 @@
 
 ## 1.1.0
 
+- Fixed contract-carrier loss incorrectly removing manifested maids. Carrier loss is now confirmed by binding after a grace period; a broken-but-present SlashBlade keeps its contract, while a truly destroyed carrier leaves the maid alive or manifests her safely before detaching the lost carrier.
 - Added the Shinkitsu Shrine integration with SlashBlade, found in newly generated snowy plains, with an enshrined White Fox blade.
 - Claiming the blade requires a combined kill count of 520 across carried SlashBlades. Right-click the offering stand while holding a cake, then right-click again with an empty hand to take the blade.
 - The shrine's White Fox has her own spirit and forms a contract when claimed, supporting calling, recall, protection and life together.
