@@ -2,6 +2,8 @@
 
 ## 1.1.0
 
+- Fixed carrier-loss recovery for separate contracts interfering with one another.
+- Replaced the Spirit Crystal in the Heartbound Knot altar recipe with an ender pearl.
 - Fixed contract-carrier loss incorrectly removing manifested maids. Carrier loss is now confirmed by binding after a grace period; a broken-but-present SlashBlade keeps its contract, while a truly destroyed carrier leaves the maid alive or manifests her safely before detaching the lost carrier.
 - Added the Shinkitsu Shrine integration with SlashBlade, found in newly generated snowy plains, with an enshrined White Fox blade.
 - Claiming the blade requires a combined kill count of 520 across carried SlashBlades. Right-click the offering stand while holding a cake, then right-click again with an empty hand to take the blade.

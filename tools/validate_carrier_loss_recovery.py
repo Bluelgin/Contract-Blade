@@ -52,6 +52,13 @@ for carrier_surface in (
     assert carrier_surface in locator, f"binding lookup misses carrier surface: {carrier_surface}"
 
 assert "public static void clear(Entity maid)" in companion
+assert 'Map<UUID, Map<String, CarrierLossCandidate>>' in deployment
+assert 'cancelCarrierLoss(player, active.bindingId())' in deployment
+assert 'pending.get(bindingId)' in deployment and 'pending.put(bindingId' in deployment
+cleanup = deployment.split('private static void clearCarrierLossRuntime', 1)[1].split(
+    'private static long carrierLossClock', 1)[0]
+assert 'active.bindingId().equals(candidate.bindingId())' in cleanup
+assert 'candidate.maidId().equals(ContractRecoveryService.currentMaidId(player))' in cleanup
 assert "maid.getPersistentData().remove(KEY)" in companion
 
 film_method = film_service[film_service.index("public static ItemStack createEmergencyResurrectionFilm") :]

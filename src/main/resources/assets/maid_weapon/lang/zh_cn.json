@@ -40,7 +40,7 @@
   "patchouli.maid_weapon.entry.projection_baubles.name": "相伴的饰品",
   "patchouli.maid_weapon.entry.projection_baubles.page.1": "一份小小的饰物，也能陪她走很远。把饰品交给女仆，放进她的饰品栏即可。$(br2)共鸣剑穗让显现的她使用契约武器，并随武器切换战斗工作。守护缎带让她穿戴与你相同的护甲，工作仍由你安排。$(br2)同心结兼具两者的用途，只需佩戴一件。三种饰品选一件佩戴就好；摘下后，她会换回原来的装备。",
   "patchouli.maid_weapon.entry.projection_baubles.page.2": "这些饰品需要在车万女仆的祭坛制作，每件材料占一个台座，重复材料分开放置。$(br2)共鸣剑穗：线×3、金粒×1、紫水晶碎片×1、红色染料×1；消耗0.15 P点。$(br2)守护缎带：线×3、皮革×2、紫水晶碎片×1；消耗0.15 P点。",
-  "patchouli.maid_weapon.entry.projection_baubles.page.3": "同心结：共鸣剑穗、守护缎带、钻石、金锭、紫水晶碎片、灵结晶各一件；消耗0.3 P点。$(br2)将剑穗与缎带结在一起，让她带着熟悉的武器与护甲，陪你继续冒险。$(br2)祭坛的搭建与使用方式，请查看车万女仆的说明。",
+  "patchouli.maid_weapon.entry.projection_baubles.page.3": "同心结：共鸣剑穗、守护缎带、钻石、金锭、紫水晶碎片、末影珍珠各一件；消耗0.3 P点。$(br2)将剑穗与缎带结在一起，让她带着熟悉的武器与护甲，陪你继续冒险。$(br2)祭坛的搭建与使用方式，请查看车万女仆的说明。",
   "maid_weapon.tooltip.projection.weapon": "§7显现时使用契约武器",
   "maid_weapon.tooltip.projection.armor": "§7显现时穿戴与你相同的护甲",
   "maid_weapon.tooltip.projection.slot": "§7交给女仆佩戴",

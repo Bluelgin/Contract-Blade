@@ -60,7 +60,7 @@ Place these items in the maid's native Touhou Little Maid bauble slots; Curios i
 All three baubles use the native TLM altar, not a crafting table (one ingredient
 per pedestal). Tassel: 3 string, gold nugget, amethyst shard, red dye (0.15 P).
 Ribbon: 3 string, 2 leather, amethyst shard (0.15 P). Knot: tassel, ribbon,
-diamond, gold ingot, amethyst shard, Spirit Crystal (0.3 P).
+diamond, gold ingot, amethyst shard, ender pearl (0.3 P).
 
 Projection does not additionally copy the player's base attack or armor attributes. Removing a bauble restores the original equipment; if a player replaced it manually, the saved original is returned to the maid's backpack (or dropped nearby if full).
 
