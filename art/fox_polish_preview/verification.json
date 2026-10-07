@@ -1,0 +1,22 @@
+[
+  {
+    "color": "white",
+    "geometryUnchanged": true,
+    "originalUsedTexelsUnchanged": true,
+    "changedFaces": 528,
+    "headSkinTexelsPreserved": 99,
+    "residualOriginalHairColors": 0,
+    "sourceAnimations": 38,
+    "previewAnimations": 38
+  },
+  {
+    "color": "black",
+    "geometryUnchanged": true,
+    "originalUsedTexelsUnchanged": true,
+    "changedFaces": 528,
+    "headSkinTexelsPreserved": 99,
+    "residualOriginalHairColors": 0,
+    "sourceAnimations": 39,
+    "previewAnimations": 39
+  }
+]

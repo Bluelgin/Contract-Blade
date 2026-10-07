@@ -78,7 +78,7 @@ public final class ModItems {
                         return InteractionResultHolder.fail(crystal);
                     }
                     MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
-                    if (data.getResonance() >= MaidWeaponData.MAX_RESONANCE) {
+                    if (data.getResonance() >= MaidWeaponData.maximumResonance()) {
                         player.displayClientMessage(
                                 Component.translatable("maid_weapon.message.resonance_full"), true);
                         return InteractionResultHolder.fail(crystal);

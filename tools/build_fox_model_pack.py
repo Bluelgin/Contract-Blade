@@ -1,6 +1,8 @@
 """Build a credited runtime derivative without touching the supplied 1.0.0 archive."""
 import hashlib
+import base64
 import json
+import sys
 import zipfile
 from pathlib import Path
 
@@ -19,6 +21,15 @@ def replace_json(name, data):
 for color in ('white', 'black'):
     name = f'assets/contract_fox/models/entity/fox_{color}.json'
     geometry = json.loads(files[name])
+    if '--original-look' not in sys.argv:
+        preview = ROOT / 'art/fox_polish_preview/sleeve'
+        optimized = json.loads((preview / f'fox_{color}_optimized.bbmodel').read_text(encoding='utf-8'))
+        exported = json.loads((preview / f'{color}-optimized.geo.json').read_text(encoding='utf-8'))
+        exported['minecraft:geometry'][0]['description']['identifier'] = geometry['minecraft:geometry'][0]['description']['identifier']
+        old_names = {b['name'] for b in geometry['minecraft:geometry'][0]['bones']}
+        assert old_names <= {b['name'] for b in exported['minecraft:geometry'][0]['bones']}
+        geometry = exported
+        files[f'assets/contract_fox/textures/entity/fox_{color}.png'] = base64.b64decode(optimized['textures'][0]['source'].split(',', 1)[1])
     crown = next(b for b in geometry['minecraft:geometry'][0]['bones'] if b['name'] == 'FoxMoonCrown')
     assert crown['parent'] == 'AllHead' and len(crown['cubes']) == 6
     # Preserve the named bone for animation compatibility, but remove its visible cubes.
@@ -50,7 +61,27 @@ files['CREDITS.md'] += ('\nRuntime derivative for Contract Blade: crown geometry
                        'Full author attribution remains above despite the abbreviated UI author field. Character textures '
                        'and animations are unchanged. The original attribution and CC BY-NC-SA 4.0 '
                        'license above remain applicable.\n').encode('utf-8')
+if '--original-look' not in sys.argv:
+    files['CREDITS.md'] += ('\n2026-10-06 visual derivative: fox hair and garment textures refined, '
+                           'waist ornaments fitted to clothing, and identical texture regions repacked '
+                           'without downsampling detail into a 512x512 atlas. White Fox fully enclosed '
+                           'opaque faces are omitted; Black Fox retains all faces for translucent rendering. '
+                           'Existing runtime animation files, named bones, model IDs, author attribution '
+                           'and license are preserved. Native Blockbench geometry exports are used.\n').encode('utf-8')
 files.pop('SHA256SUMS.txt')
+notice = ROOT / 'src/main/resources/licenses/fox_models/ASSET-LICENSE-NOTICE.md'
+files['ASSET-LICENSE-NOTICE.md'] = notice.read_bytes()
+files['MODEL_ASSET_SHA256SUMS.txt'] = ''.join(
+    f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in sorted(files.items())
+    if name.startswith('assets/contract_fox/') and ('/models/' in name or '/textures/' in name or '/animation/' in name)
+).encode('utf-8')
+files['CREDITS.md'] += ('\n2026-10-07: bilingual asset license/source notice and model checksums added. '
+                       'Earlier "textures unchanged" statements describe only the first crown-only derivative; '
+                       'the later garment/atlas refinement is described above. This is provenance documentation, '
+                       'not a new authorization or commercial license.\n').encode('utf-8')
+license_dir = ROOT / 'src/main/resources/licenses/fox_models'
+for name in ('CREDITS.md', 'LICENSE-CC-BY-NC-SA-4.0.txt', 'MODEL_ASSET_SHA256SUMS.txt'):
+    (license_dir / name).write_bytes(files[name])
 files['SHA256SUMS.txt'] = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n'
                                 for name, data in sorted(files.items())).encode('utf-8')
 with zipfile.ZipFile(TARGET, 'w', compression=zipfile.ZIP_DEFLATED) as archive:

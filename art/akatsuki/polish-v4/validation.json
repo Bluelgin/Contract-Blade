@@ -1,0 +1,275 @@
+{
+  "source": "E:/Little maid/art/akatsuki/polish-v3/akatsuki-drunk-moon-v3.bbmodel",
+  "targets": [
+    "97815206-a2e2-4bc8-064c-f89e5bee3054",
+    "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+    "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+    "d42a77d3-7391-bb1a-502f-f4bef908d907",
+    "21916b88-716c-7034-13c0-dab1edf3cba2",
+    "0bea8f4c-56fe-0440-ff78-d37e923d9e7f",
+    "dff3a6f7-446f-d7ee-33a4-3634d9868e5a",
+    "be57128d-455c-2d96-5db8-023b643a4a8c",
+    "fa134129-1ddc-df70-70e6-01c664bbe06b",
+    "2ecc318c-5ff1-bf8f-2528-333af76437e5",
+    "7f3d3174-2a28-6289-7de0-df00656df381"
+  ],
+  "changes": [
+    {
+      "cube": "97815206-a2e2-4bc8-064c-f89e5bee3054",
+      "side": "north",
+      "w": 6,
+      "h": 8,
+      "reused": true
+    },
+    {
+      "cube": "97815206-a2e2-4bc8-064c-f89e5bee3054",
+      "side": "east",
+      "w": 4,
+      "h": 16,
+      "reused": false
+    },
+    {
+      "cube": "97815206-a2e2-4bc8-064c-f89e5bee3054",
+      "side": "south",
+      "w": 6,
+      "h": 8,
+      "reused": true
+    },
+    {
+      "cube": "97815206-a2e2-4bc8-064c-f89e5bee3054",
+      "side": "west",
+      "w": 4,
+      "h": 16,
+      "reused": false
+    },
+    {
+      "cube": "97815206-a2e2-4bc8-064c-f89e5bee3054",
+      "side": "up",
+      "w": 12,
+      "h": 4,
+      "reused": false
+    },
+    {
+      "cube": "97815206-a2e2-4bc8-064c-f89e5bee3054",
+      "side": "down",
+      "w": 12,
+      "h": 4,
+      "reused": false
+    },
+    {
+      "cube": "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+      "side": "north",
+      "w": 10,
+      "h": 14,
+      "reused": true
+    },
+    {
+      "cube": "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+      "side": "east",
+      "w": 4,
+      "h": 28,
+      "reused": false
+    },
+    {
+      "cube": "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+      "side": "south",
+      "w": 10,
+      "h": 14,
+      "reused": true
+    },
+    {
+      "cube": "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+      "side": "west",
+      "w": 4,
+      "h": 28,
+      "reused": false
+    },
+    {
+      "cube": "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+      "side": "up",
+      "w": 20,
+      "h": 4,
+      "reused": false
+    },
+    {
+      "cube": "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+      "side": "down",
+      "w": 20,
+      "h": 4,
+      "reused": false
+    },
+    {
+      "cube": "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+      "side": "north",
+      "w": 14,
+      "h": 8,
+      "reused": true
+    },
+    {
+      "cube": "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+      "side": "east",
+      "w": 4,
+      "h": 16,
+      "reused": false
+    },
+    {
+      "cube": "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+      "side": "south",
+      "w": 14,
+      "h": 8,
+      "reused": true
+    },
+    {
+      "cube": "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+      "side": "west",
+      "w": 4,
+      "h": 16,
+      "reused": false
+    },
+    {
+      "cube": "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+      "side": "up",
+      "w": 28,
+      "h": 4,
+      "reused": false
+    },
+    {
+      "cube": "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+      "side": "down",
+      "w": 28,
+      "h": 4,
+      "reused": false
+    },
+    {
+      "cube": "d42a77d3-7391-bb1a-502f-f4bef908d907",
+      "side": "north",
+      "w": 10,
+      "h": 12,
+      "reused": true
+    },
+    {
+      "cube": "d42a77d3-7391-bb1a-502f-f4bef908d907",
+      "side": "south",
+      "w": 10,
+      "h": 12,
+      "reused": true
+    },
+    {
+      "cube": "21916b88-716c-7034-13c0-dab1edf3cba2",
+      "side": "north",
+      "w": 10,
+      "h": 24,
+      "reused": false
+    },
+    {
+      "cube": "21916b88-716c-7034-13c0-dab1edf3cba2",
+      "side": "south",
+      "w": 10,
+      "h": 24,
+      "reused": false
+    },
+    {
+      "cube": "0bea8f4c-56fe-0440-ff78-d37e923d9e7f",
+      "side": "north",
+      "w": 10,
+      "h": 24,
+      "reused": false
+    },
+    {
+      "cube": "0bea8f4c-56fe-0440-ff78-d37e923d9e7f",
+      "side": "south",
+      "w": 10,
+      "h": 24,
+      "reused": false
+    },
+    {
+      "cube": "dff3a6f7-446f-d7ee-33a4-3634d9868e5a",
+      "side": "north",
+      "w": 12,
+      "h": 6,
+      "reused": false
+    },
+    {
+      "cube": "dff3a6f7-446f-d7ee-33a4-3634d9868e5a",
+      "side": "south",
+      "w": 12,
+      "h": 6,
+      "reused": false
+    },
+    {
+      "cube": "be57128d-455c-2d96-5db8-023b643a4a8c",
+      "side": "north",
+      "w": 12,
+      "h": 6,
+      "reused": false
+    },
+    {
+      "cube": "be57128d-455c-2d96-5db8-023b643a4a8c",
+      "side": "south",
+      "w": 12,
+      "h": 6,
+      "reused": false
+    },
+    {
+      "cube": "fa134129-1ddc-df70-70e6-01c664bbe06b",
+      "side": "north",
+      "w": 12,
+      "h": 6,
+      "reused": false
+    },
+    {
+      "cube": "fa134129-1ddc-df70-70e6-01c664bbe06b",
+      "side": "south",
+      "w": 12,
+      "h": 6,
+      "reused": false
+    },
+    {
+      "cube": "2ecc318c-5ff1-bf8f-2528-333af76437e5",
+      "side": "north",
+      "w": 4,
+      "h": 8,
+      "reused": true
+    },
+    {
+      "cube": "2ecc318c-5ff1-bf8f-2528-333af76437e5",
+      "side": "south",
+      "w": 4,
+      "h": 8,
+      "reused": true
+    },
+    {
+      "cube": "7f3d3174-2a28-6289-7de0-df00656df381",
+      "side": "north",
+      "w": 12,
+      "h": 20,
+      "reused": true
+    },
+    {
+      "cube": "7f3d3174-2a28-6289-7de0-df00656df381",
+      "side": "south",
+      "w": 4,
+      "h": 8,
+      "reused": true
+    }
+  ],
+  "cubes": 407,
+  "groups": 179,
+  "resolution": [
+    256,
+    256
+  ],
+  "hemY": 8.266733966910277,
+  "unrelatedReferencedTexelsUnchanged": true,
+  "geometryChanged": false,
+  "bonesAndAnimationsChanged": false,
+  "independentValidation": {
+    "pass": true,
+    "allGeometryAndHierarchyUnchanged": true,
+    "animationsAndLocatorsUnchanged": true,
+    "unrelatedFacesAndUVsUnchanged": true,
+    "unrelatedTextureSamples": 31850,
+    "embeddedTextureMatches": true,
+    "cubes": 407
+  }
+}

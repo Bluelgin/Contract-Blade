@@ -20,7 +20,7 @@ joy = (JAVA / 'compat/tlm/TlmHomeJoyAdapter.java').read_text()
 picnic = (JAVA / 'compat/tlm/TlmHomePicnicAdapter.java').read_text()
 events = (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
 for path in HOME.glob('*.java'):
-    source = path.read_text()
+    source = path.read_text(encoding='utf-8')
     for forbidden in ('setChunkForced(', 'addRegionTicket(', 'createAppearanceProxy(', 'saveWithoutId(',
                       'ContractLifecycleService.manifest(', 'ContractLifecycleService.capture('):
         assert forbidden not in source, f'{path}: unexpected authority/loading API {forbidden}'
@@ -71,7 +71,7 @@ assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPos
 assert 'recoverDestroyedActiveContract' in service
 assert 'createEmergencyResurrectionFilm' in service
 interior_events = (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
-assert 'PlayerDestroyItemEvent' in interior_events
+assert 'PlayerDestroyItemEvent' not in interior_events
 assert 'ContractTransferSafetyService.rescueSelfStoredContract(player)' in interior_events
 assert 'ContractInteriorService.rescueActiveContractFromContainer(player)' in interior_events
 guide = (HOME / 'ContractInteriorGuideService.java').read_text()

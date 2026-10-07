@@ -1,0 +1,162 @@
+{
+  "source": "E:/Little maid/art/akatsuki/polish-v2/akatsuki-clothing-v2.bbmodel",
+  "targets": [
+    "a05e6d49-16b5-559c-f732-7bbc0bede765",
+    "7f3d3174-2a28-6289-7de0-df00656df381",
+    "524d6b99-2abd-1b23-c870-ee6c0f293a72",
+    "f8c9dbb9-7f3e-6b53-9a43-8276026b182f",
+    "edd2b37b-d966-d8cf-f1a0-1d4c39db0563",
+    "9db14d60-8596-da87-f11a-aef7849eda1c",
+    "956776e2-aa27-d41b-cdb9-c7b5d83b0b96",
+    "a3877b5e-19b5-0109-0758-dbe00cc8b7ee",
+    "acb8dffe-916e-e64d-37d1-7cd3cbbf5983",
+    "e6fdfdbf-91e2-557e-ca34-593c92145293",
+    "617dbae3-c93a-ac9e-510d-c4592c9a7b3f",
+    "8ba4cdab-f5fc-be35-e980-1de9b1caa11c"
+  ],
+  "changes": [
+    {
+      "cube": "a05e6d49-16b5-559c-f732-7bbc0bede765",
+      "side": "north",
+      "w": 18,
+      "h": 42
+    },
+    {
+      "cube": "7f3d3174-2a28-6289-7de0-df00656df381",
+      "side": "north",
+      "w": 12,
+      "h": 20
+    },
+    {
+      "cube": "524d6b99-2abd-1b23-c870-ee6c0f293a72",
+      "side": "north",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "524d6b99-2abd-1b23-c870-ee6c0f293a72",
+      "side": "south",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "f8c9dbb9-7f3e-6b53-9a43-8276026b182f",
+      "side": "north",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "f8c9dbb9-7f3e-6b53-9a43-8276026b182f",
+      "side": "south",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563",
+      "side": "north",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563",
+      "side": "south",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "9db14d60-8596-da87-f11a-aef7849eda1c",
+      "side": "north",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "9db14d60-8596-da87-f11a-aef7849eda1c",
+      "side": "south",
+      "w": 12,
+      "h": 24
+    },
+    {
+      "cube": "956776e2-aa27-d41b-cdb9-c7b5d83b0b96",
+      "side": "north",
+      "w": 16,
+      "h": 16
+    },
+    {
+      "cube": "956776e2-aa27-d41b-cdb9-c7b5d83b0b96",
+      "side": "south",
+      "w": 16,
+      "h": 16
+    },
+    {
+      "cube": "a3877b5e-19b5-0109-0758-dbe00cc8b7ee",
+      "side": "north",
+      "w": 16,
+      "h": 16
+    },
+    {
+      "cube": "a3877b5e-19b5-0109-0758-dbe00cc8b7ee",
+      "side": "south",
+      "w": 16,
+      "h": 16
+    },
+    {
+      "cube": "acb8dffe-916e-e64d-37d1-7cd3cbbf5983",
+      "side": "north",
+      "w": 12,
+      "h": 28
+    },
+    {
+      "cube": "e6fdfdbf-91e2-557e-ca34-593c92145293",
+      "side": "north",
+      "w": 12,
+      "h": 28
+    },
+    {
+      "cube": "617dbae3-c93a-ac9e-510d-c4592c9a7b3f",
+      "side": "north",
+      "w": 12,
+      "h": 28
+    },
+    {
+      "cube": "8ba4cdab-f5fc-be35-e980-1de9b1caa11c",
+      "side": "north",
+      "w": 12,
+      "h": 28
+    }
+  ],
+  "addedCubes": [
+    "61f11de0-2d23-8858-c31f-a975629efa40",
+    "8745282d-4528-7f36-ce95-0daee07abf56"
+  ],
+  "contacts": [
+    {
+      "cube": "61f11de0-2d23-8858-c31f-a975629efa40",
+      "clothingSurfaceZ": -2.1944278730515787,
+      "rearZ": -2.169427873051579,
+      "embedded": 0.025
+    },
+    {
+      "cube": "8745282d-4528-7f36-ce95-0daee07abf56",
+      "clothingSurfaceZ": -2.3534818611504513,
+      "rearZ": -2.3284818611504514,
+      "embedded": 0.025
+    }
+  ],
+  "cubes": 407,
+  "groups": 179,
+  "resolution": [
+    256,
+    256
+  ],
+  "originalReferencedTexelsUnchanged": true,
+  "bonesAndAnimationsChanged": false,
+  "independentValidation": {
+    "pass": true,
+    "existingGeometryAndBonesUnchanged": true,
+    "animationsAndLocatorsUnchanged": true,
+    "unrelatedFacesUnchanged": true,
+    "addedCubes": 2,
+    "cordCentersIntersectClothing": true,
+    "embeddedTextureMatches": true
+  }
+}

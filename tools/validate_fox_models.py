@@ -20,11 +20,23 @@ with zipfile.ZipFile(PACK) as archive:
                            'assets/contract_fox/models/entity/fox_black.json',
                            'assets/contract_fox/lang/zh_cn.json', 'assets/contract_fox/lang/en_us.json',
                            'assets/contract_fox/maid_model.json', 'assets/contract_fox/textures/maid_icon.png',
+                           'assets/contract_fox/textures/entity/fox_white.png',
+                           'assets/contract_fox/textures/entity/fox_black.png',
                            'CREDITS.md', 'SHA256SUMS.txt'}, changed
         assert archive.read('CREDITS.md').startswith(original.read('CREDITS.md'))
         assert archive.read('LICENSE-CC-BY-NC-SA-4.0.txt') == original.read('LICENSE-CC-BY-NC-SA-4.0.txt')
+        for name in original.namelist():
+            if '/animation/' in name and not name.endswith('/'):
+                assert archive.read(name) == original.read(name), ('Animation must stay unchanged', name)
     for name in ('CREDITS.md', 'LICENSE-CC-BY-NC-SA-4.0.txt', 'SHA256SUMS.txt'):
         assert archive.getinfo(name).file_size > 0
+    assert archive.getinfo('ASSET-LICENSE-NOTICE.md').file_size > 0
+    for line in archive.read('MODEL_ASSET_SHA256SUMS.txt').decode('utf-8').splitlines():
+        digest, name = line.split(maxsplit=1)
+        assert hashlib.sha256(archive.read(name)).hexdigest() == digest
+    notice = ROOT / 'src/main/resources/licenses/fox_models'
+    for name in ('CREDITS.md', 'LICENSE-CC-BY-NC-SA-4.0.txt', 'ASSET-LICENSE-NOTICE.md', 'MODEL_ASSET_SHA256SUMS.txt'):
+        assert (notice / name).read_bytes() == archive.read(name)
     for line in archive.read('SHA256SUMS.txt').decode('utf-8-sig').splitlines():
         if not line.strip():
             continue
@@ -42,6 +54,7 @@ with zipfile.ZipFile(PACK) as archive:
         color = model['model_id'].split(':')[1]
         geometry = json.loads(archive.read(f'assets/contract_fox/models/entity/{color}.json'))
         assert geometry['minecraft:geometry']
+        bone_names = {bone['name'] for bone in geometry['minecraft:geometry'][0]['bones']}
         crown = next(b for b in geometry['minecraft:geometry'][0]['bones'] if b['name'] == 'FoxMoonCrown')
         assert not crown.get('cubes')
         texture = archive.read(f'assets/contract_fox/textures/entity/{color}.png')
@@ -52,8 +65,10 @@ with zipfile.ZipFile(PACK) as archive:
             namespace, path = animation.split(':', 1)
             clips = json.loads(archive.read(f'assets/{namespace}/{path}'))['animations']
             assert clips
+            for clip in clips.values():
+                assert set(clip.get('bones', {})) <= bone_names, ('Missing activity bone', color, animation)
             count += len(clips)
         assert count >= 180, (color, count)
         print(f'FOX_MODEL_ASSETS_PASS: {color}, {count} animation resources, 512x512 texture')
 
-print('FOX_ARCHIVE_PASS: preserved source, crowns removed, player descriptions, pixel icon, checksums and license')
+print('FOX_ARCHIVE_PASS: preserved source and animation files, polished geometry and 512px texture, checksums and license')

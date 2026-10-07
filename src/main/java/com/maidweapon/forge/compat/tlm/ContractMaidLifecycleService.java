@@ -56,7 +56,7 @@ public final class ContractMaidLifecycleService {
 
             MaidWeaponData data = new MaidWeaponData(displayName);
             data.setFavorability(MaidWeaponData.MAX_FAVORABILITY / 2);
-            data.setResonance(MaidWeaponData.MAX_RESONANCE);
+            data.setResonance(MaidWeaponData.maximumResonance());
             ContractCarrierData.setMaidData(weaponStack, data);
             if (!ContractMaidStorage.commit(player, weaponStack, TlmEntityAdapter.save(maid))) {
                 weaponStack.setTag(originalWeaponTag);

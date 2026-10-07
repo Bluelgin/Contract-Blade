@@ -1,0 +1,55 @@
+{
+  "source": "E:\\Little maid\\tmp\\external\\SlashBlade_2\\src\\main\\resources\\assets\\slashblade\\model\\pa\\player_motion.vmd",
+  "sha256": "339addd939a7d7ec11facb43df0afa9785a3d488bc1bf15c9956f8fde204b850",
+  "note": "Native VMD arm rhythm retarget; body/head adapted. Visual prototype, not combat implementation.",
+  "sourceFps": 30,
+  "samplingFps": 60,
+  "leadIn": 0.3,
+  "stages": [
+    {
+      "name": "combo_b1",
+      "start": 0,
+      "end": 0.4,
+      "frame": 700
+    },
+    {
+      "name": "combo_b2",
+      "start": 0.4,
+      "end": 0.6,
+      "frame": 710
+    },
+    {
+      "name": "combo_b3",
+      "start": 0.6000000000000001,
+      "end": 0.8,
+      "frame": 710
+    },
+    {
+      "name": "combo_b4",
+      "start": 0.8,
+      "end": 1,
+      "frame": 710
+    },
+    {
+      "name": "combo_b5",
+      "start": 1,
+      "end": 1.2000000000000002,
+      "frame": 710
+    },
+    {
+      "name": "combo_b6",
+      "start": 1.2000000000000002,
+      "end": 1.4,
+      "frame": 710
+    },
+    {
+      "name": "combo_b7",
+      "start": 1.4,
+      "end": 2.5,
+      "frame": 710
+    }
+  ],
+  "halfCutoff": 0.8,
+  "fullDuration": 3.3,
+  "halfDuration": 1.6
+}

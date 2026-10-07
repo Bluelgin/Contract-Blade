@@ -16,7 +16,10 @@ assert '@LittleMaidExtension' in native and 'implements ILittleMaid' in native
 assert all(item in native for item in ('RESONANCE_SWORD_TASSEL', 'GUARDIAN_RIBBON', 'HEARTBOUND_KNOT'))
 assert 'getMaidBauble' in slots and 'getStackInSlot' in slots
 assert 'CuriosApi' not in slots and 'getInventory' not in slots
-assert 'if (!mode.weapon()) return;' in runtime
+assert 'if (!ContractWorkPolicy.automatic(mode)) return;' in runtime
+assert 'ContractWorkPolicy.combat(mode)' in runtime and 'ContractWorkPolicy.feeding(mode)' in runtime
+assert 'mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get()' in work
+assert 'mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_FEED.get()' in work
 assert 'ContractWorkPolicy.release(weapon, maid)' in runtime
 assert 'restoreOriginalTask(carrier, maid)' in work and 'clearOriginalTask(carrier)' in work
 assert 'owner.getAttributeValue' not in projection
@@ -25,6 +28,13 @@ assert 'mode.weapon() : mode.armor()' in projection
 assert 'returnOriginal(maid, original)' in projection
 assert 'isUsingItem()) return' in projection
 assert 'ContractCarrierData.clearMaidContract(copy)' in read('compat/TripleMagicCompat.java')
+knot = json.loads((root / 'src/main/resources/data/maid_weapon/recipes/altar/heartbound_knot.json').read_text())
+assert knot['ingredients'] == [
+    {'item': 'maid_weapon:resonance_sword_tassel'}, {'item': 'maid_weapon:guardian_ribbon'},
+    {'item': 'minecraft:diamond'}, {'item': 'minecraft:gold_ingot'},
+    {'item': 'minecraft:amethyst_shard'}, {'item': 'minecraft:ender_pearl'},
+]
+assert knot['power'] == 0.3
 for item in ('resonance_sword_tassel', 'guardian_ribbon', 'heartbound_knot'):
     assets = root / 'src/main/resources/assets/maid_weapon'
     assert (assets / f'textures/item/{item}.png').is_file()

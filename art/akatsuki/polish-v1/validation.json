@@ -1,0 +1,28 @@
+{
+  "source": "E:/Akatsuki-Taisho-Wine-Fox/source/akatsuki-1.2.3.bbmodel",
+  "cubes": 405,
+  "groups": 179,
+  "resolution": [
+    256,
+    256
+  ],
+  "changedTexels": 3277,
+  "materials": {
+    "wine": 362,
+    "ivory": 752,
+    "dark": 2163
+  },
+  "protectedTexels": 10135,
+  "geometryChanged": false,
+  "bonesChanged": false,
+  "alphaChanged": false,
+  "independentValidation": {
+    "pass": true,
+    "geometryAndGroupTransformsUnchanged": true,
+    "allGroupsRetained": true,
+    "alphaUnchanged": true,
+    "embeddedTextureMatches": true,
+    "changedTexels": 3277,
+    "sourceSha256": "91bbdf595d37e31044b30eaeb6517b482ce3b5440ab3849c3ad647e32191871e"
+  }
+}

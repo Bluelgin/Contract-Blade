@@ -30,6 +30,7 @@ public final class MaidEntityDataCodec {
 
     public static CompoundTag read(CompoundTag container) throws IOException {
         if (container == null) throw new IOException("Missing maid data container");
+        validateContainer(container);
         if (container.contains(LEGACY_DATA, Tag.TAG_COMPOUND)) {
             CompoundTag legacy = container.getCompound(LEGACY_DATA);
             long size = ContractNbtGuard.serializedSize(legacy);
@@ -69,6 +70,8 @@ public final class MaidEntityDataCodec {
         } catch (RuntimeException | StackOverflowError exception) {
             throw new IOException("Unsafe compressed maid entity data", exception);
         }
+        if (ContractNbtGuard.depth(decoded) > MaidWeaponConfig.CONTRACT_NBT_MAX_DEPTH.get())
+            throw new IOException("Decoded maid data nesting is too deep");
         long actualSize = ContractNbtGuard.serializedSize(decoded);
         if (actualSize != expectedSize) {
             throw new IOException("Maid entity data size mismatch: expected "
@@ -106,6 +109,11 @@ public final class MaidEntityDataCodec {
         verified.putLong(CHECKSUM, checksum.getValue());
         read(verified);
 
+        CompoundTag prospective = container.copy();
+        prospective.remove(LEGACY_DATA);
+        for (String key : verified.getAllKeys()) prospective.put(key, verified.get(key));
+        validateContainer(prospective);
+
         container.putByteArray(COMPRESSED_DATA, compressed);
         container.putInt(FORMAT, FORMAT_VERSION);
         container.putInt(UNCOMPRESSED_SIZE, (int) rawSize);
@@ -121,6 +129,13 @@ public final class MaidEntityDataCodec {
         } catch (IOException ignored) {
             return false;
         }
+    }
+
+    /** One boundary for active maid data plus dormant archives and original weapon state. */
+    public static void validateContainer(CompoundTag container) throws IOException {
+        if (ContractNbtGuard.depth(container) > MaidWeaponConfig.CONTRACT_NBT_MAX_DEPTH.get()
+                || ContractNbtGuard.serializedSize(container) > MaidWeaponConfig.CONTRACT_NBT_MAX_STORED_BYTES.get())
+            throw new IOException("Complete contract exceeds storage limits");
     }
 
     public static boolean update(CompoundTag container, Consumer<CompoundTag> update) {

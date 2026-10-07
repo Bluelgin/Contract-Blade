@@ -4,6 +4,22 @@ import net.minecraft.world.entity.Entity;
 
 /** Native home/stay choices remain owned by TLM, not a parallel residence menu. */
 public final class TlmResidenceAdapter {
+    private static final String SNAPSHOT = "MaidWeaponResidenceChoice";
+    public static void rememberResidence(Entity maid) {
+        var choice = new net.minecraft.nbt.CompoundTag();
+        choice.putBoolean("Home", flag(maid, "isHomeModeEnable"));
+        choice.putBoolean("Sit", flag(maid, "isOrderedToSit"));
+        maid.getPersistentData().put(SNAPSHOT, choice);
+    }
+    public static void restoreResidence(Entity maid) {
+        var choice = maid.getPersistentData().getCompound(SNAPSHOT);
+        boolean home = choice.getBoolean("Home"), sit = choice.getBoolean("Sit");
+        try {
+            maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, home);
+            // Without a previous home choice, safely wait in place instead.
+            maid.getClass().getMethod("setOrderedToSit", boolean.class).invoke(maid, sit || !home);
+        } catch (ReflectiveOperationException | LinkageError ignored) { }
+    }
     public static boolean isResident(Entity maid) {
         return flag(maid, "isHomeModeEnable") || flag(maid, "isOrderedToSit");
     }

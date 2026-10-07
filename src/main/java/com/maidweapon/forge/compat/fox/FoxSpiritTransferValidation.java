@@ -56,6 +56,9 @@ public final class FoxSpiritTransferValidation {
 
         var identity = FoxSpiritState.resident(white).copy();
         var first = click(menu, owner, white, new ItemStack(soulItem));
+        check(com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.hasEffect(first[0])
+                        && !com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.hasEffect(first[1]),
+                "native SE stays on shrine sword rather than entering soul talisman");
         ItemStack original = first[0];
         ItemStack sealed = first[1];
         check(!FoxSpiritState.hasResident(original) && !FoxSpiritTransferService.storyEligible(owner, original),

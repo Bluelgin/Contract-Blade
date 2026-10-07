@@ -1,0 +1,9 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.maidweapon.forge.compat.akatsuki.mixin",
+  "plugin": "com.maidweapon.forge.mixin.OptionalClientMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "client": ["AkatsukiGeckoPoseMixin", "AkatsukiGeckoHeldMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -20,6 +20,10 @@ assert 'NEXT_REQUEST' in policy and 'owner.containerMenu != owner.inventoryMenu'
 assert 'owner.getHealth() < injury.health()' in policy and 'owner.isAlive()' in policy
 assert 'attacker == owner' in policy and 'attacker instanceof LivingEntity' in policy
 assert 'RECALL_RANGE = 32' in policy and 'GUARD_TICKS = 400' in policy
+assert 'canFollow(owner, carrier)' in policy and 'canFollow(owner, held)' in policy
+assert 'TlmResidenceAdapter.restoreResidence(maid)' in policy
+assert 'ContractRulesConfig.MAX_FOLLOWERS.get()' in policy
+assert 'ContractActiveDeployments.forgetMaid' in deployment and 'ACTIVE_WEAPONS' not in deployment
 assert 'maid.level() != owner.level()' in policy
 assert 'MaidInfusion.containsMaid(held)' in policy and 'loaded(owner, held) == null' in policy
 assert 'if (resident) continue;' in policy and 'Mode.RESIDENT' in policy
@@ -37,6 +41,8 @@ assert '!isSafeToNotify(owner)' in voice
 bond = read('event/MaidBondCombatHandler.java')
 bond_tick = bond.split('public static void onPlayerTick', 1)[1].split('private static void tickResonance', 1)[0]
 assert 'followingContracts(player)' in bond_tick and 'getMainHandItem' not in bond_tick
+assert 'MAID_HITS.get(key + ":" + ContractCarrierData.ensureBindingId(weapon))' in bond
+assert 'LAST_COOP_REWARD.put(bindingKey, time)' in bond
 for case in ('switched-away companion still recovers resonance',
              'switched-away companion still drains combat resonance',
              'resident stays excluded from following resonance ticks',

@@ -19,6 +19,7 @@ public final class MaidWeaponDataSerializer {
     public static final String KEY_UNLOCKED_TIER = "UnlockedTier";
     public static final String KEY_ENDER_DRAGON_KILLS = "EnderDragonKills";
     public static final String KEY_WITHER_KILLS = "WitherKills";
+    public static final String KEY_CONFIGURED_PROGRESS = "ConfiguredUpgradeProgress";
     public static final String KEY_EMBEDDED_SINS = "EmbeddedSins";
 
     private MaidWeaponDataSerializer() {}

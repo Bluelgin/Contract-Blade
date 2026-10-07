@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+ <title>共鸣剑穗 · 金扣绛穗</title>
+ <path fill="#472d3c" d="M13 2h6v2h2v7h-2v3h-2v2h4v3h-2v2h-2v2h-3v-2h-2v-2h-2v-3h4v-2h-2v-3h-2V4h2z"/>
+ <path fill="#ae667d" d="M14 3h4v2h2v5h-2v3h-4v-3h-2V5h2z"/>
+ <path fill="#efb9bd" d="M14 3h4v1h-3v2h-2v4h-1V5h2z"/>
+ <path fill="#472d3c" d="M15 5h2v1h1v4h-1v1h-2v-1h-1V6h1z"/>
+ <path fill="#d6a75e" d="M14 12h4v3h-4zM12 16h8v2h-8zM14 18h4v3h-4z"/>
+ <path fill="#ffe1a0" d="M14 12h3v1h-3zM12 16h7v1h-7zM14 18h1v2h-1z"/>
+ <g id="tail-left">
+  <path fill="#472d3c" d="M11 20h5v7h-1v3h-5v-3H9v-4h2z"/>
+  <path fill="#a24c68" d="M12 21h3v6h-1v2h-3v-2h-1v-3h2z"/>
+  <path fill="#dc8798" d="M12 21h1v4h-1v3h-1v-3h1z"/>
+  <path fill="#ecc183" d="M11 28h3v1h-3z"/>
+ </g>
+ <g id="tail-right">
+  <path fill="#472d3c" d="M17 20h4v3h2v4h-1v3h-5v-3h-1v-4h1z"/>
+  <path fill="#bf647b" d="M18 21h2v3h2v3h-1v2h-3v-2h-1v-3h1z"/>
+  <path fill="#efb0b2" d="M18 21h1v4h-1v2h-1v-3h1z"/>
+  <path fill="#ecc183" d="M18 28h3v1h-3z"/>
+ </g>
+ <g id="glint" fill="#fff1bd"><path d="M15 12h2v1h-2z"/></g>
+</svg>

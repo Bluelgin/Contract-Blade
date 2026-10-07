@@ -48,6 +48,10 @@ public final class ContractCompanionState {
         if (carrier.getTag() != null) carrier.getTag().remove(KEY);
     }
 
+    public static void clear(Entity maid) {
+        if (maid != null) maid.getPersistentData().remove(KEY);
+    }
+
     private static CompoundTag data(ItemStack carrier) {
         return carrier.getTag() == null ? new CompoundTag() : carrier.getTag().getCompound(KEY);
     }

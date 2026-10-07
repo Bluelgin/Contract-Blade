@@ -36,7 +36,7 @@ public final class ContractTooltipComposer {
         tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
         tooltip.add(Component.translatable("maid_weapon.tooltip.maid_name", data.getMaidName()));
         tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
-                data.getResonance(), MaidWeaponData.MAX_RESONANCE));
+                data.getResonance(), MaidWeaponData.maximumResonance()));
         tooltip.add(Component.translatable(statusKey(stored, superseded)));
 
         if (superseded) {
@@ -154,7 +154,9 @@ public final class ContractTooltipComposer {
 
         tooltip.add(Component.translatable(stored ? "maid_weapon.tooltip.call_companion" : "maid_weapon.tooltip.recall_companion",
                 com.maidweapon.forge.client.ContractCompanionKeys.CALL.getTranslatedKeyMessage()));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.protect_companion"));
+        if (com.maidweapon.common.ContractRulesConfig.AUTO_MANIFEST.get()) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.protect_companion"));
+        }
 
         if (SlashBladeCompat.usesMaidSlashBladeTask(stack)) {
             tooltip.add(Component.translatable(
@@ -186,6 +188,13 @@ public final class ContractTooltipComposer {
         int level = data.getLevel();
         if (level >= MaidWeaponData.MAX_LEVEL) {
             return Component.translatable("maid_weapon.tooltip.upgrade.max");
+        }
+        if (com.maidweapon.common.ContractRulesConfig.LEVELS[level + 1].custom()) {
+            var rule = com.maidweapon.common.ContractRulesConfig.LEVELS[level + 1];
+            String target = rule.mode().get().equals("entities")
+                    ? String.join(" / ", rule.entities().get()) : "TIER " + rule.tier().get();
+            return Component.translatable("maid_weapon.tooltip.upgrade.configured",
+                    target, data.getNextUpgradeProgress(), rule.kills().get());
         }
         return switch (level) {
             case 5 -> Component.translatable("maid_weapon.tooltip.upgrade.dragon");

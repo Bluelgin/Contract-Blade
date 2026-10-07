@@ -18,6 +18,16 @@ public final class ContractCompanionNetwork {
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(MaidWeaponConstants.MOD_ID, "companion"), () -> VERSION, VERSION::equals, VERSION::equals);
     public record Call() { }
+    private static final java.util.Map<net.minecraft.server.level.ServerPlayer, Long> LAST_CALL =
+            new java.util.WeakHashMap<>();
+
+    private static synchronized boolean accept(net.minecraft.server.level.ServerPlayer player) {
+        long now = System.nanoTime();
+        Long previous = LAST_CALL.get(player);
+        if (previous != null && now - previous < 100_000_000L) return false;
+        LAST_CALL.put(player, now);
+        return true;
+    }
     public static void register() {
         CHANNEL.registerMessage(0, Call.class, (packet, buffer) -> { }, ContractCompanionNetwork::decode,
                 ContractCompanionNetwork::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
@@ -25,6 +35,11 @@ public final class ContractCompanionNetwork {
     private static Call decode(FriendlyByteBuf buffer) { return new Call(); }
     private static void handle(Call packet, Supplier<NetworkEvent.Context> context) {
         var ctx = context.get();
+        // Gate before enqueueing work, not after a flood has reached the server thread.
+        if (ctx.getSender() == null || !accept(ctx.getSender())) {
+            ctx.setPacketHandled(true);
+            return;
+        }
         ctx.enqueueWork(() -> {
             if (ctx.getSender() != null) ContractCompanionService.toggle(ctx.getSender());
         });

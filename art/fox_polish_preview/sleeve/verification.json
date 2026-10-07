@@ -1,0 +1,28 @@
+[
+  {
+    "color": "white",
+    "changedFaces": 68,
+    "geometryUnchanged": true,
+    "existingAtlasUnchanged": true,
+    "unrelatedUVUnchanged": true,
+    "goldSamplesPreserved": 1472,
+    "atlas": [
+      1024,
+      1024
+    ],
+    "scope": "Left sleeve sample only"
+  },
+  {
+    "color": "black",
+    "changedFaces": 68,
+    "geometryUnchanged": true,
+    "existingAtlasUnchanged": true,
+    "unrelatedUVUnchanged": true,
+    "goldSamplesPreserved": 1472,
+    "atlas": [
+      1024,
+      1024
+    ],
+    "scope": "Left sleeve sample only"
+  }
+]

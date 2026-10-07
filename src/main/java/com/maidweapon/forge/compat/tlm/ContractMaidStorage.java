@@ -27,13 +27,18 @@ public final class ContractMaidStorage {
         CompoundTag root = stack.getTag();
         if (root == null) return null;
         try {
+            MaidEntityDataCodec.validateContainer(root);
             if (root.contains(MaidEntityDataCodec.LEGACY_DATA, Tag.TAG_COMPOUND)) {
                 MaidEntityDataCodec.migrate(root);
             }
             return MaidEntityDataCodec.read(root);
         } catch (IOException exception) {
-            LOGGER.error("[MaidWeapon] Stored maid data failed validation for {}",
-                    player.getScoreboardName(), exception);
+            long now = player.level().getGameTime();
+            if (now - LAST_NBT_NOTICE.getOrDefault(player, Long.MIN_VALUE / 2) >= NBT_NOTICE_COOLDOWN) {
+                LAST_NBT_NOTICE.put(player, now);
+                LOGGER.warn("[MaidWeapon] Stored maid data rejected for {}: {}",
+                        player.getScoreboardName(), exception.getMessage());
+            }
             return null;
         }
     }
@@ -54,6 +59,7 @@ public final class ContractMaidStorage {
                 ? new CompoundTag() : weapon.getTag().copy();
         try {
             MaidEntityDataCodec.write(candidate, maidData);
+            MaidEntityDataCodec.validateContainer(candidate);
         } catch (IOException exception) {
             LOGGER.error("[MaidWeapon] Refused to discard maid because entity data could not be encoded", exception);
             player.displayClientMessage(

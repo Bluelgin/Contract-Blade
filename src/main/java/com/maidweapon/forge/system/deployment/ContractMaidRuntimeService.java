@@ -33,20 +33,25 @@ public final class ContractMaidRuntimeService {
         }
         if (!(maid instanceof LivingEntity living)) return;
         ContractProjectionMode mode = prepare(player, weapon, living);
-        if (!mode.weapon()) return; // Manual work, schedule and combat remain authoritative.
+        if (!ContractWorkPolicy.automatic(mode)) return;
 
-        boolean safeTask = MaidCareTaskSystem.applySafeTask(player, weapon, maid);
+        boolean safeTask = ContractWorkPolicy.feeding(mode) && MaidCareTaskSystem.applySafeTask(player, weapon, maid);
         if (!safeTask) {
-            ContractCombatTaskRouter.configure(player, weapon, maid);
-            TripleMagicCompat.castFallbackSpell(player, living, weapon);
+            if (ContractWorkPolicy.combat(mode)) {
+                ContractCombatTaskRouter.configure(player, weapon, maid);
+                TripleMagicCompat.castFallbackSpell(player, living, weapon);
+            } else ContractWorkPolicy.release(weapon, maid);
         }
     }
 
     public static void selectCombatTask(Player player, ItemStack weapon, Entity maid) {
         if (maid.level().dimension().equals(
                 com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
-        if (!(maid instanceof LivingEntity living) || !prepare(player, weapon, living).weapon()) return;
-        if (!MaidCareTaskSystem.applySafeTask(player, weapon, maid)) {
+        if (!(maid instanceof LivingEntity living)) return;
+        ContractProjectionMode mode = prepare(player, weapon, living);
+        if (!ContractWorkPolicy.automatic(mode)) return;
+        if (!(ContractWorkPolicy.feeding(mode) && MaidCareTaskSystem.applySafeTask(player, weapon, maid))) {
+            if (!ContractWorkPolicy.combat(mode)) { ContractWorkPolicy.release(weapon, maid); return; }
             ContractCombatTaskRouter.configure(player, weapon, maid);
         }
     }
@@ -66,7 +71,7 @@ public final class ContractMaidRuntimeService {
         ContractProjectionMode mode = com.maidweapon.forge.compat.tlm.TlmResidenceAdapter.isResident(maid)
                 ? ContractProjectionMode.NONE : TlmProjectionBaubles.mode(maid);
         ContractWorkPolicy.prepare(weapon, maid, mode);
-        if (mode.weapon()) TouhouLittleMaidHelper.setAllDaySchedule(maid);
+        if (ContractWorkPolicy.automatic(mode)) TouhouLittleMaidHelper.setAllDaySchedule(maid);
         if (mode == ContractProjectionMode.NONE) TripleMagicCompat.clearPhantoms(maid, weapon);
         else TripleMagicCompat.equipPhantoms(player, maid, weapon);
         if (mode.weapon()) {

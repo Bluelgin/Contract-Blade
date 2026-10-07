@@ -1,0 +1,28 @@
+{
+  "source": "v4",
+  "changedGeometry": [
+    "a3877b5e-19b5-0109-0758-dbe00cc8b7ee"
+  ],
+  "changedArt": [
+    "97815206-a2e2-4bc8-064c-f89e5bee3054",
+    "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+    "98fbc638-4adb-41bb-9b95-c5f20683b06e",
+    "a3877b5e-19b5-0109-0758-dbe00cc8b7ee"
+  ],
+  "cubes": 407,
+  "groups": 179,
+  "resolution": [
+    256,
+    256
+  ],
+  "atlasRepacked": true,
+  "moon": "static head-following alpha preview; runtime glow not integrated",
+  "clothing": "central folds converge towards hem; fine gold binding and wine hem facing",
+  "independentValidation": {
+    "pass": true,
+    "unrelatedTextureSamples": 619008,
+    "unrelatedGeometryUnchanged": true,
+    "bonesAnimationsAndHierarchyUnchanged": true,
+    "cubes": 407
+  }
+}

@@ -1,0 +1,12 @@
+const fs=require('fs'),assert=require('assert/strict'),sharp=require('sharp');
+const folder=__dirname,old=JSON.parse(fs.readFileSync(folder+'/../polish-v2/akatsuki-clothing-v2.bbmodel','utf8')),next=JSON.parse(fs.readFileSync(folder+'/akatsuki-drunk-moon-v3.bbmodel','utf8')),report=JSON.parse(fs.readFileSync(folder+'/validation.json','utf8'));
+const targets=new Set(report.targets),added=new Set(report.addedCubes);
+assert.equal(next.elements.length,old.elements.length+2);
+for(const c of old.elements){const n=next.elements.find(e=>e.uuid===c.uuid);assert.ok(n);for(const key of ['type','name','from','to','origin','rotation','inflate'])assert.deepEqual(n[key],c[key],c.uuid+':'+key);if(!targets.has(c.uuid)){assert.deepEqual(n.faces,c.faces,c.uuid+':faces');assert.equal(n.box_uv,c.box_uv);}}
+for(const c of next.elements)assert.ok(old.elements.some(e=>e.uuid===c.uuid)||added.has(c.uuid));
+const groups=a=>a.flatMap(n=>typeof n==='string'?[]:[n,...groups(n.children||[])]),a=groups(old.outliner),b=groups(next.outliner);assert.equal(a.length,b.length);
+for(const g of a){const n=b.find(e=>e.uuid===g.uuid);for(const key of ['name','origin','rotation','visibility'])assert.deepEqual(n[key],g[key],g.name+':'+key);assert.deepEqual((n.children||[]).map(x=>typeof x==='string'?x:x.uuid).filter(x=>!added.has(x)),(g.children||[]).map(x=>typeof x==='string'?x:x.uuid));}
+assert.deepEqual(next.animations,old.animations);
+for(const contact of report.contacts){const c=next.elements.find(e=>e.uuid===contact.cube);assert.ok(c.to[2]>contact.clothingSurfaceZ);assert.ok(c.from[2]<contact.clothingSurfaceZ);assert.ok(c.to[2]-contact.clothingSurfaceZ<.03);}
+async function main(){const raw=await sharp(folder+'/akatsuki-drunk-moon-v3.png').ensureAlpha().raw().toBuffer({resolveWithObject:true});assert.equal(raw.info.width,256);assert.equal(raw.info.height,256);const embedded=await sharp(Buffer.from(next.textures[0].source.split(',')[1],'base64')).ensureAlpha().raw().toBuffer();assert.ok(raw.data.equals(embedded));report.independentValidation={pass:true,existingGeometryAndBonesUnchanged:true,animationsAndLocatorsUnchanged:true,unrelatedFacesUnchanged:true,addedCubes:2,cordCentersIntersectClothing:true,embeddedTextureMatches:true};fs.writeFileSync(folder+'/validation.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report.independentValidation));}
+main().catch(e=>{console.error(e);process.exitCode=1;});

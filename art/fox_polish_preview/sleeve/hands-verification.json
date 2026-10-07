@@ -1,0 +1,18 @@
+[
+  {
+    "color": "white",
+    "visibleHandsRestored": 2,
+    "restoredFaces": 12,
+    "originalTexelsMatched": 108,
+    "otherUVUnchanged": true,
+    "geometryUnchanged": true
+  },
+  {
+    "color": "black",
+    "visibleHandsRestored": 2,
+    "restoredFaces": 12,
+    "originalTexelsMatched": 108,
+    "otherUVUnchanged": true,
+    "geometryUnchanged": true
+  }
+]

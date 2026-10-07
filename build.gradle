@@ -9,6 +9,24 @@ plugins {
 version = mod_version
 group = mod_group_id
 
+// Keep unfinished encounters in the development tree, physically absent from public builds.
+def stableRelease = providers.gradleProperty('stableRelease').map { it.toBoolean() }.orElse(false).get()
+if (stableRelease) {
+    layout.buildDirectory.set(file('build/stable-release'))
+    def staged = layout.buildDirectory.dir('release-inputs')
+    def prepare = tasks.register('prepareStableRelease', Exec) {
+        inputs.dir('src/main/java')
+        inputs.dir('src/main/resources')
+        inputs.file('tools/prepare_stable_release.py')
+        outputs.dir(staged)
+        commandLine 'python', 'tools/prepare_stable_release.py', staged.get().asFile.absolutePath
+    }
+    sourceSets.main.java.setSrcDirs([staged.get().dir('java')])
+    sourceSets.main.resources.setSrcDirs([staged.get().dir('resources')])
+    tasks.named('compileJava').configure { dependsOn prepare }
+    tasks.named('processResources').configure { dependsOn prepare }
+}
+
 def compatTestMode = providers.gradleProperty('compatTest').orElse('vanilla').get()
 def compatWorld = providers.gradleProperty('compatWorld').orNull
 def tlmTestMode = providers.gradleProperty('tlmTest').orElse('latest').get()
@@ -74,15 +92,24 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'contractblade.home.validation', galleryPreviewMode.toString()
             property 'contractblade.home.nativeValidation', homeLifeTestMode.toString()
+            property 'contractblade.stress.validation', providers.gradleProperty('contractStressTest').orElse('false').get()
             property 'contractblade.epicfight.validation', providers.gradleProperty('epicFightTest').orElse('false').get()
             property 'contractblade.projection.validation', providers.gradleProperty('projectionTest').orElse('false').get()
             property 'contractblade.companion.validation', providers.gradleProperty('companionTest').orElse('false').get()
+            property 'contractblade.rebirth.validation', providers.gradleProperty('contractRebirthTest').orElse('false').get()
+            property 'contractblade.performance.validation', providers.gradleProperty('contractPerfTest').orElse('false').get()
+            property 'contractblade.performance.label', providers.gradleProperty('contractPerfLabel').orElse('after').get()
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
+            property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
+            property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
+            property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
+            property 'contractblade.blackFox.clientValidation', providers.gradleProperty('blackFoxClientTest').orElse('false').get()
             property 'forge.logging.console.level', 'debug'
             // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             args '--mixin', 'maid_weapon.mixins.json'
+            args '--mixin', 'maid_weapon.akatsuki.mixins.json'
             args '--mixin', 'maid_weapon.slashblade.mixins.json'
             mods {
                 "${mod_id}" {
@@ -112,11 +139,15 @@ minecraft {
 }
 
 // 将生成的资源目录加入资源集
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+if (!stableRelease) sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 
 // 依赖配置
 dependencies {
+    // Optional local play-test UI only; remap the published jar rather than loading SRG names from run/mods.
+    if (providers.gradleProperty('configScreens').map { it.toBoolean() }.orElse(false).get()) {
+        runtimeOnly fg.deobf("local:configured:1.20.1-2.2.3")
+    }
     // Minecraft Forge
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
@@ -200,7 +231,12 @@ dependencies {
     if (providers.gradleProperty('foxBladeTetraTest').map { it.toBoolean() }.orElse(false).get()) {
         // Isolated fox-story verification only; never bundle these mod JARs.
         runtimeOnly fg.deobf("compat:SlashBladeResharped:1.20.1-1.9.65")
-        runtimeOnly fg.deobf("compat:blade_tetra:1.5.1")
+        def bladeTetraTestVersion = providers.gradleProperty('foxBladeTetraVersion').orElse('1.5.9').get()
+        runtimeOnly fg.deobf("compat:blade_tetra:${bladeTetraTestVersion}")
+        runtimeOnly fg.deobf("compat:tetra:6.3.0")
+        runtimeOnly fg.deobf("compat:mutil:1.20.1-6.2.0")
+    }
+    if (providers.gradleProperty('tetraContainerTest').map { it.toBoolean() }.orElse(false).get()) {
         runtimeOnly fg.deobf("compat:tetra:6.3.0")
         runtimeOnly fg.deobf("compat:mutil:1.20.1-6.2.0")
     }
@@ -238,10 +274,13 @@ tasks.named('processResources', ProcessResources).configure {
             loader_version_range: loader_version_range,
             mod_id              : mod_id,
             mod_name            : mod_name,
-            mod_license         : mod_license,
+            mod_license         : mod_license + (stableRelease ? '' : '; CC BY-4.0 (music)'),
             mod_version         : mod_version,
             mod_authors         : mod_authors,
             mod_description     : mod_description,
+            mod_asset_notice    : stableRelease
+                ? '各类资源分别遵守其附带许可；代码许可不替代模型许可。'
+                : '音乐 / Music: EpicBattle_J — PeriTune (Sei Mutsuki), CC BY 4.0。\n来源：https://peritune.com/blog/2021/09/16/epicbattle_j/\n署名、音频处理记录与完整条款见包内 licenses/black_fox_music/。',
             tlm_mandatory       : galleryPreviewMode ? 'false' : 'true'
     ]
     inputs.properties replaceProperties
@@ -260,7 +299,7 @@ jar {
                 'Implementation-Title'  : project.name,
                 'Implementation-Version': project.jar.archiveVersion,
                 'Implementation-Vendor' : mod_authors,
-                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json',
+                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json,maid_weapon.akatsuki.mixins.json',
         ])
     }
     finalizedBy 'reobfJar'

@@ -1,6 +1,7 @@
 package com.maidweapon.common.data;
 
 import com.maidweapon.common.MaidWeaponConfig;
+import com.maidweapon.common.ContractRulesConfig;
 import com.maidweapon.common.sin.SinType;
 import com.maidweapon.common.sin.SinSlotManager;
 import java.util.ArrayList;
@@ -66,6 +67,18 @@ public class MaidWeaponData {
 
     /** 凋灵击杀数（无死亡） */
     private int witherKills = 0;
+    private static final int[] NO_PROGRESS = new int[0];
+    private int[] upgradeProgress = NO_PROGRESS;
+
+    public int[] getUpgradeProgress() { return upgradeProgress.clone(); }
+    public void setUpgradeProgress(int[] progress) {
+        if (progress.length == 0) { upgradeProgress = NO_PROGRESS; return; }
+        upgradeProgress = new int[MAX_LEVEL + 1];
+        for (int i = 0; i < Math.min(progress.length, upgradeProgress.length); i++) {
+            upgradeProgress[i] = Math.max(0, Math.min(1000000, progress[i]));
+        }
+    }
+    public static int maximumResonance() { return ContractRulesConfig.maximumResonance(); }
 
     // ==================== Legacy Part archive ====================
 
@@ -143,7 +156,24 @@ public class MaidWeaponData {
      * @return 是否成功升级
      */
     public boolean tryUpgrade(int defeatedTier, boolean isEnderDragon, boolean isWither) {
+        return tryUpgrade(defeatedTier, isEnderDragon, isWither,
+                isEnderDragon ? "minecraft:ender_dragon" : isWither ? "minecraft:wither" : "");
+    }
+
+    public boolean tryUpgrade(int defeatedTier, boolean isEnderDragon, boolean isWither, String entityId) {
         if (level >= MAX_LEVEL) return false;
+
+        var rule = ContractRulesConfig.LEVELS[level + 1];
+        if (rule.custom()) {
+            if (!rule.matches(defeatedTier, entityId)) return false;
+            int target = level + 1;
+            if (upgradeProgress.length == 0) upgradeProgress = new int[MAX_LEVEL + 1];
+            upgradeProgress[target] = Math.min(1000000, upgradeProgress[target] + 1);
+            if (upgradeProgress[target] < rule.kills().get()) return false;
+            level++;
+            unlockedTier = Math.max(unlockedTier, Math.min(TIER_5, defeatedTier));
+            return true;
+        }
 
         int requiredTier = TIER_REQUIREMENT[level - 1];
 
@@ -188,6 +218,13 @@ public class MaidWeaponData {
     public String getNextUpgradeHint() {
         if (level >= MAX_LEVEL) return "已达到最大等级";
 
+        var rule = ContractRulesConfig.LEVELS[level + 1];
+        if (rule.custom()) {
+            String target = rule.mode().get().equals("entities")
+                    ? String.join(" / ", rule.entities().get()) : "TIER " + rule.tier().get();
+            return "需要无死亡击杀 " + target + "（" + getNextUpgradeProgress() + "/" + rule.kills().get() + "）";
+        }
+
         if (level == 5) return "需要无死亡击杀末影龙";
         if (level == 6) return "需要无死亡击杀凋灵";
         if (level == 7) return "需要无死亡击杀末影龙和凋灵各3次";
@@ -199,6 +236,10 @@ public class MaidWeaponData {
     }
 
     // ==================== 好感度 ====================
+
+    public int getNextUpgradeProgress() {
+        return level >= MAX_LEVEL || upgradeProgress.length == 0 ? 0 : upgradeProgress[level + 1];
+    }
 
     public int getFavorability() {
         return favorability;
@@ -219,19 +260,19 @@ public class MaidWeaponData {
     // ==================== 契约共鸣 ====================
 
     public int getResonance() {
-        return resonance;
+        return Math.min(resonance, maximumResonance());
     }
 
     public void setResonance(int resonance) {
-        this.resonance = Math.max(MIN_RESONANCE, Math.min(resonance, MAX_RESONANCE));
+        this.resonance = Math.max(MIN_RESONANCE, Math.min(resonance, maximumResonance()));
     }
 
     public void addResonance(int amount) {
-        setResonance(this.resonance + amount);
+        setResonance(getResonance() + amount);
     }
 
     public void reduceResonance(int amount) {
-        setResonance(this.resonance - amount);
+        setResonance(getResonance() - amount);
     }
 
     // ==================== 战斗统计 ====================
@@ -286,6 +327,8 @@ public class MaidWeaponData {
      * 根据等级计算基础攻击力加成
      */
     public float getAttackDamageBonus() {
+        double override = ContractRulesConfig.LEVELS[level].damage().get();
+        if (override >= 0) return (float) override;
         float perLevel = (float)(double) MaidWeaponConfig.LEVEL_DAMAGE_PER_LEVEL.get();
         float maxBonus = (float)(double) MaidWeaponConfig.LEVEL_MAX_BONUS.get();
         float bonus = (level - 1) * perLevel;

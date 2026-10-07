@@ -1,0 +1,30 @@
+[
+  {
+    "color": "white",
+    "textureBefore": 1024,
+    "textureAfter": 512,
+    "baseRGBABytesBefore": 4194304,
+    "baseRGBABytesAfter": 1048576,
+    "removedFaces": 93,
+    "removedTriangles": 186,
+    "checkedTexelSamples": 2589236,
+    "texelSamplesIdentical": true,
+    "bonesAnimationsGeometryAndVisibilityUnchanged": true,
+    "projectBytesBefore": 2232694,
+    "projectBytesAfter": 2099009
+  },
+  {
+    "color": "black",
+    "textureBefore": 1024,
+    "textureAfter": 512,
+    "baseRGBABytesBefore": 4194304,
+    "baseRGBABytesAfter": 1048576,
+    "removedFaces": 0,
+    "removedTriangles": 0,
+    "checkedTexelSamples": 2763164,
+    "texelSamplesIdentical": true,
+    "bonesAnimationsGeometryAndVisibilityUnchanged": true,
+    "projectBytesBefore": 2359450,
+    "projectBytesAfter": 2225939
+  }
+]

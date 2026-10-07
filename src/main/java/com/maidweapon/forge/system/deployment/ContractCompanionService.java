@@ -1,5 +1,6 @@
 package com.maidweapon.forge.system.deployment;
 
+import com.maidweapon.common.ContractRulesConfig;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 
 import com.maidweapon.forge.compat.tlm.TlmResidenceAdapter;
@@ -25,14 +26,18 @@ public final class ContractCompanionService {
     private record Injury(String binding, float health) { }
     private static final Map<UUID, Injury> INJURIES = new HashMap<>();
     private static final Map<UUID, Long> NEXT_REQUEST = new HashMap<>();
+    private static final Map<UUID, Long> AUTO_NEXT = new HashMap<>();
 
     public static void attacked(Player owner, Entity attacker, float damage) {
         if (damage <= 0 || !(attacker instanceof LivingEntity) || attacker == owner || atHome(owner)) return;
+        prolongGuard(owner);
+        if (!ContractRulesConfig.AUTO_MANIFEST.get()
+                || now(owner) < AUTO_NEXT.getOrDefault(owner.getUUID(), 0L)) return;
         ItemStack held = owner.getMainHandItem();
-        if (InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)) {
+        if (InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)
+                && MaidInfusion.data(held).getResonance() >= ContractRulesConfig.HURT_MIN_RESONANCE.get()) {
             INJURIES.put(owner.getUUID(), new Injury(ContractCarrierData.ensureBindingId(held), owner.getHealth()));
         }
-        prolongGuard(owner);
     }
 
     public static void prolongGuard(Player owner) {
@@ -67,18 +72,24 @@ public final class ContractCompanionService {
             return;
         }
         if (!InfusedMaidDeploymentSystem.isEligibleWeapon(carrier, owner)) { message(owner, "unavailable"); return; }
-        if (hasFollowingCompanion(owner)) { message(owner, "already_accompanied"); return; }
+        if (!canFollow(owner, carrier)) { message(owner, "limit_reached"); return; }
         summon(owner, carrier, ContractCompanionState.Mode.MANUAL);
     }
 
     public static void tick(Player owner) {
         Injury injury = INJURIES.remove(owner.getUUID());
         ItemStack held = owner.getMainHandItem();
-        if (injury != null && owner.isAlive() && owner.getHealth() < injury.health()
+        if (injury != null && ContractRulesConfig.AUTO_MANIFEST.get()
+                && now(owner) >= AUTO_NEXT.getOrDefault(owner.getUUID(), 0L)
+                && !atHome(owner) && !owner.isSpectator()
+                && MaidInfusion.data(held).getResonance() >= ContractRulesConfig.HURT_MIN_RESONANCE.get()
+                && owner.isAlive() && owner.getHealth() < injury.health()
                 && injury.binding().equals(ContractCarrierData.getBindingId(held))
                 && InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)
-                && MaidInfusion.containsMaid(held) && loaded(owner, held) == null && !hasFollowingCompanion(owner)) {
-            summon(owner, held, ContractCompanionState.Mode.GUARD);
+                && MaidInfusion.containsMaid(held) && loaded(owner, held) == null && canFollow(owner, held)) {
+            if (summon(owner, held, ContractCompanionState.Mode.GUARD)) {
+                AUTO_NEXT.put(owner.getUUID(), now(owner) + ContractRulesConfig.HURT_COOLDOWN.get());
+            }
         }
         if (owner.tickCount % 5 != 0) return;
         var seen = new HashSet<String>();
@@ -91,6 +102,17 @@ public final class ContractCompanionService {
             if (maid == null || maid.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) continue;
             boolean resident = TlmResidenceAdapter.isResident(maid);
             var mode = ContractCompanionState.mode(carrier);
+            if (resident) TlmResidenceAdapter.rememberResidence(maid);
+            else if ((mode == ContractCompanionState.Mode.RESIDENT
+                    || ContractActiveDeployments.get(owner.getUUID(), binding) == null
+                    || ContractActiveDeployments.count(owner.getUUID()) > ContractRulesConfig.MAX_FOLLOWERS.get())
+                    && !canFollow(owner, carrier)) {
+                // Native toggles have already happened: restore a safe residence,
+                // never delete a maid or overwrite another contract.
+                TlmResidenceAdapter.restoreResidence(maid);
+                resident = TlmResidenceAdapter.isResident(maid);
+                message(owner, "limit_reached");
+            }
             if (resident) mode = ContractCompanionState.Mode.RESIDENT;
             else if (mode == ContractCompanionState.Mode.RESIDENT) mode = ContractCompanionState.Mode.MANUAL;
             ContractCompanionState.mark(carrier, maid, mode, ContractCompanionState.until(carrier));
@@ -120,24 +142,41 @@ public final class ContractCompanionService {
     public static void disconnect(Player owner) {
         cancelRequests(owner);
         NEXT_REQUEST.remove(owner.getUUID());
+        AUTO_NEXT.remove(owner.getUUID());
     }
-    public static void clearSession() { INJURIES.clear(); NEXT_REQUEST.clear(); }
+    public static void clearSession() { INJURIES.clear(); NEXT_REQUEST.clear(); AUTO_NEXT.clear(); }
 
-    private static void summon(Player owner, ItemStack carrier, ContractCompanionState.Mode mode) {
-        if (!InfusedMaidDeploymentSystem.manifestRequested(owner, carrier, mode)) { message(owner, "failed"); return; }
+    private static boolean summon(Player owner, ItemStack carrier, ContractCompanionState.Mode mode) {
+        if (!InfusedMaidDeploymentSystem.manifestRequested(owner, carrier, mode)) { message(owner, "failed"); return false; }
         Entity maid = loaded(owner, carrier);
-        if (maid == null) return;
+        if (maid == null) return false;
         ContractCompanionState.mark(carrier, maid, mode, mode == ContractCompanionState.Mode.GUARD ? now(owner) + GUARD_TICKS : 0);
         ContractCompanionDialogue.say(owner, maid, mode == ContractCompanionState.Mode.GUARD ? "protect" : "greeting");
+        return true;
     }
 
-    private static boolean hasFollowingCompanion(Player owner) {
+    public static boolean canFollow(Player owner, ItemStack requested) {
+        String requestedBinding = ContractCarrierData.getBindingId(requested);
+        var seen = new HashSet<String>();
         for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
             ItemStack carrier = owner.getInventory().getItem(slot);
             if (owned(owner, carrier) && !ContractCarrierData.isContractSuperseded(carrier)
-                    && !MaidInfusion.containsMaid(carrier) && !isResident(owner, carrier)) return true;
+                    && !MaidInfusion.containsMaid(carrier) && !isResident(owner, carrier)) {
+                // A resident requesting to return must not displace an already
+                // admitted follower merely because her carrier has an earlier slot.
+                if (ContractCompanionState.mode(carrier) == ContractCompanionState.Mode.RESIDENT) continue;
+                String binding = ContractCarrierData.ensureBindingId(carrier);
+                if (!binding.equals(requestedBinding)) seen.add(binding);
+            }
         }
-        return false;
+        // A transferred carrier must not open another slot while its maid is out.
+        for (var active : ContractActiveDeployments.snapshot(owner.getUUID())) {
+            if (active.bindingId().equals(requestedBinding)) continue;
+            Entity maid = ContractWeaponLocator.findManifestedMaid(owner, active.maidId());
+            if (maid == null || !TlmResidenceAdapter.isResident(maid)
+                    && ContractCompanionState.mode(maid) != ContractCompanionState.Mode.RESIDENT) seen.add(active.bindingId());
+        }
+        return seen.size() < ContractRulesConfig.MAX_FOLLOWERS.get();
     }
 
     private static boolean inCombat(Player owner, Entity maid) {

@@ -1,0 +1,15 @@
+{
+  "sortnum": 1,
+  "name": "patchouli.maid_weapon.entry.fox_passage.name",
+  "icon": "minecraft:soul_lantern",
+  "category": "maid_weapon:compatibility",
+  "flag": "mod:slashblade",
+  "pages": [
+    {"type": "patchouli:text", "text": "patchouli.maid_weapon.entry.fox_passage.page.0"},
+    {"type": "patchouli:text", "title": "patchouli.maid_weapon.entry.fox_passage.page.1.title", "text": "patchouli.maid_weapon.entry.fox_passage.page.1"},
+    {"type": "patchouli:text", "title": "patchouli.maid_weapon.entry.fox_passage.page.2.title", "text": "patchouli.maid_weapon.entry.fox_passage.page.2"},
+    {"type": "patchouli:text", "title": "patchouli.maid_weapon.entry.fox_passage.page.3.title", "text": "patchouli.maid_weapon.entry.fox_passage.page.3"},
+    {"type": "patchouli:text", "title": "patchouli.maid_weapon.entry.fox_passage.page.4.title", "text": "patchouli.maid_weapon.entry.fox_passage.page.4"},
+    {"type": "patchouli:text", "title": "patchouli.maid_weapon.entry.fox_passage.page.5.title", "text": "patchouli.maid_weapon.entry.fox_passage.page.5"}
+  ]
+}

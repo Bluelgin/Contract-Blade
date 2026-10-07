@@ -42,7 +42,7 @@ public final class MaidFavorabilityOverlay {
         MaidWeaponData data = MaidInfusion.data(weapon);
         int width = 81;
         int filled = Math.round(width * data.getResonance()
-                / (float) MaidWeaponData.MAX_RESONANCE);
+                / (float) MaidWeaponData.maximumResonance());
         int x = screenWidth / 2 + 10;
         int y = screenHeight - 59 - MaidWeaponConfig.RESONANCE_HUD_OFFSET_Y.get();
 
@@ -60,7 +60,7 @@ public final class MaidFavorabilityOverlay {
         }
         graphics.drawCenteredString(minecraft.font,
                 Component.translatable("maid_weapon.hud.resonance",
-                        data.getResonance(), MaidWeaponData.MAX_RESONANCE),
+                        data.getResonance(), MaidWeaponData.maximumResonance()),
                 x + width / 2, y + 1, 0xFFFFFFFF);
     }
 

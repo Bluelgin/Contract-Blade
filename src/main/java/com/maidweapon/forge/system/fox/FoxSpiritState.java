@@ -6,6 +6,7 @@ import net.minecraft.world.item.ItemStack;
 /** Item-local identity only; it never creates a maid or decides server authority. */
 public final class FoxSpiritState {
     public static final String WHITE = "maid_weapon:fox_white";
+    public static final String BLACK = "maid_weapon:fox_black";
     public static final String OFFERING = "MaidWeaponShrineWhiteFox";
     public static final String ROOT = "MaidWeaponFoxSpirit";
     public static final String SEAL = "MaidWeaponFoxSoulSeal";
@@ -17,7 +18,8 @@ public final class FoxSpiritState {
     }
 
     public static boolean valid(CompoundTag identity) {
-        return identity.getInt("Version") == 1 && WHITE.equals(identity.getString("SpiritId"))
+        return identity.getInt("Version") == 1 && (WHITE.equals(identity.getString("SpiritId"))
+                || BLACK.equals(identity.getString("SpiritId")))
                 && identity.hasUUID("SpiritUUID") && identity.hasUUID("OriginUUID")
                 && identity.hasUUID("OwnerUUID") && identity.hasUUID("Token");
     }

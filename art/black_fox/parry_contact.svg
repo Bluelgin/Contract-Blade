@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <title>刀锋碰撞 · 格挡接触特效</title>
+  <desc>透明底像素碰撞火花，中心白金闪光、两侧淡紫冲击弧和散开的金色火星。预览稿，尚未接入游戏。</desc>
+  <!-- Broken arcs suggest a shockwave, not a shield or a HUD badge. -->
+  <g fill="#bba5f2" opacity=".55">
+    <path d="M25 11h-6v3h-4v4h-3v7H9v10h3v-9h3v-6h4v-4h6z"/>
+    <path d="M39 53h6v-3h4v-4h3v-7h3V29h-3v9h-3v6h-4v4h-6z"/>
+  </g>
+  <g fill="#e6ddff" opacity=".85">
+    <path d="M23 15h-4v4h-3v6h-2v9h2v-7h3v-6h4z"/>
+    <path d="M41 49h4v-4h3v-6h2v-9h-2v7h-3v6h-4z"/>
+  </g>
+  <!-- Thin, asymmetric rays stay close to the impact and leave the combatants visible. -->
+  <g fill="#db9950">
+    <path d="M28 28h-4v-3h-4v-3h-4v-3h-3v-3h-3v-3h4v3h4v3h4v3h3v3h3z"/>
+    <path d="M36 36h4v3h4v3h4v3h4v3h3v3h-4v-3h-4v-3h-4v-3h-4v-3h-3z"/>
+    <path d="M35 28h3v-4h3v-4h3v-4h3v-4h3v-4h3v5h-3v4h-3v4h-3v3h-3v3h-3v3h-3z"/>
+    <path d="M28 36h-3v4h-3v4h-3v4h-3v4h-3v4h-3v-5h3v-4h3v-4h3v-3h3v-3h3v-3h3z"/>
+  </g>
+  <g fill="#ffe5a1">
+    <path d="M26 26h-3v-3h-4v-3h-4v-3h-3v-2h3v3h4v3h4v3h3z"/>
+    <path d="M38 38h3v3h4v3h4v3h3v2h-3v-3h-4v-3h-4v-3h-3z"/>
+    <path d="M36 27h2v-4h3v-4h3v-4h3v-4h2v4h-3v4h-3v4h-3v3h-4z"/>
+    <path d="M28 37h-2v4h-3v4h-3v4h-3v4h-2v-4h3v-4h3v-4h3v-3h4z"/>
+  </g>
+  <!-- Compact bright center: no text, frame, sword pictogram or solid backing. -->
+  <path fill="#ffc86e" d="M30 19h3v8h4v3h9v3h-9v4h-4v9h-3v-9h-4v-4h-9v-3h9v-3h4z"/>
+  <path fill="#fff4cf" d="M30 24h3v5h3v2h6v1h-6v3h-3v6h-2v-6h-3v-3h-6v-1h6v-2h2z"/>
+  <path fill="#ffffff" d="M30 28h3v2h3v3h-3v3h-3v-3h-3v-3h3z"/>
+  <!-- Small detached sparks convey an outward burst. -->
+  <g fill="#ffe4a2">
+    <path d="M5 22h3v2H5zM17 6h2v4h-2zM36 7h2v3h-2zM54 19h4v2h-4zM57 38h3v2h-3zM44 55h2v4h-2zM27 54h2v3h-2zM5 43h4v2H5z"/>
+  </g>
+  <g fill="#ffffff"><path d="M7 22h1v1H7zM54 19h2v1h-2zM44 55h1v2h-1zM8 43h1v1H8z"/></g>
+</svg>

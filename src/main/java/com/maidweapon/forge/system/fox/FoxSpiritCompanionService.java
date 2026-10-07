@@ -21,18 +21,20 @@ public final class FoxSpiritCompanionService {
         if (!FoxSpiritState.valid(identity) || !identity.getUUID("OwnerUUID").equals(owner.getUUID())
                 || !FoxSpiritLedger.get(owner.getServer()).owns(identity, "WEAPON")) return false;
         if (identity.getBoolean(INITIALIZED)) return true;
+        String spirit = identity.getString("SpiritId");
+        boolean black = FoxSpiritState.BLACK.equals(spirit);
+        String model = black ? FoxModelPackBootstrap.BLACK_MODEL : FoxModelPackBootstrap.WHITE_MODEL;
         // Existing complete contracts retain the model chosen by their owner.
-        if (IntrinsicSpiritApi.hasIntrinsicSpirit(weapon, FoxSpiritState.WHITE)) {
+        if (IntrinsicSpiritApi.hasIntrinsicSpirit(weapon, spirit)) {
             identity.putBoolean(INITIALIZED, true);
             return true;
         }
         if (ContractCarrierData.hasMaidData(weapon) || ContractCarrierData.hasMaidEntityData(weapon)
-                || !FoxModelPackBootstrap.isRegistered(FoxModelPackBootstrap.WHITE_MODEL)) return false;
+                || !FoxModelPackBootstrap.isRegistered(model)) return false;
         ItemStack prepared = weapon.copy();
-        if (!IntrinsicSpiritApi.ensureIntrinsicSpirit(owner, prepared, FoxSpiritState.WHITE, "白狐")
-                || !IntrinsicSpiritApi.setIntrinsicSpiritModel(owner, prepared, FoxSpiritState.WHITE,
-                FoxModelPackBootstrap.WHITE_MODEL)
-                || !IntrinsicSpiritApi.setIntrinsicSpiritActive(owner, prepared, FoxSpiritState.WHITE, true)) return false;
+        if (!IntrinsicSpiritApi.ensureIntrinsicSpirit(owner, prepared, spirit, black ? "黑狐" : "白狐")
+                || !IntrinsicSpiritApi.setIntrinsicSpiritModel(owner, prepared, spirit, model)
+                || !IntrinsicSpiritApi.setIntrinsicSpiritActive(owner, prepared, spirit, true)) return false;
         FoxSpiritState.resident(prepared).putBoolean(INITIALIZED, true);
         weapon.setTag(prepared.getTag());
         owner.getInventory().setChanged();

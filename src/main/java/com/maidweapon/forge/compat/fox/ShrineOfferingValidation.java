@@ -90,10 +90,18 @@ public final class ShrineOfferingValidation {
         check(ShrineOfferingService.isProtected(restored), "swap remains blocked even after offering");
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         restored.interact(player, InteractionHand.MAIN_HAND);
-        check(restored.getItem().isEmpty() && player.getMainHandItem().save(new CompoundTag()).equals(offered)
+        var picked = player.getMainHandItem().save(new CompoundTag());
+        picked.getCompound("tag").remove(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT);
+        picked.getCompound("tag").remove(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN);
+        check(restored.getItem().isEmpty() && picked.equals(offered)
                         && !ShrineOfferingService.isProtected(restored)
                         && restored.getPersistentData().getBoolean(ShrineOfferingService.TAKEN),
                 "native empty-hand pickup preserves the complete blade and releases stand");
+        var receipt = player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)
+                .getCompound("MaidWeaponShrineFoxStory");
+        check(receipt.contains("FirstDay") && receipt.getLong("FirstDay")
+                        == com.maidweapon.forge.system.fox.ShrineStoryPolicy.gameDay(player.getServer().overworld().getDayTime()),
+                "successful native delivery records its exact acquisition day");
         restored.setItem(ItemStack.of(offered));
         restored.removeTag(ShrineOfferingService.STAND_TAG);
         player.setItemInHand(InteractionHand.MAIN_HAND, first.copy());

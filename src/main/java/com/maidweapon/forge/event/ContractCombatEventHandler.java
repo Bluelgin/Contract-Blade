@@ -66,10 +66,17 @@ public final class ContractCombatEventHandler {
 
         MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
         data.addKill();
-        data.addResonance(5);
+        data.addResonance(com.maidweapon.common.ContractRulesConfig.KILL_REWARD.get());
         int oldLevel = data.getLevel();
-        boolean upgraded = data.tryUpgrade(tier, ChallengeTracker.hasDragon(playerId),
-                ChallengeTracker.hasWither(playerId));
+        String defeatedId = entityId(event.getEntity());
+        int defeatedTier = MonsterTierRegistry.getTier(defeatedId);
+        if (defeatedTier <= 0) defeatedTier = MonsterTierRegistry.estimateTierFromHealth(event.getEntity().getMaxHealth());
+        // Custom rules use the entity that actually died, not a previously attacked boss.
+        boolean custom = data.getLevel() < MaidWeaponData.MAX_LEVEL
+                && com.maidweapon.common.ContractRulesConfig.LEVELS[data.getLevel() + 1].custom();
+        boolean upgraded = data.tryUpgrade(custom ? defeatedTier : tier,
+                custom ? "minecraft:ender_dragon".equals(defeatedId) : ChallengeTracker.hasDragon(playerId),
+                custom ? "minecraft:wither".equals(defeatedId) : ChallengeTracker.hasWither(playerId), defeatedId);
         if (upgraded) {
             player.playSound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, 1.0f, 1.0f);
             if (player.level() instanceof ServerLevel serverLevel) {

@@ -123,6 +123,8 @@ public final class ShrineFoxValidation {
         check(!SlashBladeCompat.isNamedBlade(blade, "item.slashblade.fox_black"),
                 "White Fox is not Black Fox");
         ShrineOfferingValidation.run((net.minecraft.world.entity.decoration.ItemFrame) stand.get(0), owner);
+        // The offering fixture now observes its actual delivery; the following scenes start afresh.
+        owner.getPersistentData().remove(Player.PERSISTED_NBT_TAG);
         CompoundTag before = blade.save(new CompoundTag());
         ItemStack unmarked = blade.copy();
         unmarked.getOrCreateTag().remove(ShrineFoxStory.OFFERING);
@@ -130,12 +132,20 @@ public final class ShrineFoxValidation {
         ShrineFoxStory.observe(owner);
         check(!progress(owner).getBoolean("Greeting"), "ordinary White Fox does not trigger");
         owner.getInventory().setItem(0, blade);
+        level.setDayTime(6000);
         ShrineFoxStory.observe(owner);
         boolean hasBladeTetra = BladeTetraStoryCompat.isLoaded();
-        check(progress(owner).getBoolean("Greeting") == !hasBladeTetra,
-                "standalone greeting is separated from BladeTetra's story");
-        check(progress(owner).getBoolean("Encounter") == hasBladeTetra,
-                "divine encounter requires the actual installed BladeTetra mod");
+        check(progress(owner).getBoolean("Greeting") && !progress(owner).getBoolean("Encounter")
+                        && !progress(owner).getBoolean("DreamMemory") && progress(owner).getLong("FirstDay") == 0,
+                "without Akatsuki acquisition day only greets in both dependency combinations");
+        var acquisition = progress(owner).copy();
+        ShrineFoxStory.observe(owner);
+        check(acquisition.equals(progress(owner)), "same-day ticks neither remind nor change acquisition date");
+        level.setDayTime(24000);
+        ShrineFoxStory.observe(owner);
+        check(progress(owner).getBoolean("Encounter") == hasBladeTetra
+                        && progress(owner).getBoolean("DreamMemory") == !hasBladeTetra,
+                "following day opens the correct installed-provider reminder");
         var afterClaim = blade.save(new CompoundTag());
         afterClaim.getCompound("tag").remove(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT);
         afterClaim.getCompound("tag").remove(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN);
@@ -145,9 +155,9 @@ public final class ShrineFoxValidation {
             owner.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG)
                     .putBoolean("blade_tetra_divine_domain_cleared", true);
             ShrineFoxStory.observe(owner);
-            check(progress(owner).getBoolean("EchoHeard")
+            check(!progress(owner).getBoolean("EchoHeard")
                             && BladeTetraStoryCompat.hasCompletedDivinePrologue(owner),
-                    "real BladeTetra bridge reads the original clear flag without changing its quest state");
+                    "historical clear is recognized but cannot play Divine echo at the shrine");
         }
         CompoundTag receipt = owner.getPersistentData().copy();
         ShrineFoxStory.observe(owner);

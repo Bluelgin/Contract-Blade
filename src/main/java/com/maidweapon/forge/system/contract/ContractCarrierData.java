@@ -31,7 +31,7 @@ public final class ContractCarrierData {
         }
 
         CompoundTag maidTag = tag.getCompound(NBT_MAID_DATA);
-        return MaidWeaponDataSerializer.fromValues(
+        MaidWeaponData data = MaidWeaponDataSerializer.fromValues(
                 maidTag.getString(MaidWeaponDataSerializer.KEY_MAID_NAME),
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_LEVEL),
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_FAVORABILITY),
@@ -44,6 +44,8 @@ public final class ContractCarrierData {
                 maidTag.getInt(MaidWeaponDataSerializer.KEY_WITHER_KILLS),
                 maidTag.getString(MaidWeaponDataSerializer.KEY_EMBEDDED_SINS)
         );
+        data.setUpgradeProgress(maidTag.getIntArray(MaidWeaponDataSerializer.KEY_CONFIGURED_PROGRESS));
+        return data;
     }
 
     public static void setMaidData(ItemStack stack, MaidWeaponData data) {
@@ -56,6 +58,8 @@ public final class ContractCarrierData {
         maidTag.putInt(MaidWeaponDataSerializer.KEY_UNLOCKED_TIER, data.getUnlockedTier());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_ENDER_DRAGON_KILLS, data.getEnderDragonKills());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_WITHER_KILLS, data.getWitherKills());
+        int[] progress = data.getUpgradeProgress();
+        if (progress.length > 0) maidTag.putIntArray(MaidWeaponDataSerializer.KEY_CONFIGURED_PROGRESS, progress);
 
         maidTag.putString(MaidWeaponDataSerializer.KEY_EMBEDDED_SINS,
                 SinSlotManager.sinsToString(data.getEmbeddedSins()));

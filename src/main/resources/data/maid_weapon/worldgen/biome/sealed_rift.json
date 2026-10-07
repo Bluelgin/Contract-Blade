@@ -1,0 +1,16 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.5,
+  "downfall": 0.0,
+  "effects": {
+    "fog_color": 471097,
+    "sky_color": 14909,
+    "water_color": 1867395,
+    "water_fog_color": 14909,
+    "ambient_sound": "minecraft:ambient.warped_forest.loop"
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": []
+}

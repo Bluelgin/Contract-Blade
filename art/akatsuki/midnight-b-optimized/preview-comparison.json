@@ -1,0 +1,65 @@
+[
+  {
+    "view": "front",
+    "changedPixels": 1,
+    "totalPixels": 880000,
+    "maxChannelDifference": 1,
+    "meanChannelDifference": 2.840909090909091e-7
+  },
+  {
+    "view": "angle",
+    "changedPixels": 0,
+    "totalPixels": 880000,
+    "maxChannelDifference": 0,
+    "meanChannelDifference": 0
+  },
+  {
+    "view": "other-angle",
+    "changedPixels": 3,
+    "totalPixels": 880000,
+    "maxChannelDifference": 22,
+    "meanChannelDifference": 0.000015625
+  },
+  {
+    "view": "side",
+    "changedPixels": 0,
+    "totalPixels": 880000,
+    "maxChannelDifference": 0,
+    "meanChannelDifference": 0
+  },
+  {
+    "view": "other-side",
+    "changedPixels": 0,
+    "totalPixels": 880000,
+    "maxChannelDifference": 0,
+    "meanChannelDifference": 0
+  },
+  {
+    "view": "back",
+    "changedPixels": 0,
+    "totalPixels": 880000,
+    "maxChannelDifference": 0,
+    "meanChannelDifference": 0
+  },
+  {
+    "view": "back-angle",
+    "changedPixels": 1,
+    "totalPixels": 880000,
+    "maxChannelDifference": 3,
+    "meanChannelDifference": 0.0000014204545454545454
+  },
+  {
+    "view": "other-side-detail",
+    "changedPixels": 0,
+    "totalPixels": 880000,
+    "maxChannelDifference": 0,
+    "meanChannelDifference": 0
+  },
+  {
+    "view": "side-detail",
+    "changedPixels": 0,
+    "totalPixels": 880000,
+    "maxChannelDifference": 0,
+    "meanChannelDifference": 0
+  }
+]

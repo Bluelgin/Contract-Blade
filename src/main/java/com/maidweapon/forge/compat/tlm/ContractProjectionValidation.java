@@ -80,6 +80,7 @@ public final class ContractProjectionValidation {
             check(!ContractCarrierData.hasMaidData(maid.getMainHandItem()), "projection has no duplicate growth contract");
             check(ItemStack.isSameItemSameTags(ownHelmet, maid.getItemBySlot(EquipmentSlot.HEAD)), "tassel does not project armor");
             check(!"touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "tassel enables automatic work");
+            validateWorkSwitches(player, carrier, maid);
             baubles.setStackInSlot(1, ribbon.copy());
             check(TlmProjectionBaubles.mode(maid) == ContractProjectionMode.WEAPON, "projection channels never stack");
             baubles.setStackInSlot(0, ItemStack.EMPTY);
@@ -167,6 +168,41 @@ public final class ContractProjectionValidation {
             check(ItemStack.isSameItemSameTags(ownHelmet, maid.getItemBySlot(EquipmentSlot.HEAD)), "recall retains original armor");
         } finally {
             if (maid != null) maid.discard();
+        }
+    }
+
+    private static void validateWorkSwitches(net.minecraft.world.entity.player.Player player,
+                                             ItemStack carrier, Mob maid) {
+        boolean combat = com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get();
+        boolean feeding = com.maidweapon.common.ContractRulesConfig.AUTO_FEED.get();
+        int food = player.getFoodData().getFoodLevel();
+        try {
+            com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.set(false);
+            com.maidweapon.common.ContractRulesConfig.AUTO_FEED.set(false);
+            ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid))
+                    && TripleMagicCompat.isPhantom(maid.getMainHandItem()),
+                    "disabled work restores task without disabling projection");
+            player.getFoodData().setFoodLevel(6);
+            com.maidweapon.common.ContractRulesConfig.AUTO_FEED.set(true);
+            ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check("touhou_little_maid:feed".equals(TlmEntityAdapter.taskId(maid)),
+                    "feeding works independently of combat automation");
+            player.getFoodData().setFoodLevel(20);
+            ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)),
+                    "feeding-only mode restores manual task when no longer hungry");
+            com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.set(true);
+            com.maidweapon.common.ContractRulesConfig.AUTO_FEED.set(false);
+            player.getFoodData().setFoodLevel(6);
+            ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check(!"touhou_little_maid:feed".equals(TlmEntityAdapter.taskId(maid))
+                    && !"touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)),
+                    "combat automation does not depend on feeding automation");
+        } finally {
+            player.getFoodData().setFoodLevel(food);
+            com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.set(combat);
+            com.maidweapon.common.ContractRulesConfig.AUTO_FEED.set(feeding);
         }
     }
 

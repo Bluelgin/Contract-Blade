@@ -25,10 +25,34 @@ import net.minecraftforge.fml.common.Mod;
 public final class ContractCompanionValidation {
     @SubscribeEvent
     public static void started(ServerStartedEvent event) {
-        if (!Boolean.getBoolean("contractblade.companion.validation")) return;
+        boolean rebirth = Boolean.getBoolean("contractblade.rebirth.validation");
+        boolean performance = Boolean.getBoolean("contractblade.performance.validation");
+        if (!performance && !rebirth && !Boolean.getBoolean("contractblade.companion.validation")) return;
+        // These isolated fixtures repeatedly change rules in one server tick.
+        // Prevent asynchronous autosave/reload from replaying an intermediate
+        // file over the next test case. This server always exits below; normal
+        // gameplay retains Forge's watcher and synchronized live config changes.
         try {
-            run(event);
-            ContractHandbookValidation.run(event.getServer());
+            for (var config : net.minecraftforge.fml.config.ConfigTracker.INSTANCE.configSets()
+                    .get(net.minecraftforge.fml.config.ModConfig.Type.SERVER)) {
+                if (config.getSpec() == com.maidweapon.common.ContractRulesConfig.SPEC
+                        && config.getConfigData() instanceof com.electronwill.nightconfig.core.file.CommentedFileConfig file) {
+                    com.electronwill.nightconfig.core.file.FileWatcher.defaultInstance().setWatch(file.getNioPath(), () -> { });
+                }
+            }
+            if (performance) com.maidweapon.forge.system.deployment.ContractCarrierPerformanceValidation.run(event.getServer());
+            else if (rebirth) {
+                ContractMaidRebirthValidation.run(event.getServer());
+                if (net.minecraftforge.fml.ModList.get().isLoaded("slashblade"))
+                    ContractDestructionValidation.run(event.getServer());
+                ContractCarrierLossValidation.run(event.getServer().overworld());
+            }
+            else {
+                ContractRulesValidation.run();
+                run(event);
+                ContractMultiCompanionValidation.run(event.getServer());
+                ContractHandbookValidation.run(event.getServer());
+            }
             LogUtils.getLogger().info("[MaidWeapon] COMPANION_VALIDATION_PASS");
         } catch (Throwable error) {
             LogUtils.getLogger().error("[MaidWeapon] COMPANION_VALIDATION_FAIL", error);
@@ -50,6 +74,7 @@ public final class ContractCompanionValidation {
         level.addFreshEntity(maid);
         var carrier = new ItemStack(ModItems.MAID_SWORD.get());
         owner.getInventory().setItem(0, carrier);
+        boolean originalAuto = com.maidweapon.common.ContractRulesConfig.AUTO_MANIFEST.get();
         try {
             check(ContractLifecycleService.capture(owner, maid, carrier, false), "fixture contract captured");
             var identity = maid.getUUID();
@@ -155,6 +180,12 @@ public final class ContractCompanionValidation {
             ContractCompanionService.tick(owner);
             check(MaidInfusion.containsMaid(carrier), "lethal injury cannot grant a last-minute rescue");
             owner.setHealth(20);
+            ContractCompanionService.attacked(owner, attacker, 2);
+            owner.setHealth(18);
+            ContractCompanionService.tick(owner);
+            check(MaidInfusion.containsMaid(carrier), "disabled automatic manifestation ignores actual injury");
+            com.maidweapon.common.ContractRulesConfig.AUTO_MANIFEST.set(true);
+            owner.setHealth(20);
             carrier.getOrCreateTag().putBoolean("MaidWantsAttention", true);
             carrier.getOrCreateTag().putLong("MaidAttentionStoredTicks", 120000);
             ContractCompanionService.attacked(owner, attacker, 2);
@@ -179,7 +210,22 @@ public final class ContractCompanionValidation {
             check(MaidInfusion.containsMaid(carrier) && level.getEntity(identity) == null,
                     "safe expired guard recalls with equipment intact");
             check(owner.getHealth() == 18, "dialogue does not heal or buff the player");
+            owner.setHealth(20);
+            ContractCompanionService.attacked(owner, attacker, 2);
+            owner.setHealth(18);
+            ContractCompanionService.tick(owner);
+            check(MaidInfusion.containsMaid(carrier), "automatic manifestation respects cooldown after recall");
+            ContractCompanionService.disconnect(owner);
+            var emptyResonance = MaidInfusion.data(carrier);
+            emptyResonance.setResonance(0);
+            ContractCarrierData.setMaidData(carrier, emptyResonance);
+            owner.setHealth(20);
+            ContractCompanionService.attacked(owner, attacker, 2);
+            owner.setHealth(18);
+            ContractCompanionService.tick(owner);
+            check(MaidInfusion.containsMaid(carrier), "insufficient resonance never auto manifests");
         } finally {
+            com.maidweapon.common.ContractRulesConfig.AUTO_MANIFEST.set(originalAuto);
             if (maid != null && !maid.isRemoved()) maid.discard();
             ContractCompanionService.disconnect(owner);
         }
