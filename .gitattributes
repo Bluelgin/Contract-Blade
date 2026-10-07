@@ -8,3 +8,5 @@
 *.jar binary
 *.nbt binary
 *.ogg binary
+# Provenance notices must remain byte-identical to their credited source archives.
+src/main/resources/licenses/** -text
