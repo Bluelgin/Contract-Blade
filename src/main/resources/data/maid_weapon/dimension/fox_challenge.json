@@ -1,0 +1,13 @@
+{
+  "type": "maid_weapon:fox_challenge",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "maid_weapon:sealed_rift",
+      "lakes": false,
+      "features": false,
+      "layers": [{"block": "minecraft:air", "height": 1}],
+      "structure_overrides": []
+    }
+  }
+}

@@ -16,7 +16,10 @@ assert '@LittleMaidExtension' in native and 'implements ILittleMaid' in native
 assert all(item in native for item in ('RESONANCE_SWORD_TASSEL', 'GUARDIAN_RIBBON', 'HEARTBOUND_KNOT'))
 assert 'getMaidBauble' in slots and 'getStackInSlot' in slots
 assert 'CuriosApi' not in slots and 'getInventory' not in slots
-assert 'if (!mode.weapon()) return;' in runtime
+assert 'if (!ContractWorkPolicy.automatic(mode)) return;' in runtime
+assert 'ContractWorkPolicy.combat(mode)' in runtime and 'ContractWorkPolicy.feeding(mode)' in runtime
+assert 'mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get()' in work
+assert 'mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_FEED.get()' in work
 assert 'ContractWorkPolicy.release(weapon, maid)' in runtime
 assert 'restoreOriginalTask(carrier, maid)' in work and 'clearOriginalTask(carrier)' in work
 assert 'owner.getAttributeValue' not in projection

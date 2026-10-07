@@ -36,7 +36,7 @@ import java.util.List;
 public final class MaidBondCombatHandler {
     private static final Map<String, Long> PLAYER_HITS = new HashMap<>();
     private static final Map<String, Long> MAID_HITS = new HashMap<>();
-    private static final Map<UUID, Long> LAST_COOP_REWARD = new HashMap<>();
+    private static final Map<String, Long> LAST_COOP_REWARD = new HashMap<>();
     private static final Map<UUID, Long> LAST_COMBAT = new HashMap<>();
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -63,14 +63,22 @@ public final class MaidBondCombatHandler {
         if (!TouhouLittleMaidHelper.isMaidEntity(event.getEntity())) return;
         Player owner = getOwner(event.getEntity());
         if (owner == null) return;
-        String maidId = event.getEntity().getStringUUID();
-        ItemStack weapon = InfusedMaidDeploymentSystem.findBoundWeapon(owner, maidId);
-        if (!isActiveContract(owner, weapon)) return;
+        if (preventContractDeath(owner, event.getEntity())) event.setCanceled(true);
+    }
 
-        event.setCanceled(true);
-        event.getEntity().setHealth(1.0f);
+    /** Called before TLM's custom death pipeline as well as vanilla death. */
+    public static boolean preventContractDeath(Player owner, LivingEntity maid) {
+        if (maid.level().isClientSide) return false;
+        String maidId = maid.getStringUUID();
+        var carrier = com.maidweapon.forge.system.deployment.ContractEmergencyCarrier.resolve(owner, maid);
+        ItemStack weapon = carrier.stack();
+        if (!isActiveContract(owner, weapon)) return false;
+
+        maid.setHealth(1.0f);
         spend(weapon, MaidWeaponConfig.RESONANCE_MAID_EMERGENCY_COST.get());
-        InfusedMaidDeploymentSystem.forceRecall(owner, maidId, 300);
+        InfusedMaidDeploymentSystem.forceRecall(owner, maidId, weapon, 300);
+        carrier.publish(owner);
+        return true;
     }
 
     @SubscribeEvent
@@ -108,7 +116,7 @@ public final class MaidBondCombatHandler {
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID player = event.getEntity().getUUID();
         LAST_COMBAT.remove(player);
-        LAST_COOP_REWARD.remove(player);
+        LAST_COOP_REWARD.keySet().removeIf(key -> key.startsWith(player + ":"));
         PLAYER_HITS.keySet().removeIf(key -> key.startsWith(player + ":"));
         MAID_HITS.keySet().removeIf(key -> key.startsWith(player + ":"));
     }
@@ -120,9 +128,9 @@ public final class MaidBondCombatHandler {
         markCombat(player, time);
         String key = key(player.getUUID(), target.getUUID());
         PLAYER_HITS.put(key, time);
-        Long maidHit = MAID_HITS.get(key);
-        if (maidHit != null && time - maidHit <= 60) {
-            for (ItemStack weapon : contracts) rewardCooperation(player, time, weapon);
+        for (ItemStack weapon : contracts) {
+            Long maidHit = MAID_HITS.get(key + ":" + ContractCarrierData.ensureBindingId(weapon));
+            if (maidHit != null && time - maidHit <= 60) rewardCooperation(player, time, weapon);
         }
     }
 
@@ -135,7 +143,7 @@ public final class MaidBondCombatHandler {
         long time = owner.level().getGameTime();
         markCombat(owner, time);
         String key = key(owner.getUUID(), target.getUUID());
-        MAID_HITS.put(key, time);
+        MAID_HITS.put(key + ":" + ContractCarrierData.ensureBindingId(weapon), time);
         Long playerHit = PLAYER_HITS.get(key);
         if (playerHit != null && time - playerHit <= 60) {
             rewardCooperation(owner, time, weapon);
@@ -163,12 +171,13 @@ public final class MaidBondCombatHandler {
     }
 
     private static void rewardCooperation(Player player, long time, ItemStack weapon) {
-        long last = LAST_COOP_REWARD.getOrDefault(player.getUUID(), Long.MIN_VALUE / 2);
+        String bindingKey = player.getUUID() + ":" + ContractCarrierData.ensureBindingId(weapon);
+        long last = LAST_COOP_REWARD.getOrDefault(bindingKey, Long.MIN_VALUE / 2);
         if (time - last < 20) return;
         MaidWeaponData data = MaidInfusion.data(weapon);
         ResonanceSystem.recover(data, MaidWeaponConfig.RESONANCE_COOP_REWARD.get());
         ContractCarrierData.setMaidData(weapon, data);
-        LAST_COOP_REWARD.put(player.getUUID(), time);
+        LAST_COOP_REWARD.put(bindingKey, time);
     }
 
     private static void spend(ItemStack weapon, int amount) {

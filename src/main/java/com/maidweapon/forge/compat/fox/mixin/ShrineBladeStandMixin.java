@@ -22,7 +22,9 @@ public abstract class ShrineBladeStandMixin {
             at = @At("HEAD"), cancellable = true)
     private void maidWeapon$protectOffering(DamageSource source, float damage,
             CallbackInfoReturnable<Boolean> result) {
-        if (ShrineOfferingService.isProtected((ItemFrame) (Object) this)) result.setReturnValue(false);
+        if (ShrineOfferingService.isProtected((ItemFrame) (Object) this)
+                || com.maidweapon.forge.system.fox.challenge.BlackFoxShrineReturn.protectedStand((ItemFrame) (Object) this))
+            result.setReturnValue(false);
     }
 
     @Inject(method = {"interact(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;",
@@ -31,7 +33,8 @@ public abstract class ShrineBladeStandMixin {
     private void maidWeapon$requireOffering(Player player, InteractionHand hand,
             CallbackInfoReturnable<InteractionResult> result) {
         if (player instanceof ServerPlayer serverPlayer
-                && !ShrineOfferingService.take((ItemFrame) (Object) this, serverPlayer, hand)) {
+                && (!com.maidweapon.forge.system.fox.challenge.BlackFoxShrineReturn.allowTake((ItemFrame) (Object) this, serverPlayer, hand)
+                || !ShrineOfferingService.take((ItemFrame) (Object) this, serverPlayer, hand))) {
             result.setReturnValue(InteractionResult.SUCCESS);
         }
     }

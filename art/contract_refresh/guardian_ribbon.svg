@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+ <title>守护缎带 · 青蓝绸结</title>
+ <path fill="#2e3d50" d="M3 6h6v1h3v2h2v1h4V9h2V7h3V6h6v11h-6v-1h-3v-1h-1v3h-6v-3h-1v1H9v1H3z"/>
+ <path fill="#4d7f9c" d="M4 7h5v1h3v2h2v4h-3v1H8v1H4zm14 3h2V8h3V7h5v9h-5v-1h-3v-1h-2z"/>
+ <path fill="#acd9df" d="M4 7h5v1h3v2h1v1h-2V9H8V8H5v6H4zm19 0h5v1h-4v1h-3v2h-2v-1h1V8h3z"/>
+ <path fill="#38627e" d="M5 12h3v1h4v1H9v1H5zm19 0h3v3h-4v-1h-3v-1h4z"/>
+ <g id="tail-left"><path fill="#2e3d50" d="M12 16h4v5h-1v4h-2v4H7v-3h2v-5h2v-3h1z"/><path fill="#598fa6" d="M13 17h2v4h-1v4h-2v3H8v-1h2v-5h2v-3h1z"/><path fill="#add3db" d="M13 18h1v3h-1v4h-2v2H9v-1h1v-4h2v-3h1z"/></g>
+ <g id="tail-right"><path fill="#2e3d50" d="M17 16h3v2h1v3h2v5h2v3h-6v-4h-2v-4h-1v-3h1z"/><path fill="#598fa6" d="M18 17h1v2h1v3h2v5h2v1h-4v-3h-2v-4h-1v-3h1z"/><path fill="#add3db" d="M18 18h1v3h1v4h2v2h-1v-1h-2v-4h-1z"/></g>
+ <path fill="#92734e" d="M13 10h6v7h-6z"/><path fill="#ddb778" d="M14 11h4v5h-4z"/><path fill="#f8e1ab" d="M14 11h4v1h-3v3h-1z"/><path fill="#688da9" d="M15 12h2v3h-2z"/>
+ <g id="glint" fill="#d7f2ee"><path d="M15 12h1v1h-1z"/></g>
+</svg>

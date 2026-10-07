@@ -63,7 +63,8 @@ public final class MaidCareTaskSystem {
     public static boolean applySafeTask(Player owner, ItemStack weapon, Entity maid) {
         if (maid.level().dimension().equals(
                 com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return false;
-        if (!MaidWeaponConfig.ENABLE_SAFE_FEEDING.get() || !isSafe(owner, maid)) {
+        if (!com.maidweapon.common.ContractRulesConfig.AUTO_FEED.get()
+                || !MaidWeaponConfig.ENABLE_SAFE_FEEDING.get() || !isSafe(owner, maid)) {
             return false;
         }
 

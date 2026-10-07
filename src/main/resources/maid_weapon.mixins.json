@@ -3,6 +3,6 @@
   "minVersion": "0.8",
   "package": "com.maidweapon.forge.mixin",
   "compatibilityLevel": "JAVA_17",
-  "mixins": ["FoxIngredientProtectionMixin"],
+  "mixins": ["FoxIngredientProtectionMixin", "ContractDurabilityMixin"],
   "injectors": {"defaultRequire": 1}
 }

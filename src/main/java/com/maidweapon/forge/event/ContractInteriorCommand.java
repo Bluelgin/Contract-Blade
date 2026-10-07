@@ -33,6 +33,23 @@ public final class ContractInteriorCommand {
         var root = Commands.literal("contractinterior").then(choose);
         com.maidweapon.forge.system.interior.home.ContractHomeCommands.addTo(root);
         if (Boolean.getBoolean("contractblade.home.validation")) {
+            if (Boolean.getBoolean("contractblade.home.nativeValidation")
+                    && Boolean.getBoolean("contractblade.stress.validation")) {
+                root.then(Commands.literal("stress-contracts").requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("payloadKiB", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 1024))
+                                .executes(ctx -> {
+                                    try {
+                                        String report = com.maidweapon.forge.compat.tlm.ContractStressValidation.run(
+                                                ctx.getSource().getServer().overworld(),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "payloadKiB"));
+                                        ctx.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(report), false);
+                                        return 1;
+                                    } catch (Exception failure) {
+                                        ctx.getSource().sendFailure(net.minecraft.network.chat.Component.literal("STRESS_FAILED: " + failure));
+                                        return 0;
+                                    }
+                                })));
+            }
             root.then(Commands.literal("validate-home").requires(source -> source.hasPermission(2))
                     .executes(ctx -> {
                         try {

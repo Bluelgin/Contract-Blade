@@ -1,0 +1,2082 @@
+{
+  "source": "E:/Little maid/art/akatsuki/midnight-b-full-robe/akatsuki-b-full-robe.bbmodel",
+  "stats": {
+    "beforeCubes": 432,
+    "afterCubes": 432,
+    "beforeFaces": 2252,
+    "afterFaces": 1943,
+    "removedFaces": 309,
+    "removedTriangles": 618,
+    "opaqueSupports": 308,
+    "bones": 179,
+    "exportedFaces": 1943
+  },
+  "cuts": [
+    {
+      "uuid": "ea8c68f5-e875-c3d2-b47d-dbb7baec05e6",
+      "name": "UpBody",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "cd33e1eb-52cd-6aec-524f-4c8a0517ad9f"
+    },
+    {
+      "uuid": "0c1e3590-d5ed-9ea4-e1ed-e31b30e23181",
+      "name": "UpBody",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "567904be-ad85-6388-af89-6eedd20157a0"
+    },
+    {
+      "uuid": "18a32732-cb3a-4ef1-9d8f-a6ce4326304a",
+      "name": "UpBody",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "59da4895-108a-7003-889e-55b06c01510f"
+    },
+    {
+      "uuid": "4131647b-4f54-9cce-bd40-b8fa1a447284",
+      "name": "Tail3",
+      "side": "south",
+      "reason": "covered-contact-face-same-bone",
+      "support": "e96b9276-b789-e2a7-40d3-1b82e8b698e4"
+    },
+    {
+      "uuid": "4131647b-4f54-9cce-bd40-b8fa1a447284",
+      "name": "Tail3",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "f2be2ec2-6c3a-81cc-33b1-159777831f5f"
+    },
+    {
+      "uuid": "ae12037d-6a7d-6f69-000a-df789fb49f08",
+      "name": "Tail3",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "e96b9276-b789-e2a7-40d3-1b82e8b698e4"
+    },
+    {
+      "uuid": "00c7c0d7-c63f-c414-5938-bce30dd01c67",
+      "name": "Tail3",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "f2be2ec2-6c3a-81cc-33b1-159777831f5f"
+    },
+    {
+      "uuid": "69438429-c2df-153a-ea9c-1b34361c4230",
+      "name": "RightEyelid",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "69438429-c2df-153a-ea9c-1b34361c4230",
+      "name": "RightEyelid",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "69438429-c2df-153a-ea9c-1b34361c4230",
+      "name": "RightEyelid",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "69438429-c2df-153a-ea9c-1b34361c4230",
+      "name": "RightEyelid",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "69438429-c2df-153a-ea9c-1b34361c4230",
+      "name": "RightEyelid",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "78eff4cd-70bf-4555-f60f-7bfe34422629",
+      "name": "RightEyelidBase",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "78eff4cd-70bf-4555-f60f-7bfe34422629",
+      "name": "RightEyelidBase",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "78eff4cd-70bf-4555-f60f-7bfe34422629",
+      "name": "RightEyelidBase",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "78eff4cd-70bf-4555-f60f-7bfe34422629",
+      "name": "RightEyelidBase",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "78eff4cd-70bf-4555-f60f-7bfe34422629",
+      "name": "RightEyelidBase",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "9d9d5062-89c1-aeaf-7e6d-e1903379b1cd",
+      "name": "LeftEyelid",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "9d9d5062-89c1-aeaf-7e6d-e1903379b1cd",
+      "name": "LeftEyelid",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "9d9d5062-89c1-aeaf-7e6d-e1903379b1cd",
+      "name": "LeftEyelid",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "9d9d5062-89c1-aeaf-7e6d-e1903379b1cd",
+      "name": "LeftEyelid",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "9d9d5062-89c1-aeaf-7e6d-e1903379b1cd",
+      "name": "LeftEyelid",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1f8fb2ac-4d6d-2556-e3a1-8c5a9e5e5b67",
+      "name": "LeftEyelidBase",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1f8fb2ac-4d6d-2556-e3a1-8c5a9e5e5b67",
+      "name": "LeftEyelidBase",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1f8fb2ac-4d6d-2556-e3a1-8c5a9e5e5b67",
+      "name": "LeftEyelidBase",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1f8fb2ac-4d6d-2556-e3a1-8c5a9e5e5b67",
+      "name": "LeftEyelidBase",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1f8fb2ac-4d6d-2556-e3a1-8c5a9e5e5b67",
+      "name": "LeftEyelidBase",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0354c903-d293-484a-ae03-16af4dd72d5e",
+      "name": "kongju",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "8d69b9b2-766f-5822-ad6b-72825a82adad"
+    },
+    {
+      "uuid": "213efddf-e4d9-87e3-9ac6-e33606899184",
+      "name": "kongju",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "0354c903-d293-484a-ae03-16af4dd72d5e"
+    },
+    {
+      "uuid": "213efddf-e4d9-87e3-9ac6-e33606899184",
+      "name": "kongju",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "34df2591-9aed-5b9b-5b3e-38c8ee1d1530"
+    },
+    {
+      "uuid": "0e44f8b2-462f-37d0-6027-9a459b830e77",
+      "name": "kongju",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "61641d86-462a-0084-629e-34ed97161605"
+    },
+    {
+      "uuid": "7e26dfee-bb4c-99b1-144d-76de79580196",
+      "name": "jingya",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "a2cb59be-c983-d971-06c0-5274d2dc29de"
+    },
+    {
+      "uuid": "7e26dfee-bb4c-99b1-144d-76de79580196",
+      "name": "jingya",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "c8960da5-204f-4924-306b-063cb86b1e34"
+    },
+    {
+      "uuid": "7e26dfee-bb4c-99b1-144d-76de79580196",
+      "name": "jingya",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "a2cb59be-c983-d971-06c0-5274d2dc29de"
+    },
+    {
+      "uuid": "8338fd48-58c2-39b1-85a9-0a86cc0397f6",
+      "name": "jingya",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "782538f5-14cb-e92d-0984-4872425ec8d0"
+    },
+    {
+      "uuid": "8d2e41e2-7c5a-364a-fb9e-e0f9213b0fef",
+      "name": "jingya",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "782538f5-14cb-e92d-0984-4872425ec8d0"
+    },
+    {
+      "uuid": "8d2e41e2-7c5a-364a-fb9e-e0f9213b0fef",
+      "name": "jingya",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "486ed89b-dfc4-9a41-7736-98db78ab2ca7"
+    },
+    {
+      "uuid": "8d2e41e2-7c5a-364a-fb9e-e0f9213b0fef",
+      "name": "jingya",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "8338fd48-58c2-39b1-85a9-0a86cc0397f6"
+    },
+    {
+      "uuid": "8d2e41e2-7c5a-364a-fb9e-e0f9213b0fef",
+      "name": "jingya",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "533c0396-ad8d-3029-b25e-03fdbc1e6c90"
+    },
+    {
+      "uuid": "533c0396-ad8d-3029-b25e-03fdbc1e6c90",
+      "name": "jingya",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "782538f5-14cb-e92d-0984-4872425ec8d0"
+    },
+    {
+      "uuid": "533c0396-ad8d-3029-b25e-03fdbc1e6c90",
+      "name": "jingya",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "8d2e41e2-7c5a-364a-fb9e-e0f9213b0fef"
+    },
+    {
+      "uuid": "c526cb46-9739-2c4b-f371-04dd5ce077a3",
+      "name": "jingya",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "486ed89b-dfc4-9a41-7736-98db78ab2ca7"
+    },
+    {
+      "uuid": "c526cb46-9739-2c4b-f371-04dd5ce077a3",
+      "name": "jingya",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb2067d8-a619-3215-d329-8dd6d3d9b947"
+    },
+    {
+      "uuid": "c526cb46-9739-2c4b-f371-04dd5ce077a3",
+      "name": "jingya",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "72b78cc6-8a7e-899e-d51e-1045f5600aba"
+    },
+    {
+      "uuid": "c526cb46-9739-2c4b-f371-04dd5ce077a3",
+      "name": "jingya",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "486ed89b-dfc4-9a41-7736-98db78ab2ca7"
+    },
+    {
+      "uuid": "72b78cc6-8a7e-899e-d51e-1045f5600aba",
+      "name": "jingya",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "486ed89b-dfc4-9a41-7736-98db78ab2ca7"
+    },
+    {
+      "uuid": "72b78cc6-8a7e-899e-d51e-1045f5600aba",
+      "name": "jingya",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb2067d8-a619-3215-d329-8dd6d3d9b947"
+    },
+    {
+      "uuid": "72b78cc6-8a7e-899e-d51e-1045f5600aba",
+      "name": "jingya",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "ab1e67fd-4390-7c25-7466-e312b7b5ebd8"
+    },
+    {
+      "uuid": "ab1e67fd-4390-7c25-7466-e312b7b5ebd8",
+      "name": "jingya",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb2067d8-a619-3215-d329-8dd6d3d9b947"
+    },
+    {
+      "uuid": "526fd572-4d15-da69-a563-acd496fe45c5",
+      "name": "BaseHair",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "d26e74c2-d17c-8a46-3247-b56deb3ff3be"
+    },
+    {
+      "uuid": "595db3a4-65a2-56f9-50d5-128ba2bdb014",
+      "name": "BaseHair",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb29e871-c86a-deaf-6dfb-0e0134bfdf35"
+    },
+    {
+      "uuid": "50e7cd26-f2f7-3c14-0d6e-a4a25680507a",
+      "name": "BaseHair",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb29e871-c86a-deaf-6dfb-0e0134bfdf35"
+    },
+    {
+      "uuid": "50e7cd26-f2f7-3c14-0d6e-a4a25680507a",
+      "name": "BaseHair",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "d26e74c2-d17c-8a46-3247-b56deb3ff3be"
+    },
+    {
+      "uuid": "58fa6d60-71cf-b177-232e-8185b6d49db6",
+      "name": "BaseHair",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "38b566fb-c08f-7d31-2b42-118f781d8621"
+    },
+    {
+      "uuid": "58fa6d60-71cf-b177-232e-8185b6d49db6",
+      "name": "BaseHair",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb29e871-c86a-deaf-6dfb-0e0134bfdf35"
+    },
+    {
+      "uuid": "1dd3f3a7-e8ef-37ab-c12f-835c5a9cfae1",
+      "name": "BaseHair",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "38b566fb-c08f-7d31-2b42-118f781d8621"
+    },
+    {
+      "uuid": "1dd3f3a7-e8ef-37ab-c12f-835c5a9cfae1",
+      "name": "BaseHair",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb29e871-c86a-deaf-6dfb-0e0134bfdf35"
+    },
+    {
+      "uuid": "38b566fb-c08f-7d31-2b42-118f781d8621",
+      "name": "BaseHair",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "eb29e871-c86a-deaf-6dfb-0e0134bfdf35"
+    },
+    {
+      "uuid": "eb29e871-c86a-deaf-6dfb-0e0134bfdf35",
+      "name": "BaseHair",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "d26e74c2-d17c-8a46-3247-b56deb3ff3be"
+    },
+    {
+      "uuid": "7ee08ff5-79da-5545-5b51-d84d34f6faf7",
+      "name": "BaseHair",
+      "side": "east",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "8927b460-6151-8404-c3c1-094c9ff45ad4"
+    },
+    {
+      "uuid": "7ee08ff5-79da-5545-5b51-d84d34f6faf7",
+      "name": "BaseHair",
+      "side": "south",
+      "reason": "covered-contact-face-same-bone",
+      "support": "5e294652-bb6d-0957-6ab9-72a0e74cdeba"
+    },
+    {
+      "uuid": "5e294652-bb6d-0957-6ab9-72a0e74cdeba",
+      "name": "BaseHair",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "8927b460-6151-8404-c3c1-094c9ff45ad4"
+    },
+    {
+      "uuid": "7a242885-bed6-7aaa-19d5-b2fd6c16f269",
+      "name": "BaseHair",
+      "side": "south",
+      "reason": "covered-contact-face-same-bone",
+      "support": "141c0ac3-0f8e-333e-8738-663711409928"
+    },
+    {
+      "uuid": "7a242885-bed6-7aaa-19d5-b2fd6c16f269",
+      "name": "BaseHair",
+      "side": "west",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "0416ff2f-7d04-d75a-ff4f-0844f62d47ce"
+    },
+    {
+      "uuid": "141c0ac3-0f8e-333e-8738-663711409928",
+      "name": "BaseHair",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "0416ff2f-7d04-d75a-ff4f-0844f62d47ce"
+    },
+    {
+      "uuid": "165f91a7-b2d4-0bd8-ea78-d5669204d1b4",
+      "name": "bone5",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "ec985b5c-08e2-e3ba-c132-a8ce36accffb"
+    },
+    {
+      "uuid": "9e4b5054-669d-2ff7-7555-baaa7a23652c",
+      "name": "bone5",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "927ac2fc-16b2-20ef-36d9-2d7ce7db6557"
+    },
+    {
+      "uuid": "9e4b5054-669d-2ff7-7555-baaa7a23652c",
+      "name": "bone5",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "1a2aca34-3df1-92a2-e473-03c029ff06c6"
+    },
+    {
+      "uuid": "1f55e739-91dd-a3db-43d2-a304b00a8ac3",
+      "name": "Bangs",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "e6f3131b-d9f5-b9c3-f3bd-9fa104ccf605"
+    },
+    {
+      "uuid": "e6f3131b-d9f5-b9c3-f3bd-9fa104ccf605",
+      "name": "Bangs",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "6e0e0cd2-c87a-2645-17b0-cd6bb5ca1dd3"
+    },
+    {
+      "uuid": "e6f3131b-d9f5-b9c3-f3bd-9fa104ccf605",
+      "name": "Bangs",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "3268811a-a274-3af2-c0b9-cf54fb507f29"
+    },
+    {
+      "uuid": "e6f3131b-d9f5-b9c3-f3bd-9fa104ccf605",
+      "name": "Bangs",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "1f55e739-91dd-a3db-43d2-a304b00a8ac3"
+    },
+    {
+      "uuid": "ccb848df-25d2-629f-ef6b-649e862ff0b4",
+      "name": "Left_ear",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ccb848df-25d2-629f-ef6b-649e862ff0b4",
+      "name": "Left_ear",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ccb848df-25d2-629f-ef6b-649e862ff0b4",
+      "name": "Left_ear",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ccb848df-25d2-629f-ef6b-649e862ff0b4",
+      "name": "Left_ear",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ccb848df-25d2-629f-ef6b-649e862ff0b4",
+      "name": "Left_ear",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "62f55621-ff51-d660-237a-02b98b43bc8d",
+      "name": "Left_ear",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "62f55621-ff51-d660-237a-02b98b43bc8d",
+      "name": "Left_ear",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "62f55621-ff51-d660-237a-02b98b43bc8d",
+      "name": "Left_ear",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "62f55621-ff51-d660-237a-02b98b43bc8d",
+      "name": "Left_ear",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "62f55621-ff51-d660-237a-02b98b43bc8d",
+      "name": "Left_ear",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "4a503e16-2b4b-489a-87c5-8d1b95869aa7",
+      "name": "Right_ear",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "4a503e16-2b4b-489a-87c5-8d1b95869aa7",
+      "name": "Right_ear",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "4a503e16-2b4b-489a-87c5-8d1b95869aa7",
+      "name": "Right_ear",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "4a503e16-2b4b-489a-87c5-8d1b95869aa7",
+      "name": "Right_ear",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "4a503e16-2b4b-489a-87c5-8d1b95869aa7",
+      "name": "Right_ear",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "43faf5e9-fe99-5f5b-291f-a88a09965328",
+      "name": "Right_ear",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "43faf5e9-fe99-5f5b-291f-a88a09965328",
+      "name": "Right_ear",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "43faf5e9-fe99-5f5b-291f-a88a09965328",
+      "name": "Right_ear",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "43faf5e9-fe99-5f5b-291f-a88a09965328",
+      "name": "Right_ear",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "43faf5e9-fe99-5f5b-291f-a88a09965328",
+      "name": "Right_ear",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "a3592730-341d-01d2-b876-b1054dbd625f",
+      "name": "Mask",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "b08afc5b-ca01-68af-dc0d-eb7fc7cc376c"
+    },
+    {
+      "uuid": "d8dc91c7-0804-5ffa-8977-066811376c2d",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d8dc91c7-0804-5ffa-8977-066811376c2d",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d8dc91c7-0804-5ffa-8977-066811376c2d",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d8dc91c7-0804-5ffa-8977-066811376c2d",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d8dc91c7-0804-5ffa-8977-066811376c2d",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "5eafcbd7-38f1-0dfb-0df0-fbdd2c5bbdeb",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "5eafcbd7-38f1-0dfb-0df0-fbdd2c5bbdeb",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "5eafcbd7-38f1-0dfb-0df0-fbdd2c5bbdeb",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "5eafcbd7-38f1-0dfb-0df0-fbdd2c5bbdeb",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "5eafcbd7-38f1-0dfb-0df0-fbdd2c5bbdeb",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "6c3de0c1-0a42-2780-6c4d-3a828fbd5fc0",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "6c3de0c1-0a42-2780-6c4d-3a828fbd5fc0",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "6c3de0c1-0a42-2780-6c4d-3a828fbd5fc0",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "6c3de0c1-0a42-2780-6c4d-3a828fbd5fc0",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "6c3de0c1-0a42-2780-6c4d-3a828fbd5fc0",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "df2a34be-e006-2260-4f4b-504e22ccc38d",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "df2a34be-e006-2260-4f4b-504e22ccc38d",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "df2a34be-e006-2260-4f4b-504e22ccc38d",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "df2a34be-e006-2260-4f4b-504e22ccc38d",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "df2a34be-e006-2260-4f4b-504e22ccc38d",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d59283d4-1962-d8ce-18e9-53c31043c0b0",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d59283d4-1962-d8ce-18e9-53c31043c0b0",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d59283d4-1962-d8ce-18e9-53c31043c0b0",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d59283d4-1962-d8ce-18e9-53c31043c0b0",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "d59283d4-1962-d8ce-18e9-53c31043c0b0",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "22f7a403-c2aa-ab4f-a6fb-cd6bddeb1644",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "22f7a403-c2aa-ab4f-a6fb-cd6bddeb1644",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "22f7a403-c2aa-ab4f-a6fb-cd6bddeb1644",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "22f7a403-c2aa-ab4f-a6fb-cd6bddeb1644",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "22f7a403-c2aa-ab4f-a6fb-cd6bddeb1644",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ef082c99-90ad-8572-494c-21d6885932a7",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ef082c99-90ad-8572-494c-21d6885932a7",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ef082c99-90ad-8572-494c-21d6885932a7",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ef082c99-90ad-8572-494c-21d6885932a7",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ef082c99-90ad-8572-494c-21d6885932a7",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "562466fe-17b7-d2ce-d893-1f74b14672fc",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "562466fe-17b7-d2ce-d893-1f74b14672fc",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "562466fe-17b7-d2ce-d893-1f74b14672fc",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "562466fe-17b7-d2ce-d893-1f74b14672fc",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "562466fe-17b7-d2ce-d893-1f74b14672fc",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cb70fc06-02ae-84dd-2e21-865089c2d00a",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cb70fc06-02ae-84dd-2e21-865089c2d00a",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cb70fc06-02ae-84dd-2e21-865089c2d00a",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cb70fc06-02ae-84dd-2e21-865089c2d00a",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cb70fc06-02ae-84dd-2e21-865089c2d00a",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "54c5d3b6-1705-f722-15ee-bcccebfba8ae",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "54c5d3b6-1705-f722-15ee-bcccebfba8ae",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "54c5d3b6-1705-f722-15ee-bcccebfba8ae",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "54c5d3b6-1705-f722-15ee-bcccebfba8ae",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "54c5d3b6-1705-f722-15ee-bcccebfba8ae",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "20c5e54a-76ce-f96f-fc65-73385f067d4e",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "20c5e54a-76ce-f96f-fc65-73385f067d4e",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "20c5e54a-76ce-f96f-fc65-73385f067d4e",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "20c5e54a-76ce-f96f-fc65-73385f067d4e",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "20c5e54a-76ce-f96f-fc65-73385f067d4e",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0eb4aa84-a77e-40bd-1581-3117671d6099",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0eb4aa84-a77e-40bd-1581-3117671d6099",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0eb4aa84-a77e-40bd-1581-3117671d6099",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0eb4aa84-a77e-40bd-1581-3117671d6099",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0eb4aa84-a77e-40bd-1581-3117671d6099",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "832deabe-881b-f2e9-18d9-d0e3d7c14ffe",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "832deabe-881b-f2e9-18d9-d0e3d7c14ffe",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "832deabe-881b-f2e9-18d9-d0e3d7c14ffe",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "832deabe-881b-f2e9-18d9-d0e3d7c14ffe",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "832deabe-881b-f2e9-18d9-d0e3d7c14ffe",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "3e7c6b53-cd81-029a-aa29-c9cf936f6e2f",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "3e7c6b53-cd81-029a-aa29-c9cf936f6e2f",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "3e7c6b53-cd81-029a-aa29-c9cf936f6e2f",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "3e7c6b53-cd81-029a-aa29-c9cf936f6e2f",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "3e7c6b53-cd81-029a-aa29-c9cf936f6e2f",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b2ba7845-276b-53ca-845b-2bac24211ff8",
+      "name": "Mask",
+      "side": "west",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "5d16e39e-b4b3-6932-89fb-e326c0371f9c"
+    },
+    {
+      "uuid": "b2442cd1-001f-53fc-b7fb-05ddcc43627c",
+      "name": "Mask",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "b2ba7845-276b-53ca-845b-2bac24211ff8"
+    },
+    {
+      "uuid": "99e56ea1-e586-5060-321d-79fc27c0bf5b",
+      "name": "Mask",
+      "side": "east",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "50d00cb6-e79a-9ab9-036b-4c386f9bbc43"
+    },
+    {
+      "uuid": "99e56ea1-e586-5060-321d-79fc27c0bf5b",
+      "name": "Mask",
+      "side": "west",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "dee15f4f-865e-fa40-3cd7-b46bd10cb772"
+    },
+    {
+      "uuid": "99e56ea1-e586-5060-321d-79fc27c0bf5b",
+      "name": "Mask",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "b2442cd1-001f-53fc-b7fb-05ddcc43627c"
+    },
+    {
+      "uuid": "bb808b8b-ffdc-f1ed-69ae-1c5209445abc",
+      "name": "Mask",
+      "side": "east",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "6bfb2023-2f4b-1bd5-26a1-db7ddb951798"
+    },
+    {
+      "uuid": "9c9b65e8-ca36-032a-804d-92b955e1364a",
+      "name": "Mask",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "bb808b8b-ffdc-f1ed-69ae-1c5209445abc"
+    },
+    {
+      "uuid": "daadf510-b841-4116-efa8-ef80d452657d",
+      "name": "Mask",
+      "side": "east",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "5630e63d-0294-4fb4-12bc-867c8b679887"
+    },
+    {
+      "uuid": "daadf510-b841-4116-efa8-ef80d452657d",
+      "name": "Mask",
+      "side": "west",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "2cabc2bd-fb1a-1271-9ee8-43853969e355"
+    },
+    {
+      "uuid": "daadf510-b841-4116-efa8-ef80d452657d",
+      "name": "Mask",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "9c9b65e8-ca36-032a-804d-92b955e1364a"
+    },
+    {
+      "uuid": "2009bda7-f097-e6a6-441b-c6ddd2776c00",
+      "name": "Mask",
+      "side": "up",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "b08afc5b-ca01-68af-dc0d-eb7fc7cc376c"
+    },
+    {
+      "uuid": "d6acc910-9c9c-dcac-d6e3-b44a553753d7",
+      "name": "Mask",
+      "side": "west",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "b08afc5b-ca01-68af-dc0d-eb7fc7cc376c"
+    },
+    {
+      "uuid": "35fe8e36-4fb6-f1b2-07eb-ff019712f5ed",
+      "name": "Mask",
+      "side": "east",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "b08afc5b-ca01-68af-dc0d-eb7fc7cc376c"
+    },
+    {
+      "uuid": "0a8fd408-577a-8024-3669-d04977ba6187",
+      "name": "Mask",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0a8fd408-577a-8024-3669-d04977ba6187",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0a8fd408-577a-8024-3669-d04977ba6187",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0a8fd408-577a-8024-3669-d04977ba6187",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "0a8fd408-577a-8024-3669-d04977ba6187",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "40b11e5e-073f-ef97-9fd0-60a95b80263c",
+      "name": "Mask",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "40b11e5e-073f-ef97-9fd0-60a95b80263c",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "40b11e5e-073f-ef97-9fd0-60a95b80263c",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "40b11e5e-073f-ef97-9fd0-60a95b80263c",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "40b11e5e-073f-ef97-9fd0-60a95b80263c",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f95230dc-4e12-4332-fd67-7421b71c8709",
+      "name": "Mask",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f95230dc-4e12-4332-fd67-7421b71c8709",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f95230dc-4e12-4332-fd67-7421b71c8709",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f95230dc-4e12-4332-fd67-7421b71c8709",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f95230dc-4e12-4332-fd67-7421b71c8709",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f000b3df-2171-ae8b-5ff9-db33b863e636",
+      "name": "Mask",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f000b3df-2171-ae8b-5ff9-db33b863e636",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f000b3df-2171-ae8b-5ff9-db33b863e636",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f000b3df-2171-ae8b-5ff9-db33b863e636",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f000b3df-2171-ae8b-5ff9-db33b863e636",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cab1fc89-7398-cfd3-5336-62865893d18a",
+      "name": "Mask",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cab1fc89-7398-cfd3-5336-62865893d18a",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cab1fc89-7398-cfd3-5336-62865893d18a",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cab1fc89-7398-cfd3-5336-62865893d18a",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "cab1fc89-7398-cfd3-5336-62865893d18a",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b3fd0833-0009-a99c-6d3c-2128dafef5f2",
+      "name": "Mask",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b3fd0833-0009-a99c-6d3c-2128dafef5f2",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b3fd0833-0009-a99c-6d3c-2128dafef5f2",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b3fd0833-0009-a99c-6d3c-2128dafef5f2",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b3fd0833-0009-a99c-6d3c-2128dafef5f2",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "40c11e19-cd3c-0c4a-b964-c0fdee7123f6",
+      "name": "Mask",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "b08afc5b-ca01-68af-dc0d-eb7fc7cc376c"
+    },
+    {
+      "uuid": "567bac32-bcb1-1747-0c09-df01c2527c45",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "567bac32-bcb1-1747-0c09-df01c2527c45",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "567bac32-bcb1-1747-0c09-df01c2527c45",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "a993f8a0-0e6d-b046-4122-eaf81f0b95b2",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "a993f8a0-0e6d-b046-4122-eaf81f0b95b2",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "a993f8a0-0e6d-b046-4122-eaf81f0b95b2",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "a993f8a0-0e6d-b046-4122-eaf81f0b95b2",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "a993f8a0-0e6d-b046-4122-eaf81f0b95b2",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "08688279-5fd4-08ce-8b93-0738b8f89c00",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "08688279-5fd4-08ce-8b93-0738b8f89c00",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "08688279-5fd4-08ce-8b93-0738b8f89c00",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "08688279-5fd4-08ce-8b93-0738b8f89c00",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "08688279-5fd4-08ce-8b93-0738b8f89c00",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1b0a45a6-6800-aba5-1429-9093dc2d8c62",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1b0a45a6-6800-aba5-1429-9093dc2d8c62",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1b0a45a6-6800-aba5-1429-9093dc2d8c62",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1b0a45a6-6800-aba5-1429-9093dc2d8c62",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "1b0a45a6-6800-aba5-1429-9093dc2d8c62",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b818f986-f995-59e0-1261-f43bc8eac570",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b818f986-f995-59e0-1261-f43bc8eac570",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b818f986-f995-59e0-1261-f43bc8eac570",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b818f986-f995-59e0-1261-f43bc8eac570",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b818f986-f995-59e0-1261-f43bc8eac570",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "eae5e43f-0dbe-2995-9ea4-4688d2c80426",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "eae5e43f-0dbe-2995-9ea4-4688d2c80426",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "eae5e43f-0dbe-2995-9ea4-4688d2c80426",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "eae5e43f-0dbe-2995-9ea4-4688d2c80426",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "eae5e43f-0dbe-2995-9ea4-4688d2c80426",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "09d84b9c-947a-6dfe-13a2-ec8d074f2ff3",
+      "name": "Mask",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "09d84b9c-947a-6dfe-13a2-ec8d074f2ff3",
+      "name": "Mask",
+      "side": "south",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "09d84b9c-947a-6dfe-13a2-ec8d074f2ff3",
+      "name": "Mask",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "09d84b9c-947a-6dfe-13a2-ec8d074f2ff3",
+      "name": "Mask",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "09d84b9c-947a-6dfe-13a2-ec8d074f2ff3",
+      "name": "Mask",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f008f8fe-b92d-8fb8-c03b-5ba68d94c5ae",
+      "name": "LeftArm",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f008f8fe-b92d-8fb8-c03b-5ba68d94c5ae",
+      "name": "LeftArm",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f008f8fe-b92d-8fb8-c03b-5ba68d94c5ae",
+      "name": "LeftArm",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "f008f8fe-b92d-8fb8-c03b-5ba68d94c5ae",
+      "name": "LeftArm",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "524d6b99-2abd-1b23-c870-ee6c0f293a72",
+      "name": "LeftForeArm",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "0e500371-a4a8-5497-f76d-620dd05db78c"
+    },
+    {
+      "uuid": "30bd6c13-3eb9-bf35-1752-3d26ecad23ca",
+      "name": "LeftForeArm",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "524d6b99-2abd-1b23-c870-ee6c0f293a72"
+    },
+    {
+      "uuid": "e53f51b9-2493-4b5b-240a-ec15391bb14c",
+      "name": "LeftForeArm",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "524d6b99-2abd-1b23-c870-ee6c0f293a72"
+    },
+    {
+      "uuid": "51efc2c3-e4b5-ca15-dc96-52a5a64fdd58",
+      "name": "LeftForeArm",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "89e47233-1cc4-9027-180e-f4a12a89e46e"
+    },
+    {
+      "uuid": "34377af8-99f1-8ef6-ec2c-bc09f1b1b26b",
+      "name": "LeftForeArm",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "524d6b99-2abd-1b23-c870-ee6c0f293a72"
+    },
+    {
+      "uuid": "edaef9b4-a4a1-2b39-2b27-1fb53d0dcb13",
+      "name": "LeftForeArm",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "524d6b99-2abd-1b23-c870-ee6c0f293a72"
+    },
+    {
+      "uuid": "a8f9d24d-e5b7-e807-46c0-04f66ee3137c",
+      "name": "LeftForeArm",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "89e47233-1cc4-9027-180e-f4a12a89e46e"
+    },
+    {
+      "uuid": "471fd222-f3c9-6f2f-d2cd-7a2c8fa7e99d",
+      "name": "LeftForeArm",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "524d6b99-2abd-1b23-c870-ee6c0f293a72"
+    },
+    {
+      "uuid": "f8c9dbb9-7f3e-6b53-9a43-8276026b182f",
+      "name": "LeftForeArm",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "0e500371-a4a8-5497-f76d-620dd05db78c"
+    },
+    {
+      "uuid": "8f632ee8-0ed4-1e53-7eea-e41594f28497",
+      "name": "LeftForeArm",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "b4a74a17-7070-e203-17f6-c9adf4fc904d"
+    },
+    {
+      "uuid": "0e500371-a4a8-5497-f76d-620dd05db78c",
+      "name": "LeftForeArm",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "b4a74a17-7070-e203-17f6-c9adf4fc904d"
+    },
+    {
+      "uuid": "ce1e17e3-a172-75a4-e261-8eafe48195ec",
+      "name": "LeftHand",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ce1e17e3-a172-75a4-e261-8eafe48195ec",
+      "name": "LeftHand",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "ce1e17e3-a172-75a4-e261-8eafe48195ec",
+      "name": "LeftHand",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "85d90868-5937-3bd1-4b7f-17794322b760",
+      "name": "RightArm",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "85d90868-5937-3bd1-4b7f-17794322b760",
+      "name": "RightArm",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "85d90868-5937-3bd1-4b7f-17794322b760",
+      "name": "RightArm",
+      "side": "up",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "85d90868-5937-3bd1-4b7f-17794322b760",
+      "name": "RightArm",
+      "side": "down",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563",
+      "name": "RightForeArm",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "4733fc27-fe09-3ded-5a92-3853d85fa950"
+    },
+    {
+      "uuid": "a552e3d6-d6ed-3b5f-6ddf-dc6bc586a9d4",
+      "name": "RightForeArm",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563"
+    },
+    {
+      "uuid": "a92d448b-e0f2-f479-e983-13f05e6fa0ee",
+      "name": "RightForeArm",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563"
+    },
+    {
+      "uuid": "ca117c75-67fe-064c-0fc2-9ba851a6a0c7",
+      "name": "RightForeArm",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "c118f5fc-cad7-542c-9860-870fd0a16f24"
+    },
+    {
+      "uuid": "31a5a178-05e1-d18d-f04f-421a9d75a758",
+      "name": "RightForeArm",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563"
+    },
+    {
+      "uuid": "ebd40490-7eba-ae25-eb45-2fc2edeae930",
+      "name": "RightForeArm",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563"
+    },
+    {
+      "uuid": "dd1e5ec4-d300-c0c3-0d74-1ac00afe54a1",
+      "name": "RightForeArm",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "c118f5fc-cad7-542c-9860-870fd0a16f24"
+    },
+    {
+      "uuid": "78183cc0-5413-05a7-9644-5cabed039756",
+      "name": "RightForeArm",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "edd2b37b-d966-d8cf-f1a0-1d4c39db0563"
+    },
+    {
+      "uuid": "9db14d60-8596-da87-f11a-aef7849eda1c",
+      "name": "RightForeArm",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "4733fc27-fe09-3ded-5a92-3853d85fa950"
+    },
+    {
+      "uuid": "34631c81-3889-a9c7-c886-d1bf162eaad7",
+      "name": "RightForeArm",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "22240246-e2d0-ea29-41f7-26cebadbd145"
+    },
+    {
+      "uuid": "4733fc27-fe09-3ded-5a92-3853d85fa950",
+      "name": "RightForeArm",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "22240246-e2d0-ea29-41f7-26cebadbd145"
+    },
+    {
+      "uuid": "fb3c03f7-a7f5-3b92-a3f8-858c45b85655",
+      "name": "RightHand",
+      "side": "north",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "fb3c03f7-a7f5-3b92-a3f8-858c45b85655",
+      "name": "RightHand",
+      "side": "east",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "fb3c03f7-a7f5-3b92-a3f8-858c45b85655",
+      "name": "RightHand",
+      "side": "west",
+      "reason": "fully-transparent-UV"
+    },
+    {
+      "uuid": "b6220579-c8e4-6c1f-33e1-f8803a1cdfd0",
+      "name": "LeftLeg",
+      "side": "up",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "b657d3f8-27e3-88f3-20f8-ab4c079e85ff"
+    },
+    {
+      "uuid": "f4738573-7773-4172-8570-bfea2a8bffe7",
+      "name": "LeftLowerLeg",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "ee84a0e8-8070-3016-d916-8ed46be0ca8b"
+    },
+    {
+      "uuid": "49c65c1f-ec2d-42d2-f69c-a868d94e4a7f",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "a4c88827-66df-bfc4-3a83-cfe5b96f28e6"
+    },
+    {
+      "uuid": "8500b708-f7e9-0489-ade9-06196c80328c",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "a4c88827-66df-bfc4-3a83-cfe5b96f28e6"
+    },
+    {
+      "uuid": "1285e48a-820c-5857-03cd-a472f2dda1c8",
+      "name": "LeftFoot",
+      "side": "north",
+      "reason": "covered-contact-face-same-bone",
+      "support": "49c65c1f-ec2d-42d2-f69c-a868d94e4a7f"
+    },
+    {
+      "uuid": "1285e48a-820c-5857-03cd-a472f2dda1c8",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "49c65c1f-ec2d-42d2-f69c-a868d94e4a7f"
+    },
+    {
+      "uuid": "064a707a-67be-243e-7fbe-20f7b09140ca",
+      "name": "LeftFoot",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "a4c88827-66df-bfc4-3a83-cfe5b96f28e6"
+    },
+    {
+      "uuid": "c7719f4e-45b7-757f-3e35-0b580fbef887",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "89ea8e56-47b7-b84c-a5a1-54aaf664887a"
+    },
+    {
+      "uuid": "02e7f90e-d256-c32e-4696-921e72285599",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "8166cf67-b189-e05f-f160-f9a9d1d773fc"
+    },
+    {
+      "uuid": "8166cf67-b189-e05f-f160-f9a9d1d773fc",
+      "name": "LeftFoot",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "49c65c1f-ec2d-42d2-f69c-a868d94e4a7f"
+    },
+    {
+      "uuid": "d66b2b60-9bbd-ef31-0312-c14785b9fe21",
+      "name": "LeftFoot",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "1285e48a-820c-5857-03cd-a472f2dda1c8"
+    },
+    {
+      "uuid": "3f6dd4e2-0ba6-4c7b-33dd-708c5e48ec18",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "89ea8e56-47b7-b84c-a5a1-54aaf664887a"
+    },
+    {
+      "uuid": "b05a3426-0ccc-da2f-fde4-0a523102c20f",
+      "name": "LeftFoot",
+      "side": "east",
+      "reason": "covered-contact-face-same-bone",
+      "support": "d66b2b60-9bbd-ef31-0312-c14785b9fe21"
+    },
+    {
+      "uuid": "0cbe0725-d27c-eb8e-83c2-c36b08218915",
+      "name": "LeftFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "89ea8e56-47b7-b84c-a5a1-54aaf664887a"
+    },
+    {
+      "uuid": "3bda1a29-0a6e-7169-e5ae-3d828125fdce",
+      "name": "RightLeg",
+      "side": "up",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "bfd48261-e2a4-1de6-48cb-84c11fe1c558"
+    },
+    {
+      "uuid": "9db5dbbd-5bb7-fc47-770d-a24f1e6daa59",
+      "name": "RightLowerLeg",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "8a415346-8609-9f2e-59a3-d1bb89ceda91"
+    },
+    {
+      "uuid": "e1624f74-8613-7fbc-5a8c-074cd78daf9e",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "f50dd7a6-36d4-627e-8914-0dcfb14ebca7"
+    },
+    {
+      "uuid": "fd0889ce-410b-29c6-b506-3903886981d7",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "f50dd7a6-36d4-627e-8914-0dcfb14ebca7"
+    },
+    {
+      "uuid": "131beb8f-9679-ece2-cb4f-a04f28d13e22",
+      "name": "RightFoot",
+      "side": "north",
+      "reason": "covered-contact-face-same-bone",
+      "support": "e1624f74-8613-7fbc-5a8c-074cd78daf9e"
+    },
+    {
+      "uuid": "131beb8f-9679-ece2-cb4f-a04f28d13e22",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "e1624f74-8613-7fbc-5a8c-074cd78daf9e"
+    },
+    {
+      "uuid": "d7283ac0-77e1-b62f-8875-c30ff46584ad",
+      "name": "RightFoot",
+      "side": "up",
+      "reason": "covered-contact-face-same-bone",
+      "support": "f50dd7a6-36d4-627e-8914-0dcfb14ebca7"
+    },
+    {
+      "uuid": "d861831c-a98c-e76d-d26b-4e71da3e947c",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "a91f901c-ef16-a94d-6008-6b4d80f2ce42"
+    },
+    {
+      "uuid": "ad5ec66d-abb2-92b9-c1ec-0bae3437f8de",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "covered-contact-face-same-bone",
+      "support": "cf1b69c4-2905-2b89-4849-b7ae866d9a16"
+    },
+    {
+      "uuid": "cf1b69c4-2905-2b89-4849-b7ae866d9a16",
+      "name": "RightFoot",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "e1624f74-8613-7fbc-5a8c-074cd78daf9e"
+    },
+    {
+      "uuid": "30b95f18-5d82-f00f-c999-9494b63740cd",
+      "name": "RightFoot",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "131beb8f-9679-ece2-cb4f-a04f28d13e22"
+    },
+    {
+      "uuid": "383c9c8a-6491-6823-51db-cdd1422c58db",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "a91f901c-ef16-a94d-6008-6b4d80f2ce42"
+    },
+    {
+      "uuid": "76ed4476-ec34-242a-a571-627cd1192d9a",
+      "name": "RightFoot",
+      "side": "west",
+      "reason": "covered-contact-face-same-bone",
+      "support": "30b95f18-5d82-f00f-c999-9494b63740cd"
+    },
+    {
+      "uuid": "df3cf9c4-2a11-b482-9202-685e7601863c",
+      "name": "RightFoot",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "a91f901c-ef16-a94d-6008-6b4d80f2ce42"
+    },
+    {
+      "uuid": "a9b8fec7-7d3d-a3f5-c558-599136df830b",
+      "name": "Body",
+      "side": "north",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "d58e6077-4fc9-61e4-0c96-4e6f1c7c2c1f"
+    },
+    {
+      "uuid": "a9b8fec7-7d3d-a3f5-c558-599136df830b",
+      "name": "Body",
+      "side": "south",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "9bfb5b47-b908-09c0-afb2-5f9f18c0d994"
+    },
+    {
+      "uuid": "ec272e4e-3967-b97b-c4e9-22fe6e24fd80",
+      "name": "B3_贴身胸身",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "3e0e6f4a-2bf8-4b6a-2129-15fb25f59d55"
+    },
+    {
+      "uuid": "cb2166fc-774b-2994-fe73-242d1e0b6769",
+      "name": "B6_实体宽搭领",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "3e0e6f4a-2bf8-4b6a-2129-15fb25f59d55"
+    },
+    {
+      "uuid": "05c24313-6757-7af5-a3d9-61c199f58c93",
+      "name": "B6_搭领下端展开",
+      "side": "down",
+      "reason": "strictly-inside-opaque-same-bone",
+      "support": "3e0e6f4a-2bf8-4b6a-2129-15fb25f59d55"
+    }
+  ],
+  "removed": [],
+  "gameInstalled": false,
+  "runtimeFPSMeasured": false,
+  "validation": {
+    "pass": true,
+    "geometryParentsBonesAnimationsAndVisibilityUnchanged": true,
+    "removedFaceProofs": 309,
+    "retainedTexelSamples": 801156,
+    "retainedTexelsIdentical": true,
+    "exportedFaces": 1943,
+    "texture": [
+      512,
+      512
+    ],
+    "previews": [
+      {
+        "view": "front",
+        "changedPixels": 1,
+        "totalPixels": 880000,
+        "maxChannelDifference": 1,
+        "meanChannelDifference": 2.840909090909091e-7
+      },
+      {
+        "view": "angle",
+        "changedPixels": 0,
+        "totalPixels": 880000,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0
+      },
+      {
+        "view": "other-angle",
+        "changedPixels": 3,
+        "totalPixels": 880000,
+        "maxChannelDifference": 22,
+        "meanChannelDifference": 0.000015625
+      },
+      {
+        "view": "side",
+        "changedPixels": 0,
+        "totalPixels": 880000,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0
+      },
+      {
+        "view": "other-side",
+        "changedPixels": 0,
+        "totalPixels": 880000,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0
+      },
+      {
+        "view": "back",
+        "changedPixels": 0,
+        "totalPixels": 880000,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0
+      },
+      {
+        "view": "back-angle",
+        "changedPixels": 1,
+        "totalPixels": 880000,
+        "maxChannelDifference": 3,
+        "meanChannelDifference": 0.0000014204545454545454
+      },
+      {
+        "view": "other-side-detail",
+        "changedPixels": 0,
+        "totalPixels": 880000,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0
+      },
+      {
+        "view": "side-detail",
+        "changedPixels": 0,
+        "totalPixels": 880000,
+        "maxChannelDifference": 0,
+        "meanChannelDifference": 0
+      }
+    ],
+    "loader": "TLM 1.5.3 SimpleBedrockModel: omitted per-face UVs set emptyFacesMask and skip vertex submission",
+    "runtimeFPSMeasured": false
+  },
+  "files": {
+    "sourceModelBytes": 570130,
+    "optimizedModelBytes": 505924,
+    "sourceTextureBytes": 152917,
+    "optimizedTextureBytes": 103707,
+    "sourceGeometryBytes": 229153,
+    "optimizedGeometryBytes": 144525
+  }
+}

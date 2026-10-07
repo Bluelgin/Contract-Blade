@@ -66,6 +66,7 @@ public final class IntrinsicSpiritApi {
         }
 
         if (!ensureGenericContractStored(owner, weapon)) return false;
+        CompoundTag beforeCreation = weapon.getTag() == null ? null : weapon.getTag().copy();
         CompoundTag external = captureContract(weapon);
         MaidEntityDataCodec.migrate(external);
         clearContract(weapon);
@@ -82,7 +83,7 @@ public final class IntrinsicSpiritApi {
         storeIntrinsic(weapon, spiritId, displayName, intrinsic);
         restoreContract(weapon, external);
         weapon.getOrCreateTag().putInt(SCHEMA, SCHEMA_VERSION);
-        return true;
+        return finishStorageChange(weapon, beforeCreation);
     }
 
     /**
@@ -481,5 +482,15 @@ public final class IntrinsicSpiritApi {
     }
 
     private IntrinsicSpiritApi() {
+    }
+
+    private static boolean finishStorageChange(ItemStack weapon, CompoundTag previous) {
+        try {
+            MaidEntityDataCodec.validateContainer(weapon.getOrCreateTag());
+            return true;
+        } catch (java.io.IOException rejected) {
+            weapon.setTag(previous);
+            return false;
+        }
     }
 }

@@ -1,0 +1,15 @@
+{
+  "runtime": "Touhou Little Maid 1.5.3 actual model metadata decoration, geometry builder and animation deserializer",
+  "model_pack_metadata_and_default_paths": "passed",
+  "minecraft_client_visual_test": false,
+  "models": [
+    {
+      "model": "travelling_bladesmith",
+      "animations_parsed": 188,
+      "expressions_parsed": 993,
+      "geometry_builder": "passed",
+      "head_hand_and_waist_locators": "passed",
+      "animation_deserialization": "passed"
+    }
+  ]
+}

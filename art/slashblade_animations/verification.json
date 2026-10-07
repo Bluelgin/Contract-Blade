@@ -1,0 +1,39 @@
+{
+  "stage": "Blockbench preview only; in-game rendering not verified",
+  "clips": [
+    {
+      "name": "animation.contract_blade.ready",
+      "length": 0.8,
+      "bones": 12
+    },
+    {
+      "name": "animation.contract_blade.draw_slash",
+      "length": 0.8499999999999999,
+      "bones": 12
+    },
+    {
+      "name": "animation.contract_blade.parry_return",
+      "length": 0.9500000000000002,
+      "bones": 12
+    },
+    {
+      "name": "animation.contract_blade.sheath",
+      "length": 1.9500000000000002,
+      "bones": 12
+    }
+  ],
+  "originals": [
+    {
+      "file": "E:/刃录/art/characters/black_fox/fox_black.bbmodel",
+      "sha256": "b427911349db3af33f303a1af72125a7dce852968986358e42f8b81bc8076fcc"
+    },
+    {
+      "file": "E:/刃录/art/characters/white_fox/fox_white.bbmodel",
+      "sha256": "5cb61a4608385b620792437dd3c4207920a5c44120894cca4c3e3b38deea75da"
+    }
+  ],
+  "geometryCountsPreserved": true,
+  "originalAnimationsPreserved": true,
+  "whiteBoneReferencesValid": true,
+  "temporaryEquipmentOverlayExported": false
+}

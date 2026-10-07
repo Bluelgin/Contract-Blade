@@ -1,0 +1,5 @@
+(async () => {
+const fs=require('fs'),dir='E:/Little maid/art/akatsuki/midnight-b-full-robe',canvas=document.createElement('canvas');canvas.width=1600;canvas.height=650;const ctx=canvas.getContext('2d');ctx.fillStyle='#232227';ctx.fillRect(0,0,1600,650);ctx.fillStyle='#ded8cf';ctx.font='22px sans-serif';ctx.fillText('赤月 · B 衣袍重构 / Blockbench 实际模型',28,35);ctx.font='17px sans-serif';ctx.fillStyle='#aaa4a4';ctx.fillText('保留原尾巴与月轮 · 非生图概念图 · 尚未游戏内验证',28,62);
+const views=[['front','正面'],['angle','斜侧面'],['other-angle','另一侧'],['back-angle','侧后方（保留尾巴）']];for(let i=0;i<views.length;i++){const [name,label]=views[i],img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src='data:image/png;base64,'+fs.readFileSync(dir+'/preview-'+name+'.png').toString('base64');});ctx.drawImage(img,i*400,70,400,550);ctx.fillStyle='#ded8cf';ctx.textAlign='center';ctx.font='19px sans-serif';ctx.fillText(label,i*400+200,635);}
+fs.writeFileSync(dir+'/native-review.png',Buffer.from(canvas.toDataURL().split(',')[1],'base64'));return 'native review sheet saved';
+})()

@@ -23,6 +23,7 @@ public final class FoxSpiritTransferService {
 
     /** Claim the story identity only. Models and full maid contracts remain optional. */
     public static void claimOffering(ServerPlayer owner, ItemStack blade) {
+        com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.ensureEffect(blade);
         if (!blade.hasTag() || !blade.getTag().getBoolean(FoxSpiritState.OFFERING)
                 || blade.getTag().getBoolean(FoxSpiritState.VACANT)
                 || blade.getTag().contains(FoxSpiritState.ROOT)
@@ -86,10 +87,11 @@ public final class FoxSpiritTransferService {
 
     private static Result extract(ServerPlayer owner, ItemStack source, ItemStack emptySeal) {
         // Never recall across dimensions or beyond the player-facing recall range.
-        if (!IntrinsicSpiritApi.prepareSpiritTransfer(owner, source, FoxSpiritState.WHITE)) return null;
+        String spirit = FoxSpiritState.resident(source).getString("SpiritId");
+        if (!IntrinsicSpiritApi.prepareSpiritTransfer(owner, source, spirit)) return null;
         ItemStack clean = source.copy();
         CompoundTag identity = FoxSpiritState.resident(source).copy();
-        CompoundTag contract = IntrinsicSpiritApi.detachStoredSpirit(clean, FoxSpiritState.WHITE);
+        CompoundTag contract = IntrinsicSpiritApi.detachStoredSpirit(clean, spirit);
         if (contract == null) return null;
         if (!contract.isEmpty()) identity.put("Contract", contract);
         identity.putUUID("Token", UUID.randomUUID());
@@ -110,21 +112,22 @@ public final class FoxSpiritTransferService {
 
     private static Result infuse(ServerPlayer owner, ItemStack target, ItemStack filledSeal) {
         CompoundTag identity = FoxSpiritState.sealed(filledSeal).copy();
+        String spirit = identity.getString("SpiritId");
         if (!safe(identity)) return null;
         ItemStack result = target.copy();
         if (identity.contains("Contract")) {
             CompoundTag contract = identity.getCompound("Contract");
             if (!contract.hasUUID("OwnerUUID") || !contract.getUUID("OwnerUUID").equals(owner.getUUID())
-                    || !FoxSpiritState.WHITE.equals(contract.getString(
+                    || !spirit.equals(contract.getString(
                     com.maidweapon.forge.api.EmbeddedSpiritApi.TAG_SPIRIT_ID))) return null;
-            if (!IntrinsicSpiritApi.attachStoredSpirit(result, FoxSpiritState.WHITE,
+            if (!IntrinsicSpiritApi.attachStoredSpirit(result, spirit,
                     contract)) return null;
             identity.remove("Contract");
         }
         identity.putUUID("Token", UUID.randomUUID());
         result.getOrCreateTag().put(FoxSpiritState.ROOT, identity);
         result.getOrCreateTag().remove(FoxSpiritState.VACANT);
-        IntrinsicSpiritApi.allowTransferredSpiritInitialization(result, FoxSpiritState.WHITE);
+        IntrinsicSpiritApi.allowTransferredSpiritInitialization(result, spirit);
         if (!safe(result.getTag())) return null;
         ItemStack empty = TouhouLittleMaidHelper.createEmptyMaidStoreItem(filledSeal);
         if (empty.isEmpty()) return null;
@@ -134,6 +137,7 @@ public final class FoxSpiritTransferService {
 
     public static boolean storyEligible(ServerPlayer owner, ItemStack weapon) {
         return FoxSpiritState.isOriginalHome(weapon)
+                && FoxSpiritState.WHITE.equals(FoxSpiritState.resident(weapon).getString("SpiritId"))
                 && SlashBladeCompat.isNamedBlade(weapon, "item.slashblade.fox_white")
                 && FoxSpiritState.resident(weapon).getUUID("OwnerUUID").equals(owner.getUUID())
                 && FoxSpiritLedger.get(owner.getServer()).owns(FoxSpiritState.resident(weapon), "WEAPON");
@@ -141,8 +145,11 @@ public final class FoxSpiritTransferService {
 
     /** Stale copied contracts cannot manifest the spirit after her authority moved. */
     public static boolean authorizesContract(Player owner, ItemStack weapon) {
-        if (!com.maidweapon.forge.api.EmbeddedSpiritApi.isSpirit(weapon, FoxSpiritState.WHITE)) return true;
+        if (!com.maidweapon.forge.api.EmbeddedSpiritApi.isSpirit(weapon, FoxSpiritState.WHITE)
+                && !com.maidweapon.forge.api.EmbeddedSpiritApi.isSpirit(weapon, FoxSpiritState.BLACK)) return true;
         return owner instanceof ServerPlayer serverPlayer && FoxSpiritState.hasResident(weapon)
+                && com.maidweapon.forge.api.EmbeddedSpiritApi.isSpirit(weapon,
+                FoxSpiritState.resident(weapon).getString("SpiritId"))
                 && FoxSpiritState.resident(weapon).getUUID("OwnerUUID").equals(owner.getUUID())
                 && FoxSpiritLedger.get(serverPlayer.getServer()).owns(FoxSpiritState.resident(weapon), "WEAPON");
     }

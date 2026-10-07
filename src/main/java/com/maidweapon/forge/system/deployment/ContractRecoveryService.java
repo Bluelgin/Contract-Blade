@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -67,14 +68,19 @@ public final class ContractRecoveryService {
         }
     }
 
-    private static final Map<UUID, RecoveryAttempt> RECOVERIES = new HashMap<>();
+    private static final Map<UUID, Map<String, RecoveryAttempt>> RECOVERIES = new HashMap<>();
+
+    private static RecoveryAttempt first(Player player) {
+        var attempts = player == null ? null : RECOVERIES.get(player.getUUID());
+        return attempts == null || attempts.isEmpty() ? null : attempts.values().iterator().next();
+    }
 
     public static boolean hasRecovery(Player player) {
         return player != null && RECOVERIES.containsKey(player.getUUID());
     }
 
     public static String currentMaidId(Player player) {
-        RecoveryAttempt attempt = player == null ? null : RECOVERIES.get(player.getUUID());
+        RecoveryAttempt attempt = first(player);
         return attempt == null ? null : attempt.maidId;
     }
 
@@ -114,7 +120,7 @@ public final class ContractRecoveryService {
     public static StartResult start(
             Player player, String maidId, String bindingId, ItemStack weapon) {
         if (player == null || weapon.isEmpty() || maidId == null || bindingId == null
-                || RECOVERIES.containsKey(player.getUUID())) {
+                || RECOVERIES.getOrDefault(player.getUUID(), Map.of()).containsKey(bindingId)) {
             return StartResult.NOT_STARTED;
         }
         DeploymentLocation location = readLocation(weapon);
@@ -131,13 +137,13 @@ public final class ContractRecoveryService {
         RecoveryAttempt attempt = new RecoveryAttempt(
                 maidId, bindingId, location,
                 player.getServer().overworld().getGameTime());
-        RECOVERIES.put(player.getUUID(), attempt);
+        RECOVERIES.computeIfAbsent(player.getUUID(), ignored -> new LinkedHashMap<>()).put(bindingId, attempt);
         addTicket(source, attempt, new ChunkPos(location.pos()));
         return StartResult.STARTED;
     }
 
     public static TickResult tick(Player player) {
-        RecoveryAttempt attempt = player == null ? null : RECOVERIES.get(player.getUUID());
+        RecoveryAttempt attempt = first(player);
         if (attempt == null || player.getServer() == null) return TickResult.IDLE;
 
         long elapsed = player.getServer().overworld().getGameTime() - attempt.startedAt;
@@ -162,7 +168,16 @@ public final class ContractRecoveryService {
     }
 
     public static void finish(Player player) {
-        RecoveryAttempt attempt = player == null ? null : RECOVERIES.remove(player.getUUID());
+        RecoveryAttempt attempt = first(player);
+        if (attempt != null) cancel(player, attempt.maidId);
+    }
+
+    public static void cancel(Player player, String maidId) {
+        var attempts = player == null ? null : RECOVERIES.get(player.getUUID());
+        if (attempts == null) return;
+        RecoveryAttempt attempt = attempts.values().stream().filter(value -> value.maidId.equals(maidId)).findFirst().orElse(null);
+        if (attempt != null) attempts.remove(attempt.bindingId);
+        if (attempts.isEmpty()) RECOVERIES.remove(player.getUUID());
         if (attempt == null || player.getServer() == null) return;
         ServerLevel source = player.getServer().getLevel(attempt.location.dimension());
         if (source == null) return;
@@ -174,7 +189,7 @@ public final class ContractRecoveryService {
     }
 
     public static void cancel(Player player) {
-        finish(player);
+        while (first(player) != null) finish(player);
     }
 
     private static DeploymentLocation readLocation(ItemStack weapon) {

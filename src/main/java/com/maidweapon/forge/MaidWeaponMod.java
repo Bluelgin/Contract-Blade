@@ -28,6 +28,10 @@ public final class MaidWeaponMod {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public MaidWeaponMod() {
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+                com.maidweapon.common.AkatsukiClientConfig.SPEC, "maid_weapon-akatsuki-client.toml");
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+                com.maidweapon.common.BlackFoxClientConfig.SPEC, "maid_weapon-client.toml");
         com.maidweapon.forge.api.ContractAuthorization.register("maid_weapon:fox_spirit",
                 com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
         com.maidweapon.forge.compat.fox.FoxModelPackBootstrap.install();
@@ -35,6 +39,9 @@ public final class MaidWeaponMod {
 
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
                 net.minecraftforge.fml.config.ModConfig.Type.COMMON, MaidWeaponConfig.SPEC);
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+                net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+                com.maidweapon.common.ContractRulesConfig.SPEC, "maid_weapon-server.toml");
         ModItems.ITEMS.register(modBus);
         ModBlocks.BLOCKS.register(modBus);
         ModMenus.MENUS.register(modBus);
@@ -43,6 +50,8 @@ public final class MaidWeaponMod {
         com.maidweapon.forge.worldgen.ShrineWorldgen.register(modBus);
         com.maidweapon.forge.network.ContractCompanionNetwork.register();
         TaczCompat.bootstrap(modBus);
+        com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.bootstrap(modBus);
+        com.maidweapon.forge.compat.fox.BlackFoxBossCompat.bootstrap(modBus);
 
         modBus.addListener(this::commonSetup);
 
@@ -52,6 +61,10 @@ public final class MaidWeaponMod {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
+            if (net.minecraftforge.fml.ModList.get().isLoaded("touhou_little_maid"))
+                com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.register();
+            com.maidweapon.forge.system.fox.challenge.BlackFoxEncounters.setup();
+            com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
             LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
             LOGGER.info("[MaidWeapon] SlashBlade compatibility: {}", SlashBladeCompat.diagnostics());
             LOGGER.info("[MaidWeapon] TACZ compatibility: {}",

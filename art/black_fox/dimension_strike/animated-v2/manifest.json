@@ -1,0 +1,18 @@
+{
+  "reviewOnly": true,
+  "rift": {
+    "frames": 24,
+    "width": 128,
+    "height": 320,
+    "columns": 6
+  },
+  "slash": {
+    "frames": 16,
+    "width": 512,
+    "height": 192,
+    "columns": 4
+  },
+  "previewFps": 20,
+  "previewSlowMotion": true,
+  "runtimeModified": false
+}

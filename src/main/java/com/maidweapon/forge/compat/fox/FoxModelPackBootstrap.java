@@ -94,7 +94,8 @@ public final class FoxModelPackBootstrap {
     private static boolean isManagedOriginal(Path path) throws IOException {
         try {
             return Set.of(ORIGINAL_SHA256, "2d4563d5afd573e1ee85fedffaf28184bd70890bfc2f629374cabacd08ee6289",
-                    "a369393325c064bc9f8cb40ffc73f9f27b134696dc69d616ad8f7dc28cdb4e90")
+                    "a369393325c064bc9f8cb40ffc73f9f27b134696dc69d616ad8f7dc28cdb4e90",
+                    "9c907d7583939b1576fca9ba9c3eb77ee2738e000653c0095054e391cd09d6e9")
                     .contains(java.util.HexFormat.of().formatHex(
                     java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path))));
         } catch (java.security.NoSuchAlgorithmException impossible) {

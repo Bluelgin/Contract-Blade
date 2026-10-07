@@ -1,0 +1,19 @@
+{
+  "track": "EpicBattle_J",
+  "author": "PeriTune",
+  "license": "CC-BY-4.0",
+  "source_page": "https://peritune.com/blog/2021/09/16/epicbattle_j/",
+  "license_page": "https://peritune.com/about/",
+  "intro_seconds": 0.24075000000000002,
+  "waveform_alignment_score": 0.9978601788404418,
+  "intro_frames_48000": 11556,
+  "encoded_entry_alignment_score": 0.994293574030091,
+  "changes": "Only the unique lead-in before the earliest waveform-matched loop entry is retained from the official MP3; the author loop already contains the opening musical passage. Runtime files use 48 kHz stereo Vorbis quality 3; source downloads unchanged. Runtime adds a three-second gain fade-in.",
+  "sha256": {
+    "art\\black_fox\\music\\epicbattle_j\\PerituneMaterial_EpicBattle_J.mp3": "c2483aefdbcde946c03428edefece9be649c40c0545ed517ae86ddb71462567c",
+    "art\\black_fox\\music\\epicbattle_j\\PerituneMaterial_EpicBattle_J_loop.ogg": "af6fde53eee786c9ea527e415dfb4228471d58c897da2dd9d0b612bb86da97e6",
+    "art\\black_fox\\music\\epicbattle_j\\PerituneMaterial_EpicBattle_J_loop.zip": "03f1381836d7d4794c3c65627ef5258230acc6c1bef323d2400ab55ba2cc560b",
+    "src\\main\\resources\\assets\\maid_weapon\\sounds\\black_fox\\epicbattle_j_intro.ogg": "760b3822df6dcc2c528aa5f2c36255157524f151c244ed80cf99872e86a0dd09",
+    "src\\main\\resources\\assets\\maid_weapon\\sounds\\black_fox\\epicbattle_j_loop.ogg": "f81fe4d8af0e130d2fc4a90aea338a7edd33c66c42bdb6bd6884e73dae0e8a92"
+  }
+}

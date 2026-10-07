@@ -12,14 +12,17 @@ public final class FoxSoulTooltipHandler {
     @SubscribeEvent
     public static void tooltip(ItemTooltipEvent event) {
         var stack = event.getItemStack();
+        boolean black = FoxSpiritState.BLACK.equals((FoxSpiritState.isSeal(stack)
+                ? FoxSpiritState.sealed(stack) : FoxSpiritState.resident(stack)).getString("SpiritId"));
+        String prefix = black ? "maid_weapon.fox.black." : "maid_weapon.fox.";
         if (FoxSpiritState.isSeal(stack)) {
             if (!event.getToolTip().isEmpty()) event.getToolTip().set(0,
-                    Component.translatable("maid_weapon.fox.seal.name"));
-            event.getToolTip().add(Component.translatable("maid_weapon.fox.tooltip.seal"));
+                    Component.translatable(prefix + "seal.name"));
+            event.getToolTip().add(Component.translatable(prefix + "tooltip.seal"));
         } else if (FoxSpiritState.hasResident(stack)) {
-            event.getToolTip().add(Component.translatable("maid_weapon.fox.tooltip.resident"));
+            event.getToolTip().add(Component.translatable(prefix + "tooltip.resident"));
             event.getToolTip().add(Component.translatable(FoxSpiritState.isOriginalHome(stack)
-                    ? "maid_weapon.fox.tooltip.original" : "maid_weapon.fox.tooltip.away"));
+                    ? prefix + "tooltip.original" : prefix + "tooltip.away"));
         } else if (stack.hasTag() && stack.getTag().getBoolean(FoxSpiritState.OFFERING)
                 && stack.getTag().getBoolean(FoxSpiritState.VACANT)) {
             event.getToolTip().add(Component.translatable("maid_weapon.fox.tooltip.vacant"));

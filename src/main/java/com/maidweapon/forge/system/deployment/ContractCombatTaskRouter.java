@@ -27,7 +27,7 @@ public final class ContractCombatTaskRouter {
     private static final String EPIC_FIGHT_TASK_FAILURE = "MaidInfusionEpicFightTaskFailure";
 
     public static void configure(Player owner, ItemStack weapon, Entity maid) {
-        if (!com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(maid).weapon()) return;
+        if (!ContractWorkPolicy.combat(com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(maid))) return;
         boolean slashBladeMode = SlashBladeCompat.usesMaidSlashBladeTask(weapon);
         boolean magicMode = !slashBladeMode && TripleMagicCompat.usesMaidSpellTask(weapon);
         boolean taczMode = !slashBladeMode && !magicMode && TaczCompat.isGun(weapon);

@@ -1,6 +1,28 @@
 # Changelog
 
+## In development
+
+- Add Akatsuki's cosmetic katana, draw, three short cuts and delayed sheathing during supported melee tasks. Actual equipment, damage and durability remain unchanged; offhand and locomotion stay native. The client-only appearance can be disabled.
+- Add a configurable contract companion limit, including support for two simultaneous followers.
+- Restore residence when a native home/stay toggle would exceed the follower limit, without deleting a maid.
+- Track deployment and recovery per contract; recalling one maid no longer clears another's record. Recall all followers on death, logout and dimension changes while preserving residents.
+- Isolate cooperative resonance hit records and reward cooldowns per contract.
+
+## 1.1.1
+
+- Fixed contracted blades being incorrectly treated as destroyed when placed on a SlashBlade stand in Survival mode. Successful transfers now preserve the contract.
+- Fixed the Heartbound Knot altar recipe requiring an unavailable Spirit Crystal; it now uses an Ender Pearl.
+- Fixed false recovery when contracted weapons are moved into containers or blade stands. Recovery now requires actual consumption during durability processing, not a generic item-destruction notification.
+- Broken SlashBlades still support manifesting and recalling their contracted maid.
+- Fixed contract identity handling after maid death and shrine resurrection, preventing failed recalls and blocked manifestation of other companions.
+- Reduced the overhead of contract weapon lookup and recovery processing.
+- Updated both fox models with improved clothing, cuffs, shoulder fur, accessory placement, color transitions, and restored hand details.
+- Optimized fox textures and hidden faces while preserving animation and bone compatibility.
+
 ## 1.1.0
+
+- Optimized contract lookup and batched carrier-loss recovery; pending recovery snapshots persist with the world.
+- Added complete-contract size checks and companion request rate limiting; rejected oversized operations preserve the original weapon and maid.
 
 - Fixed carrier-loss recovery for separate contracts interfering with one another.
 - Replaced the Spirit Crystal in the Heartbound Knot altar recipe with an ender pearl.

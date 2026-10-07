@@ -82,6 +82,8 @@ public final class ShrineOfferingService {
                 && received.hasTag() && received.getTag().getBoolean(FoxSpiritState.OFFERING)
                 && SlashBladeCompat.isNamedBlade(received, "item.slashblade.fox_white")) {
             data.putBoolean(TAKEN, true);
+            // Record the acquisition date after delivery, including a click just before dawn.
+            ShrineFoxStory.observe(player);
         }
     }
 

@@ -1,0 +1,34 @@
+(() => {
+const fs=require('fs'),out='E:/Little maid/art/akatsuki/polish-v3';fs.mkdirSync(out,{recursive:true});
+const source='E:/Little maid/art/akatsuki/polish-v2/akatsuki-clothing-v2.bbmodel';Codecs.project.load(JSON.parse(fs.readFileSync(source,'utf8')),{path:source,no_file:true});Modes.options.edit.select();Project.name='赤月 · 醉月衣纹 v3';
+const tex=Texture.all[0],canvas=document.createElement('canvas');canvas.width=canvas.height=256;const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(tex.img,0,0);const old=ctx.getImageData(0,0,256,256).data,used=new Uint8Array(65536),targets=new Set(),changes=[];
+const ancestry=c=>{const a=[];for(let p=c.parent;p&&p.name;p=p.parent)a.push(p.name);return a;};
+for(const c of Cube.all)for(const f of Object.values(c.faces)){if(f.texture===null)continue;const uv=f.uv;for(let y=Math.max(0,Math.floor(Math.min(uv[1],uv[3]))-1);y<Math.min(256,Math.ceil(Math.max(uv[1],uv[3]))+1);y++)for(let x=Math.max(0,Math.floor(Math.min(uv[0],uv[2]))-1);x<Math.min(256,Math.ceil(Math.max(uv[0],uv[2]))+1);x++)used[y*256+x]=1;}
+const protectedPixels=used.slice();
+function alloc(w,h){for(let y=1;y+h+1<256;y++)for(let x=1;x+w+1<256;x++){let free=true;for(let py=y-1;py<=y+h&&free;py++)for(let px=x-1;px<=x+w;px++)if(used[py*256+px]){free=false;break;}if(free){for(let py=y-1;py<=y+h;py++)for(let px=x-1;px<=x+w;px++)used[py*256+px]=1;return[x,y];}}throw Error('Atlas space exhausted '+w+'x'+h);}
+function paint(c,side,w,h,draw){const f=c.faces[side],uv=f.uv.slice(),dst=alloc(w,h),patch=ctx.createImageData(w,h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const u=(x+.5)/w,v=(y+.5)/h,sx=Math.max(0,Math.min(255,Math.floor(uv[0]+(uv[2]-uv[0])*u))),sy=Math.max(0,Math.min(255,Math.floor(uv[1]+(uv[3]-uv[1])*v))),i=(sy*256+sx)*4;const rgba=draw(u,v,[old[i],old[i+1],old[i+2],old[i+3]],x,y);patch.data.set(rgba,(y*w+x)*4);}ctx.putImageData(patch,dst[0],dst[1]);ctx.drawImage(canvas,dst[0],dst[1],w,1,dst[0],dst[1]-1,w,1);ctx.drawImage(canvas,dst[0],dst[1]+h-1,w,1,dst[0],dst[1]+h,w,1);ctx.drawImage(canvas,dst[0],dst[1]-1,1,h+2,dst[0]-1,dst[1]-1,1,h+2);ctx.drawImage(canvas,dst[0]+w-1,dst[1]-1,1,h+2,dst[0]+w,dst[1]-1,1,h+2);f.uv=[dst[0],dst[1],dst[0]+w,dst[1]+h];c.box_uv=false;targets.add(c.uuid);changes.push({cube:c.uuid,side,w,h});}
+function crescent(u,v,cx,cy,rx,ry,shift){const d=((u-cx)/rx)**2+((v-cy)/ry)**2,cut=((u-cx-shift)/(rx*.82))**2+((v-cy+.02)/(ry*.91))**2;return{inside:d<1&&cut>1,edge:d>.78&&d<1&&cut>1};}
+const panel=Cube.all.find(c=>c.parent?.name==='FR1');
+paint(panel,'north',18,42,(u,v,p,x,y)=>{if(p[3]===0)return p;const m=crescent(u,v,.47,.42,.38,.235,.14);if(m.inside)return m.edge&&x%3!==0?[163,120,53,p[3]]:[102+(x%3)*3,30,44,p[3]];const curl=.79+Math.sin(u*7)*.035,smoke=Math.abs(v-curl)<.017&&u>.16&&u<.87;if(smoke)return[87,32,44,p[3]];if(Math.abs(v-(curl+.065))<.012&&u>.32&&u<.77)return[115,77,46,p[3]];return p;});
+const bottom=Cube.all.find(c=>c.parent?.name==='FR2');
+paint(bottom,'north',12,20,(u,v,p)=>{if(p[3]&&p[0]<100&&Math.abs(v-(.25+Math.sin(u*5)*.045))<.024&&u>.18&&u<.8)return[84,30,41,p[3]];return p;});
+const bracelets=new Set(['471fd222-f3c9-6f2f-d2cd-7a2c8fa7e99d','78183cc0-5413-05a7-9644-5cabed039756']);
+for(const c of Cube.all.filter(c=>!bracelets.has(c.uuid)&&c.parent?.name.includes('ForeArm')&&c.to[1]-c.from[1]>4.5&&!ancestry(c).includes('FOX'))){for(const side of ['north','south'])paint(c,side,12,24,(u,v,p)=>{const wine=p[0]>p[1]*1.7&&p[0]>p[2]*1.2;if(!wine||v<.38||v>.91)return p;const sign=c.parent.name.startsWith('Left')?1:-1;const line=.67+Math.sin(u*6.3*sign+.5)*.055;const wave=Math.abs(v-line)<.021||Math.abs(v-(line+.14))<.017;return wave?[Math.min(145,p[0]+13),p[1]+8,p[2]+9,p[3]]:p;});}
+const waist=Cube.all.find(c=>c.name==='AkatsukiWaistCrystal'),hair=Cube.all.find(c=>c.name==='AkatsukiHairOrnament');
+for(const side of ['north','south'])paint(waist,side,16,16,(u,v,p,x,y)=>{const m=crescent(u,v,.47,.48,.39,.4,.15),gem=Math.abs(u-.63)+Math.abs(v-.57)<.17;if(gem)return[x<10?139:96,25,37,255];if(m.inside)return[m.edge?204:161,m.edge?161:114,m.edge?81:49,255];if(Math.abs(u-.63)+Math.abs(v-.57)<.23)return[123,83,41,255];return[39,28,32,255];});
+for(const side of ['north','south'])paint(hair,side,16,16,(u,v,p,x,y)=>{const m=crescent(u,v,.45,.46,.34,.36,.14);if(m.inside)return[m.edge?201:163,m.edge?159:117,m.edge?83:53,255];if(Math.abs(u-.73)+Math.abs(v-.76)<.075)return[170,122,58,255];return[72+(x%4===0?3:0),20,40,255];});
+for(const c of Cube.all.filter(c=>['bowR1','bowR2'].includes(c.parent?.name)))paint(c,'north',12,28,(u,v,p)=>{if(u>.27&&u<.39&&p[3])return v>.91?[155,111,51,p[3]]:[127,34,47,p[3]];return p;});
+Canvas.updateAll();Project.model_3d.updateMatrixWorld(true);
+const support=Cube.all.filter(c=>!ancestry(c).includes('FOX')&&(c.parent?.name==='UpperBody'||/^F[LRM][12]?$/.test(c.parent?.name)));
+const cordIds=[],contacts=[];
+for(let j=0;j<2;j++){
+const cy=22.5-j*.65,ray=new THREE.Raycaster(new THREE.Vector3(.5,cy,-100),new THREE.Vector3(0,0,1)),hit=ray.intersectObjects(support.map(c=>c.mesh),false)[0];if(!hit)throw Error('Cord has no clothing support');
+const back=hit.point.z+.025,c=new Cube({name:'AkatsukiMoonCord'+j,from:[.37,cy-.38,back-.13],to:[.63,cy+.38,back],origin:waist.origin.slice(),box_uv:false,autouv:0}).addTo(waist.parent).init();const dst=alloc(2,8);ctx.fillStyle=j?'#772b34':'#942f3d';ctx.fillRect(dst[0]-1,dst[1]-1,4,10);for(const f of Object.values(c.faces)){f.texture=tex.uuid;f.uv=[dst[0],dst[1],dst[0]+2,dst[1]+8];}cordIds.push(c.uuid);contacts.push({cube:c.uuid,clothingSurfaceZ:hit.point.z,rearZ:back,embedded:.025});
+}
+const pixels=ctx.getImageData(0,0,256,256).data;for(let i=0;i<65536;i++)if(protectedPixels[i])for(let k=0;k<4;k++)if(pixels[i*4+k]!==old[i*4+k])throw Error('Original texel changed');
+const data=canvas.toDataURL('image/png');tex.fromDataURL(data);tex.name='akatsuki-drunk-moon-v3.png';Canvas.updateAll();
+fs.writeFileSync(out+'/akatsuki-drunk-moon-v3.png',Buffer.from(data.split(',')[1],'base64'));fs.writeFileSync(out+'/akatsuki-drunk-moon-v3.bbmodel',Codecs.project.compile());
+const report={source,targets:[...targets],changes,addedCubes:cordIds,contacts,cubes:Cube.all.length,groups:Group.all.length,resolution:[256,256],originalReferencedTexelsUnchanged:true,bonesAndAnimationsChanged:false};fs.writeFileSync(out+'/validation.json',JSON.stringify(report,null,2));
+for(const c of Cube.all)if(ancestry(c).includes('FOX'))c.visibility=false;Canvas.updateVisibility();const p=Preview.selected;p.controls.autoRotate=false;p.camera.position.set(0,25,-84);p.controls.target.set(0,21,0);p.camera.zoom=1;p.camera.updateProjectionMatrix();p.controls.update();Project.saved=false;
+return JSON.stringify({cubes:report.cubes,groups:report.groups,ornamentFaces:changes.length,cords:contacts,resolution:report.resolution});
+})()

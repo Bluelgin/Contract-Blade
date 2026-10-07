@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450"><title>黑狐 · 沉界破斩 · 特效概念预览</title><rect width="800" height="450" fill="#101c26"/><path d="M50 351H750" stroke="#273b48"/><ellipse cx="450" cy="350" rx="105" ry="12" fill="#162832"/><path d="M145 319l12-18 12 18-12 18Z" fill="#547786" opacity=".6"/><path d="M139 346h36" stroke="#547786"/><g transform="translate(453 341) rotate(90) scale(1)" opacity="0.9092020673020286">
+  <path fill="#482076" opacity=".35" d="M-28-96L-7-140 17-95 8-63 37-23 17 18 28 76 3 128-18 81-9 46-37 8-19-38Z"/>
+  <path fill="#080a19" stroke="#7540b9" stroke-width="3" d="M-7-113L5-73-4-39 17-11 5 23 11 57-3 107-8 59-21 19-9-8-15-54Z"/>
+  <path fill="none" stroke="#c18cf8" stroke-width="2" d="M-7-113L5-73-4-39 17-11 5 23 11 57-3 107M-4-39L-40-54-55-83M5 23L42 45 55 71"/>
+  <path fill="none" stroke="#efe0ff" stroke-width="1" d="M-3-34L10-10 1 20"/>
+  <g fill="#9e62e7"><path d="M-43-13l8-9 3 13-7 4ZM30-56l7-5 4 10-9 5ZM25 75l8 6-2 8-8-7Z"/></g>
+</g><g transform="translate(446 316.12493037037035) scale(1)" opacity="0.6092112592592592">
+  <g fill="#342447" stroke="#aa7ade" stroke-width="1.5"><path d="M-17-77L-24-111-7-99 14-99 27-111 20-76ZM-16-72L-30-26-16-20-10 17 0 23 10 17 16-20 30-26 16-72Z"/>
+  <path d="M13-26Q64-33 59-75Q83-32 44-1L16 7ZM15-12Q76-2 81-37Q104 9 57 20L12 15ZM16 7Q57 27 66 11Q78 52 24 35L9 21Z"/></g>
+  <path fill="#d5a9ff" d="M-11-84h6v3h-6ZM8-84h6v3H8Z"/>
+  <path stroke="#cc92ff" stroke-width="2" d="M-13-44h27M19-36L54-12"/>
+  <path fill="#211d30" d="M-12 19h10v24h-12ZM4 19h10v24H4Z"/>
+</g><text x="36" y="43" fill="#e5d8f6" font-family="Microsoft YaHei, sans-serif" font-size="21">黑狐 · 沉界破斩</text><text x="36" y="72" fill="#7f91a2" font-family="Microsoft YaHei, sans-serif" font-size="12">特效概念稿 / 轮廓仅示意黑狐的位置，不替换游戏模型</text><text x="36" y="404" fill="#c8a3ed" font-family="Microsoft YaHei, sans-serif" font-size="17">沉入次元</text><rect x="36" y="420" width="728" height="2" fill="#273442"/><rect x="36" y="420" width="52.945454545454545" height="2" fill="#a276cb"/></svg>

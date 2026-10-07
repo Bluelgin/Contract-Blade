@@ -13,6 +13,10 @@ lifecycle = read("src/main/java/com/maidweapon/forge/compat/tlm/ContractMaidLife
 storage = read("src/main/java/com/maidweapon/forge/compat/tlm/ContractMaidStorage.java")
 guard = read("src/main/java/com/maidweapon/forge/system/ContractNbtGuard.java")
 codec = read("src/main/java/com/maidweapon/forge/system/MaidEntityDataCodec.java")
+assert "validateContainer(prospective)" in codec
+assert "CONTRACT_NBT_MAX_STORED_BYTES" in codec
+assert 'ContractNbtGuard.depth(decoded)' in codec
+assert codec.index("validateContainer(prospective)") < codec.index("container.putByteArray(COMPRESSED_DATA, compressed)")
 audit = read("src/main/java/com/maidweapon/forge/system/ContractNbtAudit.java")
 weapon = read("src/main/java/com/maidweapon/forge/item/MaidWeaponItem.java")
 config = read("src/main/java/com/maidweapon/common/MaidWeaponConfig.java")

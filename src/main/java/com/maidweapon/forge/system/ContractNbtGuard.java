@@ -17,6 +17,7 @@ import java.util.List;
 public final class ContractNbtGuard {
     private static final int MAX_REPORTED_ITEMS = 3;
     private static final int MAX_SCAN_NODES = 4096;
+    private static final int MAX_DEPTH_SCAN_NODES = 65536;
     private static final int MAX_SAFE_SCAN_DEPTH = 512;
 
     public record ItemContribution(String path, String itemId, long bytes) {}
@@ -87,15 +88,18 @@ public final class ContractNbtGuard {
 
     private static int depth(Tag tag, int current, int[] visited) {
         if (current > MAX_SAFE_SCAN_DEPTH) return current;
-        if (tag == null || visited[0]++ >= MAX_SCAN_NODES) return current;
+        if (tag == null) return current;
+        if (visited[0]++ >= MAX_DEPTH_SCAN_NODES) return Integer.MAX_VALUE;
         int maximum = current;
         if (tag instanceof CompoundTag compound) {
             for (String key : compound.getAllKeys()) {
                 maximum = Math.max(maximum, depth(compound.get(key), current + 1, visited));
+                if (maximum == Integer.MAX_VALUE) return maximum;
             }
         } else if (tag instanceof ListTag list) {
             for (Tag child : list) {
                 maximum = Math.max(maximum, depth(child, current + 1, visited));
+                if (maximum == Integer.MAX_VALUE) return maximum;
             }
         }
         return maximum;

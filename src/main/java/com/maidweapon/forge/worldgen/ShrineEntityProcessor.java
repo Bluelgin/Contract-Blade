@@ -1,7 +1,10 @@
 package com.maidweapon.forge.worldgen;
 
+import com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat;
 import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureProcessor;
@@ -23,6 +26,11 @@ public final class ShrineEntityProcessor extends StructureProcessor {
         nbt.putInt("TileX", current.blockPos.getX());
         nbt.putInt("TileY", current.blockPos.getY());
         nbt.putInt("TileZ", current.blockPos.getZ());
+        var blade = ItemStack.of(nbt.getCompound("Item"));
+        if (WhiteFoxSpecialEffectCompat.isShrineBlade(blade)) {
+            WhiteFoxSpecialEffectCompat.ensureEffect(blade);
+            nbt.put("Item", blade.save(new CompoundTag()));
+        }
         return new StructureTemplate.StructureEntityInfo(current.pos, current.blockPos, nbt);
     }
 

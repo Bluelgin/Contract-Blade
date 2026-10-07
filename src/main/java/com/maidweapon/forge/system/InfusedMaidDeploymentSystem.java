@@ -3,18 +3,20 @@ package com.maidweapon.forge.system;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 
 import com.maidweapon.forge.system.contract.ContractLifecycleService;
-import com.mojang.logging.LogUtils;
 import com.maidweapon.forge.compat.TouhouLittleMaidCompat;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
 import com.maidweapon.forge.system.deployment.ContractDeploymentEffects;
+import com.maidweapon.forge.system.deployment.ContractCarrierLossService;
 import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import com.maidweapon.forge.system.deployment.ContractRecoveryService;
 import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
 import com.maidweapon.forge.system.deployment.ContractMaidRuntimeService;
 import com.maidweapon.forge.system.deployment.ContractCompanionService;
 import com.maidweapon.forge.system.deployment.ContractCompanionState;
+import com.maidweapon.forge.system.deployment.ContractActiveDeployments;
+import com.maidweapon.forge.system.deployment.ContractActiveDeployments.Deployment;
 import com.maidweapon.forge.compat.tlm.TlmResidenceAdapter;
 import com.maidweapon.forge.system.interior.ContractInteriorService;
 import net.minecraft.network.chat.Component;
@@ -25,7 +27,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -35,22 +36,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import org.slf4j.Logger;
 
 /** Lifecycle orchestration and safety; companion policy owns summon/recall intent. */
 @Mod.EventBusSubscriber
 public final class InfusedMaidDeploymentSystem {
-    private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int CARRIER_LOSS_CONFIRM_TICKS = 40;
-    private record ActiveDeployment(String maidId, String bindingId) {}
     private record DesiredDeployment(String maidId, String bindingId) {}
-    private record CarrierLossCandidate(
-            String maidId, String bindingId, ItemStack snapshot, long detectedAt) {}
-    private static final Map<UUID, ActiveDeployment> ACTIVE_WEAPONS = new HashMap<>();
-    /** Last known carrier snapshot; used only if a third-party item deletes itself. */
-    private static final Map<UUID, ItemStack> ACTIVE_CARRIERS = new HashMap<>();
-    /** Suspected carrier loss is confirmed over time before changing maid lifecycle state. */
-    private static final Map<UUID, Map<String, CarrierLossCandidate>> PENDING_CARRIER_LOSSES = new HashMap<>();
     private static final Map<String, Long> DEPLOY_COOLDOWNS = new HashMap<>();
 
     @SubscribeEvent
@@ -60,92 +50,62 @@ public final class InfusedMaidDeploymentSystem {
         Player player = event.player;
         if (player.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) {
             clearTransitions(player);
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractActiveDeployments.clear(player.getUUID());
             return;
         }
         if (player.tickCount % 5 == 0) {
             ContractMaidRuntimeService.purgeLeakedProjections(player);
             ContractTransferSafetyService.rescueSelfStoredContract(player);
-            ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
-            if (active != null) {
-                ItemStack weapon = ContractWeaponLocator.findBoundWeaponByBinding(
-                        player, active.bindingId());
-                if (weapon.isEmpty()) {
-                    ItemStack snapshot = ACTIVE_CARRIERS.getOrDefault(
-                            player.getUUID(), ItemStack.EMPTY);
-                    scheduleCarrierLoss(player, active.maidId(), active.bindingId(), snapshot);
-                } else {
-                    cancelCarrierLoss(player, active.bindingId());
-                    ACTIVE_CARRIERS.put(player.getUUID(), weapon.copy());
-                }
+            if (ContractCarrierLossService.hasPending(player)) {
+                var carriers = ContractWeaponLocator.indexByBinding(player);
+                ContractCarrierLossService.process(player, carriers, InfusedMaidDeploymentSystem::clearCarrierLossRuntime);
             }
-            processCarrierLossCandidate(player);
         }
         if (ContractRecoveryService.hasRecovery(player)) {
             if (player.tickCount % 5 == 0) processRecovery(player);
-            return;
         }
         ContractCompanionService.tick(player);
     }
 
     @SubscribeEvent
-    public static void onContractCarrierDestroyed(PlayerDestroyItemEvent event) {
-        Player player = event.getEntity();
-        if (player.level().isClientSide) return;
-        ItemStack destroyed = event.getOriginal();
-        if (destroyed.isEmpty() || !MaidInfusion.isInfused(destroyed)
-                || !ContractCarrierData.isOwner(destroyed, player)
-                || ContractCarrierData.isContractSuperseded(destroyed)) return;
-
-        String maidId = ContractCarrierData.getBoundMaidUUID(destroyed);
-        String bindingId = ContractCarrierData.getBindingId(destroyed);
-        if (maidId == null || maidId.isEmpty() || bindingId == null || bindingId.isEmpty()) return;
-
-        // SlashBlade and other modded weapons may report a break transition while
-        // keeping the same ItemStack alive. Treat the event only as a suspicion:
-        // the exact binding must remain absent for a grace period before detaching.
-        scheduleCarrierLoss(player, maidId, bindingId, destroyed);
-    }
-
-    @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         ContractCompanionService.disconnect(event.getEntity());
-        ActiveDeployment active = ACTIVE_WEAPONS.get(event.getEntity().getUUID());
-        cancelRecovery(event.getEntity());
-        clearTransitions(event.getEntity());
-        ACTIVE_WEAPONS.remove(event.getEntity().getUUID());
-        ACTIVE_CARRIERS.remove(event.getEntity().getUUID());
-        if (active != null && !event.getEntity().level().isClientSide) {
-            ItemStack weapon = findBoundWeapon(event.getEntity(), active.maidId());
-            if (!ContractCompanionService.isResident(event.getEntity(), weapon))
-                recall(event.getEntity(), active.maidId());
-        }
+        if (!event.getEntity().level().isClientSide) recallFollowers(event.getEntity());
     }
 
     @SubscribeEvent
     public static void onPlayerDeath(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof Player player) || player.level().isClientSide) return;
-        ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
-        cancelRecovery(player);
-        clearTransitions(player);
-        ACTIVE_WEAPONS.remove(player.getUUID());
-        ACTIVE_CARRIERS.remove(player.getUUID());
-        if (active != null && !ContractCompanionService.isResident(
-                player, findBoundWeapon(player, active.maidId()))) recall(player, active.maidId());
+        recallFollowers(player);
     }
 
     @SubscribeEvent
     public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         Player player = event.getEntity();
         if (player.level().isClientSide) return;
-        ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
+        recallFollowers(player);
+    }
+
+    private static void recallFollowers(Player player) {
         cancelRecovery(player);
         clearTransitions(player);
-        ACTIVE_WEAPONS.remove(player.getUUID());
-        ACTIVE_CARRIERS.remove(player.getUUID());
-        if (active != null && !ContractCompanionService.isResident(
-                player, findBoundWeapon(player, active.maidId()))) recall(player, active.maidId());
+        // Rebuild from carried references too: login/load or a native home toggle
+        // may precede the first maintenance tick. Never instantiate absent entities.
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack carrier = player.getInventory().getItem(slot);
+            if (!MaidInfusion.isInfused(carrier) || MaidInfusion.containsMaid(carrier)
+                    || !ContractCarrierData.isOwner(carrier, player)
+                    || ContractCarrierData.isContractSuperseded(carrier)
+                    || ContractTransferSafetyService.isProjectionPhantom(carrier)
+                    || ContractCompanionService.isResident(player, carrier)) continue;
+            String maid = ContractCarrierData.getBoundMaidUUID(carrier);
+            if (maid != null) ContractActiveDeployments.remember(player.getUUID(), maid, ContractCarrierData.ensureBindingId(carrier));
+        }
+        for (var active : ContractActiveDeployments.snapshot(player.getUUID())) {
+            ItemStack weapon = findBoundWeapon(player, active.maidId());
+            if (!ContractCompanionService.isResident(player, weapon)) recall(player, active.maidId());
+        }
+        ContractActiveDeployments.clear(player.getUUID());
     }
 
     @SubscribeEvent
@@ -154,10 +114,13 @@ public final class InfusedMaidDeploymentSystem {
         if (player.level().isClientSide) return;
         ItemStack weapon = event.getEntity().getItem();
         if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
+        if (ContractCompanionService.isResident(player, weapon)) return;
 
-        ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
         String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
         String bindingId = ContractCarrierData.getBindingId(weapon);
+        Deployment active = ContractActiveDeployments.get(player.getUUID(), bindingId);
+        if (active == null && maidId != null && bindingId != null && hasDeployedMaid(player, weapon)
+                && !ContractCompanionService.isResident(player, weapon)) active = new Deployment(maidId, bindingId);
         if (active == null || maidId == null || bindingId == null
                 || !active.maidId().equals(maidId)
                 || !active.bindingId().equals(bindingId)) return;
@@ -166,8 +129,7 @@ public final class InfusedMaidDeploymentSystem {
         Entity maid = findManifestedMaid(player, maidId);
         if (maid != null) ContractDeploymentEffects.recallFinish(maid);
         if (recallIntoStack(player, maidId, weapon)) {
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
         } else {
             // ItemTossEvent removes the stack before firing. Cancellation prevents
             // the entity from spawning, so the protected contract must be restored
@@ -219,22 +181,6 @@ public final class InfusedMaidDeploymentSystem {
         // recall. The normal tick state machine resumes and applies the configured delay.
     }
 
-    /**
-     * Returns a contract weapon accidentally placed in its own manifested maid's menu.
-     *
-     * <p>This is deliberately checked both while the menu is open and from the close
-     * event. Shift-click can move the weapon and close the screen inside the same tick.
-     * Removing the stack before maid serialization makes the operation atomic: either
-     * the weapon is back with the player, or any remainder is dropped beside the owner.</p>
-     */
-    private static boolean deliverEmergencyFilm(Player player, ItemStack film) {
-        if (film.isEmpty()) return false;
-        ItemStack remainder = film.copy();
-        player.getInventory().add(remainder);
-        if (remainder.isEmpty()) return true;
-        return player.drop(remainder, false) != null;
-    }
-
     private static DesiredDeployment desiredDeployment(Player player) {
         ItemStack held = player.getMainHandItem();
         if (!isEligibleWeapon(held, player)) return null;
@@ -250,8 +196,6 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     private static void maintainManifestedMaid(Player player, ItemStack weapon, Entity maid) {
-        if (!ContractCompanionService.isResident(player, weapon))
-            ACTIVE_CARRIERS.put(player.getUUID(), weapon.copy());
         if (player.tickCount % 20 == 0 || !ContractRecoveryService.hasLocation(weapon)) {
             rememberDeploymentLocation(weapon, maid);
         }
@@ -259,139 +203,13 @@ public final class InfusedMaidDeploymentSystem {
         ContractMaidRuntimeService.maintain(player, weapon, maid);
     }
 
-    private static void scheduleCarrierLoss(
-            Player player, String maidId, String bindingId, ItemStack carrierSnapshot) {
-        if (player == null || maidId == null || maidId.isEmpty()
-                || bindingId == null || bindingId.isEmpty()) return;
-        UUID playerId = player.getUUID();
-        ItemStack snapshot = carrierSnapshot == null ? ItemStack.EMPTY : carrierSnapshot.copy();
-        Map<String, CarrierLossCandidate> pending = PENDING_CARRIER_LOSSES.computeIfAbsent(
-                playerId, ignored -> new HashMap<>());
-        CarrierLossCandidate existing = pending.get(bindingId);
-        if (existing != null && existing.maidId().equals(maidId)
-                && existing.bindingId().equals(bindingId)) {
-            if (!MaidInfusion.containsMaid(existing.snapshot())
-                    && MaidInfusion.containsMaid(snapshot)) {
-                pending.put(bindingId, new CarrierLossCandidate(
-                        maidId, bindingId, snapshot, existing.detectedAt()));
-            }
-            return;
-        }
-        pending.put(bindingId, new CarrierLossCandidate(
-                maidId, bindingId, snapshot, carrierLossClock(player)));
-    }
-
-    private static void processCarrierLossCandidate(Player player) {
-        Map<String, CarrierLossCandidate> pending = PENDING_CARRIER_LOSSES.get(player.getUUID());
-        if (pending == null) return;
-        for (CarrierLossCandidate candidate : new java.util.ArrayList<>(pending.values())) {
-            processCarrierLossCandidate(player, candidate);
-        }
-    }
-
-    private static void cancelCarrierLoss(Player player, String bindingId) {
-        Map<String, CarrierLossCandidate> pending = PENDING_CARRIER_LOSSES.get(player.getUUID());
-        if (pending == null) return;
-        pending.remove(bindingId);
-        if (pending.isEmpty()) PENDING_CARRIER_LOSSES.remove(player.getUUID());
-    }
-
-    private static void processCarrierLossCandidate(Player player, CarrierLossCandidate candidate) {
-
-        ItemStack restored = ContractWeaponLocator.findBoundWeaponByBinding(
-                player, candidate.bindingId());
-        if (!restored.isEmpty()) {
-            cancelCarrierLoss(player, candidate.bindingId());
-            ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
-            if (active != null && active.bindingId().equals(candidate.bindingId())
-                    && findManifestedMaid(player, candidate.maidId()) != null) {
-                ACTIVE_CARRIERS.put(player.getUUID(), restored.copy());
-            }
-            return;
-        }
-
-        if (carrierLossClock(player) - candidate.detectedAt() < CARRIER_LOSS_CONFIRM_TICKS) {
-            return;
-        }
-        if (resolveConfirmedCarrierLoss(player, candidate)) {
-            cancelCarrierLoss(player, candidate.bindingId());
-        }
-    }
-
-    /**
-     * A destroyed carrier releases the real maid instead of destroying or replacing her.
-     *
-     * <p>If she was already manifested, the entity is kept alive. If she was stored in
-     * the destroyed stack, its final snapshot is manifested beside the owner first.
-     * A resurrection film is retained only as the last data-safety fallback when a
-     * stored maid cannot be instantiated.</p>
-     */
-    private static boolean resolveConfirmedCarrierLoss(
-            Player player, CarrierLossCandidate candidate) {
-        ItemStack snapshot = candidate.snapshot();
-        Entity maid = findManifestedMaid(player, candidate.maidId());
-
-        if (maid == null && MaidInfusion.containsMaid(snapshot)) {
-            ItemStack transientCarrier = snapshot.copy();
-            if (ContractLifecycleService.manifest(player, transientCarrier, false)) {
-                maid = findManifestedMaid(player, candidate.maidId());
-            }
-            if (maid == null) {
-                ItemStack film = TouhouLittleMaidHelper.createEmergencyResurrectionFilm(
-                        player, snapshot, null);
-                if (!film.isEmpty() && deliverEmergencyFilm(player, film)) {
-                    clearCarrierLossRuntime(player, candidate);
-                    player.displayClientMessage(Component.translatable(
-                            "maid_weapon.message.carrier_destroyed_film_created"), false);
-                    LOGGER.error("[MaidWeapon] Contract carrier {} was destroyed; maid {} could not "
-                                    + "manifest and was preserved in a TLM film",
-                            snapshot.getItem(), candidate.maidId());
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        if (maid == null) {
-            // Never invent a replacement or delete state when the live maid may simply
-            // be in an unloaded chunk. Keep the candidate retryable.
-            return false;
-        }
-
-        if (!snapshot.isEmpty() && snapshot.getTag() != null
-                && snapshot.getTag().contains("MaidData")) {
-            maid.getPersistentData().put(
-                    com.maidweapon.forge.compat.tlm.ContractMaidKeys.EMERGENCY_FILM_PROGRESS,
-                    snapshot.getTag().getCompound("MaidData").copy());
-        }
-        ContractMaidRuntimeService.cleanupBeforeRecall(player, snapshot, maid);
-        maid.getPersistentData().remove(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
-        ContractCompanionState.clear(maid);
-        clearCarrierLossRuntime(player, candidate);
-        player.displayClientMessage(Component.translatable(
-                "maid_weapon.message.carrier_destroyed_maid_released"), false);
-        LOGGER.warn("[MaidWeapon] Contract carrier {} was destroyed; maid {} remains alive "
-                        + "and has been detached from the missing carrier",
-                snapshot.isEmpty() ? "unknown" : snapshot.getItem(), candidate.maidId());
-        return true;
-    }
-
-    private static void clearCarrierLossRuntime(Player player, CarrierLossCandidate candidate) {
-        ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
+    private static void clearCarrierLossRuntime(Player player, ContractCarrierLossService.Candidate candidate) {
+        Deployment active = ContractActiveDeployments.get(player.getUUID(), candidate.bindingId());
         if (active != null && active.bindingId().equals(candidate.bindingId())) {
             clearTransitions(player);
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractActiveDeployments.forgetMaid(player.getUUID(), candidate.maidId());
         }
-        if (candidate.maidId().equals(ContractRecoveryService.currentMaidId(player))) {
-            cancelRecovery(player);
-        }
-    }
-
-    private static long carrierLossClock(Player player) {
-        return player.getServer() != null
-                ? player.getServer().overworld().getGameTime()
-                : player.level().getGameTime();
+        ContractRecoveryService.cancel(player, candidate.maidId());
     }
 
     public static boolean manifestRequested(Player player, ItemStack weapon) {
@@ -402,7 +220,7 @@ public final class InfusedMaidDeploymentSystem {
     public static boolean manifestRequested(Player player, ItemStack weapon,
             com.maidweapon.forge.system.deployment.ContractCompanionState.Mode mode) {
         if (weapon != player.getMainHandItem() || !isEligibleWeapon(weapon, player)
-                || !MaidInfusion.containsMaid(weapon)) return false;
+                || !MaidInfusion.containsMaid(weapon) || !ContractCompanionService.canFollow(player, weapon)) return false;
         DesiredDeployment desired = desiredDeployment(player);
         return desired != null && manifestDesired(player, weapon, desired, mode);
     }
@@ -419,8 +237,7 @@ public final class InfusedMaidDeploymentSystem {
                     .getString(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID))) return false;
         boolean result = recallIntoStack(player, id, weapon);
         if (result) {
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractActiveDeployments.forgetMaid(player.getUUID(), id);
             clearTransitions(player);
         }
         return result;
@@ -428,14 +245,9 @@ public final class InfusedMaidDeploymentSystem {
 
     public static void maintainCompanion(Player player, ItemStack weapon, Entity maid, boolean resident) {
         if (!resident) {
-            ACTIVE_WEAPONS.put(player.getUUID(), new ActiveDeployment(maid.getStringUUID(), ContractCarrierData.ensureBindingId(weapon)));
-            ACTIVE_CARRIERS.put(player.getUUID(), weapon.copy());
+            ContractActiveDeployments.remember(player.getUUID(), maid.getStringUUID(), ContractCarrierData.ensureBindingId(weapon));
         } else {
-            ActiveDeployment active = ACTIVE_WEAPONS.get(player.getUUID());
-            if (active != null && active.maidId().equals(maid.getStringUUID())) {
-                ACTIVE_WEAPONS.remove(player.getUUID());
-                ACTIVE_CARRIERS.remove(player.getUUID());
-            }
+            ContractActiveDeployments.forgetMaid(player.getUUID(), maid.getStringUUID());
         }
         maintainManifestedMaid(player, weapon, maid);
     }
@@ -451,15 +263,14 @@ public final class InfusedMaidDeploymentSystem {
             String entityBinding = maid.getPersistentData().getString(
                     TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
             if (!desired.bindingId().equals(entityBinding)) return false;
-            ACTIVE_WEAPONS.put(player.getUUID(),
-                    new ActiveDeployment(desired.maidId(), desired.bindingId()));
+            ContractActiveDeployments.remember(player.getUUID(), desired.maidId(), desired.bindingId());
             maintainManifestedMaid(player, weapon, maid);
             return true;
         }
         if (!MaidInfusion.containsMaid(weapon)) {
             if (!ContractRecoveryService.failed(weapon)) {
                 startRecovery(player,
-                        new ActiveDeployment(desired.maidId(), desired.bindingId()), weapon);
+                        new Deployment(desired.maidId(), desired.bindingId()), weapon);
             }
             return false;
         }
@@ -477,8 +288,7 @@ public final class InfusedMaidDeploymentSystem {
         ContractMaidRuntimeService.selectCombatTask(player, weapon, maid);
         rememberDeploymentLocation(weapon, maid);
         ContractRecoveryService.clearFailure(weapon);
-        ACTIVE_WEAPONS.put(player.getUUID(),
-                new ActiveDeployment(desired.maidId(), desired.bindingId()));
+        ContractActiveDeployments.remember(player.getUUID(), desired.maidId(), desired.bindingId());
         ContractDeploymentEffects.deployFinish(maid);
         return true;
     }
@@ -495,15 +305,21 @@ public final class InfusedMaidDeploymentSystem {
                 && !isCoolingDown(player, ContractCarrierData.getBoundMaidUUID(stack));
     }
     public static boolean forceRecall(Player player, String maidId, int cooldownTicks) {
+        ContractTransferSafetyService.rescueSelfStoredContract(player);
+        return forceRecall(player, maidId, findBoundWeapon(player, maidId), cooldownTicks);
+    }
+
+    /** Emergency callers may have resolved a real carrier in a nearby blade stand. */
+    public static boolean forceRecall(Player player, String maidId, ItemStack weapon, int cooldownTicks) {
+        if (weapon.isEmpty() || !ContractCarrierData.isOwner(weapon, player)
+                || !maidId.equals(ContractCarrierData.getBoundMaidUUID(weapon))) return false;
         clearTransitions(player);
         Entity deployed = findManifestedMaid(player, maidId);
         float recoveryHealth = deployed instanceof LivingEntity living
                 ? Math.max(1.0f, living.getMaxHealth() * 0.25f) : 1.0f;
-        boolean recalled = recall(player, maidId);
-        ACTIVE_WEAPONS.remove(player.getUUID());
-        ACTIVE_CARRIERS.remove(player.getUUID());
+        boolean recalled = recallIntoStack(player, maidId, weapon);
+        if (recalled) ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
         if (recalled && cooldownTicks > 0) {
-            ItemStack weapon = findBoundWeapon(player, maidId);
             TouhouLittleMaidHelper.setStoredMaidHealth(player, weapon, recoveryHealth);
             DEPLOY_COOLDOWNS.put(cooldownKey(player, maidId),
                     player.level().getGameTime() + cooldownTicks);
@@ -525,6 +341,8 @@ public final class InfusedMaidDeploymentSystem {
 
         ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
         if (ContractLifecycleService.capture(player, maid, weapon, false)) {
+            ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
+            ContractRecoveryService.cancel(player, maidId);
             MaidCareTaskSystem.clearOriginalTask(weapon);
             clearDeploymentLocation(weapon);
             ContractCompanionState.clear(weapon);
@@ -554,7 +372,7 @@ public final class InfusedMaidDeploymentSystem {
         ContractRecoveryService.clearLocation(weapon);
     }
 
-    private static boolean startRecovery(Player player, ActiveDeployment deployment,
+    private static boolean startRecovery(Player player, Deployment deployment,
                                          ItemStack weapon) {
         ContractRecoveryService.StartResult result = ContractRecoveryService.start(
                 player, deployment.maidId(), deployment.bindingId(), weapon);
@@ -563,8 +381,7 @@ public final class InfusedMaidDeploymentSystem {
             return true;
         }
         if (result == ContractRecoveryService.StartResult.TERMINAL_FAILURE) {
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractActiveDeployments.forgetMaid(player.getUUID(), deployment.maidId());
             clearTransitions(player);
             return true;
         }
@@ -576,9 +393,8 @@ public final class InfusedMaidDeploymentSystem {
         String maidId = ContractRecoveryService.currentMaidId(player);
         if (maidId != null && findManifestedMaid(player, maidId) != null
                 && recall(player, maidId)) {
-            ContractRecoveryService.finish(player);
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractRecoveryService.cancel(player, maidId);
+            ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
             clearTransitions(player);
             return true;
         }
@@ -587,8 +403,7 @@ public final class InfusedMaidDeploymentSystem {
         if (result == ContractRecoveryService.TickResult.IDLE) return false;
         if (result == ContractRecoveryService.TickResult.TIMED_OUT) {
             ContractRecoveryService.finish(player);
-            ACTIVE_WEAPONS.remove(player.getUUID());
-            ACTIVE_CARRIERS.remove(player.getUUID());
+            ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
             clearTransitions(player);
         }
         return true;
@@ -614,9 +429,8 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     public static void clearSession() {
-        ACTIVE_WEAPONS.clear();
-        ACTIVE_CARRIERS.clear();
-        PENDING_CARRIER_LOSSES.clear();
+        ContractActiveDeployments.clear();
+        ContractCarrierLossService.clearSession();
         DEPLOY_COOLDOWNS.clear();
     }
 

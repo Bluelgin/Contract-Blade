@@ -51,7 +51,7 @@ public class MaidWeaponCommand {
                 .then(Commands.literal("resonance")
                         .then(Commands.argument("value", IntegerArgumentType.integer(
                                         MaidWeaponData.MIN_RESONANCE,
-                                        MaidWeaponData.MAX_RESONANCE))
+                                        1000000))
                                 .executes(ctx -> setResonance(
                                         ctx.getSource(),
                                         IntegerArgumentType.getInteger(ctx, "value")))))
@@ -143,7 +143,7 @@ public class MaidWeaponCommand {
             data.setResonance(value);
             ContractCarrierData.setMaidData(stack, data);
             source.sendSuccess(() -> Component.literal(
-                    "§b已将契约共鸣设为 " + value + "/" + MaidWeaponData.MAX_RESONANCE), true);
+                    "§b已将契约共鸣设为 " + data.getResonance() + "/" + MaidWeaponData.maximumResonance()), true);
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));

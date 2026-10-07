@@ -1,0 +1,18 @@
+[
+  {
+    "color": "white",
+    "braceletPixelsRemoved": 24,
+    "existingSkinTexelsPreserved": 84,
+    "cuffFacesChanged": 60,
+    "geometryUnchanged": true,
+    "unrelatedUVAndTexelsUnchanged": true
+  },
+  {
+    "color": "black",
+    "braceletPixelsRemoved": 24,
+    "existingSkinTexelsPreserved": 84,
+    "cuffFacesChanged": 60,
+    "geometryUnchanged": true,
+    "unrelatedUVAndTexelsUnchanged": true
+  }
+]

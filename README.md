@@ -8,13 +8,15 @@ The default branch contains the maintained Core addon only. The legacy Part camp
 
 Architecture and extension boundaries are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Legacy seven-sins NBT from older worlds is preserved as archival metadata, but it no longer affects Core combat, resonance, deployment, or progression.
 
-Contract Blade is a Touhou Little Maid addon that lets maids form persistent contracts with supported weapons. Call companions manually or let them protect you after enemy damage, build Contract Resonance, and strengthen their weapon through shared battles. Switching weapons does not dismiss a manually called companion. Versioned compressed storage preserves maid inventories, appearances, capabilities, and progression while reducing contract NBT size.
+Contract Blade is a Touhou Little Maid addon that lets maids form persistent contracts with supported weapons. Call companions manually or enable protective manifestation after enemy damage, build Contract Resonance, and strengthen their weapon through shared battles. Switching weapons does not dismiss a manually called companion. Versioned compressed storage preserves maid inventories, appearances, capabilities, and progression while reducing contract NBT size.
+
+契约配置说明见 [docs/CONTRACT_CONFIGURATION.md](docs/CONTRACT_CONFIGURATION.md)：跟随人数上限、受伤显现开关、饰品自动工作、共鸣上限，以及每级的击杀条件与攻击力加成。新规则使用存档的 `serverconfig/maid_weapon-server.toml`，服务器自动同步客户端。开发版将 `Manifestation.maxFollowingMaids` 设为 2 即可正式双召唤，默认仍为 1。
 
 ## Features
 
 - Bind a tamed maid to the dedicated Contract Blade or another supported weapon.
 - Press the configurable call key (default `]`) while holding a contract weapon to call or recall your maid.
-- Protective manifestation after enemy damage, with restrained greeting and post-combat dialogue.
+- Optional protective manifestation after enemy damage (disabled by default), with restrained greeting and post-combat dialogue.
 - Native TLM home/stay choices keep a companion resident; recall requires the same dimension and at most 32 blocks, without force-loading her chunk.
 - Contract Resonance as a renewable combat resource, separate from TLM favorability.
 - Weapon growth, ownership protection, transfer safeguards, and multiplayer-safe contracts.
@@ -81,8 +83,12 @@ Ordinary crafting cannot consume her occupied weapon or soul talisman.
 The supplied White/Black Fox model pack is prepared automatically for TLM's
 native loader. Existing same-ID packs are preserved. With BladeTetra, the shrine
 encounter and existing divine-domain progress provide additional dialogue;
-without it, no divine-domain quest is offered. Black Fox's model is available,
-but her Boss, purification, and Wine Fox rescue story are not yet playable.
+without it, the secondary shrine offers a separate dream entrance rather than
+a divine-domain quest. Black Fox now guards a private Sealed Rift arena: evade
+her mobile sword attacks, attack into her flashing finisher to clash, or exploit
+her recovery. The shrine White Fox's Purifying Edge helps against this encounter.
+Wine Fox's rescue, a corruption-source Boss and the story Black Fox companion
+reward are not implemented yet. This fight requires TLM 1.5.3+ and SlashBlade.
 
 ## Requirements
 
@@ -105,6 +111,20 @@ flag in a player world; it shuts down the test server when checks finish).
 
 TACZ contract guns require TACZ 1.1.8 or newer and a TLM version that provides
 the `touhou_little_maid:gun_attack` task. The current TLM release is recommended.
+
+## Server workload safeguards
+
+Contract lookup shares a short-lived binding index instead of repeatedly scanning
+inventory for each lost carrier. Recovery checks at most 32 queued contracts per
+player pass, with at most 2 restoration attempts per player and 8 per server tick.
+Failed jobs retry after 200 ticks; queued snapshots persist with the world across
+logout and orderly restart. These budgets do not limit weapon collection.
+
+`ContractNbtSafety.maxStoredContractBytes` limits the complete stored item tag
+(default 2 MiB), including dormant spirit archives. Oversized writes are rejected
+without deleting the existing weapon or live maid. The existing decompressed-data
+and depth limits still apply. Companion call packets are rate-limited before
+server-thread work is queued. These safeguards are not a general Minecraft NBT firewall.
 
 ## Build
 

@@ -10,7 +10,8 @@ import org.apache.commons.lang3.tuple.Pair;
  * ========================================
  *
  * 所有数值都可以调整，无需重新编译。
- * 配置文件位于 .minecraft/config/maid_weapon.toml
+ * 原有配置位于 config/maid_weapon-common.toml。
+ * 世界级契约规则位于存档/serverconfig/maid_weapon-server.toml（ContractRulesConfig）。
  */
 @Mod.EventBusSubscriber
 public class MaidWeaponConfig {
@@ -40,6 +41,7 @@ public class MaidWeaponConfig {
     public static ForgeConfigSpec.IntValue CONTRACT_NBT_CRITICAL_WARNING_BYTES;
     public static ForgeConfigSpec.IntValue CONTRACT_NBT_MAX_DECOMPRESSED_BYTES;
     public static ForgeConfigSpec.IntValue CONTRACT_NBT_MAX_DEPTH;
+    public static ForgeConfigSpec.IntValue CONTRACT_NBT_MAX_STORED_BYTES;
     public static ForgeConfigSpec.IntValue CONTRACT_NBT_MAX_INTRINSIC_SPIRITS;
 
     // ==================== 安全照料模式 ====================
@@ -144,6 +146,9 @@ public class MaidWeaponConfig {
         CONTRACT_NBT_MAX_DECOMPRESSED_BYTES = builder
                 .comment("Absolute decompressed MaidEntityData safety limit used against compression bombs")
                 .defineInRange("maxDecompressedMaidBytes", 16777216, 1048576, 67108864);
+        CONTRACT_NBT_MAX_STORED_BYTES = builder
+                .comment("Maximum complete stored contract tag size; rejected writes preserve the existing contract.")
+                .defineInRange("maxStoredContractBytes", 2097152, 262144, 16777216);
         CONTRACT_NBT_MAX_DEPTH = builder
                 .comment("Maximum permitted nesting depth inside compressed maid entity data")
                 .defineInRange("maxDepth", 128, 16, 512);

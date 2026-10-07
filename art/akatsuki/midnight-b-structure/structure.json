@@ -1,0 +1,819 @@
+{
+  "source": "E:/Little maid/art/akatsuki/midnight-b/akatsuki-midnight-b.bbmodel",
+  "removed": [
+    "c7b60b9e-f92e-14df-4430-a3f1f78b09df",
+    "ba7812e4-a726-c1b6-03a3-823e0fcc37f4",
+    "4dae71b0-90de-84eb-815a-a5cd67d694df",
+    "85229eed-e5e9-e5d2-b6f1-725570438aa4",
+    "5da72c1e-8185-06fb-5711-b9b7e2b6f91c",
+    "c70964ca-fa5e-8b0f-3a4b-1e0d5e0492b3",
+    "70e47ca1-358f-4daf-a848-eb36ff2207b4",
+    "5b65761f-dd79-78ca-1de1-639b7e75e6cb",
+    "d02f4aef-6835-a504-7ac6-4772501a51d5",
+    "0befa34a-dc65-1453-7f4b-2d4fb0f39a3a",
+    "73e2d5e5-870a-3395-5170-1aa84ee3dade",
+    "4e361873-0425-b8bc-93fb-42440bb5a1e3",
+    "d2351de0-d2df-996f-e474-0fb30838ad30",
+    "7f7bb2ce-27b2-9ee5-c845-af2a6ba0d1dc",
+    "fcacec37-4106-7c7e-b155-854dc8f09818",
+    "9791379f-88c0-fb37-b576-9fa99fe17f3b",
+    "1954da94-0d7f-9a27-fe6f-2a73f697e125",
+    "eacdc632-c83b-70a8-048f-36d463e231ad",
+    "748a550f-f930-539f-2cd5-b8cdbc48821b",
+    "c8287c0f-a3b9-8db0-d7c9-184847848592",
+    "fb6928b3-de25-01ab-82c3-95a5447baad0",
+    "8b7dc49c-19af-b1b9-7b95-6088dda5b1fa",
+    "5ff1cc79-b546-6e4d-b5b5-58ea5b5b8565",
+    "bbe676c7-9a15-131e-06ef-27c497695527",
+    "ee59e88a-511b-5f21-a9d0-5b10e706bfdd",
+    "c724a9fd-5f2e-8e9b-5a7c-a4137acaf114",
+    "a4ad8cd4-501a-ce01-0225-5f7d0e4898e7",
+    "599d3b2d-c747-05ce-038d-82d5a6feb12e",
+    "c161a1ea-6e8b-20e1-7d2f-cab704f5ac96",
+    "2ecc318c-5ff1-bf8f-2528-333af76437e5",
+    "8b28cfce-ff36-6e9d-f774-5c308e5081f8",
+    "a05e6d49-16b5-559c-f732-7bbc0bede765",
+    "7f3d3174-2a28-6289-7de0-df00656df381",
+    "97815206-a2e2-4bc8-064c-f89e5bee3054",
+    "c25b9d6f-02d3-aa78-8028-d28a5c200b4f",
+    "98fbc638-4adb-41bb-9b95-c5f20683b06e"
+  ],
+  "pieces": [
+    {
+      "uuid": "fb3c1d5e-1186-4c30-073d-80876dc218f2",
+      "name": "B_酒红内褶_0",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        0,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "189a855a-dee0-16b3-30a9-580fc98ed5ca",
+      "name": "B_酒红内褶_1",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        36,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "5aff1f14-dc31-97ac-d7eb-1548b9f18245",
+      "name": "B_酒红内褶_2",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        72,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "5805b99a-7b7f-64eb-2aae-ce626aaef70e",
+      "name": "B_酒红内褶_3",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        108,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "127f5882-ac4f-6718-d438-838d08cb15c7",
+      "name": "B_酒红内褶_4",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        144,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "ec3b9e84-996f-7e25-eba3-6a75e00a9d8d",
+      "name": "B_酒红内褶_5",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        180,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "aed13225-1c93-947d-58e7-e05258207010",
+      "name": "B_酒红内褶_6",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        216,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "51c9c7d7-f0eb-80f8-4071-47d3c6cddf3d",
+      "name": "B_酒红内褶_7",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        252,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "789b2fce-2c16-1232-c5db-5e9c3a23fd8e",
+      "name": "B_酒红内褶_8",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        288,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "b38112fc-ca51-ed33-5dd9-42ca2459ec61",
+      "name": "B_酒红内褶_9",
+      "kind": "lining",
+      "parent": "FM",
+      "from": [
+        -1.67,
+        9.9,
+        -3.05
+      ],
+      "to": [
+        1.67,
+        23.05,
+        -2.72
+      ],
+      "rotation": [
+        6.8,
+        324,
+        0
+      ],
+      "origin": [
+        0,
+        22.95,
+        0
+      ]
+    },
+    {
+      "uuid": "00448764-0b8b-e979-66ad-ddc8ea4d7d28",
+      "name": "B_外袍左侧",
+      "kind": "ink",
+      "parent": "LM",
+      "from": [
+        -2.3,
+        6.9,
+        -3.45
+      ],
+      "to": [
+        2.3,
+        23.05,
+        -3.12
+      ],
+      "rotation": [
+        10,
+        90,
+        0
+      ],
+      "origin": [
+        0,
+        22.85,
+        0
+      ]
+    },
+    {
+      "uuid": "3c1f533d-a5e9-a5c8-d66c-8a7ee7228727",
+      "name": "B_外袍右侧",
+      "kind": "ink",
+      "parent": "RM",
+      "from": [
+        -2.3,
+        7.55,
+        -3.45
+      ],
+      "to": [
+        2.3,
+        23.05,
+        -3.12
+      ],
+      "rotation": [
+        10,
+        -90,
+        0
+      ],
+      "origin": [
+        0,
+        22.85,
+        0
+      ]
+    },
+    {
+      "uuid": "e541ebb5-932b-a7b2-8401-d1e0d8d7f1ed",
+      "name": "B_后袍中片",
+      "kind": "ink",
+      "parent": "BM",
+      "from": [
+        -3.4,
+        6.9,
+        2.63
+      ],
+      "to": [
+        3.4,
+        23.05,
+        2.95
+      ],
+      "rotation": [
+        -10,
+        0,
+        0
+      ],
+      "origin": [
+        0,
+        22.9,
+        2.76
+      ]
+    },
+    {
+      "uuid": "08b801cd-1629-7f9e-1a6d-082f40456e0e",
+      "name": "B_后袍左片",
+      "kind": "ink",
+      "parent": "BR",
+      "from": [
+        -0.3,
+        7.1,
+        2.7
+      ],
+      "to": [
+        3.7,
+        23.05,
+        3.04
+      ],
+      "rotation": [
+        -8,
+        32,
+        10
+      ],
+      "origin": [
+        2.7,
+        22.9,
+        2.75
+      ]
+    },
+    {
+      "uuid": "fdc36944-bcb9-0f93-2bd1-ffd00b4d922c",
+      "name": "B_后袍右片",
+      "kind": "ink",
+      "parent": "BL",
+      "from": [
+        -3.7,
+        7.45,
+        2.7
+      ],
+      "to": [
+        0.3,
+        23.05,
+        3.04
+      ],
+      "rotation": [
+        -8,
+        -32,
+        -10
+      ],
+      "origin": [
+        -2.7,
+        22.9,
+        2.75
+      ]
+    },
+    {
+      "uuid": "9f92b171-8411-18ce-4502-224f0450d411",
+      "name": "B_前左开襟",
+      "kind": "counter",
+      "parent": "FR",
+      "from": [
+        0.7,
+        7.25,
+        -3.38
+      ],
+      "to": [
+        4.35,
+        23.05,
+        -3.08
+      ],
+      "rotation": [
+        6,
+        0,
+        13
+      ],
+      "origin": [
+        2.6,
+        22.9,
+        -2.98
+      ]
+    },
+    {
+      "uuid": "7543aeac-5c80-0477-0f22-247cb742cd7d",
+      "name": "B_前左内红衬",
+      "kind": "lining",
+      "parent": "FR",
+      "from": [
+        1,
+        7.4,
+        -3.09
+      ],
+      "to": [
+        4.25,
+        23,
+        -2.84
+      ],
+      "rotation": [
+        6,
+        0,
+        13
+      ],
+      "origin": [
+        2.6,
+        22.9,
+        -2.98
+      ]
+    },
+    {
+      "uuid": "6c0c2514-ff84-0eb0-c37a-2a7fea4784dd",
+      "name": "B_右侧开襟",
+      "kind": "ink",
+      "parent": "FL",
+      "from": [
+        -4.3,
+        7.85,
+        -3.38
+      ],
+      "to": [
+        -1.75,
+        23.05,
+        -3.08
+      ],
+      "rotation": [
+        6,
+        0,
+        -13
+      ],
+      "origin": [
+        -2.65,
+        22.9,
+        -2.98
+      ]
+    },
+    {
+      "uuid": "1972c19f-c5a4-1b20-6fbd-7346635d24e7",
+      "name": "B_斜跨墨色叠襟_0",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        0.3714285714285712,
+        21.185714285714287,
+        -3.85
+      ],
+      "to": [
+        4.228571428571429,
+        23.575,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "39a1e68f-8c73-fceb-868f-9c27fb0ef98c",
+      "name": "B_斜跨墨色叠襟_1",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        0.1428571428571428,
+        18.821428571428573,
+        -3.85
+      ],
+      "to": [
+        4.457142857142857,
+        21.210714285714285,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "1d5790bb-f92f-b24b-4788-b19709d39a95",
+      "name": "B_斜跨墨色叠襟_2",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        -0.08571428571428585,
+        16.45714285714286,
+        -3.85
+      ],
+      "to": [
+        4.685714285714285,
+        18.84642857142857,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "6abb78a2-ed20-b27c-3e2b-9e50c2d56fbf",
+      "name": "B_斜跨墨色叠襟_3",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        -0.3142857142857145,
+        14.092857142857142,
+        -3.85
+      ],
+      "to": [
+        4.914285714285715,
+        16.482142857142854,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "1ef12bc8-c5e5-67e0-5058-d84b5f0bafb3",
+      "name": "B_斜跨墨色叠襟_4",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        -0.5428571428571427,
+        11.72857142857143,
+        -3.85
+      ],
+      "to": [
+        5.142857142857142,
+        14.117857142857144,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "78ffc1df-ffca-c1fd-8728-0d3355e8ec7e",
+      "name": "B_斜跨墨色叠襟_5",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        -0.7714285714285718,
+        9.364285714285716,
+        -3.85
+      ],
+      "to": [
+        5.371428571428572,
+        11.75357142857143,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "757e8fd8-6699-aca0-9655-11585bded493",
+      "name": "B_斜跨墨色叠襟_6",
+      "kind": "diagonal",
+      "parent": "FFM",
+      "from": [
+        -1,
+        7,
+        -3.85
+      ],
+      "to": [
+        5.6,
+        9.389285714285714,
+        -3.51
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "734952eb-24d4-3624-fc95-408d16650334",
+      "name": "B_叠襟酒红衣片",
+      "kind": "redInsert",
+      "parent": "FFM",
+      "from": [
+        0.57,
+        7.25,
+        -3.99
+      ],
+      "to": [
+        2.65,
+        23.52,
+        -3.84
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "0e36838a-a2c8-2b4a-925a-aa981d86fd3f",
+      "name": "B_叠襟金色下摆",
+      "kind": "hem",
+      "parent": "FFM",
+      "from": [
+        -1.01,
+        7,
+        -4.02
+      ],
+      "to": [
+        5.61,
+        7.25,
+        -3.79
+      ],
+      "rotation": [
+        5,
+        0,
+        -24
+      ],
+      "origin": [
+        2.3,
+        23,
+        -3.5
+      ]
+    },
+    {
+      "uuid": "feb67829-6511-cc90-cfc7-281000ff5f6d",
+      "name": "B_开襟金色下摆",
+      "kind": "hem",
+      "parent": "FR",
+      "from": [
+        0.7,
+        7.25,
+        -3.44
+      ],
+      "to": [
+        4.36,
+        7.49,
+        -3.15
+      ],
+      "rotation": [
+        6,
+        0,
+        13
+      ],
+      "origin": [
+        2.6,
+        22.9,
+        -2.98
+      ]
+    },
+    {
+      "uuid": "6902c8ad-d631-a063-dbc8-50dc324d9b96",
+      "name": "B_衣片腰内承托",
+      "kind": "ink",
+      "parent": "clothe",
+      "from": [
+        -4.1,
+        22.86,
+        -3.96
+      ],
+      "to": [
+        4.1,
+        23.65,
+        2.75
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "origin": [
+        0,
+        23.25,
+        0
+      ]
+    }
+  ],
+  "oldSkirtCubes": 36,
+  "newSkirtCubes": 29,
+  "moonUnchanged": true,
+  "bonesUnchanged": true,
+  "independentValidation": {
+    "pass": true,
+    "removedSkirtCubes": 36,
+    "newSkirtCubes": 29,
+    "cubes": 400,
+    "bones": 179,
+    "unrelatedTextureSamples": 568832,
+    "unrelatedGeometryAndParentsUnchanged": true,
+    "bonesAndAnimationsUnchanged": true,
+    "headMoonUnchanged": true,
+    "layeredSkirtGeometry": true,
+    "diagonalPanelsConnected": true,
+    "bedrockExportValid": true,
+    "texture": [
+      512,
+      512
+    ]
+  }
+}

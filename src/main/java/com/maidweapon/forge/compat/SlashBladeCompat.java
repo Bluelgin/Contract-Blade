@@ -103,6 +103,13 @@ public final class SlashBladeCompat {
         return MOD_ID.equals(id.getNamespace());
     }
 
+    /** Native break may leave a usable broken blade rather than consume its carrier. */
+    public static boolean isRetainedContractBreak(ItemStack original, ItemStack retained) {
+        String binding = ContractCarrierData.getBindingId(original);
+        return isSlashBlade(original) && !retained.isEmpty() && binding != null && !binding.isEmpty()
+                && binding.equals(ContractCarrierData.getBindingId(retained));
+    }
+
     /** Legacy compatibility predicate retained for addons compiled against beta builds. */
     @Deprecated
     public static boolean usesTruePowerTask(ItemStack stack) {
@@ -298,7 +305,7 @@ public final class SlashBladeCompat {
         }
     }
 
-    private static Object resolveBladeState(ItemStack stack) {
+    static Object resolveBladeState(ItemStack stack) {
         Capability<?> capability = resolveBladeStateCapability();
         if (capability == null) return null;
         try {

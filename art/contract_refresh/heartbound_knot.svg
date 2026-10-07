@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+ <title>同心结 · 绛青双绸</title>
+ <path fill="#443341" d="M3 6h6v1h3v2h2V7h4v2h2V7h3V6h6v10h-6v-1h-3v2h-2v2h-4v-2h-2v-2H9v1H3z"/>
+ <path fill="#be748a" d="M4 7h5v1h3v2h2v4h-3v-1H8v2H4z"/>
+ <path fill="#f0bdc3" d="M4 7h5v1h3v2h1v1h-2V9H8V8H5v5H4z"/>
+ <path fill="#875169" d="M5 11h3v1h4v1H8v1H5z"/>
+ <path fill="#5d91a9" d="M18 10h2V8h3V7h5v8h-4v-2h-3v1h-3z"/>
+ <path fill="#b3dce2" d="M23 7h5v1h-4v1h-3v2h-2v-1h1V8h3z"/>
+ <path fill="#38627e" d="M24 11h3v3h-3v-1h-4v-1h4z"/>
+ <g id="tail-left"><path fill="#443341" d="M11 15h5v7h-1v5h-2v3H7v-3h2v-5h1v-4h1z"/><path fill="#bf7187" d="M12 16h3v6h-1v5h-2v2H8v-1h2v-5h1v-4h1z"/><path fill="#edb0b8" d="M12 17h1v5h-1v4h-1v2H9v-1h1v-4h1v-4h1z"/><path fill="#e7c589" d="M8 28h4v1H8z"/></g>
+ <g id="tail-right"><path fill="#443341" d="M17 15h4v3h1v4h1v5h2v3h-6v-3h-2v-5h-1v-4h1z"/><path fill="#5d91a9" d="M18 16h2v3h1v4h1v5h2v1h-4v-2h-2v-5h-1v-4h1z"/><path fill="#b3dce2" d="M18 17h1v5h1v4h1v2h-1v-1h-1v-4h-1z"/><path fill="#e7c589" d="M20 28h4v1h-4z"/></g>
+ <path fill="#94714b" d="M14 8h4v3h2v5h-2v2h-4v-2h-2v-5h2z"/>
+ <path fill="#e0b978" d="M15 9h2v3h2v3h-2v2h-2v-2h-2v-3h2z"/>
+ <path fill="#fae3ac" d="M15 9h1v4h-2v1h-1v-2h2z"/>
+ <path fill="#8c527b" d="M15 12h2v3h-2z"/>
+ <g id="glint" fill="#f3c0db"><path d="M15 12h1v1h-1z"/></g>
+</svg>
