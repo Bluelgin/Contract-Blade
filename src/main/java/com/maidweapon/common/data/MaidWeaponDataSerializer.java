@@ -25,7 +25,7 @@ public final class MaidWeaponDataSerializer {
     private MaidWeaponDataSerializer() {}
 
     /**
-     * 从平面数据恢复 MaidWeaponData
+     * 恢复关系数据及只读旧成长档案。此方法不写入玩家熟练度。
      */
     public static MaidWeaponData fromValues(String name, int level, int favorability, int resonance,
                                              int totalKills, int unlockedTier,

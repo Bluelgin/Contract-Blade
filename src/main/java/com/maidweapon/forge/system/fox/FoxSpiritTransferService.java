@@ -82,6 +82,8 @@ public final class FoxSpiritTransferService {
     /** A result is prepared in copies; the menu commits both outputs in one server action. */
     public static Result transfer(ServerPlayer owner, ItemStack weapon, ItemStack seal) {
         if (!canTransfer(owner, weapon, seal)) return null;
+        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(owner, weapon);
+        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(owner, seal);
         return FoxSpiritState.isSeal(seal) ? infuse(owner, weapon, seal) : extract(owner, weapon, seal);
     }
 

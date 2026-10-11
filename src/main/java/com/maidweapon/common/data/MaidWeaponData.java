@@ -10,33 +10,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * ========================================
- * 女仆武器数据（通用层）
- * ========================================
- *
- * 成长系统核心机制：
- *   使用女仆武器攻击怪物后，如果在该怪物死亡前玩家没有死亡，
- *   则根据怪物的强度等级解锁对应的武器等级。
- *
- * 怪物强度分级（Tier）：
- *   TIER_0 (0) → 无战斗力生物（鸡、猪、牛等）
- *   TIER_1 (1) → 普通怪物（僵尸、骷髅、蜘蛛等）
- *   TIER_2 (2) → 较强怪物（灾厄村民、洞穴蜘蛛等）
- *   TIER_3 (3) → 精英怪物（潜影贝、守卫者等）
- *   TIER_4 (4) → 准Boss（远古守卫者、监守者等）
- *   TIER_5 (5) → Boss（末影龙、凋灵）
- *
- * 武器等级：
- *   Lv.1 → 初始等级
- *   Lv.2 → 击杀任意 TIER_1 怪物（无死亡）
- *   Lv.3 → 击杀 TIER_2 怪物（无死亡）
- *   Lv.4 → 击杀 TIER_3 怪物（无死亡）
- *   Lv.5 → 击杀 TIER_4 怪物（无死亡）
- *   Lv.6 → 击杀末影龙（无死亡）
- *   Lv.7 → 击杀凋灵（无死亡）
- *   Lv.8 → 击杀末影龙+凋灵各3次（无死亡）
- *   Lv.9 → 特殊挑战（未来扩展）
- *   Lv.10 → 完全觉醒（未来扩展）
+ * 女仆/契约通道独立的关系数据：名称、好感度、共鸣与旧 Part 档案。
+ * 玩家共享成长由 ContractMasteryData/ContractMasteryService 管理。
+ * 下方 deprecated 成长方法只用于读取旧物品存档和二进制兼容，不能作为战斗等级来源。
  */
 public class MaidWeaponData {
 
@@ -45,8 +21,8 @@ public class MaidWeaponData {
     /** 女仆名称 */
     private String maidName = "Unknown Maid";
 
-    /** 当前等级（1 ~ MAX_LEVEL） */
-    private int level = 1;
+    /** 旧物品成长档案；玩家当前熟练度由 ContractMasteryService 提供。 */
+    private final ContractMasteryData legacyGrowth = new ContractMasteryData();
 
     /** 好感度（0 ~ 384，对应 TLM 好感度） */
     private int favorability = 0;
@@ -56,28 +32,10 @@ public class MaidWeaponData {
 
     // ==================== 战斗统计 ====================
 
-    /** 总击杀数 */
-    private int totalKills = 0;
-
-    /** 已解锁的最高怪物Tier */
-    private int unlockedTier = 0;
-
-    /** 末影龙击杀数（无死亡） */
-    private int enderDragonKills = 0;
-
-    /** 凋灵击杀数（无死亡） */
-    private int witherKills = 0;
-    private static final int[] NO_PROGRESS = new int[0];
-    private int[] upgradeProgress = NO_PROGRESS;
-
-    public int[] getUpgradeProgress() { return upgradeProgress.clone(); }
-    public void setUpgradeProgress(int[] progress) {
-        if (progress.length == 0) { upgradeProgress = NO_PROGRESS; return; }
-        upgradeProgress = new int[MAX_LEVEL + 1];
-        for (int i = 0; i < Math.min(progress.length, upgradeProgress.length); i++) {
-            upgradeProgress[i] = Math.max(0, Math.min(1000000, progress[i]));
-        }
-    }
+    /** Detached archive only. Never use this as a combat authority. */
+    public ContractMasteryData legacyGrowth() { return legacyGrowth.copy(); }
+    @Deprecated public int[] getUpgradeProgress() { return legacyGrowth.getUpgradeProgress(); }
+    @Deprecated public void setUpgradeProgress(int[] progress) { legacyGrowth.setUpgradeProgress(progress); }
     public static int maximumResonance() { return ContractRulesConfig.maximumResonance(); }
 
     // ==================== Legacy Part archive ====================
@@ -120,17 +78,7 @@ public class MaidWeaponData {
      * 升到每一级所需要的怪物Tier
      * 索引 0 = Lv.1→Lv.2 的需求，以此类推
      */
-    public static final int[] TIER_REQUIREMENT = {
-        TIER_1,   // Lv.1 → Lv.2: 击杀普通怪物
-        TIER_2,   // Lv.2 → Lv.3: 击杀较强怪物
-        TIER_3,   // Lv.3 → Lv.4: 击杀精英怪物
-        TIER_4,   // Lv.4 → Lv.5: 击杀准Boss
-        TIER_5,   // Lv.5 → Lv.6: 击杀末影龙
-        TIER_5,   // Lv.6 → Lv.7: 击杀凋灵（特殊Boss）
-        TIER_5,   // Lv.7 → Lv.8: 击杀Boss多次
-        TIER_5,   // Lv.8 → Lv.9: 特殊挑战（待定）
-        TIER_5    // Lv.9 → Lv.10: 完全觉醒（待定）
-    };
+    @Deprecated public static final int[] TIER_REQUIREMENT = ContractMasteryData.TIER_REQUIREMENT.clone();
 
     // ==================== 构造器 ====================
 
@@ -142,104 +90,13 @@ public class MaidWeaponData {
 
     // ==================== 等级 ====================
 
-    public int getLevel() {
-        return level;
-    }
-
-    public void setLevel(int level) {
-        this.level = Math.max(1, Math.min(level, MAX_LEVEL));
-    }
-
-    /**
-     * 尝试升级武器
-     * @param defeatedTier 被击杀怪物的Tier
-     * @return 是否成功升级
-     */
-    public boolean tryUpgrade(int defeatedTier, boolean isEnderDragon, boolean isWither) {
-        return tryUpgrade(defeatedTier, isEnderDragon, isWither,
-                isEnderDragon ? "minecraft:ender_dragon" : isWither ? "minecraft:wither" : "");
-    }
-
-    public boolean tryUpgrade(int defeatedTier, boolean isEnderDragon, boolean isWither, String entityId) {
-        if (level >= MAX_LEVEL) return false;
-
-        var rule = ContractRulesConfig.LEVELS[level + 1];
-        if (rule.custom()) {
-            if (!rule.matches(defeatedTier, entityId)) return false;
-            int target = level + 1;
-            if (upgradeProgress.length == 0) upgradeProgress = new int[MAX_LEVEL + 1];
-            upgradeProgress[target] = Math.min(1000000, upgradeProgress[target] + 1);
-            if (upgradeProgress[target] < rule.kills().get()) return false;
-            level++;
-            unlockedTier = Math.max(unlockedTier, Math.min(TIER_5, defeatedTier));
-            return true;
-        }
-
-        int requiredTier = TIER_REQUIREMENT[level - 1];
-
-        // 基本条件：击杀怪物的Tier必须达到要求
-        if (defeatedTier < requiredTier) return false;
-
-        // 特殊条件检查（Lv.7+）
-        if (level >= 5) {
-            // 记录Boss击杀
-            if (isEnderDragon) enderDragonKills++;
-            if (isWither) witherKills++;
-
-            // Lv.5 → Lv.6: 必须击杀末影龙
-            if (level == 5 && !isEnderDragon) return false;
-
-            // Lv.6 → Lv.7: 必须击杀凋灵
-            if (level == 6 && !isWither) return false;
-
-            // Lv.7 → Lv.8: 末影龙+凋灵各击杀3次
-            if (level == 7) {
-                if (enderDragonKills < 3 || witherKills < 3) return false;
-            }
-
-            // Lv.8 → Lv.9: 需要击杀Boss 5次
-            if (level == 8 && (enderDragonKills + witherKills) < 5) return false;
-
-            // Lv.9 → Lv.10: 需要击杀Boss 10次
-            if (level == 9 && (enderDragonKills + witherKills) < 10) return false;
-        }
-
-        // 升级成功
-        level++;
-        if (defeatedTier > unlockedTier) {
-            unlockedTier = defeatedTier;
-        }
-        return true;
-    }
-
-    /**
-     * 获取升到下一级的提示文本
-     */
-    public String getNextUpgradeHint() {
-        if (level >= MAX_LEVEL) return "已达到最大等级";
-
-        var rule = ContractRulesConfig.LEVELS[level + 1];
-        if (rule.custom()) {
-            String target = rule.mode().get().equals("entities")
-                    ? String.join(" / ", rule.entities().get()) : "TIER " + rule.tier().get();
-            return "需要无死亡击杀 " + target + "（" + getNextUpgradeProgress() + "/" + rule.kills().get() + "）";
-        }
-
-        if (level == 5) return "需要无死亡击杀末影龙";
-        if (level == 6) return "需要无死亡击杀凋灵";
-        if (level == 7) return "需要无死亡击杀末影龙和凋灵各3次";
-        if (level == 8) return "需要累计无死亡击杀末影龙与凋灵共5次";
-        if (level == 9) return "需要累计无死亡击杀末影龙与凋灵共10次";
-
-        int requiredTier = TIER_REQUIREMENT[level - 1];
-        return "需要无死亡击杀 TIER " + requiredTier + " 级怪物";
-    }
-
-    // ==================== 好感度 ====================
-
-    public int getNextUpgradeProgress() {
-        return level >= MAX_LEVEL || upgradeProgress.length == 0 ? 0 : upgradeProgress[level + 1];
-    }
+    /** @deprecated Item growth is an old-save archive. Use ContractMasteryService with a player. */
+    @Deprecated public int getLevel() { return legacyGrowth.getLevel(); }
+    @Deprecated public void setLevel(int value) { legacyGrowth.setLevel(value); }
+    @Deprecated public boolean tryUpgrade(int tier, boolean dragon, boolean wither) { return legacyGrowth.tryUpgrade(tier, dragon, wither); }
+    @Deprecated public boolean tryUpgrade(int tier, boolean dragon, boolean wither, String id) { return legacyGrowth.tryUpgrade(tier, dragon, wither, id); }
+    @Deprecated public String getNextUpgradeHint() { return legacyGrowth.getNextUpgradeHint(); }
+    @Deprecated public int getNextUpgradeProgress() { return legacyGrowth.getNextUpgradeProgress(); }
 
     public int getFavorability() {
         return favorability;
@@ -285,56 +142,16 @@ public class MaidWeaponData {
         this.maidName = maidName;
     }
 
-    public int getTotalKills() {
-        return totalKills;
-    }
-
-    public void setTotalKills(int totalKills) {
-        this.totalKills = totalKills;
-    }
-
-    public void addKill() {
-        this.totalKills++;
-    }
-
-    public int getUnlockedTier() {
-        return unlockedTier;
-    }
-
-    public void setUnlockedTier(int unlockedTier) {
-        this.unlockedTier = Math.max(0, Math.min(unlockedTier, TIER_5));
-    }
-
-    public int getEnderDragonKills() {
-        return enderDragonKills;
-    }
-
-    public void setEnderDragonKills(int enderDragonKills) {
-        this.enderDragonKills = enderDragonKills;
-    }
-
-    public int getWitherKills() {
-        return witherKills;
-    }
-
-    public void setWitherKills(int witherKills) {
-        this.witherKills = witherKills;
-    }
-
-    // ==================== 伤害计算 ====================
-
-    /**
-     * 根据等级计算基础攻击力加成
-     */
-    public float getAttackDamageBonus() {
-        double override = ContractRulesConfig.LEVELS[level].damage().get();
-        if (override >= 0) return (float) override;
-        float perLevel = (float)(double) MaidWeaponConfig.LEVEL_DAMAGE_PER_LEVEL.get();
-        float maxBonus = (float)(double) MaidWeaponConfig.LEVEL_MAX_BONUS.get();
-        float bonus = (level - 1) * perLevel;
-        if (level >= MAX_LEVEL) bonus += maxBonus;
-        return bonus;
-    }
+    @Deprecated public int getTotalKills() { return legacyGrowth.getTotalKills(); }
+    @Deprecated public void setTotalKills(int value) { legacyGrowth.setTotalKills(value); }
+    @Deprecated public void addKill() { legacyGrowth.addKill(); }
+    @Deprecated public int getUnlockedTier() { return legacyGrowth.getUnlockedTier(); }
+    @Deprecated public void setUnlockedTier(int value) { legacyGrowth.setUnlockedTier(value); }
+    @Deprecated public int getEnderDragonKills() { return legacyGrowth.getEnderDragonKills(); }
+    @Deprecated public void setEnderDragonKills(int value) { legacyGrowth.setEnderDragonKills(value); }
+    @Deprecated public int getWitherKills() { return legacyGrowth.getWitherKills(); }
+    @Deprecated public void setWitherKills(int value) { legacyGrowth.setWitherKills(value); }
+    @Deprecated public float getAttackDamageBonus() { return legacyGrowth.getAttackDamageBonus(); }
 
     /**
      * 根据好感度计算伤害倍率（连续曲线，每点好感度都有影响）
@@ -410,7 +227,7 @@ public class MaidWeaponData {
     @Override
     public String toString() {
         return String.format("MaidWeaponData{name='%s', Lv.%d, Favorability=%d, Resonance=%d, Kills=%d, Tier=%d, Dragon=%d, Wither=%d, Sins=%s}",
-                maidName, level, favorability, resonance, totalKills, unlockedTier, enderDragonKills, witherKills,
+                maidName, getLevel(), favorability, resonance, getTotalKills(), getUnlockedTier(), getEnderDragonKills(), getWitherKills(),
                 SinSlotManager.sinsToString(embeddedSins));
     }
 }

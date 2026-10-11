@@ -31,17 +31,25 @@ public class MaidWeaponCommand {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
         dispatcher.register(Commands.literal("maidweapon")
-                .requires(s -> s.hasPermission(2))
 
                 // /maidweapon level <1-10>
+                .then(Commands.literal("mastery")
+                        .executes(ctx -> showMastery(ctx.getSource())))
                 .then(Commands.literal("level")
+                        .requires(s -> s.hasPermission(2))
+                        .executes(ctx -> showMastery(ctx.getSource()))
                         .then(Commands.argument("level", IntegerArgumentType.integer(1, 10))
                                 .executes(ctx -> setLevel(
                                         ctx.getSource(),
-                                        IntegerArgumentType.getInteger(ctx, "level")))))
+                                        IntegerArgumentType.getInteger(ctx, "level")))
+                                .then(Commands.argument("player", net.minecraft.commands.arguments.EntityArgument.player())
+                                        .executes(ctx -> setPlayerLevel(ctx.getSource(),
+                                                net.minecraft.commands.arguments.EntityArgument.getPlayer(ctx, "player"),
+                                                IntegerArgumentType.getInteger(ctx, "level"))))))
 
                 // /maidweapon favorability <0-384>
                 .then(Commands.literal("favorability")
+                        .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("value", IntegerArgumentType.integer(0, 384))
                                 .executes(ctx -> setFavorability(
                                         ctx.getSource(),
@@ -49,6 +57,7 @@ public class MaidWeaponCommand {
 
                 // /maidweapon resonance <0-200>
                 .then(Commands.literal("resonance")
+                        .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("value", IntegerArgumentType.integer(
                                         MaidWeaponData.MIN_RESONANCE,
                                         1000000))
@@ -58,10 +67,12 @@ public class MaidWeaponCommand {
 
                 // /maidweapon nbt
                 .then(Commands.literal("nbt")
+                        .requires(source -> source.hasPermission(2))
                         .executes(ctx -> auditNbt(ctx.getSource())))
 
                 // /maidweapon interior gallery [stage/rebuild/leave]
                 .then(Commands.literal("interior")
+                        .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("gallery")
                                 .executes(ctx -> openInteriorGallery(ctx.getSource()))
                                 .then(Commands.literal("stage")
@@ -101,21 +112,27 @@ public class MaidWeaponCommand {
         );
     }
 
-    private static int setLevel(CommandSourceStack source, int level) {
+    private static int showMastery(CommandSourceStack source) {
         try {
-            ItemStack stack = editableContract(source);
-            if (stack.isEmpty()) return 0;
-
-            MaidWeaponData data = MaidInfusion.data(stack);
-            data.setLevel(level);
-            ContractCarrierData.setMaidData(stack, data);
-
-            source.sendSuccess(() -> Component.literal("§a已将契约等级设为 Lv." + level), true);
+            var player = source.getPlayerOrException();
+            com.maidweapon.forge.system.mastery.ContractMasteryService.observeInventory(player);
+            var data = com.maidweapon.forge.system.mastery.ContractMasteryService.getProgress(player);
+            source.sendSuccess(() -> Component.literal("契约熟练度 Lv." + data.getLevel() + "（玩家共享）\n"
+                    + "有效击杀: " + data.getTotalKills() + "，龙/凋灵: " + data.getEnderDragonKills() + "/" + data.getWitherKills()
+                    + "\n" + data.getNextUpgradeHint()), false);
             return 1;
-        } catch (Exception e) {
-            source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));
-            return 0;
-        }
+        } catch (Exception error) { source.sendFailure(Component.literal(error.getMessage())); return 0; }
+    }
+    private static int setLevel(CommandSourceStack source, int level) {
+        try { return setPlayerLevel(source, source.getPlayerOrException(), level); }
+        catch (Exception error) { source.sendFailure(Component.literal(error.getMessage())); return 0; }
+    }
+    private static int setPlayerLevel(CommandSourceStack source, net.minecraft.server.level.ServerPlayer player, int level) {
+        try {
+            com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(source, player, level);
+            source.sendSuccess(() -> Component.literal("已将 " + player.getScoreboardName() + " 的全局契约熟练度设为 Lv." + level), true);
+            return 1;
+        } catch (Exception error) { source.sendFailure(Component.literal(error.getMessage())); return 0; }
     }
 
     private static int setFavorability(CommandSourceStack source, int value) {

@@ -25,6 +25,9 @@ final class BlackFoxShrineReturnValidation {
         var anchor = stand.getPos();
         stand.getItem().getOrCreateTag().putString("ReturnFixture", "original-strengthening-SA-texture");
         var before = stand.getItem().save(new CompoundTag());
+        com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(server.createCommandSourceStack(), player, 10);
+        check(!com.maidweapon.forge.compat.BlackFoxSwordArtCompat.entitled(stand.getItem(), player),
+                "global Lv10 never grants Black Fox story entitlement");
         check(service.begin(player, stand) && stand.getItem().isEmpty(), "one original blade in escrow");
         check(!service.begin(player, stand) && BlackFoxShrineReturn.protectedStand(stand), "second ritual rejected");
         check(!stand.hurt(level.damageSources().generic(), 10), "native reserved stand cannot be broken");
@@ -83,7 +86,17 @@ final class BlackFoxShrineReturnValidation {
         ItemStack clean = returned.copy();
         clean.getOrCreateTag().remove(FoxSpiritState.ROOT);
         clean.getOrCreateTag().remove(FoxSpiritState.ORIGIN);
-        check(before.equals(clean.save(new CompoundTag())), "victory does not change original blade capabilities");
+        check(com.maidweapon.forge.compat.BlackFoxSwordArtCompat.entitled(returned, player), "real victory grants owner-bound native SA");
+        var returnedState = BlackFoxSwordCoreValidation.nativeState(returned);
+        check(com.maidweapon.forge.compat.BlackFoxSwordArtCompat.ID.equals(
+                returnedState.getClass().getMethod("getSlashArtsKey").invoke(returnedState)), "reward selects native sealed sword core");
+        // PR #10 legitimately added SA reward metadata/capability. Compare every other original field.
+        clean.getOrCreateTag().remove("MaidWeaponBlackFoxSwordArt");
+        var originalState = BlackFoxSwordCoreValidation.nativeState(ItemStack.of(before));
+        var cleanState = BlackFoxSwordCoreValidation.nativeState(clean);
+        cleanState.getClass().getMethod("setSlashArtsKey", ResourceLocation.class).invoke(cleanState,
+                originalState.getClass().getMethod("getSlashArtsKey").invoke(originalState));
+        check(before.equals(clean.save(new CompoundTag())), "victory preserves original blade apart from the earned native SA");
         check(!service.canBegin(player, replacement), "repeat ritual cannot consume rescued spirit");
         var stranger = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), "BlackFoxReturnStranger"));
         check(!BlackFoxShrineReturn.allowTake(replacement, stranger, InteractionHand.MAIN_HAND), "stranger cannot claim returned blade");
@@ -95,6 +108,11 @@ final class BlackFoxShrineReturnValidation {
         replacement.setItem(ItemStack.EMPTY);
         ItemStack weapon = player.getMainHandItem();
         check(FoxSpiritCompanionService.initialize(player, weapon), "normal Black Fox companion contract initializes");
+        var abilities = com.maidweapon.forge.api.ability.ContractAbilityProgressionService.query(player, weapon,
+                com.maidweapon.forge.compat.BlackFoxSwordArtCompat.ID);
+        check(abilities.masteryLevel() == 10 && abilities.status() ==
+                com.maidweapon.forge.api.ability.ContractAbilityProgressionService.Status.ENTITLED_WITHOUT_ROUTE
+                && abilities.capabilities().features().isEmpty(), "earned Black Fox reads shared Lv10 with no phase-two route");
         check(FoxModelPackBootstrap.BLACK_MODEL.equals(MaidEntityDataCodec.read(weapon.getTag()).getString("ModelId")),
                 "companion uses original Black Fox model, not Boss tint");
         check(!FoxSpiritTransferService.storyEligible(player, weapon), "Black Fox cannot trigger White Fox story");

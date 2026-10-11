@@ -198,12 +198,7 @@ public class MaidWeaponItem extends SwordItem {
 
     @Override
     public Rarity getRarity(ItemStack stack) {
-        if (hasMaidData(stack)) {
-            int level = getMaidData(stack).getLevel();
-            if (level >= 9) return Rarity.EPIC;
-            if (level >= 7) return Rarity.RARE;
-            if (level >= 4) return Rarity.UNCOMMON;
-        }
+        if (hasMaidData(stack)) return Rarity.UNCOMMON;
         return Rarity.COMMON;
     }
 
@@ -211,7 +206,7 @@ public class MaidWeaponItem extends SwordItem {
     public Component getName(ItemStack stack) {
         if (hasMaidData(stack)) {
             MaidWeaponData data = getMaidData(stack);
-            return Component.literal("§d" + data.getMaidName() + " §f· 女仆之刃 Lv." + data.getLevel());
+            return Component.literal("§d" + data.getMaidName() + " §f· 女仆之刃");
         }
         return Component.translatable("item.maid_weapon.maid_sword_empty");
     }

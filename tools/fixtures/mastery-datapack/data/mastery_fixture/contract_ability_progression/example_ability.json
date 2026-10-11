@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "ability": "mastery_fixture:example_ability",
+  "level_source": "player_mastery",
+  "milestones": [
+    {"level": 1, "features": ["mastery_fixture:basic"]},
+    {"level": 10, "features": ["mastery_fixture:ultimate"]}
+  ]
+}

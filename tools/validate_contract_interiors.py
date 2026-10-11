@@ -56,7 +56,7 @@ rcon = read("tools/rcon_command.py")
 for needle in [
     "MAX_SPACE_STAGE = 5",
     "MAX_WARMTH_STAGE = 6",
-    "data.getLevel()",
+    "masteryLevel",
     "data.getFavorability()",
 ]:
     if needle not in profile:

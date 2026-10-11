@@ -44,10 +44,10 @@ public final class MaidInfusion {
         return ContractCarrierData.getMaidData(stack);
     }
 
-    /** Generic weapons only gain damage; low favorability can never reduce base damage. */
-    public static float getGenericDamageBonus(MaidWeaponData data) {
-        return Math.max(0.0f,
-                data.getAttackDamageBonus() * data.getFavorabilityDamageMultiplier());
+    /** @deprecated No player context means no authoritative growth bonus. */
+    @Deprecated public static float getGenericDamageBonus(MaidWeaponData data) { return 0; }
+    public static float getGenericDamageBonus(net.minecraft.world.entity.player.Player player, ItemStack carrier) {
+        return com.maidweapon.forge.api.ContractGrowthAttributes.resolve(player, carrier).additiveBonus();
     }
 
     private MaidInfusion() {}

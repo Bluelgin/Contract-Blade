@@ -78,6 +78,16 @@ public final class BlackFoxSwordArtCompat {
         return reward.hasUUID("Owner") && reward.getUUID("Owner").equals(player.getUUID()) && reward.hasUUID("Origin")
                 && blade.getTag().hasUUID(FoxSpiritState.ORIGIN) && reward.getUUID("Origin").equals(blade.getTag().getUUID(FoxSpiritState.ORIGIN));
     }
+    /** Phase-one query adapter only; existing native release readiness does not call it. */
+    public static boolean progressionEntitled(ItemStack blade, ServerPlayer player) {
+        if (!entitled(blade, player) || !FoxSpiritState.isOriginalHome(blade)
+                || !player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)
+                .getBoolean("MaidWeaponBlackFoxDefeated")
+                || !com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(FoxSpiritState.resident(blade), "WEAPON")) return false;
+        var state = SlashBladeCompat.resolveBladeState(blade);
+        try { return state != null && ID.equals(state.getClass().getMethod("getSlashArtsKey").invoke(state)); }
+        catch (ReflectiveOperationException error) { return false; }
+    }
     public static BlackFoxSwordCoreEntity active(ServerPlayer player) {
         var core = CORES.get(player);
         if (core != null && (core.isRemoved() || core.level() != player.level())) { core.discard(); CORES.remove(player); return null; }

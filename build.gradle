@@ -99,6 +99,10 @@ minecraft {
             property 'contractblade.rebirth.validation', providers.gradleProperty('contractRebirthTest').orElse('false').get()
             property 'contractblade.performance.validation', providers.gradleProperty('contractPerfTest').orElse('false').get()
             property 'contractblade.performance.label', providers.gradleProperty('contractPerfLabel').orElse('after').get()
+            property 'contractblade.swordCore.validation', providers.gradleProperty('swordCoreTest').orElse('false').get()
+            property 'contractblade.mastery.foxValidation', providers.gradleProperty('masteryFoxTest').orElse('false').get()
+            property 'contractblade.mastery.resume', providers.gradleProperty('masteryResume').orElse('false').get()
+            property 'contractblade.mastery.validation', providers.gradleProperty('masteryTest').orElse('false').get()
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
             property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
             property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
@@ -148,6 +152,7 @@ dependencies {
     if (providers.gradleProperty('configScreens').map { it.toBoolean() }.orElse(false).get()) {
         runtimeOnly fg.deobf("local:configured:1.20.1-2.2.3")
     }
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
     // Minecraft Forge
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
@@ -160,7 +165,7 @@ dependencies {
 
     // Native bauble extension compiles against the public TLM API. Runtime-only
     // launch profiles use the local jar; other integrations stay version-tolerant.
-    if (!ciMode || homeLifeTestMode) {
+    if (!ciMode || homeLifeTestMode || providers.gradleProperty('tlmRuntimeTest').orElse('false').get().toBoolean()) {
         if (tlmTestMode == 'old') {
             runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
         } else if (tlmTestMode == 'pack') {
@@ -321,3 +326,5 @@ publishing {
         }
     }
 }
+
+tasks.named("test", Test).configure { useJUnitPlatform() }

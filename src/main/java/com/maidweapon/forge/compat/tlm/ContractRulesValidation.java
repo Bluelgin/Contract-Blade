@@ -17,9 +17,10 @@ final class ContractRulesValidation {
         try {
             check(!ContractRulesConfig.AUTO_MANIFEST.get(), "hurt auto-manifest defaults off");
             var data = new MaidWeaponData();
-            data.setLevel(5);
-            data.setEnderDragonKills(2);
-            data.setWitherKills(1);
+            var mastery = new com.maidweapon.common.data.ContractMasteryData();
+            mastery.setLevel(5);
+            mastery.setEnderDragonKills(2);
+            mastery.setWitherKills(1);
             data.setResonance(120);
             ContractRulesConfig.MAX_RESONANCE.set(400);
             var stack = new ItemStack(Items.IRON_SWORD);
@@ -37,23 +38,23 @@ final class ContractRulesValidation {
             rule.mode().set("entities");
             rule.entities().set(java.util.List.of("minecraft:wither", "minecraft:warden"));
             rule.kills().set(2);
-            check(!data.tryUpgrade(5, true, false, "minecraft:ender_dragon"), "non-listed boss cannot upgrade");
-            check(!data.tryUpgrade(4, false, false, "minecraft:warden"), "first any-of kill saves progress");
-            ContractCarrierData.setMaidData(stack, data);
-            data = ContractCarrierData.getMaidData(stack);
-            check(data.getUpgradeProgress()[6] == 1 && data.getLevel() == 5
-                    && data.getEnderDragonKills() == 2 && data.getWitherKills() == 1,
+            check(!mastery.tryUpgrade(5, true, false, "minecraft:ender_dragon"), "non-listed boss cannot upgrade");
+            check(!mastery.tryUpgrade(4, false, false, "minecraft:warden"), "first any-of kill saves progress");
+            mastery = com.maidweapon.forge.system.mastery.ContractMasteryCodec.read(
+                    com.maidweapon.forge.system.mastery.ContractMasteryCodec.write(mastery));
+            check(mastery.getUpgradeProgress()[6] == 1 && mastery.getLevel() == 5
+                    && mastery.getEnderDragonKills() == 2 && mastery.getWitherKills() == 1,
                     "new progress round-trips without changing old progression");
-            check(data.tryUpgrade(5, false, true, "minecraft:wither") && data.getLevel() == 6,
+            check(mastery.tryUpgrade(5, false, true, "minecraft:wither") && mastery.getLevel() == 6,
                     "second matching entity upgrades exactly once");
             rule.damage().set(7.5);
-            check(data.getAttackDamageBonus() == 7.5f, "per-level damage override applies");
-            data.setLevel(5);
+            check(mastery.getAttackDamageBonus() == 7.5f, "per-level damage override applies");
+            mastery.setLevel(5);
             rule.mode().set("tier");
-            check(!data.tryUpgrade(4, false, false, "minecraft:warden"), "tier rule rejects weaker target");
+            check(!mastery.tryUpgrade(4, false, false, "minecraft:warden"), "tier rule rejects weaker target");
             rule.mode().set("legacy");
-            check(!data.tryUpgrade(5, false, true, "minecraft:wither")
-                    && data.tryUpgrade(5, true, false, "minecraft:ender_dragon"),
+            check(!mastery.tryUpgrade(5, false, true, "minecraft:wither")
+                    && mastery.tryUpgrade(5, true, false, "minecraft:ender_dragon"),
                     "legacy dragon requirement remains unchanged");
             com.mojang.logging.LogUtils.getLogger().info("[MaidWeapon] CONTRACT_RULES_VALIDATION_PASS");
         } finally {

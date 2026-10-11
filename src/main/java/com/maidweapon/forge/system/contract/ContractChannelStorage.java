@@ -90,5 +90,14 @@ public final class ContractChannelStorage {
     }
 
 
+    public static boolean finishStorageChange(ItemStack weapon, CompoundTag previous) {
+        try {
+            MaidEntityDataCodec.validateContainer(weapon.getOrCreateTag());
+            return true;
+        } catch (java.io.IOException rejected) {
+            weapon.setTag(previous);
+            return false;
+        }
+    }
     private ContractChannelStorage() {}
 }

@@ -146,6 +146,8 @@ public final class ContractMaidLifecycleService {
         } else {
             data = ContractCarrierData.getMaidData(weaponStack);
         }
+        // Preserve an old emergency-film growth archive until the player authority imports it.
+        if (firstCapture && !emergencyProgress.isEmpty()) weaponStack.getOrCreateTag().put("MaidData", emergencyProgress.copy());
         data.setMaidName(entity.getName().getString());
         data.setFavorability(Math.min(MaidWeaponData.MAX_FAVORABILITY,
                 Math.max(0, TlmEntityAdapter.favorability(entity))));
@@ -162,6 +164,7 @@ public final class ContractMaidLifecycleService {
             return false;
         }
 
+        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weaponStack);
         entity.getPersistentData().remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
         entity.discard();
         com.maidweapon.forge.system.deployment.ContractCompanionState.clear(weaponStack);
