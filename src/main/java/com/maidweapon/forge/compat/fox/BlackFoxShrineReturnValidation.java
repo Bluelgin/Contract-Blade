@@ -46,6 +46,11 @@ final class BlackFoxShrineReturnValidation {
         check(service.begin(player, stand), "victory fixture escrows original shrine blade");
         var actor = com.maidweapon.forge.system.fox.challenge.BlackFoxEncounters.get(player);
         actor.combat().defeat();
+        var cores = player.serverLevel().getEntitiesOfClass(com.maidweapon.forge.entity.BlackFoxCoreEntity.class,
+                actor.body().getBoundingBox().inflate(24));
+        check(cores.size() == 1, "final stand creates one real breakable core before rescue");
+        check(cores.get(0).hurt(player.damageSources().playerAttack(player), 1000),
+                "challenger breaks the final core through real damage handling");
         check(FoxSpiritState.BLACK.equals(FoxSpiritState.resident(ItemStack.of(service.save(new CompoundTag())
                 .getList("Returns", 10).getCompound(0).getCompound("Blade"))).getString("SpiritId")),
                 "real encounter defeat installs Black Fox identity");

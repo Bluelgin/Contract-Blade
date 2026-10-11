@@ -1,13 +1,11 @@
 package com.maidweapon.forge.system.fox.challenge;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RotatedPillarBlock;
 
-/** An invisible fighting floor. Scenery is outside the playable enclosure. */
+/** Flat fighting platform. Decorative architecture stays outside the playable enclosure. */
 public final class FoxChallengeArena {
     public static final int FLOOR_Y = 63;
     public static final int RADIUS = 24;
@@ -30,40 +28,24 @@ public final class FoxChallengeArena {
     public static void build(ServerLevel level, BlockPos origin) {
         // Marker is outside the arena. Re-entry/restart never regenerates an existing cell.
         BlockPos marker = origin.offset(0, -6, 0);
-        if (level.getBlockState(marker).is(Blocks.BEDROCK)) { FoxChallengeScenery.upgrade(level, origin); return; }
+        if (level.getBlockState(marker).is(Blocks.BEDROCK)) { FoxChallengeArenaDesign.upgrade(level, origin); return; }
         for (int x = -RADIUS; x <= RADIUS; x++) {
             for (int z = -RADIUS; z <= RADIUS; z++) {
-                place(level, origin.offset(x, 0, z), Blocks.BARRIER);
+                place(level, origin.offset(x, 0, z), Blocks.POLISHED_BLACKSTONE);
                 if (Math.abs(x) == RADIUS || Math.abs(z) == RADIUS) {
                     for (int y = 1; y <= 18; y++) place(level, origin.offset(x, y, z), Blocks.BARRIER);
                 }
                 place(level, origin.offset(x, 19, z), Blocks.BARRIER);
             }
         }
-        // Cold fragments below the transparent floor, not a second visible fighting floor.
-        for (int i = 0; i < 12; i++) {
-            double angle = Math.PI * 2 * i / 12;
-            int x = (int) Math.round(Math.cos(angle) * 31);
-            int z = (int) Math.round(Math.sin(angle) * 31);
-            BlockPos foot = origin.offset(x, -4 - i % 3, z);
-            for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++)
-                place(level, foot.offset(dx, 0, dz), Blocks.BASALT);
-            for (int y = 1; y <= 7 + i % 3; y++)
-                level.setBlock(foot.above(y), Blocks.WARPED_STEM.defaultBlockState()
-                        .setValue(RotatedPillarBlock.AXIS, Direction.Axis.Y), 2 | 16);
-            for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++)
-                if (Math.abs(dx) + Math.abs(dz) < 4)
-                    place(level, foot.offset(dx, 8 + i % 3, dz), Blocks.WARPED_WART_BLOCK);
-            place(level, foot.offset(1, 6, 0), Blocks.SHROOMLIGHT);
-        }
         place(level, returnLight(origin), Blocks.SOUL_LANTERN);
         // The sealed passage is behind the future Boss, beyond the enclosure.
         for (int x = -3; x <= 3; x++) for (int y = 0; y <= 7; y++)
             if (Math.abs(x) == 3 || y == 7) place(level, origin.offset(x, y, 29), Blocks.POLISHED_BLACKSTONE);
         for (int x = -2; x <= 2; x++) for (int y = 1; y <= 6; y++)
-            place(level, origin.offset(x, y, 29), Blocks.CYAN_STAINED_GLASS);
+            place(level, origin.offset(x, y, 29), Blocks.PURPLE_STAINED_GLASS);
         place(level, marker, Blocks.BEDROCK);
-        FoxChallengeScenery.upgrade(level, origin);
+        FoxChallengeArenaDesign.upgrade(level, origin);
     }
 
     public static void atmosphere(ServerLevel level, BlockPos origin) {

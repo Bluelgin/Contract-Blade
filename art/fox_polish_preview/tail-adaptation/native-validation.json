@@ -1,0 +1,20 @@
+{
+  "runtime": "TLM 1.5.3 geometry builder and strict Molang parser; no substitutions",
+  "in_game_visual_verification": false,
+  "models": [
+    {
+      "id": "contract_fox:fox_white",
+      "clips": 191,
+      "tracks": 2039,
+      "expressions": 1053,
+      "native_geometry_and_strict_parser_passed": true
+    },
+    {
+      "id": "contract_fox:fox_black",
+      "clips": 192,
+      "tracks": 2059,
+      "expressions": 1053,
+      "native_geometry_and_strict_parser_passed": true
+    }
+  ]
+}

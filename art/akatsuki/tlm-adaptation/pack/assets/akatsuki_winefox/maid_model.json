@@ -1,0 +1,29 @@
+{
+  "pack_name": "{maid_pack.akatsuki_winefox.name}",
+  "version": "1.2.3",
+  "author": [
+    "TartaricAcid / 酒石酸菌 (original Wine Fox Maid)",
+    "Blade Tetra contributors (Akatsuki adaptation)"
+  ],
+  "description": [
+    "{maid_pack.akatsuki_winefox.desc}"
+  ],
+  "date": "2026-08-01",
+  "icon": "akatsuki_winefox:textures/maid_icon.png",
+  "model_list": [
+    {
+      "model_id": "akatsuki_winefox:akatsuki",
+      "is_gecko": true,
+      "render_entity_scale": 0.65,
+      "description": [
+        "{model.akatsuki_winefox.akatsuki.desc}",
+        "{model.akatsuki_winefox.akatsuki.credit}"
+      ],
+      "animation": [
+        "akatsuki_winefox:animation/winefox.animation.json",
+        "akatsuki_winefox:animation/foxmaid.tac.animation.json",
+        "akatsuki_winefox:animation/akatsuki.adaptation.animation.json"
+      ]
+    }
+  ]
+}

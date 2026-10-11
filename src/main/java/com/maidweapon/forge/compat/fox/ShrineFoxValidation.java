@@ -135,17 +135,16 @@ public final class ShrineFoxValidation {
         level.setDayTime(6000);
         ShrineFoxStory.observe(owner);
         boolean hasBladeTetra = BladeTetraStoryCompat.isLoaded();
-        check(progress(owner).getBoolean("Greeting") && !progress(owner).getBoolean("Encounter")
+        check(!progress(owner).getBoolean("Greeting") && !progress(owner).getBoolean("Encounter")
                         && !progress(owner).getBoolean("DreamMemory") && progress(owner).getLong("FirstDay") == 0,
-                "without Akatsuki acquisition day only greets in both dependency combinations");
+                "acquisition does not start background dialogue in either dependency combination");
         var acquisition = progress(owner).copy();
         ShrineFoxStory.observe(owner);
         check(acquisition.equals(progress(owner)), "same-day ticks neither remind nor change acquisition date");
         level.setDayTime(24000);
         ShrineFoxStory.observe(owner);
-        check(progress(owner).getBoolean("Encounter") == hasBladeTetra
-                        && progress(owner).getBoolean("DreamMemory") == !hasBladeTetra,
-                "following day opens the correct installed-provider reminder");
+        check(!progress(owner).getBoolean("Encounter") && !progress(owner).getBoolean("DreamMemory"),
+                "following day never opens background dialogue");
         var afterClaim = blade.save(new CompoundTag());
         afterClaim.getCompound("tag").remove(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT);
         afterClaim.getCompound("tag").remove(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN);

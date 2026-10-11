@@ -34,11 +34,6 @@ public final class BlackFoxNativeCombo {
         long elapsed = (long) Api.call(Api.elapsed, state, boss);
         // Emulate consecutive attack inputs using the registered next-input gates, not our own B timeline.
         ResourceLocation next = (ResourceLocation) Api.call(Api.next, combo, boss);
-        if (!actor.combat().fight().phaseTwo() && stage.getPath().equals("combo_b3")
-                && next.getPath().equals("combo_b4")) {
-            stop(); change(ResourceLocation.parse("slashblade:none")); lastTick = now;
-            return;
-        }
         if (stage.getPath().matches("combo_b[1-6]") && !next.equals(stage) && next.getPath().matches("combo_b[2-7]")) {
             change(next); combo = Api.combo(stage);
         } else if (elapsed * 50 > (int) Api.call(Api.timeout, combo)) {
@@ -56,6 +51,11 @@ public final class BlackFoxNativeCombo {
         stageStartedAt = boss.level().getGameTime();
         Api.call(Api.update, SlashBladeCompat.resolveBladeState(boss.getMainHandItem()), boss, next);
         boss.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, boss.getMainHandItem().copy());
+        if (next.getPath().equals("combo_b7")) {
+            actor.markSlash(BlackFoxFight.Skill.RETURN_BLADE, actor.combat().fight().age());
+            BlackFoxEffects.heavyStrike(boss);
+            actor.combat().impact(5);
+        }
     }
     public boolean pursuing() { return stage != null && stage.getPath().matches("combo_b[1-7]"); }
     /** Presentation only. The registered native state remains the authority for attack timing. */
@@ -65,6 +65,12 @@ public final class BlackFoxNativeCombo {
     public boolean owns(Entity projectile) { return projectiles.contains(projectile); }
     public static long elapsed(LivingEntity entity) {
         return (long) Api.call(Api.elapsed, SlashBladeCompat.resolveBladeState(entity.getMainHandItem()), entity);
+    }
+    public static void update(LivingEntity entity, ResourceLocation stage) {
+        Api.call(Api.update, SlashBladeCompat.resolveBladeState(entity.getMainHandItem()), entity, stage);
+    }
+    public static void proxyTarget(LivingEntity entity, LivingEntity target) {
+        Api.call(Api.target, SlashBladeCompat.resolveBladeState(entity.getMainHandItem()), target == null ? -1 : target.getId());
     }
     public BlackFoxFight.Motion motion() {
         if (stage == null) return BlackFoxFight.Motion.GUARD;
@@ -76,7 +82,8 @@ public final class BlackFoxNativeCombo {
         };
     }
     public void capture(Entity entity) {
-        if (executing || actor.combat().fight().skill() == BlackFoxFight.Skill.RETURN_BLADE) {
+        if (executing || actor.combat().fight().nativeComboSkill()) {
+            com.maidweapon.forge.system.fox.challenge.BlackFoxAttackOrigin.stamp(entity, actor.combat().fight());
             try { entity.getClass().getMethod("setColor", int.class).invoke(entity,
                     BlackFoxSlashColors.blade(actor.combat().fight().phaseTwo())); }
             catch (ReflectiveOperationException error) { throw new IllegalStateException("Native B color", error); }
@@ -96,12 +103,18 @@ public final class BlackFoxNativeCombo {
     /** Null means vanilla/native selection; a Boss query has exactly one authorized candidate. */
     public static List<Entity> targets(Entity source, AABB nativeBounds, double meleeReach) {
         Entity shooter = source instanceof Projectile projectile ? projectile.getOwner() : source;
+        if (shooter instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity actor) {
+            if (actor.isRemoved()) return List.of();
+            return actor.level().getEntitiesOfClass(LivingEntity.class, nativeBounds,
+                    living -> actor.permits(living) && (meleeReach <= 0 || actor.distanceToSqr(living) <= meleeReach * meleeReach))
+                    .stream().map(living -> (Entity)living).toList();
+        }
         if (!(shooter instanceof BlackFoxCombatant boss)) return null;
         // Non-indirect native slashes query with the shooter, not the projectile itself.
         Entity active = BlackFoxAttackTrace.projectile();
         if (source == shooter && active instanceof Projectile projectile && projectile.getOwner() == shooter) source = active;
         var combo = boss.combat().nativeCombo();
-        if (!BlackFoxEncounters.registered(boss) || boss.combat().fight().skill() != BlackFoxFight.Skill.RETURN_BLADE
+        if (!BlackFoxEncounters.registered(boss) || !boss.combat().fight().nativeComboSkill()
                 || source.isRemoved() || source instanceof Projectile && !combo.projectiles.contains(source)) return List.of();
         ServerPlayer player = shooter.getServer().getPlayerList().getPlayer(boss.challenger());
         if (player == null || !player.isAlive() || player.isSpectator() || player.isCreative()
@@ -109,9 +122,9 @@ public final class BlackFoxNativeCombo {
                 || meleeReach > 0 && shooter.distanceToSqr(player) > meleeReach * meleeReach) return List.of();
         // Exclude before native knockback/stun callbacks; vanilla i-frames are reset by native forceHit.
         if (boss.combat().protects(player)) return List.of();
-        if (source.getPersistentData().getBoolean("MaidWeaponBlackFoxParried")) return List.of();
-        if (boss.combat().parryNative(player)) {
-            source.getPersistentData().putBoolean("MaidWeaponBlackFoxParried", true);
+        if (source != shooter && source.getPersistentData().getBoolean("MaidWeaponBlackFoxParried")) return List.of();
+        if (boss.combat().parryNative(player, source)) {
+            if (source != shooter) source.getPersistentData().putBoolean("MaidWeaponBlackFoxParried", true);
             return List.of();
         }
         return List.of(player);
@@ -120,7 +133,7 @@ public final class BlackFoxNativeCombo {
     /** Lazy linkage keeps SlashBlade completely optional; cache reflection outside the combat loop. */
     private static final class Api {
         static final net.minecraftforge.registries.IForgeRegistry<?> registry;
-        static final Method update, elapsed, tick, next, timeoutNext, timeout;
+        static final Method update, elapsed, tick, next, timeoutNext, timeout, target;
         static {
             try {
                 registry = (net.minecraftforge.registries.IForgeRegistry<?>) ((Supplier<?>) Class.forName(
@@ -128,6 +141,7 @@ public final class BlackFoxNativeCombo {
                 Class<?> state = Class.forName("mods.flammpfeil.slashblade.capability.slashblade.ISlashBladeState");
                 Class<?> combo = Class.forName("mods.flammpfeil.slashblade.registry.combo.ComboState");
                 update = state.getMethod("updateComboSeq", LivingEntity.class, ResourceLocation.class);
+                target = state.getMethod("setTargetEntityId", int.class);
                 elapsed = state.getMethod("getElapsedTime", LivingEntity.class);
                 tick = combo.getMethod("tickAction", LivingEntity.class);
                 next = combo.getMethod("getNext", LivingEntity.class);

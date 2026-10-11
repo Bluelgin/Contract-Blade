@@ -1,0 +1,514 @@
+{
+  "source": "YSM 2.6.5 builtin wine_fox/01_taisho_maid",
+  "metadata": {
+    "name": "Wine Fox（酒狐）",
+    "tips": "一只爱喝葡萄酒的狐娘。\nA fox girl who loves to drink wine.\n乱舞参考自 VRChat 的永雏塔菲动画。\n音乐为改编的 Zufolo Impazzito。",
+    "license": {
+      "type": "CC BY-NC-SA 4.0"
+    },
+    "authors": [
+      {
+        "name": "完美冻结",
+        "role": "模型原作",
+        "avatar": "avatar/wmdj.jpg",
+        "contact": {
+          "Afdian": "https://afdian.com/a/6TGESILA",
+          "Bilibili": "https://space.bilibili.com/17798027"
+        },
+        "comment": "OwO"
+      },
+      {
+        "name": "星屑海螺",
+        "role": "动画原作",
+        "avatar": "avatar/hl.png",
+        "contact": {
+          "Afdian": "https://afdian.com/a/lucia2048",
+          "Bilibili": "https://space.bilibili.com/14975572"
+        },
+        "comment": "漂泊于群星之中"
+      },
+      {
+        "name": "哥斯拉（映素团队）",
+        "role": "模型修改",
+        "avatar": "avatar/gsl.png",
+        "contact": {
+          "Afdian": "https://afdian.com/a/6TGESILA",
+          "Bilibili": "https://space.bilibili.com/17798027"
+        },
+        "comment": "一个MC模型/YSM作者，想法很多，时间很少"
+      },
+      {
+        "name": "白帆小喵",
+        "role": "新版材质",
+        "avatar": "avatar/bfxm.jpg",
+        "comment": "一只爱玩mc的小猫咪罢了qwq",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/492836494"
+        }
+      },
+      {
+        "name": "蓝玫瑰",
+        "role": "UI 材质/贴图",
+        "avatar": "avatar/lmg.png",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/11814817"
+        },
+        "comment": "8月24号，传奇永不落幕"
+      },
+      {
+        "name": "墨染逝羽",
+        "role": "面具模型",
+        "avatar": "avatar/mrsy.png",
+        "comment": "事到如今，先摸鱼吧",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/5718046"
+        }
+      },
+      {
+        "name": "Maks怜悯",
+        "role": "载具模型",
+        "avatar": "avatar/maks.jpg",
+        "comment": "ysm人偶制作中～",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/352177387"
+        }
+      },
+      {
+        "name": "浅陌菌",
+        "role": "模型修改",
+        "avatar": "avatar/nico.png",
+        "comment": "最美好的前途，可不要对我冷酷",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/14975572"
+        }
+      },
+      {
+        "name": "祸御神",
+        "role": "动画修改",
+        "avatar": "avatar/hys.png",
+        "comment": "五十代精神病人",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/164557734"
+        }
+      },
+      {
+        "name": "羊毛",
+        "role": "音效/动画修改",
+        "avatar": "avatar/wool.png",
+        "comment": "喵喵喵喵",
+        "contact": {
+          "Bilibili": "https://space.bilibili.com/85335217"
+        }
+      }
+    ],
+    "link": {
+      "home": "https://modrinth.com/mod/yes-steve-model",
+      "donate": "https://afdian.com/a/ysmmod"
+    }
+  },
+  "fly": {
+    "loop": true,
+    "animation_length": 0.7556,
+    "bones": {
+      "LeftArm": {
+        "rotation": {
+          "0.0": [
+            -0.24213,
+            1.36875,
+            15.93701
+          ],
+          "0.2889": [
+            -1.23882,
+            2.64919,
+            7.94967
+          ],
+          "0.7556": [
+            -0.24448,
+            1.42103,
+            14.93832
+          ]
+        }
+      },
+      "RightArm": {
+        "rotation": {
+          "0.0": [
+            -0.24213,
+            -1.36875,
+            -15.93701
+          ],
+          "0.2889": [
+            -1.23882,
+            -2.64919,
+            -7.94967
+          ],
+          "0.7556": [
+            -0.24448,
+            -1.42103,
+            -14.93832
+          ]
+        }
+      },
+      "LeftLeg": {
+        "rotation": [
+          -14,
+          0,
+          0
+        ]
+      },
+      "LeftLowerLeg": {
+        "rotation": {
+          "0.0": [
+            25,
+            0,
+            0
+          ],
+          "0.2444": [
+            21,
+            0,
+            0
+          ],
+          "0.7556": [
+            25,
+            0,
+            0
+          ]
+        }
+      },
+      "RightLeg": {
+        "rotation": {
+          "0.0": [
+            -5.63,
+            0,
+            0
+          ],
+          "0.3333": [
+            -7.63,
+            0,
+            0
+          ],
+          "0.7556": [
+            -5.63,
+            0,
+            0
+          ]
+        }
+      },
+      "RightLowerLeg": {
+        "rotation": [
+          18.59,
+          0,
+          0
+        ]
+      },
+      "AllBody": {
+        "rotation": [
+          "math.clamp(query.ground_speed*1.5,0,30)",
+          0,
+          0
+        ]
+      },
+      "Root": {
+        "position": [
+          0,
+          -0.1,
+          0
+        ]
+      },
+      "LongHair": {
+        "rotation": [
+          "(ysm.head_pitch > 0) ? -0.2*ysm.head_pitch : 0.8*ysm.head_pitch-5",
+          0,
+          0
+        ],
+        "position": [
+          0,
+          0.22,
+          0.61
+        ]
+      },
+      "clothe": {
+        "rotation": {
+          "0.0": [
+            -38.85,
+            0,
+            0
+          ],
+          "0.3556": [
+            -44.85,
+            0,
+            0
+          ],
+          "0.7556": [
+            -38.85,
+            0,
+            0
+          ]
+        },
+        "position": [
+          -0.1,
+          -1.1376,
+          0.28619
+        ]
+      },
+      "wb": {
+        "rotation": {
+          "0.0": [
+            90,
+            0,
+            0
+          ],
+          "0.7556": [
+            90,
+            0,
+            -1440
+          ]
+        }
+      },
+      "weixiao": {
+        "position": [
+          0,
+          0,
+          -1
+        ]
+      },
+      "MRoot": {
+        "rotation": {
+          "0.0": [
+            40,
+            0,
+            0
+          ],
+          "0.3778": [
+            42.9,
+            0,
+            0
+          ],
+          "0.7556": [
+            39.8,
+            0,
+            0
+          ]
+        },
+        "position": {
+          "0.0": [
+            0,
+            -2.9,
+            5.5
+          ],
+          "0.3778": [
+            0,
+            -2.4,
+            5.5
+          ],
+          "0.6889": [
+            0,
+            -2.9,
+            5.5
+          ]
+        }
+      },
+      "MAllbody": {
+        "rotation": [
+          26,
+          0,
+          0
+        ]
+      },
+      "Tail": {
+        "rotation": {
+          "0.0": [
+            -9.48358,
+            34.32914,
+            -23.76488
+          ],
+          "0.7556": [
+            -9.48358,
+            34.32914,
+            1056.23512
+          ]
+        },
+        "position": [
+          0,
+          -1,
+          0
+        ]
+      },
+      "Tail2": {
+        "rotation": [
+          -37.84568,
+          12.09375,
+          21.94366
+        ]
+      },
+      "Tail3": {
+        "rotation": [
+          -6.77871,
+          0.66607,
+          -5.23718
+        ]
+      },
+      "Tail4": {
+        "rotation": [
+          19.96029,
+          8.55176,
+          10.08373
+        ]
+      },
+      "Tail5": {
+        "rotation": [
+          -7.25153,
+          8.98905,
+          4.56497
+        ]
+      },
+      "Head": {
+        "rotation": [
+          "-48+0.4*ysm.head_pitch",
+          0,
+          0
+        ],
+        "position": [
+          0,
+          -0.86198,
+          0.89618
+        ]
+      },
+      "FLongHair": {
+        "rotation": [
+          "(ysm.head_pitch>0)?1.5*ysm.head_pitch:10",
+          0,
+          0
+        ],
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      "MLongHair": {
+        "rotation": [
+          25,
+          0,
+          0
+        ]
+      },
+      "FLongRightHair": {
+        "rotation": [
+          16.93902,
+          1.46016,
+          12.21744
+        ]
+      },
+      "LongRightHair": {
+        "rotation": [
+          -14.39256,
+          -6.81352,
+          -4.29249
+        ],
+        "position": [
+          -0.38406,
+          1.2049,
+          0.35552
+        ]
+      },
+      "FLongLeftHair": {
+        "rotation": [
+          8.93902,
+          -1.46016,
+          -12.21744
+        ],
+        "position": [
+          0.04274,
+          -0.1398,
+          -0.47815
+        ]
+      },
+      "LongLeftHair": {
+        "rotation": [
+          -14.39256,
+          6.81352,
+          4.29249
+        ],
+        "position": [
+          0.27408,
+          1.41776,
+          0.01996
+        ]
+      },
+      "Arm": {
+        "rotation": [
+          -69,
+          0,
+          0
+        ]
+      },
+      "DownBody": {
+        "rotation": {
+          "0.0": [
+            -49,
+            0,
+            0
+          ],
+          "0.3778": [
+            -50,
+            0,
+            0
+          ],
+          "0.7556": [
+            -49,
+            0,
+            0
+          ]
+        },
+        "position": [
+          0,
+          0.05725,
+          0.02164
+        ]
+      },
+      "MTail": {
+        "rotation": [
+          -10,
+          0,
+          0
+        ],
+        "position": [
+          0,
+          0,
+          1.7
+        ]
+      },
+      "FOX": {
+        "rotation": [
+          -38,
+          0,
+          0
+        ],
+        "position": [
+          0,
+          -4.36489,
+          -10.71937
+        ]
+      },
+      "MLongRightHair": {
+        "rotation": [
+          -6,
+          0,
+          0
+        ],
+        "position": [
+          -0.06366,
+          0.45444,
+          -0.77423
+        ]
+      },
+      "MLongLeftHair": {
+        "rotation": [
+          -6,
+          0,
+          0
+        ]
+      }
+    }
+  }
+}

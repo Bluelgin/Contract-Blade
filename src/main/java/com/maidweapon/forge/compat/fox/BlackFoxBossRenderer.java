@@ -60,7 +60,8 @@ public class BlackFoxBossRenderer extends GeoReplacedEntityRenderer<BlackFoxBoss
         boolean dimension = entity != null && entity.skill() == com.maidweapon.forge.system.fox.challenge.BlackFoxFight.Skill.DIMENSION_STRIKE;
         float bodyAlpha = dimension ? com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.bodyAlpha(entity.skillAge(partialTick)) : 1;
         stack.pushPose();
-        if (dimension && entity.skillAge(partialTick) < com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.DIVE_END)
+        if (dimension && com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.localAge(entity.skillAge(partialTick))
+                < com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.DIVE_END)
             stack.translate(0, -1.5 * (1-bodyAlpha), 0);
         super.render(model, entity, partialTick, spirit, stack, buffers, buffers.getBuffer(spirit), light, overlay,
                 red * tint[0], green * tint[1], blue * tint[2], alpha * tint[3] * bodyAlpha);
@@ -88,6 +89,7 @@ public class BlackFoxBossRenderer extends GeoReplacedEntityRenderer<BlackFoxBoss
             float age=entity.skillAge(partial);
             if(entity.skill()==com.maidweapon.forge.system.fox.challenge.BlackFoxFight.Skill.STANDING_IAIDO)
                 age=com.maidweapon.forge.system.fox.challenge.BlackFoxStandingIaidoTimeline.poseAge(age);
+            else age=com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.poseAge(age);
             boolean drawn = com.maidweapon.forge.system.fox.challenge.BlackFoxIaidoTimeline.drawn(age);
             var mouth = hierarchy(model.bones(), "LeftHandLocator");
             renderPart(entity.getMainHandItem(), stack, buffers, light, mouth, true, false);

@@ -23,10 +23,14 @@ public final class BlackFoxController {
     private final BlackFoxDimensionStrike dimensionStrike;
     private final BlackFoxCorruption corruption;
     private final BlackFoxBalance balance=new BlackFoxBalance();
+    private final BlackFoxParryCredit parryCredit = new BlackFoxParryCredit();
+    private final BlackFoxSealArray seals;
+    public BlackFoxSealArray seals() { return seals; }
     private long blockedFeedback = -100;
     private boolean engaged;
     private int displayedMarks = -1, displayedStyle = -1;
-    public static final int PARRY_PROTECTION_TICKS = 24;
+    private int displayedSeals = -1;
+    public static final int PARRY_PROTECTION_TICKS = 8;
     private long parryProtectedUntil = Long.MIN_VALUE;
     public BlackFoxController(BlackFoxCombatant actor) {
         this.actor = actor;
@@ -37,17 +41,23 @@ public final class BlackFoxController {
         phaseOne = new BlackFoxPhaseOne(actions, actor, dimensionStrike);
         defense = new BlackFoxDefense(actions, phaseOne);
         corruption = new BlackFoxCorruption(actor, fight, actions, ranged);
+        seals = new BlackFoxSealArray(actor);
     }
     public BlackFoxNativeCombo nativeCombo() { return nativeCombo; }
     public void damageAccepted() {
         defense.accepted(); fight.wakeFaster();
-        if(boss().getHealth()<=boss().getMaxHealth()*.10f) lastStand();
     }
     public BlackFoxDomainAttacks ranged() { return ranged; }
     public BlackFoxDimensionStrike dimensionStrike() { return dimensionStrike; }
     public BlackFoxRiftCross riftCross() { return phaseOne.riftCross(); }
     void feedbackParry(ServerPlayer player, boolean comboClash) {
-        if(!corruption.finalStand() && !fight.offBalance()) balance.parried(boss().level().getGameTime());
+        feedbackParry(player, comboClash, null);
+    }
+    void feedbackParry(ServerPlayer player, boolean comboClash, net.minecraft.world.entity.Entity incoming) {
+        boolean credit = !corruption.finalStand() && !fight.offBalance()
+                && (incoming == null || incoming == boss() ? parryCredit.accept(fight.skill(), fight.sequence(), fight.parryRound())
+                : BlackFoxAttackOrigin.credit(incoming, parryCredit));
+        if (credit) balance.parried(boss().level().getGameTime());
         com.maidweapon.forge.compat.BlackFoxRankCompat.reward(player, comboClash);
         com.maidweapon.forge.network.BlackFoxFeedbackNetwork.contact(actor, player, comboClash ? 2 : 1);
         if (!fight.phaseTwo()) phaseOne.parried(boss().level().getGameTime(), comboClash);
@@ -55,18 +65,26 @@ public final class BlackFoxController {
         updateBar(player, false);
     }
     public BlackFoxFight fight() { return fight; }
+    /** Presentation only, restricted to the nearby challenger. */
+    public void impact(int strength) {
+        var target = player();
+        if (target != null && target.level() == boss().level() && target.distanceToSqr(boss()) <= 14 * 14)
+            com.maidweapon.forge.network.BlackFoxFeedbackNetwork.contact(actor, target, strength);
+    }
     public void showBar(ServerPlayer player) { bar.addPlayer(player); updateBar(player, true); }
     private void updateBar(ServerPlayer player, boolean force) {
         int style = fight.offBalance() ? 2 : fight.phaseTwo() ? 1 : 0;
         int marks = fight.offBalance() ? BlackFoxBalance.REQUIRED : balance.progress();
-        if (!force && marks == displayedMarks && style == displayedStyle) return;
+        int remaining = seals.remaining();
+        if (!force && marks == displayedMarks && style == displayedStyle && remaining == displayedSeals) return;
+        displayedSeals = remaining;
         displayedMarks = marks; displayedStyle = style;
-        com.maidweapon.forge.network.BlackFoxFeedbackNetwork.bar(actor, player, bar.getId(), marks, style, true);
+        com.maidweapon.forge.network.BlackFoxFeedbackNetwork.bar(actor, player, bar.getId(), marks, style, true, remaining);
     }
     public void close() {
         com.maidweapon.forge.network.BlackFoxFeedbackNetwork.bar(actor, player(), bar.getId(), 0, 0, false);
         com.maidweapon.forge.network.BlackFoxFeedbackNetwork.music(actor, player(), false);
-        phaseOne.close(); corruption.close(); nativeCombo.stop(); parryProtectedUntil = Long.MIN_VALUE; bar.removeAllPlayers();
+        seals.close(); phaseOne.close(); corruption.close(); nativeCombo.stop(); parryProtectedUntil = Long.MIN_VALUE; bar.removeAllPlayers();
     }
     public BlackFoxCorruption corruption() { return corruption; }
     public float damageTaken(float amount) {
@@ -101,21 +119,21 @@ public final class BlackFoxController {
             player.sendSystemMessage(Component.translatable("maid_weapon.fox.boss.warning"));
             BlackFoxEffects.tell(boss(), false);
         }
-        if (fight.updatePhase(boss().getHealth(), boss().getMaxHealth())) {
-            phaseOne.close();
-            nativeCombo.stop(); corruption.begin();
-            BlackFoxEffects.tell(boss(), false);
-        }
-        bar.setProgress(Math.max(0, boss().getHealth() / boss().getMaxHealth()));
+        fight.updatePhase(boss().getHealth(), boss().getMaxHealth());
+        bar.setProgress(corruption.finalStand() ? 0 : Math.max(0, boss().getHealth() / boss().getMaxHealth()));
         updateBar(player, false);
         fight.advance();
-        if (fight.skill() != BlackFoxFight.Skill.RETURN_BLADE) nativeCombo.stop();
+        if (!corruption.finalStand() && seals.begin(player)) { phaseOne.close(); ranged.clear(); nativeCombo.stop(); }
+        seals.tick(player);
+        if (!fight.nativeComboSkill()) nativeCombo.stop();
         if (tryClash(player)) { actions.clamp(); return; }
-        if (fight.phaseTwo()) corruption.tick(player);
+        if (corruption.finalStand()) corruption.tick(player);
         else phaseOne.tick(player);
-        if(balance.take() && !corruption.finalStand()) {
+        if(fight.skill() != BlackFoxFight.Skill.SEAL_ARRAY && balance.take() && !corruption.finalStand()) {
             phaseOne.close(); ranged.clear(); nativeCombo.stop(); fight.loseBalance();
             boss().setDeltaMovement(Vec3.ZERO); BlackFoxEffects.breakMomentum(boss());
+            com.maidweapon.forge.network.BlackFoxFeedbackNetwork.contact(actor, player, 3); updateBar(player, true);
+            player.displayClientMessage(Component.translatable("maid_weapon.fox.boss.balance_break"), true);
         }
         if (!fight.phaseTwo() && fight.finished() && fight.skill() != BlackFoxFight.Skill.APPROACH
                 && fight.skill() != BlackFoxFight.Skill.DEFEATED) {
@@ -137,7 +155,6 @@ public final class BlackFoxController {
         protectParry();
         feedbackParry(attacker, true);
         fight.counter();
-        nativeCombo.stop();
         boss().setDeltaMovement(Vec3.ZERO);
         BlackFoxEffects.contact(boss(), attacker, true);
         attacker.displayClientMessage(Component.translatable("maid_weapon.fox.boss.clash"), true);
@@ -147,13 +164,20 @@ public final class BlackFoxController {
         return actions.parry(player);
     }
     public boolean parryNative(ServerPlayer player, net.minecraft.world.entity.Entity incoming) {
-        if (fight.skill() != BlackFoxFight.Skill.DOMAIN_CROSS) return parryNative(player);
+        if (!BlackFoxAttackOrigin.domainCross(incoming) && !BlackFoxAttackOrigin.sealPulse(incoming))
+            return actions.parryProjectile(player, incoming, false);
         Vec3 direction = BlackFoxActions.horizontal(incoming.position().subtract(player.position())).normalize();
         if (direction.lengthSqr() < .01) direction = BlackFoxActions.horizontal(incoming.getDeltaMovement().scale(-1)).normalize();
-        return BlackFoxActions.horizontal(player.getLookAngle()).normalize().dot(direction) >= .15 && actions.parryArena(player);
+        return BlackFoxActions.horizontal(player.getLookAngle()).normalize().dot(direction) >= .15 && actions.parryProjectile(player, incoming, true);
     }
     public boolean intercept(DamageSource source) {
         if(corruption.finalStand()) return true;
+        if (seals.active()) {
+            if (boss().level().getGameTime() - blockedFeedback >= 8 && source.getEntity() instanceof net.minecraft.world.entity.LivingEntity attacker) {
+                blockedFeedback = boss().level().getGameTime(); BlackFoxEffects.contact(boss(), attacker, true);
+            }
+            return true;
+        }
         if (fight.skill() == BlackFoxFight.Skill.DIMENSION_STRIKE && BlackFoxDimensionTimeline.submerged(fight.age())) return true;
         if (fight.phaseTwo() && !BlackFoxDamagePolicy.bladeMelee(source, boss())) return true;
         if (source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
@@ -161,10 +185,6 @@ public final class BlackFoxController {
         // Both sides are protected during the clash itself, including already-emitted player slashes.
         if (parryGuarded() && !fight.offBalance()) return true;
         if (fight.skill() == BlackFoxFight.Skill.TRANSITION) return true;
-        if (fight.skill() == BlackFoxFight.Skill.RETURN_BLADE && fight.age() < fight.rushTimeout()
-                && source.getEntity() instanceof ServerPlayer attacker
-                && source.getDirectEntity() == attacker && boss().distanceToSqr(attacker) <= 4.8 * 4.8
-                && actions.parry(attacker)) return true;
         if (defense.protectedNow()) return true;
         if (corruption.retaliate(source)) return true;
         if (defense.counter(source)) return true;
@@ -177,26 +197,28 @@ public final class BlackFoxController {
         return true;
     }
     public void landedHit(float damage) {
-        if (!fight.phaseTwo() && phaseOne.opportunisticHit()) return;
         if (!fight.phaseTwo()) phaseOne.pressured(boss().level().getGameTime());
         var before = fight.skill(); fight.hit(damage);
         if (before != fight.skill()) { BlackFoxEffects.tell(boss(), true); synchronize(); }
     }
     public void defeat() {
         if(fight.skill()==BlackFoxFight.Skill.DEFEATED) return;
+        // The entity redirects lethal death here; low health alone never starts the final core.
         lastStand();
     }
     private void lastStand() {
         if(corruption.finalStand() || fight.skill()==BlackFoxFight.Skill.DEFEATED) return;
-        balance.clear(); phaseOne.close(); nativeCombo.stop();
-        if(!fight.phaseTwo()) { fight.updatePhase(0,boss().getMaxHealth()); corruption.begin(); }
-        boss().setHealth(Math.max(1,boss().getHealth()));
+        seals.close(); balance.clear(); phaseOne.close(); nativeCombo.stop();
+        if(!fight.phaseTwo()) { fight.beginFinalStand(); corruption.begin(); }
+        // Keep the body alive internally while presenting its combat health as exhausted.
+        boss().setHealth(1); bar.setProgress(0);
         var target=player();
         if(target!=null) corruption.startUltimate(target);
     }
     void finishDefeat() {
         if (fight.skill() == BlackFoxFight.Skill.DEFEATED) return;
         fight.start(BlackFoxFight.Skill.DEFEATED);
+        seals.close();
         phaseOne.close();
         corruption.close();
         nativeCombo.stop();
@@ -208,11 +230,12 @@ public final class BlackFoxController {
             boolean rescued = BlackFoxShrineReturn.get(player.getServer()).rescue(player);
             player.sendSystemMessage(Component.translatable(rescued ? "maid_weapon.fox.black.returning"
                     : "maid_weapon.fox.boss.defeated"));
+            FoxChallengeCollapse.begin(player);
         }
         BlackFoxEffects.tell(boss(), true); synchronize();
     }
     private void synchronize() {
-        var motion = fight.skill() == BlackFoxFight.Skill.RETURN_BLADE ? nativeCombo.motion()
+        var motion = fight.nativeComboSkill() ? nativeCombo.motion()
                 : fight.skill() == BlackFoxFight.Skill.APPROACH && engaged
                 && boss().getDeltaMovement().horizontalDistance() > .05 ? BlackFoxFight.Motion.WALK : fight.motion();
         actor.sync(motion, fight.phaseTwo());

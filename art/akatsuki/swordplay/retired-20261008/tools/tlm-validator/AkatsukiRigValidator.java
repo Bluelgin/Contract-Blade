@@ -72,8 +72,11 @@ public class AkatsukiRigValidator {
         Map<String,Matrix4f> original=new HashMap<>();
         for(String name:model.bones().keySet())original.put(name,bone(model,name));
         var rows=new JsonArray();float maxGap=0;
+        int subdivisions=args.length>1?Integer.parseInt(args[1]):5;
+        if(subdivisions<1||subdivisions>120)throw new IllegalArgumentException("Preview sample count out of range");
         for(String motion:List.of("idle","draw","ready","cut_1","cut_2","cut_3","sheathe")){
-            for(float fraction:new float[]{0,.2f,.4f,.6f,.8f,1}) {
+            for(int frame=0;frame<=subdivisions;frame++) {
+                float fraction=(float)frame/subdivisions;
                 for(var b:model.bones().values()){var s=b.getInitialSnapshot();b.setRotation(s.rotationValueX,s.rotationValueY,s.rotationValueZ);}
                 var pose=new AkatsukiSwordplay.Pose();pose.model=model;
                 if(motion.equals("draw")){pose.timeline.update(0,true,true,false,0);}
@@ -111,7 +114,7 @@ public class AkatsukiRigValidator {
                 row.add("bladeMatrix",new Gson().toJsonTree(blade.get(new float[16])));row.add("sheathMatrix",new Gson().toJsonTree(sheath.get(new float[16])));rows.add(row);
             }
         }
-        Files.writeString(art.resolve("native-poses.json"),new Gson().toJson(rows));
+        Files.writeString(art.resolve(subdivisions==5?"native-poses.json":"native-preview-poses.json"),new Gson().toJson(rows));
         System.out.println("AKATSUKI_NATIVE_RIG_PASS: "+rows.size()+" poses, maximum extraction wrist gap="+maxGap+" model pixels; tail/leg geometry unmodified");
     }
 }

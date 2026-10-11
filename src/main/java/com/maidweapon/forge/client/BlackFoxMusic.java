@@ -35,7 +35,7 @@ public final class BlackFoxMusic {
         envelope = new BlackFoxMusicEnvelope(); waiting = 40;
     }
     public static void contact(int id, int strength) {
-        if (!ending && source == Minecraft.getInstance().level && id == bossId && strength >= 1 && strength <= 2 && envelope != null)
+        if (!ending && source == Minecraft.getInstance().level && id == bossId && strength >= 1 && strength <= 3 && envelope != null)
             envelope.parry();
     }
     private static void end() { ending = true; if (envelope != null) envelope.end(); }

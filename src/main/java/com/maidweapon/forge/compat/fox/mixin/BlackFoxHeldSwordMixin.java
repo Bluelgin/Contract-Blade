@@ -13,6 +13,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Pseudo
 @Mixin(targets = "mods.flammpfeil.slashblade.entity.EntityAbstractSummonedSword", remap = false)
 public abstract class BlackFoxHeldSwordMixin {
+    @Inject(method = "doForceHitEntity", at = @At("HEAD"), cancellable = true)
+    private void contractblade$coreSafeHit(net.minecraft.world.entity.Entity target, CallbackInfo callback) {
+        Projectile sword = (Projectile)(Object)this;
+        if (sword.getOwner() instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity actor && !actor.permits(target)) callback.cancel();
+    }
+    @Inject(method = {"onHitEntity", "m_5790_"}, at = @At("HEAD"), cancellable = true, require = 1)
+    private void contractblade$coreSafeCollision(net.minecraft.world.phys.EntityHitResult hit, CallbackInfo callback) {
+        Projectile sword = (Projectile)(Object)this;
+        if (sword.getOwner() instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity actor && !actor.permits(hit.getEntity())) callback.cancel();
+    }
     @Shadow public abstract boolean isNoClip();
     @Inject(method = {"tick", "m_8119_"}, at = @At("HEAD"), cancellable = true, require = 1)
     private void contractblade$hold(CallbackInfo callback) {

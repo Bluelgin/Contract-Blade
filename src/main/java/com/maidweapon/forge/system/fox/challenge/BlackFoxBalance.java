@@ -1,13 +1,13 @@
 package com.maidweapon.forge.system.fox.challenge;
 
-/** Five confirmed parries, not projectile contacts. Independent of ordinary short staggers. */
+/** The only normal-combat stagger gate: five confirmed defensive inputs, not projectile contacts. */
 public final class BlackFoxBalance {
-    public static final int REQUIRED = 5, RECOVERY_TICKS = 100, HIT_RECOVERY = 10;
+    public static final int REQUIRED = 5, RECOVERY_TICKS = 30, HIT_RECOVERY = 0;
     private int count;
     private long last = Long.MIN_VALUE;
     private boolean pending;
     public void parried(long now) {
-        if(pending || last!=Long.MIN_VALUE && now-last<4) return;
+        if(pending || last!=Long.MIN_VALUE && now-last<8) return;
         last=now;
         if(++count>=REQUIRED) { count=0; pending=true; }
     }

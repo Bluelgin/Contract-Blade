@@ -7,7 +7,8 @@ public final class BlackFoxSkillPool {
     private static final BlackFoxFight.Skill[] BAG = {
         PROBE_CUT, CROSS_CUT, RETURN_BLADE, DIMENSION_STRIKE, ARC_BARRAGE,
         RIFT_CROSS, DIMENSION_STRIKE, ARC_BARRAGE, RIFT_CROSS, ARC_BARRAGE,
-        STANDING_IAIDO, PHANTOM_FEINT, SEAL, SKY, SIDESTEP_CUT
+        STANDING_IAIDO, PHANTOM_FEINT, SEAL, SKY, SIDESTEP_CUT, TRIPLE_COMBO, TRIPLE_COMBO,
+        SWORD_WHEEL, DOMAIN_CROSS, DOMAIN_RAIN, DOMAIN_SEAL
     };
     private final long[] readyAt = new long[BlackFoxFight.Skill.values().length];
     private long used;
@@ -18,6 +19,11 @@ public final class BlackFoxSkillPool {
             case DIMENSION_STRIKE -> BlackFoxDimensionTimeline.COOLDOWN;
             case STANDING_IAIDO -> BlackFoxStandingIaidoTimeline.COOLDOWN;
             case ARC_BARRAGE -> 180;
+            case TRIPLE_COMBO -> 320;
+            case SWORD_WHEEL -> 180;
+            case DOMAIN_CROSS -> 200;
+            case DOMAIN_RAIN -> 240;
+            case DOMAIN_SEAL -> 220;
             case RIFT_CROSS -> 130;
             case RETURN_BLADE, PHANTOM_FEINT, SKY, SIDESTEP_CUT -> 100;
             case SEAL -> 140;
@@ -28,8 +34,11 @@ public final class BlackFoxSkillPool {
     }
     public boolean ready(BlackFoxFight.Skill skill, long now) { return now >= readyAt[skill.ordinal()]; }
     public void started(BlackFoxFight.Skill skill, long now) {
+        started(skill, now, 1f);
+    }
+    public void started(BlackFoxFight.Skill skill, long now, float tempoScale) {
         if (cooldown(skill) == 0) return; // Idle, stagger, counters and phase choreography aren't bag entries.
-        readyAt[skill.ordinal()] = now + cooldown(skill);
+        readyAt[skill.ordinal()] = now + Math.max(1, Math.round(cooldown(skill) * tempoScale));
         last = skill;
         // Consume one weighted seat even for a reactive link, so it doesn't immediately repeat in the bag.
         for (int i=0;i<BAG.length;i++) if (BAG[i]==skill && (used & (1L<<i))==0) {
@@ -37,11 +46,14 @@ public final class BlackFoxSkillPool {
         }
     }
     public BlackFoxFight.Skill select(long now, double distance, double height, int random) {
+        return select(now, distance, height, random, false);
+    }
+    public BlackFoxFight.Skill select(long now, double distance, double height, int random, boolean intensified) {
         if (height > 2.4 && distance < 14 && last != SKY && ready(SKY,now)) return SKY;
         if (distance < BlackFoxSpacing.CLOSE && last != SIDESTEP_CUT && ready(SIDESTEP_CUT,now)) return SIDESTEP_CUT;
-        long candidates = candidates(now,distance,height,false);
+        long candidates = candidates(now,distance,height,false,intensified);
         if (candidates==0) {
-            candidates = candidates(now,distance,height,true);
+            candidates = candidates(now,distance,height,true,intensified);
             if (candidates==0) return APPROACH; // Respect all cooldowns; never force an unavailable attack.
             used = 0; // Remaining seats are unavailable in this context; begin a fresh eligible round.
         }
@@ -49,16 +61,19 @@ public final class BlackFoxSkillPool {
         for (int i=0;i<BAG.length;i++) if ((candidates & (1L<<i))!=0 && seat--==0) return BAG[i];
         return APPROACH;
     }
-    private long candidates(long now, double distance, double height, boolean fresh) {
+    private long candidates(long now, double distance, double height, boolean fresh, boolean intensified) {
         long result = 0;
         for (int i=0;i<BAG.length;i++) {
             var skill = BAG[i];
             if ((!fresh && (used & (1L<<i))!=0) || skill==last || !ready(skill,now)) continue;
+            if (skill==TRIPLE_COMBO && (!intensified || last==RETURN_BLADE)
+                    || skill==RETURN_BLADE && last==TRIPLE_COMBO) continue;
             if((skill==STANDING_IAIDO && last==DIMENSION_STRIKE) || (skill==DIMENSION_STRIKE && last==STANDING_IAIDO)) continue;
             boolean suitable = switch (skill) {
                 case DIMENSION_STRIKE -> distance<=14 && height<=2.4;
                 case STANDING_IAIDO -> distance<=10 && height<=2.4;
                 case PROBE_CUT, CROSS_CUT, RETURN_BLADE -> distance<=8 && height<=2.4;
+                case TRIPLE_COMBO -> distance<=12 && Math.abs(height)<=2.4;
                 case PHANTOM_FEINT, SEAL -> distance>8;
                 case SKY -> height>2.4 && distance<14;
                 case SIDESTEP_CUT -> distance<BlackFoxSpacing.CLOSE;

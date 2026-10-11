@@ -138,9 +138,9 @@ public final class FoxChallengeValidation {
         check(!FoxChallengeEntry.whiteFox(player).isEmpty(), "original shrine White Fox is the guide");
         level.setDayTime(6000);
         ShrineFoxStory.observe(player);
-        check(story(player).getBoolean("Greeting") && story(player).getLong("FirstDay") == 0
+        check(!story(player).getBoolean("Greeting") && story(player).getLong("FirstDay") == 0
                         && !story(player).getBoolean("Encounter") && !story(player).getBoolean("DreamMemory"),
-                "acquisition day records date and greets without request");
+                "acquisition records date without automatic background dialogue");
         check(!story(player).getBoolean("DreamHint"), "taking White Fox away from secondary shrine gives no dream directions");
         if (BladeTetraStoryCompat.isLoaded()) {
             check(!BladeTetraStoryCompat.hasVisitedDivineDomain(player), "provider installation alone does not imply knowledge of Divine Domain");
@@ -151,8 +151,8 @@ public final class FoxChallengeValidation {
                     "blade_tetra:akatsuki", "Akatsuki"), "real intrinsic Akatsuki channel created for late reunion");
             player.getInventory().setItem(1, akatsuki);
             ShrineFoxStory.observe(player);
-            check(story(player).getBoolean("Reunion") && story(player).getBoolean("Encounter"),
-                    "bringing Akatsuki later on acquisition day immediately opens reunion");
+            check(!story(player).getBoolean("Reunion") && !story(player).getBoolean("Encounter"),
+                    "carrying Akatsuki does not open the paused Divine storyline");
             var receipt = story(player).copy();
             ShrineFoxStory.observe(player);
             check(receipt.equals(story(player)), "late reunion never repeats");
@@ -202,24 +202,41 @@ public final class FoxChallengeValidation {
         check(FoxChallengeEntry.whiteFox(player).isEmpty(), "missing original White Fox cannot guide");
         player.getInventory().setItem(0, white);
         var whiteBefore = white.save(new CompoundTag()).copy();
-        if (!BladeTetraStoryCompat.isLoaded()) {
+        {
             player.teleportTo(level, bed.getX() + 0.5, bed.getY(), bed.getZ() - 0.5, 0, 0);
             ShrineFoxStory.observe(player);
-            check(!story(player).getBoolean("DreamHint") && !story(player).getBoolean("DreamMemory"),
-                    "secondary shrine proximity does not bypass acquisition-day delay");
+            check(story(player).getBoolean("EntryHint") && !story(player).getBoolean("DreamMemory")
+                            && !story(player).getBoolean("DreamHint"),
+                    "secondary shrine gives immediate tutorial without activating old story flags");
             player.getInventory().setItem(0, ItemStack.EMPTY);
             level.setDayTime(24000);
             ShrineFoxStory.observe(player);
             check(!story(player).getBoolean("DreamMemory"), "next-day reminder pauses while original blade is absent");
             player.getInventory().setItem(0, white);
             ShrineFoxStory.observe(player);
-            check(story(player).getBoolean("DreamHint") && !story(player).getBoolean("Encounter"),
-                    "bringing blade back next day at secondary shrine gives dream directions, not Divine plot");
+            check(story(player).getBoolean("EntryHint") && !story(player).getBoolean("Encounter")
+                            && !story(player).getBoolean("DreamMemory"),
+                    "following day retains tutorial without replaying background dialogue");
             var receipt = story(player).copy();
             ShrineFoxStory.observe(player);
             check(receipt.equals(story(player)), "secondary shrine dream directions never repeat");
             ShrineFoxStory.copyProgress(player, clone);
             check(receipt.equals(story(clone)), "death clone keeps reminder date and standalone receipt");
+            var legacyProgress = player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG);
+            var legacyStory = story(player).copy();
+            legacyStory.remove("EntryHint");
+            legacyStory.putBoolean("Greeting", true);
+            legacyStory.putBoolean("DreamMemory", true);
+            legacyStory.putBoolean("DreamHint", true);
+            legacyStory.putBoolean("Reunion", true);
+            legacyStory.putBoolean("EchoHeard", true);
+            legacyProgress.put("MaidWeaponShrineFoxStory", legacyStory.copy());
+            player.getPersistentData().put(Player.PERSISTED_NBT_TAG, legacyProgress);
+            ShrineFoxStory.observe(player);
+            legacyStory.putBoolean("EntryHint", true);
+            check(legacyStory.equals(story(player)), "legacy story receipts remain intact while new tutorial is delivered");
+            ShrineFoxStory.observe(player);
+            check(legacyStory.equals(story(player)), "legacy save tutorial never repeats");
             level.setWeatherParameters(6000, 6000, false, false);
             level.setDayTime(6000);
             level.updateSkyBrightness();
@@ -240,9 +257,8 @@ public final class FoxChallengeValidation {
             check(blackBefore.equals(stand.getItem().save(new CompoundTag())), "loss restores original blade unchanged");
             stand = BlackFoxShrineReturnValidation.run(player, stand);
             player.getInventory().setItem(0, white);
-        } else {
-            validateDivine(server, player, white);
         }
+        if (BladeTetraStoryCompat.isLoaded()) validateDivine(server, player, white);
         validateCompanionTravel(player, white);
         player.getInventory().clearContent();
         FoxChallengeDropsValidation.run(player);
@@ -287,59 +303,35 @@ public final class FoxChallengeValidation {
         com.maidweapon.forge.system.deployment.ContractCompanionService.disconnect(player);
     }
 
-    @SuppressWarnings("unchecked")
-    private static void validateDivine(MinecraftServer server, net.minecraft.server.level.ServerPlayer player, ItemStack white) throws Exception {
-        Class<?> manager = Class.forName("dev.bladetetra.challenge.DivineDomainManager");
-        Class<?> sessionType = Class.forName("dev.bladetetra.challenge.DivineDomainManager$Session");
-        var constructor = sessionType.getDeclaredConstructor(long.class, int.class, int.class); constructor.setAccessible(true);
-        long id = 990001L;
-        Object session = constructor.newInstance(id, 2048, 2048);
-        var state = sessionType.getDeclaredField("state"); state.setAccessible(true);
-        var participants = sessionType.getDeclaredField("players"); participants.setAccessible(true);
-        ((java.util.Set<UUID>) participants.get(session)).add(player.getUUID());
-        var sessionsField = manager.getDeclaredField("SESSIONS"); sessionsField.setAccessible(true);
-        var sessions = (java.util.Map<Long, Object>) sessionsField.get(null); sessions.put(id, session);
-        try {
-            var dimension = server.getLevel(net.minecraft.resources.ResourceKey.create(
-                    net.minecraft.core.registries.Registries.DIMENSION, ResourceLocation.parse("blade_tetra:divine_domain")));
-            var data = player.getPersistentData();
-            var persisted = data.getCompound(Player.PERSISTED_NBT_TAG);
-            persisted.putBoolean("blade_tetra_divine_afterword_received", true); data.put(Player.PERSISTED_NBT_TAG, persisted);
-            data.putLong("blade_tetra_divine_challenge", id);
-            data.putInt("blade_tetra_divine_origin_x", 2048); data.putInt("blade_tetra_divine_origin_z", 2048);
-            data.putString("blade_tetra_origin_dimension", "minecraft:overworld");
-            data.putDouble("blade_tetra_origin_x", 1024.5); data.putDouble("blade_tetra_origin_y", 100);
-            data.putDouble("blade_tetra_origin_z", 1024.5);
-            player.teleportTo(dimension, 2071.5, 64.2, 2048.5, 0, 0);
-            state.set(session, Enum.valueOf((Class) state.getType(), "ACTIVE"));
-            check(BladeTetraStoryCompat.clearedRoute(player) == null, "prior clear cannot bypass active Divine replay");
-            ShrineFoxStory.observe(player);
-            check(story(player).getBoolean("DivineRecognized") && !ShrineFoxStory.hasHeardDivineEcho(player),
-                    "actual arrival recognizes atmosphere but active replay never opens echo");
-            state.set(session, Enum.valueOf((Class) state.getType(), "CLEARED"));
-            check(BladeTetraStoryCompat.clearedRoute(player) != null, "actual current Divine clear recognized read-only");
-            player.tickCount = 20;
-            FoxChallengeEntry.tick(player);
-            check(!player.getPersistentData().contains("MaidWeaponFoxJumpGuide"), "jump directions wait for the Divine echo");
-            ShrineFoxStory.observe(player);
-            check(ShrineFoxStory.hasHeardDivineEcho(player), "actual cleared Divine scene opens echo");
-            var receipt = story(player).copy();
-            ShrineFoxStory.observe(player);
-            check(receipt.equals(story(player)), "Divine echo does not repeat");
-            player.teleportTo(dimension, 2074.5, 61, 2048.5, 0, 0);
-            player.setDeltaMovement(0, -1, 0);
-            FoxChallengeEntry.tick(player);
-            check(!FoxChallengeService.inside(player), "unguided fall does not open passage");
-            player.teleportTo(dimension, 2071.5, 64.2, 2048.5, 0, 0);
-            FoxChallengeEntry.tick(player);
-            player.teleportTo(dimension, 2074.5, 61, 2048.5, 0, 0);
-            // Teleport clears the guide through the dimension hook only on an actual dimension change.
-            player.setDeltaMovement(0, -1, 0);
-            FoxChallengeEntry.tick(player);
-            check(FoxChallengeService.inside(player), "guided east-edge fall enters before provider recovery");
-            check(FoxChallengeService.leave(player) && player.level() == server.overworld(), "Divine route returns to original outside world");
-            check(BladeTetraStoryCompat.hasVisitedDivineDomain(player), "returning from Divine Domain keeps narrative familiarity");
-        } finally { sessions.remove(id); }
+    private static void validateDivine(MinecraftServer server, net.minecraft.server.level.ServerPlayer player, ItemStack white) {
+        var dimension = server.getLevel(net.minecraft.resources.ResourceKey.create(
+                net.minecraft.core.registries.Registries.DIMENSION, ResourceLocation.parse("blade_tetra:divine_domain")));
+        check(dimension != null, "provider dimension is available for disabled-route regression");
+        var point = FoxChallengeService.position(player);
+        var progressBefore = story(player).copy();
+        var bladeBefore = white.save(new CompoundTag());
+        player.teleportTo(dimension, 2071.5, 64.2, 2048.5, 0, 0);
+        ShrineFoxStory.observe(player);
+        check(progressBefore.equals(story(player)), "domain arrival does not resume paused story beats");
+        // Simulate a saved guide from the previous version at the formerly valid fall point.
+        player.teleportTo(dimension, 2074.5, 61, 2048.5, 0, 0);
+        var guide = new CompoundTag();
+        guide.putLong("Until", dimension.getGameTime() + 1200);
+        guide.putInt("X", 2048); guide.putInt("Z", 2048);
+        guide.putUUID("Spirit", com.maidweapon.forge.system.fox.FoxSpiritState.resident(white).getUUID("SpiritUUID"));
+        player.getPersistentData().put("MaidWeaponFoxJumpGuide", guide);
+        player.tickCount = 20;
+        player.setDeltaMovement(0, -1, 0);
+        FoxChallengeEntry.tick(player);
+        check(!FoxChallengeService.inside(player) && player.serverLevel() == dimension,
+                "legacy guided fall remains provider-owned and never enters Black Fox arena");
+        check(!player.getPersistentData().contains("MaidWeaponFoxJumpGuide"),
+                "legacy jump guidance is discarded");
+        check(bladeBefore.equals(white.save(new CompoundTag())), "disabled route does not change White Fox");
+        player.teleportTo(server.overworld(), point.getDouble("X"), point.getDouble("Y"),
+                point.getDouble("Z"), point.getFloat("Yaw"), point.getFloat("Pitch"));
+        player.setDeltaMovement(0, 0, 0);
+        player.fallDistance = 0;
     }
 
     private static CompoundTag story(net.minecraft.server.level.ServerPlayer player) {

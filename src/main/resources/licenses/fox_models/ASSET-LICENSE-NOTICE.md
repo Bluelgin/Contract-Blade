@@ -45,8 +45,13 @@ Code, model and music licenses are separate. The music's commercial permissions 
 - 相同贴图区域合并到 512×512 图集，不下采样非重复细节；白狐移除完全被遮挡的不透明面，黑狐保留面以供透明渲染。
 - 保留原有女仆活动动画、命名骨骼和模型 ID；Boss 使用独立战斗渲染/动画和刀鞘定位，不修改本体酒狐模型。
 - 本次仅补齐许可说明与校验记录，不修改角色造型。
+- 2026-10-10：以独立低优先级动画层改善人形三尾的走跑跟随、转身和停步；原活动动画文件、飞行、狐形、几何及贴图保留不变。此尾巴层使用女仆本体动画功能，不要求安装 YSM。
 
 Removed visible crown cubes while retaining named bones/IDs; refined hair, hands, cuffs, shoulder fur, garment colors and fitted ornaments; repacked identical atlas regions at 512×512 without downsampling unique detail; omitted fully occluded opaque White Fox faces, retaining Black Fox faces for transparency. Existing companion animation files remain unchanged. The Boss has its own combat animation/rendering and sheath locator. This documentation update does not change the character appearance or upstream Wine Fox.
 
+2026-10-10: a separate low-priority humanoid tail layer adds locomotion lag and smooth stopping/turning. Original activity animation files, flight, fox form, geometry and textures remain unchanged. It uses native maid animation functions and does not require the YSM mod.
+
 模型包中 `MODEL_ASSET_SHA256SUMS.txt` 标识具体模型、纹理与动画文件；`SHA256SUMS.txt` 标识包内所有非校验表资源。校验表用于完整性核对，不是作者签名或法律授权证据。
 Checksums identify the actual asset files; they are integrity records, not author signatures or legal authorization evidence.
+
+2026-10-10 包封面更新 / Pack cover update: 根据项目提供的三狐合照，用内置生图工具生成方形插画，仅替换包封面和标签图标。本体 3D 微缩预览、角色几何、贴图及动作保留不变。Generated with the built-in image tool from the project-provided trio reference; only pack/tab artwork changes. Native 3D thumbnails and character assets are preserved. Original character attribution and CC BY-NC-SA 4.0 notices remain applicable.

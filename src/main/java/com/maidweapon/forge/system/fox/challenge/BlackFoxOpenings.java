@@ -6,7 +6,8 @@ public final class BlackFoxOpenings {
         return switch (skill) {
             case RIFT_CROSS -> age >= 8 && age < 24 || age >= 44 && age < 64;
             case ARC_BARRAGE -> age >= 10 && age < 18 || age >= 48 && age < 50 || age >= 78 && age < 94;
-            case DIMENSION_STRIKE -> age >= BlackFoxDimensionTimeline.HIT + 4 && age < BlackFoxDimensionTimeline.END;
+            case DIMENSION_STRIKE -> BlackFoxDimensionTimeline.localAge(age) >= BlackFoxDimensionTimeline.hitAge(age) + 4
+                    && age < BlackFoxDimensionTimeline.END;
             case SWORD_WHEEL -> age >= 60 && age < 92;
             case DOMAIN_CROSS -> age >= 52 && age < 88;
             case DOMAIN_RAIN -> age >= 40 && age < 70;

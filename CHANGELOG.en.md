@@ -2,7 +2,14 @@
 
 ## In development
 
-- Add Akatsuki's cosmetic katana, draw, three short cuts and delayed sheathing during supported melee tasks. Actual equipment, damage and durability remain unchanged; offhand and locomotion stay native. The client-only appearance can be disabled.
+- Refine the Black Fox encounter with full native Combo B chains, faster dimensional follow-ups, five eligible skill parries for stagger, four corner seals, and a non-lethal return / victory-collapse countdown.
+- Unlock Sword Core SA on the original victorious Black Fox blade: toggle native phantom barrages and repeating native B1–B7 pursuit without an additional cooldown; retain fixed lifetime, resource costs and friendly-target protection.
+- Simplify encounter entry and immediate story presentation; fix realm-entry and custom-SA crashes while retaining contract safety fixes.
+- Use a square trio portrait for maid-pack covers/tabs while retaining native 3D model thumbnails. Upgrade only byte-identical prior bundled archives with backups; preserve user-modified packs.
+- Bundle the current pink-white Akatsuki maid model with attribution and CC BY-NC-SA 4.0 licensing. BladeTetra awakening selects its matching appearance; migrate old default skins without overriding player-selected skins or the separate external contract.
+- Improve White/Black Fox companion tails with stable roots, delayed tips and smoother stopping/turning. Preserve existing activity, combat, flight and fox-form animations; YSM is not required.
+- Prepare standalone Akatsuki, White Fox and Black Fox YSM model packages with player-facing installation instructions, attribution and CC BY-NC-SA 4.0 licensing.
+- Withdraw Akatsuki's cosmetic katana and custom combat motions; restore native maid held-item rendering and attacks while preserving the character model, clothing and tail refinements.
 - Add a configurable contract companion limit, including support for two simultaneous followers.
 - Restore residence when a native home/stay toggle would exceed the follower limit, without deleting a maid.
 - Track deployment and recovery per contract; recalling one maid no longer clears another's record. Recall all followers on death, logout and dimension changes while preserving residents.

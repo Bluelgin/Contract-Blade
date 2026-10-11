@@ -1,0 +1,18 @@
+{
+  "cubes": 615,
+  "previousCubes": 395,
+  "bones": 179,
+  "textures": 1,
+  "atlas": [
+    512,
+    512
+  ],
+  "removedSkirtParts": 51,
+  "newParts": 271,
+  "protectedGeometryAndUvsUnchanged": true,
+  "protectedTexturePixelsUnchanged": true,
+  "boneHierarchyUnchanged": true,
+  "invalidUvs": 0,
+  "embeddedAnimations": 0,
+  "inGameVisualVerification": false
+}

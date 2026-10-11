@@ -25,6 +25,7 @@ public final class BlackFoxEncounters {
         return SESSIONS.getOrDefault(player.getServer(), Map.of()).get(player.getUUID());
     }
     public static boolean start(ServerPlayer player) {
+        if (FoxChallengeCollapse.active(player)) return false;
         if (!FoxChallengeService.inside(player) || !player.isAlive() || !BlackFoxBossCompat.available()) return false;
         stop(player);
         var boss = BlackFoxBossCompat.spawn(player, FoxChallengeService.origin(player));

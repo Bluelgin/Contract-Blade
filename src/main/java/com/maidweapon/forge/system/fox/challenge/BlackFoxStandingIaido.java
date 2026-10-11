@@ -21,9 +21,7 @@ final class BlackFoxStandingIaido {
         boss.playSound(SoundEvents.PLAYER_ATTACK_SWEEP,1.3f,.6f);
         actions.markSlash();
         if(actions.protectedPlayer(player)) return;
-        if(actions.parryArena(player)) {
-            actions.fight.clash(); BlackFoxEffects.breakMomentum(boss);
-        } else player.hurt(boss.damageSources().mobAttack(boss),60);
+        if(!actions.parryArena(player)) player.hurt(boss.damageSources().mobAttack(boss),60);
     }
     private BlackFoxStandingIaido() { }
 }

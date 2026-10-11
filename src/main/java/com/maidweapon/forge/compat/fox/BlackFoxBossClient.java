@@ -22,6 +22,9 @@ public final class BlackFoxBossClient {
         event.registerEntityRenderer(BlackFoxBossCompat.type(), BlackFoxBossRenderer::new);
         event.registerEntityRenderer(BlackFoxBossCompat.coreType(), BlackFoxCoreRenderer::new);
         event.registerEntityRenderer(BlackFoxBossCompat.minorCutType(), BlackFoxMinorCutRenderer::new);
+        event.registerEntityRenderer(BlackFoxBossCompat.swordCoreType(), BlackFoxSwordCoreRenderer::new);
+        event.registerEntityRenderer(BlackFoxBossCompat.swordBoltType(), BlackFoxSwordBoltRenderer::new);
+        event.registerEntityRenderer(BlackFoxBossCompat.swordActorType(), net.minecraft.client.renderer.entity.NoopRenderer::new);
     }
     private static void particles(net.minecraftforge.client.event.RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(BlackFoxBossCompat.parryParticle(), BlackFoxParryParticle.Provider::new);

@@ -100,6 +100,7 @@ minecraft {
             property 'contractblade.performance.validation', providers.gradleProperty('contractPerfTest').orElse('false').get()
             property 'contractblade.performance.label', providers.gradleProperty('contractPerfLabel').orElse('after').get()
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
+            property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
             property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
             property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
             property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
@@ -109,7 +110,6 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             args '--mixin', 'maid_weapon.mixins.json'
-            args '--mixin', 'maid_weapon.akatsuki.mixins.json'
             args '--mixin', 'maid_weapon.slashblade.mixins.json'
             mods {
                 "${mod_id}" {
@@ -299,7 +299,7 @@ jar {
                 'Implementation-Title'  : project.name,
                 'Implementation-Version': project.jar.archiveVersion,
                 'Implementation-Vendor' : mod_authors,
-                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json,maid_weapon.akatsuki.mixins.json',
+                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json',
         ])
     }
     finalizedBy 'reobfJar'

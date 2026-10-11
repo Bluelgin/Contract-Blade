@@ -9,15 +9,8 @@ public final class ShrineStoryPolicy {
                           boolean inDivineDomain, boolean inClearedDivineDomain) { }
 
     public static Beat next(Progress progress, Context context) {
-        if (context.bladeTetra() && context.hasAkatsuki() && !progress.reunited()) return Beat.REUNION;
-        if (!progress.greeted() && !progress.encountered() && !progress.memoryHeard()
-                && !progress.reunited()) return Beat.GREETING;
-        if (!context.bladeTetra()) {
-            return context.followingDay() && !progress.memoryHeard() ? Beat.MEMORY : Beat.NONE;
-        }
-        if (!progress.encountered()) return context.followingDay() ? Beat.ENCOUNTER : Beat.NONE;
-        if (context.inDivineDomain() && !progress.domainRecognized()) return Beat.ARRIVAL;
-        return context.inClearedDivineDomain() && !progress.echoHeard() ? Beat.ECHO : Beat.NONE;
+        // Background dialogue is intentionally dormant; tutorial hints have a separate receipt.
+        return Beat.NONE;
     }
 
     public static long gameDay(long dayTime) {
