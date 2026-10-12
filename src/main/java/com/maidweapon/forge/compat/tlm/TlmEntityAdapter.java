@@ -122,6 +122,22 @@ public final class TlmEntityAdapter {
         entity.load(tag);
     }
 
+    /** Native film only reads additional data. Restore the verified full Forge portion without reading the entity twice. */
+    public static boolean restoreEmergencyExtras(Entity maid, CompoundTag data) {
+        try {
+            if (!data.getCompound("ForgeCaps").isEmpty()) {
+                var method = net.minecraftforge.common.capabilities.CapabilityProvider.class
+                        .getDeclaredMethod("deserializeCaps", CompoundTag.class);
+                method.setAccessible(true); method.invoke(maid, data.getCompound("ForgeCaps").copy());
+            }
+            maid.getPersistentData().merge(data.getCompound("ForgeData").copy());
+            maid.getPersistentData().remove("MaidWeaponCoreStorageTransfer");
+            maid.getPersistentData().remove("MaidWeaponNativeStorageTransfer");
+            maid.getPersistentData().remove(ContractMaidKeys.ENTITY_BINDING_ID);
+            return true;
+        } catch (ReflectiveOperationException | RuntimeException failure) { return false; }
+    }
+
     public static void tame(Entity maid, Player player) {
         if (maid instanceof TamableAnimal tamable) tamable.tame(player);
     }

@@ -82,7 +82,7 @@
   "maid_weapon.message.deployed_contract_transfer_blocked": "Recall the manifested maid before transferring this contract",
   "maid_weapon.message.film_not_owner": "§cOnly this maid's owner can use the filled film",
   "maid_weapon.message.carrier_destroyed_maid_released": "§eThe contract weapon broke, but your maid is safe and has been released from the missing carrier.",
-  "maid_weapon.message.carrier_destroyed_film_created": "§eThe contract weapon broke. She could not manifest, but is safely sheltered in a rescue soul talisman.",
+  "maid_weapon.message.carrier_destroyed_film_created": "§eThe carrier was actually destroyed. Manifestation failed; the last snapshot is preserved in an emergency film.",
   "maid_weapon.message.emergency_film_failed": "§cThe contract carrier is confirmed missing, but the maid cannot be restored safely yet. Recovery will keep retrying.",
   "maid_weapon.message.magic_task_unavailable": "§cCould not select Wan Fa Jie Tong's ranged task; check the MaidWeapon log entry",
   "maid_weapon.message.tacz_link_full": "§eThe maid needs one empty inventory slot for the contract ammo link",
@@ -152,7 +152,7 @@
   "patchouli.maid_weapon.contract.subtitle": "A guide to contracts, manifestation, and growth",
   "patchouli.maid_weapon.entry.first_steps.name": "Where to Begin",
   "patchouli.maid_weapon.entry.first_steps.page.0": "$(thing)Contract Blade$() lets you form a weapon contract with your maid and share adventures and a home. Making any item from this mod awards this handbook once per player; altar baubles count too. Replace a lost copy with a book and an amethyst shard.$(br2)Start with a Contract Blade. Hold it in your main hand and right-click your tamed maid to bind, then read $(l:basics/companion)Calling a Companion$().",
-  "patchouli.maid_weapon.entry.first_steps.page.1": "Dedicated Contract Blades bind directly to your own maid without a table. To bind another supported weapon, use the Contract Binding Table with a maid film and the weapon.$(br2)The table can also release the contract into a film. Prepare her equipment, food and baubles before your adventure.",
+  "patchouli.maid_weapon.entry.first_steps.page.1": "Dedicated Contract Blades bind directly to your own maid without a table. To bind another supported weapon, use the Contract Binding Table with a filled soul talisman and the weapon.$(br2)The table can also release the contract into a soul talisman. Prepare her equipment, food and baubles before your adventure.",
   "patchouli.maid_weapon.entry.first_steps.page.1.title": "Contract Binding Table",
   "patchouli.maid_weapon.entry.growth_values.name": "Growth and Values",
   "patchouli.maid_weapon.entry.growth_values.page.0": "Contract level ranges from Lv.1 to Lv.10, maid favorability from 0 to 384, and Contract Resonance from 0 to 200. Fight together to raise weapon level; favorability grants additional contract damage.$(br2)Contract powers answer only to the original owner. Other players borrowing the weapon can use only its ordinary abilities.",
@@ -201,7 +201,7 @@
   "patchouli.maid_weapon.entry.troubleshooting.page.0": "$(bold)Cannot form a contract:$() check that she is your maid and the weapon is not bound to someone else.$(br2)$(bold)Cannot call or recall:$() hold your contract weapon, use the call key (default ]) and check resonance. Recall requires the same world and at most 32 blocks. Visit your Contract Interior to see her there.$(br2)$(bold)Bauble altar will not start:$() check the native altar, one correct ingredient per pedestal and enough P.",
   "patchouli.maid_weapon.entry.troubleshooting.page.1": "If a magic staff or SlashBlade falls back to ordinary attacks, verify that both client and server use matching versions of Contract Blade, TLM, and the optional addon.",
   "patchouli.maid_weapon.entry.troubleshooting.page.1.title": "Optional integrations",
-  "patchouli.maid_weapon.entry.troubleshooting.page.2": "Do not use a weapon with a maid contract for crafting, smelting or processing: the contract may disappear with the materials. Transfer your maid into a film at the Binding Table first.$(br2)If you lose her, try Touhou Little Maid's backup feature. The latest weapon growth records may not be recoverable.",
+  "patchouli.maid_weapon.entry.troubleshooting.page.2": "Do not use a weapon with a maid contract for crafting, smelting or processing: the contract may disappear with the materials. Transfer your maid into a soul talisman at the Binding Table first.$(br2)If you lose her, try Touhou Little Maid's backup feature. The latest weapon growth records may not be recoverable.",
   "patchouli.maid_weapon.entry.troubleshooting.page.2.title": "Unbind before processing",
   "maid_weapon.message.contract_nbt_warning": "Contract data is large: %s. Consider clearing high-data items from the maid's inventory.",
   "maid_weapon.message.contract_nbt_high": "Contract data is very large: %s. Containers holding many such weapons may exceed Minecraft's NBT quota.",
@@ -395,5 +395,8 @@
   "patchouli.maid_weapon.entry.fox_passage.page.1": "In the smaller shrine behind White Fox's stand, place a blade stand on the empty raised dais and put a crafted SlashBlade Black Fox blade on it.$(br2)Place a bed within eight blocks and sleep at night under vanilla conditions while carrying your own original shrine White Fox blade. One second of sleep starts the challenge, with or without BladeTetra.$(br2)Your original Black Fox blade is held safely by the server, not consumed. Ordinary beds or stands elsewhere do not open this entrance.",
   "patchouli.maid_weapon.entry.fox_passage.page.2.title": "Entering and Returning",
   "patchouli.maid_weapon.entry.fox_passage.page.2": "Enter the Sealed Rift to challenge Black Fox. No Divine Domain clear or jump is required.$(br2)The floor is invisible but solid. Blue flames mark the boundaries. Right-click the entrance soul lantern with an empty hand or click the return message in chat to leave.$(br2)Recall any manifested companions that cannot be safely recalled before entering or leaving.",
-  "maid_weapon.fox.sa.combo_locked": "Combo B unlocks at Contract Mastery Lv.5."
+  "maid_weapon.fox.sa.combo_locked": "Combo B unlocks at Contract Mastery Lv.5.",
+  "maid_weapon.transfer.emergency": "Emergency film: actual carrier destruction only; not a normal contract transfer item.",
+  "maid_weapon.transfer.soul": "Soul talisman: bind, unbind and move contracts at the Binding Table.",
+  "maid_weapon.transfer.legacy_film": "Film: native resurrection; historical contract payloads require operator migration checks."
 }

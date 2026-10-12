@@ -18,7 +18,7 @@ public final class FoxSoulProtectionEvents {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void useOn(PlayerInteractEvent.RightClickBlock event) {
-        if (FoxSpiritState.isSeal(event.getItemStack()) && event.getLevel().getBlockState(event.getPos())
+        if (tableOnly(event.getItemStack()) && event.getLevel().getBlockState(event.getPos())
                 .is(com.maidweapon.forge.init.ModBlocks.MAID_INJECTOR.get())) {
             event.setUseItem(net.minecraftforge.eventbus.api.Event.Result.DENY);
             return;
@@ -32,8 +32,13 @@ public final class FoxSoulProtectionEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void interactAt(PlayerInteractEvent.EntityInteractSpecific event) { blockSeal(event); }
 
+    private static boolean tableOnly(net.minecraft.world.item.ItemStack item) {
+        return FoxSpiritState.isSeal(item) || com.maidweapon.forge.compat.tlm.SoulTalismanService.filled(item)
+                && item.hasTag() && item.getTag().contains(com.maidweapon.forge.compat.tlm.SoulTalismanService.RECEIPT);
+    }
+
     private static void blockSeal(PlayerInteractEvent event) {
-        if (!FoxSpiritState.isSeal(event.getItemStack())) return;
+        if (!tableOnly(event.getItemStack())) return;
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.FAIL);
         if (!event.getLevel().isClientSide()) event.getEntity().displayClientMessage(

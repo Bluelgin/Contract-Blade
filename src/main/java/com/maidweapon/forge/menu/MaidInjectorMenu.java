@@ -72,7 +72,8 @@ public class MaidInjectorMenu extends AbstractContainerMenu {
         if (IntrinsicSpiritApi.hasActiveProjection(weapon)) return false;
         ItemStack film = slotsContainer.getItem(1);
         boolean forward = MaidInfusion.isWeapon(weapon) && !MaidInfusion.isInfused(weapon)
-                && TouhouLittleMaidHelper.isFilledMaidFilm(film);
+                && TouhouLittleMaidHelper.isFilledMaidFilm(film)
+                && (player.level().isClientSide || com.maidweapon.forge.compat.tlm.SoulTalismanService.importAllowed(player, film));
         boolean reverse = MaidInfusion.containsMaid(weapon)
                 && TouhouLittleMaidHelper.isEmptyMaidFilm(film)
                 && ContractCarrierData.isOwner(weapon, player);

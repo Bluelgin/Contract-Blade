@@ -78,6 +78,7 @@ public final class ContractCarrierData {
         CompoundTag tag = stack.getTag();
         if (tag == null) return;
         tag.remove(NBT_MAID_DATA);
+        tag.remove("MaidWeaponSoulTransfer");
         com.maidweapon.forge.system.MaidEntityDataCodec.remove(tag);
         tag.remove(NBT_MAID_UUID);
         tag.remove(NBT_BINDING_ID);

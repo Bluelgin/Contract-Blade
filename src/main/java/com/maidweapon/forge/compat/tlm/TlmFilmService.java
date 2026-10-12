@@ -30,22 +30,17 @@ public final class TlmFilmService {
     }
 
     public static boolean isFilledMaidFilm(ItemStack stack) {
-        return !com.maidweapon.forge.system.fox.FoxSpiritState.isSeal(stack)
-                && isMaidFilm(stack) && stack.getTag() != null
-                && stack.getTag().contains("MaidInfo");
+        return SoulTalismanService.filled(stack);
     }
 
     public static boolean isEmptyMaidFilm(ItemStack stack) {
-        if (stack.isEmpty() || com.maidweapon.forge.system.fox.FoxSpiritState.isSeal(stack)) return false;
-        String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-        return itemId.equals("touhou_little_maid:smart_slab_empty")
-                || (itemId.equals("touhou_little_maid:film")
-                && (stack.getTag() == null || !stack.getTag().contains("MaidInfo")));
+        return SoulTalismanService.empty(stack);
     }
 
     public static ItemStack createEmptyMaidStoreItem(ItemStack filled) {
         String itemId = BuiltInRegistries.ITEM.getKey(filled.getItem()).toString();
-        if (itemId.equals("touhou_little_maid:smart_slab_has_maid")) {
+        if (itemId.equals("touhou_little_maid:smart_slab_has_maid")
+                || itemId.equals("touhou_little_maid:film") && com.maidweapon.forge.system.fox.FoxSpiritState.isSeal(filled)) {
             return new ItemStack(BuiltInRegistries.ITEM.get(new ResourceLocation(
                     "touhou_little_maid", "smart_slab_empty")));
         }
@@ -56,7 +51,7 @@ public final class TlmFilmService {
     }
 
     public static boolean infuseFromFilm(Player player, ItemStack film, ItemStack weaponStack) {
-        if (!isFilledMaidFilm(film) || !MaidInfusion.isWeapon(weaponStack)
+        if (!SoulTalismanService.importAllowed(player, film) || !MaidInfusion.isWeapon(weaponStack)
                 || MaidInfusion.isInfused(weaponStack)) return false;
         CompoundTag originalWeaponTag = weaponStack.getTag() == null
                 ? null : weaponStack.getTag().copy();
@@ -72,6 +67,8 @@ public final class TlmFilmService {
                 return false;
             }
 
+            String carriedBinding = film.getTag().getCompound(SoulTalismanService.RECEIPT).getString("Binding");
+            if (!carriedBinding.isEmpty()) weaponStack.getOrCreateTag().putString("MaidBindingId", carriedBinding);
             String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
             ContractCarrierData.setContractSuperseded(weaponStack, false);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
@@ -90,8 +87,8 @@ public final class TlmFilmService {
                 weaponStack.setTag(originalWeaponTag);
                 return false;
             }
-            ContractMaidStorage.retirePreviousContracts(
-                    player, maid.getStringUUID(), weaponStack);
+            SoulTalismanService.imported(player, film, weaponStack);
+            ContractMaidStorage.retirePreviousContracts(player, maid.getStringUUID(), weaponStack);
             return true;
         } catch (Exception exception) {
             weaponStack.setTag(originalWeaponTag);
@@ -101,13 +98,18 @@ public final class TlmFilmService {
     }
 
     public static ItemStack extractMaidToFilm(Player player, ItemStack weapon, ItemStack emptyFilm) {
-        if (!MaidInfusion.containsMaid(weapon) || !isEmptyMaidFilm(emptyFilm)
+        if (!SoulTalismanService.authorizes(player, weapon)
+                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, weapon)
+                || com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(weapon)
+                || !MaidInfusion.containsMaid(weapon) || !isEmptyMaidFilm(emptyFilm)
                 || !ContractCarrierData.isOwner(weapon, player)) return ItemStack.EMPTY;
         try {
             CompoundTag weaponTag = weapon.getTag();
             if (weaponTag == null) return ItemStack.EMPTY;
             CompoundTag maidTag = ContractMaidStorage.read(player, weapon);
-            if (maidTag == null) return ItemStack.EMPTY;
+            if (maidTag == null || !maidTag.hasUUID("UUID") || !maidTag.hasUUID("Owner")
+                    || !player.getUUID().equals(maidTag.getUUID("Owner"))
+                    || !maidTag.getUUID("UUID").toString().equals(ContractCarrierData.getBoundMaidUUID(weapon))) return ItemStack.EMPTY;
             Class<?> maidClass = TlmEntityAdapter.maidClass();
             if (maidClass == null) return ItemStack.EMPTY;
             Entity maid = (Entity) maidClass.getConstructor(net.minecraft.world.level.Level.class)
@@ -127,6 +129,7 @@ public final class TlmFilmService {
             filledTag.put(ContractMaidKeys.FILM_PROGRESS,
                     weaponTag.getCompound("MaidData").copy());
             ContractMaidStorage.inspectExternalPayload(player, filledTag);
+            SoulTalismanService.exported(player, weapon, filled);
             ContractMaidStorage.remove(weapon);
             return filled;
         } catch (Exception exception) {
@@ -140,7 +143,9 @@ public final class TlmFilmService {
      */
     public static ItemStack createEmergencyResurrectionFilm(
             Player player, ItemStack contract, Entity liveMaid) {
-        if (contract.isEmpty() || !MaidInfusion.isInfused(contract)
+        if (!com.maidweapon.forge.api.ContractAuthorization.allows(player, contract)
+                || !com.maidweapon.forge.system.deployment.ContractCarrierLossService.confirmedSnapshot(player, contract)
+                || liveMaid != null || contract.isEmpty() || !MaidInfusion.isInfused(contract)
                 || !ContractCarrierData.isOwner(contract, player)) return ItemStack.EMPTY;
         try {
             CompoundTag maidData;
@@ -160,6 +165,9 @@ public final class TlmFilmService {
                 if (maidData == null) return ItemStack.EMPTY;
             }
 
+            if (!maidData.hasUUID("Owner") || !player.getUUID().equals(maidData.getUUID("Owner"))
+                    || !maidData.hasUUID("UUID") || !maidData.getUUID("UUID").toString()
+                        .equals(ContractCarrierData.getBoundMaidUUID(contract))) return ItemStack.EMPTY;
             maidData.putString("id", "touhou_little_maid:maid");
             CompoundTag contractTag = contract.getTag();
             CompoundTag progress = contractTag != null
@@ -176,6 +184,14 @@ public final class TlmFilmService {
             if (film.isEmpty()) return ItemStack.EMPTY;
             CompoundTag filmTag = film.getOrCreateTag();
             filmTag.put("MaidInfo", maidData);
+            CompoundTag emergency = new CompoundTag();
+            emergency.putUUID("Owner", player.getUUID());
+            emergency.putString("Binding", ContractCarrierData.getBindingId(contract));
+            emergency.putString("Maid", ContractCarrierData.getBoundMaidUUID(contract));
+            emergency.putUUID("Token", java.util.UUID.randomUUID());
+            if (com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(contract))
+                emergency.put("Fox", com.maidweapon.forge.system.fox.FoxSpiritState.resident(contract).copy());
+            filmTag.put(SoulTalismanService.EMERGENCY, emergency);
             if (!progress.isEmpty()) {
                 filmTag.put(ContractMaidKeys.FILM_PROGRESS, progress);
             }

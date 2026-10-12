@@ -24,7 +24,9 @@ public final class FoxSpiritLedger extends SavedData {
     public boolean owns(CompoundTag identity, String kind) {
         if (!FoxSpiritState.valid(identity)) return false;
         CompoundTag record = entries.getCompound(identity.getUUID("SpiritUUID").toString());
-        return record.hasUUID("Token") && record.getUUID("Token").equals(identity.getUUID("Token"))
+        return (!record.hasUUID("OriginUUID") || record.getUUID("OriginUUID").equals(identity.getUUID("OriginUUID")))
+                && (!record.contains("SpiritId") || record.getString("SpiritId").equals(identity.getString("SpiritId")))
+                && record.hasUUID("Token") && record.getUUID("Token").equals(identity.getUUID("Token"))
                 && record.getString("Kind").equals(kind)
                 && record.hasUUID("OwnerUUID")
                 && record.getUUID("OwnerUUID").equals(identity.getUUID("OwnerUUID"));
@@ -34,6 +36,8 @@ public final class FoxSpiritLedger extends SavedData {
         CompoundTag record = new CompoundTag();
         record.putUUID("Token", identity.getUUID("Token"));
         record.putUUID("OwnerUUID", identity.getUUID("OwnerUUID"));
+        record.putUUID("OriginUUID", identity.getUUID("OriginUUID"));
+        record.putString("SpiritId", identity.getString("SpiritId"));
         record.putString("Kind", kind);
         entries.put(identity.getUUID("SpiritUUID").toString(), record);
         setDirty();

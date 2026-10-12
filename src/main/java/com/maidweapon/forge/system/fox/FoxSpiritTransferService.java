@@ -23,6 +23,7 @@ public final class FoxSpiritTransferService {
 
     /** Claim the story identity only. Models and full maid contracts remain optional. */
     public static void claimOffering(ServerPlayer owner, ItemStack blade) {
+        if (blade.hasTag() && blade.getTag().getBoolean("MaidWeaponClientSuppliedContract")) return;
         com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.ensureEffect(blade);
         if (!blade.hasTag() || !blade.getTag().getBoolean(FoxSpiritState.OFFERING)
                 || blade.getTag().getBoolean(FoxSpiritState.VACANT)
@@ -46,7 +47,9 @@ public final class FoxSpiritTransferService {
     }
 
     public static boolean canTransfer(Player owner, ItemStack weapon, ItemStack seal) {
-        if (weapon.getCount() != 1 || seal.getCount() != 1
+        if (weapon.hasTag() && weapon.getTag().getBoolean("MaidWeaponClientSuppliedContract")
+                || seal.hasTag() && seal.getTag().getBoolean("MaidWeaponClientSuppliedContract")
+                || weapon.getCount() != 1 || seal.getCount() != 1
                 || owner.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL)) return false;
         if (FoxSpiritState.isSeal(seal)) {
             var identity = FoxSpiritState.sealed(seal);

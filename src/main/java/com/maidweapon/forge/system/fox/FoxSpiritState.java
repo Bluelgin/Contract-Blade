@@ -24,6 +24,13 @@ public final class FoxSpiritState {
                 && identity.hasUUID("OwnerUUID") && identity.hasUUID("Token");
     }
 
+    public static boolean sameIdentity(CompoundTag a, CompoundTag b) {
+        if (!valid(a) || !valid(b) || !a.getString("SpiritId").equals(b.getString("SpiritId"))) return false;
+        for (String key : new String[]{"OwnerUUID", "SpiritUUID", "OriginUUID", "Token"})
+            if (!a.getUUID(key).equals(b.getUUID(key))) return false;
+        return true;
+    }
+
     public static boolean hasResident(ItemStack stack) {
         return valid(resident(stack));
     }
