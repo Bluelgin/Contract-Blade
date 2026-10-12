@@ -18,9 +18,13 @@ final class BlackFoxSwordCoreRenderer extends EntityRenderer<BlackFoxSwordCoreEn
         BlackFoxJudgementRenderer.draw(stack, buffers, age, false);
         stack.pushPose(); stack.scale(10, .9f, 10); BlackFoxJudgementRenderer.draw(stack, buffers, age, true); stack.popPose();
         for (int aperture = 0; aperture < 4; aperture++) {
-            double angle = age * (entity.following() ? .06 : .025) + aperture * Math.PI / 2;
+            double angle = age * (entity.attackMode() == com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.AttackMode.COMBO_B ? .06 : .025) + aperture * Math.PI / 2;
             stack.pushPose(); stack.translate(Math.cos(angle) * 2.4, 0, Math.sin(angle) * 2.4); stack.scale(.75f, .75f, .75f);
             BlackFoxJudgementRenderer.draw(stack, buffers, age + aperture * 6, false); stack.popPose();
+        }
+        if (entity.synchronizedDomain()) {
+            stack.pushPose(); stack.scale(2.2f,.3f,2.2f);
+            BlackFoxJudgementRenderer.draw(stack,buffers,age*2,true); stack.popPose();
         }
         stack.popPose(); super.render(entity, yaw, partial, stack, buffers, light);
     }

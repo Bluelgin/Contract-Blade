@@ -18,7 +18,7 @@ assert 'hasPermission(2)' in service and 'ContractMasterySavedData' in service
 assert 'ClientSuppliedGrowth' in read('forge/system/mastery/ContractMasteryMigration.java')
 assert 'ContractMasteryCreativeGuard' in read('forge/mixin/ContractCreativeGrowthMixin.java')
 for name in ['BlackFoxSwordCoreEntity', 'BlackFoxSwordActorEntity']:
-    assert 'ContractAbilityProgressionService.query' not in read('forge/entity/' + name + '.java'), 'Phase two combat gates leaked into phase one'
+    assert 'ContractAbilityProgressionService.query' not in read('forge/entity/' + name + '.java'), 'Entity executor must consume the entry point snapshot, not query its own growth'
 for path in (java / 'com/maidweapon/forge/api/ability').glob('*.java'):
     source = path.read_text()
     assert 'BlackFox' not in source and 'mods.flammpfeil' not in source and 'Class.forName' not in source

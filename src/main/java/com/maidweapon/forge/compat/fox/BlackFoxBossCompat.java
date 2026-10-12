@@ -86,10 +86,20 @@ public final class BlackFoxBossCompat {
         return player.level().addFreshEntity(entity) ? entity : null;
     }
     public static com.maidweapon.forge.entity.BlackFoxSwordCoreEntity spawnSwordCore(ServerPlayer player) {
-        if (swordCore == null) return null;
+        var profile = com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.ready(
+                com.maidweapon.forge.api.ability.ContractAbilityProgressionService.query(player, player.getMainHandItem(),
+                        com.maidweapon.forge.compat.BlackFoxSwordArtCompat.ID));
+        return profile == null ? null : spawnSwordCore(player, profile);
+    }
+    public static com.maidweapon.forge.entity.BlackFoxSwordCoreEntity spawnSwordCore(ServerPlayer player,
+            com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.Profile profile) {
+        if (swordCore == null || player == null || profile == null || !profile.has(com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.SUMMON)
+                || !com.maidweapon.forge.compat.BlackFoxSwordArtCompat.progressionEntitled(player.getMainHandItem(),player)
+                || !com.maidweapon.forge.api.ContractCombatCreditResolver.valid(
+                        new com.maidweapon.forge.api.ContractCombatCreditResolver.Credit(player,player.getMainHandItem()))) return null;
         var entity = swordCore.get().create(player.level());
         if (entity == null) return null;
-        entity.initialize(player);
+        entity.initialize(player, profile);
         return player.level().addFreshEntity(entity) ? entity : null;
     }
     public static com.maidweapon.forge.entity.BlackFoxMinorCutEntity spawnMinorCut(BlackFoxCombatant owner,

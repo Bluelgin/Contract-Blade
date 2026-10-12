@@ -111,8 +111,8 @@ final class BlackFoxShrineReturnValidation {
         var abilities = com.maidweapon.forge.api.ability.ContractAbilityProgressionService.query(player, weapon,
                 com.maidweapon.forge.compat.BlackFoxSwordArtCompat.ID);
         check(abilities.masteryLevel() == 10 && abilities.status() ==
-                com.maidweapon.forge.api.ability.ContractAbilityProgressionService.Status.ENTITLED_WITHOUT_ROUTE
-                && abilities.capabilities().features().isEmpty(), "earned Black Fox reads shared Lv10 with no phase-two route");
+                com.maidweapon.forge.api.ability.ContractAbilityProgressionService.Status.READY
+                && abilities.capabilities().has(com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.SYNC), "earned Black Fox reads shared Lv10 complete growth route");
         check(FoxModelPackBootstrap.BLACK_MODEL.equals(MaidEntityDataCodec.read(weapon.getTag()).getString("ModelId")),
                 "companion uses original Black Fox model, not Boss tint");
         check(!FoxSpiritTransferService.storyEligible(player, weapon), "Black Fox cannot trigger White Fox story");

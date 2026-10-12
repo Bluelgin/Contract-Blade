@@ -396,5 +396,6 @@
   "patchouli.maid_weapon.entry.fox_passage.page.1.title": "神社中的梦",
   "patchouli.maid_weapon.entry.fox_passage.page.1": "在白狐供奉台后方的副神社找到空着的凸起。制作一把拔刀剑黑狐刀，将挂刀台放在凸起上，再把黑狐刀放入。$(br2)在凸起八格以内安放床，携带自己的神社白狐原刀，于夜里按原版条件入睡。睡眠持续一秒后进入挑战。有无 BladeTetra 均使用此入口。$(br2)原黑狐刀由服务器暂存，不作为祭品消耗。普通床和其他地方的刀架不会触发入口。",
   "patchouli.maid_weapon.entry.fox_passage.page.2.title": "进入与返回",
-  "patchouli.maid_weapon.entry.fox_passage.page.2": "进入后抵达黑狐挑战场地「封缄之隙」。无需完成神域挑战，也无需从边缘跳下。$(br2)地面透明但能够站立，边缘青火标示活动范围。空手右键入口魂灯，或点击聊天中的返回提示，即可离开。$(br2)若有无法安全收回的显现伙伴，请先收回她们，再进入或离开。"
+  "patchouli.maid_weapon.entry.fox_passage.page.2": "进入后抵达黑狐挑战场地「封缄之隙」。无需完成神域挑战，也无需从边缘跳下。$(br2)地面透明但能够站立，边缘青火标示活动范围。空手右键入口魂灯，或点击聊天中的返回提示，即可离开。$(br2)若有无法安全收回的显现伙伴，请先收回她们，再进入或离开。",
+  "maid_weapon.fox.sa.combo_locked": "连击 B 将在契约熟练度 Lv.5 解锁。"
 }

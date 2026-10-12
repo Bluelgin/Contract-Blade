@@ -20,12 +20,14 @@ public abstract class BlackFoxSlashColorMixin {
     @ModifyConstant(method = DRAW, constant = @Constant(intValue = 0x555555))
     private int contractBlade$bossTint(int original, @Coerce Entity slash, float yaw, float partial,
                                       PoseStack stack, MultiBufferSource buffers, int light) {
+        if (slash instanceof Projectile shot && shot.getOwner() instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity) return 0xB04CE5;
         return slash instanceof Projectile projectile && projectile.getOwner() instanceof BlackFoxBossEntity boss
                 ? BlackFoxSlashColors.blade(boss.phaseTwo()) : original;
     }
     @ModifyConstant(method = DRAW, constant = @Constant(intValue = 0x404040))
     private int contractBlade$bossRim(int original, @Coerce Entity slash, float yaw, float partial,
                                      PoseStack stack, MultiBufferSource buffers, int light) {
+        if (slash instanceof Projectile shot && shot.getOwner() instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity) return 0x582672;
         return slash instanceof Projectile projectile && projectile.getOwner() instanceof BlackFoxBossEntity boss
                 ? BlackFoxSlashColors.rim(boss.phaseTwo()) : original;
     }
