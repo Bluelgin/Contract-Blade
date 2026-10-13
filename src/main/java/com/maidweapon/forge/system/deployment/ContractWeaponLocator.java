@@ -42,7 +42,7 @@ public final class ContractWeaponLocator {
         if (player == null || player.getServer() == null || maidId == null || findEntity(player, maidId) != null) return false;
         try { UUID.fromString(maidId); } catch (IllegalArgumentException invalid) { return false; }
         return !com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer())
-                .transfer(maidId).getBoolean("WorldPresent");
+                .isMaidPresent(maidId);
     }
 
     private static void index(java.util.Map<String, ItemStack> result, ItemStack stack) {

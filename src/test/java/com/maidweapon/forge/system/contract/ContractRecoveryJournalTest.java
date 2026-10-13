@@ -51,6 +51,36 @@ class ContractRecoveryJournalTest {
         assertFalse(ContractRecoveryJournal.load(restarted.save(new CompoundTag())).transfer("maid").getBoolean("WorldPresent"));
         assertTrue(restarted.transfer("other").isEmpty());
     }
+    @Test void unknownPresenceIsNotInventedByDetachAndSurvivesRestart() {
+        var journal = ContractRecoveryJournal.load(new CompoundTag());
+        assertEquals(ContractRecoveryJournal.Presence.UNKNOWN, journal.presence("legacy"));
+        journal.destination("legacy", UUID.randomUUID(), "binding", "FREE_MAID",
+                journal.presence("legacy"), null);
+        var restarted = ContractRecoveryJournal.load(journal.save(new CompoundTag()));
+        assertEquals(ContractRecoveryJournal.Presence.UNKNOWN, restarted.presence("legacy"));
+        assertFalse(restarted.transfer("legacy").contains("WorldPresent"));
+        assertEquals("FREE_MAID", restarted.transfer("legacy").getString("Kind"));
+    }
+    @Test void namedPresenceOperationsPreserveDestinationAndCannotAffectOtherMaids() {
+        var journal = ContractRecoveryJournal.load(new CompoundTag());
+        UUID owner = UUID.randomUUID();
+        journal.destination("maid", owner, "binding", "WEAPON", ContractRecoveryJournal.Presence.ABSENT, null);
+        journal.markMaidPresent("maid");
+        assertTrue(journal.isMaidPresent("maid"));
+        assertEquals(owner, journal.transfer("maid").getUUID("Owner"));
+        assertEquals("binding", journal.transfer("maid").getString("Binding"));
+        journal.markMaidAbsent("maid");
+        assertEquals(ContractRecoveryJournal.Presence.ABSENT, journal.presence("maid"));
+        assertEquals(ContractRecoveryJournal.Presence.UNKNOWN, journal.presence("other"));
+    }
+    @Test void semanticWritesRetainFutureSchemaWithoutInventingAuthority() {
+        var raw = new CompoundTag(); raw.putInt("Schema", 42); raw.putString("Future", "preserve");
+        var journal = ContractRecoveryJournal.load(raw);
+        journal.markMaidPresent("maid");
+        journal.destination("maid", UUID.randomUUID(), "binding", "WEAPON", ContractRecoveryJournal.Presence.PRESENT, null);
+        assertEquals(raw, journal.save(new CompoundTag()));
+        assertEquals(ContractRecoveryJournal.Presence.UNKNOWN, journal.presence("maid"));
+    }
     @Test void foxLedgerRejectsTokenOwnerOriginAndSpiritConflicts() {
         var identity = new CompoundTag(); identity.putInt("Version", 1); identity.putString("SpiritId", "maid_weapon:fox_white");
         for (String key : new String[]{"OwnerUUID", "SpiritUUID", "OriginUUID", "Token"}) identity.putUUID(key, UUID.randomUUID());

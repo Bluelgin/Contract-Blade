@@ -97,6 +97,7 @@ minecraft {
             property 'contractblade.projection.validation', providers.gradleProperty('projectionTest').orElse('false').get()
             property 'contractblade.companion.validation', providers.gradleProperty('companionTest').orElse('false').get()
             property 'contractblade.rebirth.validation', providers.gradleProperty('contractRebirthTest').orElse('false').get()
+            property 'contractblade.architecture.validation', providers.gradleProperty('architectureTest').orElse('false').get()
             property 'contractblade.stageThree.validation', providers.gradleProperty('stageThreeTest').orElse('false').get()
             property 'contractblade.whiteBlessing.validation', providers.gradleProperty('whiteBlessingTest').orElse('false').get()
             property 'contractblade.whiteBlessing.resume', providers.gradleProperty('whiteBlessingResume').orElse('false').get()

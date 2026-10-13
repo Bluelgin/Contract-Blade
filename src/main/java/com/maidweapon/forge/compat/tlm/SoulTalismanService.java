@@ -55,10 +55,9 @@ public final class SoulTalismanService {
         if (owner.getServer() == null) return;
         var journal = ContractRecoveryJournal.get(owner.getServer());
         if (!journal.knownSchema()) return; // preserve future files; never make normal storage throw after spawn
-        var record = new CompoundTag(); record.putUUID("Owner", owner.getUUID());
-        record.putString("Kind", kind); record.putString("Binding", ContractCarrierData.getBindingId(carrier));
-        record.putBoolean("WorldPresent", present);
-        journal.transfer(ContractCarrierData.getBoundMaidUUID(carrier), record);
+        journal.destination(ContractCarrierData.getBoundMaidUUID(carrier), owner.getUUID(),
+                ContractCarrierData.getBindingId(carrier), kind,
+                present ? ContractRecoveryJournal.Presence.PRESENT : ContractRecoveryJournal.Presence.ABSENT, null);
     }
     public static void imported(Player owner, ItemStack item, ItemStack carrier) {
         destination(owner, carrier, "WEAPON", false);

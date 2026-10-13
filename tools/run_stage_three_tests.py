@@ -13,11 +13,12 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
-parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se'])
+parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture'])
 args = parser.parse_args()
 root = Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
 print(f'Disposable fixtures: {root}', flush=True)
 fixtures = [
+    ('architecture', ['-ParchitectureTest=true'], ['CONTRACT_ARCHITECTURE_PASS']),
     ('recovery', ['-PstageThreeTest=true'], ['CONTRACT_STAGE_THREE_PASS']),
     ('rebirth', ['-PcontractRebirthTest=true'], ['CONTRACT_REBIRTH_PASS','CONTRACT_DESTRUCTION_PASS','MULTI_CARRIER_LOSS_VALIDATION_PASSED','COMPANION_VALIDATION_PASS']),
     ('fox', ['-PmasteryFoxTest=true'], ['BLACK_FOX_SHRINE_RETURN_PASS','CONTRACT_MASTERY_FOX_PASS']),

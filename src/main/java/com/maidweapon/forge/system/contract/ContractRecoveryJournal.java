@@ -27,6 +27,30 @@ public final class ContractRecoveryJournal extends SavedData {
     public void clearIncident(String binding) {
         if (future == null && binding != null && incidents.contains(binding)) { incidents.remove(binding); setDirty(); }
     }
+    /** UNKNOWN is legacy/unobserved data, not evidence that a maid exists or has died. */
+    public enum Presence { UNKNOWN, PRESENT, ABSENT }
+    public Presence presence(String maid) {
+        var record = transfer(maid);
+        return !record.contains("WorldPresent") ? Presence.UNKNOWN
+                : record.getBoolean("WorldPresent") ? Presence.PRESENT : Presence.ABSENT;
+    }
+    public boolean isMaidPresent(String maid) { return presence(maid) == Presence.PRESENT; }
+    public void markMaidPresent(String maid) { worldPresent(maid, true); }
+    public void markMaidAbsent(String maid) { worldPresent(maid, false); }
+
+    /** Write current destination without inventing presence for unobserved legacy entities. */
+    public void destination(String maid, java.util.UUID owner, String binding, String kind,
+                            Presence presence, CompoundTag fox) {
+        if (!knownSchema() || maid == null || maid.isBlank()) return;
+        var record = new CompoundTag();
+        record.putUUID("Owner", owner);
+        record.putString("Binding", binding == null ? "" : binding);
+        record.putString("Kind", kind);
+        if (presence != Presence.UNKNOWN) record.putBoolean("WorldPresent", presence == Presence.PRESENT);
+        if (fox != null && !fox.isEmpty()) record.put("Fox", fox.copy());
+        transfer(maid, record);
+    }
+
     public void worldPresent(String maid, boolean present) {
         if (future != null || maid == null || maid.isBlank()) return;
         var record = transfer(maid);

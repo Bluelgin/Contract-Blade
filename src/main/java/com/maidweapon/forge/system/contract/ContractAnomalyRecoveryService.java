@@ -14,6 +14,7 @@ import java.util.*;
 
 /** Reconciles current facts. Historical incidents never override current storage or authorize resurrection. */
 public final class ContractAnomalyRecoveryService {
+    /** STORED/MANIFESTED are facts; TRANSITIONING is session-only; missing/pending are diagnostics. */
     public enum State { STORED, MANIFESTED, TRANSITIONING, SUSPECT_MISSING, RECOVERY_PENDING, UNBOUND }
     private static final Map<UUID, Integer> CURSORS = new HashMap<>();
     private static final Set<ItemStack> TRANSITIONS = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -43,8 +44,8 @@ public final class ContractAnomalyRecoveryService {
     public static boolean preserveRemoved(Player owner, ItemStack carrier, LivingEntity maid) {
         var reason = maid.getRemovalReason();
         if (reason != Entity.RemovalReason.DISCARDED && reason != Entity.RemovalReason.KILLED
-                || maid.getPersistentData().getBoolean("MaidWeaponNativeStorageTransfer")
-                || maid.getPersistentData().getBoolean("MaidWeaponCoreStorageTransfer")
+                || maid.getPersistentData().getBoolean(ContractMaidKeys.NATIVE_STORAGE_TRANSFER)
+                || maid.getPersistentData().getBoolean(ContractMaidKeys.CORE_STORAGE_TRANSFER)
                 || carrier.isEmpty() || !TlmEntityAdapter.isOwnedMaid(maid, owner)
                 || !ContractCarrierData.isOwner(carrier, owner) || !ContractCarrierData.isBoundMaid(carrier, maid)
                 || !ContractAuthorization.allows(owner, carrier)
@@ -83,9 +84,14 @@ public final class ContractAnomalyRecoveryService {
             carrier.getTag().remove("MaidWeaponClientSuppliedContract");
         }
     }
+    /** Legacy addon entry: the reason is diagnostic-only and never affects authority. */
+    @Deprecated
     public static void record(Player owner, ItemStack carrier, String reason, boolean confirmed) {
-        if (owner.getServer() == null || !confirmed) return;
-        ContractRecoveryJournal.get(owner.getServer()).worldPresent(ContractCarrierData.getBoundMaidUUID(carrier), false);
+        if (confirmed) confirmedRemoved(owner, carrier);
+    }
+    public static void confirmedRemoved(Player owner, ItemStack carrier) {
+        if (owner == null || owner.getServer() == null) return;
+        ContractRecoveryJournal.get(owner.getServer()).markMaidAbsent(ContractCarrierData.getBoundMaidUUID(carrier));
         clearRuntime(owner, carrier, ContractCarrierData.getBoundMaidUUID(carrier));
         owner.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.recovery.native_backup"), false);
     }
@@ -124,7 +130,7 @@ public final class ContractAnomalyRecoveryService {
             var legacy = incident(owner, carrier);
             if (matches(owner, carrier, legacy) && legacy.getBoolean("Confirmed")) {
                 var retained = retainedSnapshot(owner, carrier);
-                if (retained != null && !ContractRecoveryJournal.get(owner.getServer()).transfer(legacy.getString("Maid")).getBoolean("WorldPresent")
+                if (retained != null && !ContractRecoveryJournal.get(owner.getServer()).isMaidPresent(legacy.getString("Maid"))
                         && ContractAuthorization.allows(owner, carrier)
                         && ContractMaidStorage.commit(owner, carrier, retained)) {
                     SoulTalismanService.captured(owner, carrier); stored(owner, carrier);
@@ -132,7 +138,12 @@ public final class ContractAnomalyRecoveryService {
             }
         }
     }
+    /** Legacy signature: an incident is never permission to clear or respawn an entity. */
+    @Deprecated
     public static boolean cleanup(Player owner, ItemStack carrier, CompoundTag record) {
+        return cleanup(owner, carrier);
+    }
+    public static boolean cleanup(Player owner, ItemStack carrier) {
         if (!ContractCarrierData.isOwner(carrier, owner) || ContractWeaponLocator.findManifestedMaid(owner,
                 ContractCarrierData.getBoundMaidUUID(carrier)) != null) return false;
         clearRuntime(owner, carrier, ContractCarrierData.getBoundMaidUUID(carrier));

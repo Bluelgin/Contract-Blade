@@ -1,6 +1,25 @@
 package com.maidweapon.forge.compat.tlm;
 
 import com.maidweapon.forge.system.contract.ContractCarrierData;
+import com.maidweapon.forge.system.fox.FoxSpiritState;
+import com.maidweapon.forge.system.fox.FoxSpiritLedger;
+import com.maidweapon.forge.api.IntrinsicSpiritApi;
+import com.maidweapon.forge.api.EmbeddedSpiritApi;
+import com.maidweapon.forge.api.ContractAuthorization;
+import com.maidweapon.forge.system.interior.ContractResidentPositionService;
+import com.maidweapon.forge.system.mastery.ContractMasteryService;
+import com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService;
+import com.maidweapon.forge.system.contract.ContractRecoveryJournal;
+import com.maidweapon.forge.system.deployment.ContractCompanionState;
+import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
+import com.maidweapon.forge.system.interior.ContractInteriorService;
+import com.maidweapon.forge.system.interior.ContractInteriorSavedData;
+import com.maidweapon.forge.system.deployment.ContractMaidRuntimeService;
+import com.maidweapon.forge.api.event.ContractMaidManifestedEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.MinecraftForge;
+import java.util.function.Consumer;
 
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.api.event.ContractMaidCapturedEvent;
@@ -34,15 +53,15 @@ public final class ContractMaidLifecycleService {
                 || ContractCarrierData.hasMaidData(weaponStack)) {
             return false;
         }
-        var fox = com.maidweapon.forge.system.fox.FoxSpiritState.resident(weaponStack);
-        if (com.maidweapon.forge.system.fox.FoxSpiritState.valid(fox)
-                && !com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).maid(fox).isEmpty()) return false;
+        var fox = FoxSpiritState.resident(weaponStack);
+        if (FoxSpiritState.valid(fox)
+                && !FoxSpiritLedger.get(player.getServer()).maid(fox).isEmpty()) return false;
         CompoundTag originalWeaponTag = weaponStack.getTag() == null
                 ? null : weaponStack.getTag().copy();
         try {
             Class<?> maidClass = TlmEntityAdapter.maidClass();
             if (maidClass == null) return false;
-            Entity maid = (Entity) maidClass.getConstructor(net.minecraft.world.level.Level.class)
+            Entity maid = (Entity) maidClass.getConstructor(Level.class)
                     .newInstance(player.level());
             TlmEntityAdapter.tame(maid, player);
             PresetSpiritModels.initialize(maid, spiritId);
@@ -53,7 +72,7 @@ public final class ContractMaidLifecycleService {
 
             String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
-            maid.getPersistentData().putString("MaidWeaponEmbeddedSpirit", spiritId);
+            maid.getPersistentData().putString(ContractMaidKeys.EMBEDDED_SPIRIT, spiritId);
             ContractCarrierData.setOwner(weaponStack, player);
             ContractCarrierData.setBoundMaidUUID(weaponStack, maid.getStringUUID());
             ContractCarrierData.setContractSuperseded(weaponStack, false);
@@ -77,25 +96,25 @@ public final class ContractMaidLifecycleService {
     /** Rehouse a released, ledger-owned fox through the ordinary full-data capture transaction. */
     public static boolean capture(Player player, Entity entity, ItemStack weaponStack, boolean notifyPlayer) {
         if (player == null || player.level().isClientSide || entity == null || weaponStack.isEmpty()) return false;
-        var free = entity.getPersistentData().getCompound(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT);
-        boolean adopt = !com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(weaponStack)
-                && com.maidweapon.forge.system.fox.FoxSpiritState.valid(free)
+        var free = entity.getPersistentData().getCompound(FoxSpiritState.ROOT);
+        boolean adopt = !FoxSpiritState.hasResident(weaponStack)
+                && FoxSpiritState.valid(free)
                 && free.getUUID("OwnerUUID").equals(player.getUUID())
-                && com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(free, "FREE_MAID")
-                && (com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).maid(free).isEmpty()
-                    || entity.getStringUUID().equals(com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).maid(free)))
+                && FoxSpiritLedger.get(player.getServer()).owns(free, "FREE_MAID")
+                && (FoxSpiritLedger.get(player.getServer()).maid(free).isEmpty()
+                    || entity.getStringUUID().equals(FoxSpiritLedger.get(player.getServer()).maid(free)))
                 && !ContractCarrierData.hasMaidData(weaponStack)
-                && !com.maidweapon.forge.api.IntrinsicSpiritApi.hasActiveProjection(weaponStack)
-                && !com.maidweapon.forge.system.fox.FoxSpiritState.isProtected(weaponStack);
+                && !IntrinsicSpiritApi.hasActiveProjection(weaponStack)
+                && !FoxSpiritState.isProtected(weaponStack);
         var previous = weaponStack.getTag() == null ? null : weaponStack.getTag().copy();
         if (adopt) {
-            weaponStack.getOrCreateTag().put(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT, free.copy());
-            weaponStack.getOrCreateTag().putString(com.maidweapon.forge.api.EmbeddedSpiritApi.TAG_SPIRIT_ID, free.getString("SpiritId"));
+            weaponStack.getOrCreateTag().put(FoxSpiritState.ROOT, free.copy());
+            weaponStack.getOrCreateTag().putString(EmbeddedSpiritApi.TAG_SPIRIT_ID, free.getString("SpiritId"));
         }
         boolean captured = false;
         try {
             captured = captureBound(player, entity, weaponStack, notifyPlayer);
-            if (captured && adopt) com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(free, "WEAPON");
+            if (captured && adopt) FoxSpiritLedger.get(player.getServer()).record(free, "WEAPON");
             return captured;
         } finally {
             if (adopt && !captured) weaponStack.setTag(previous);
@@ -105,18 +124,18 @@ public final class ContractMaidLifecycleService {
     private static boolean captureBound(Player player, Entity entity, ItemStack weaponStack,
                                   boolean notifyPlayer) {
         if (player == null || player.level().isClientSide || entity == null || entity.isRemoved() || !entity.isAlive()
-                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, weaponStack)
+                || !ContractAuthorization.allows(player, weaponStack)
                 || !TlmEntityAdapter.isMaidEntity(entity)
                 || weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)) {
             return false;
         }
-        String embedded = entity.getPersistentData().getString("MaidWeaponEmbeddedSpirit");
-        if ((com.maidweapon.forge.system.fox.FoxSpiritState.WHITE.equals(embedded)
-                || com.maidweapon.forge.system.fox.FoxSpiritState.BLACK.equals(embedded)
-                || com.maidweapon.forge.system.fox.FoxSpiritState.valid(entity.getPersistentData().getCompound(
-                        com.maidweapon.forge.system.fox.FoxSpiritState.ROOT)))
-                && !com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(weaponStack)) return false;
+        String embedded = entity.getPersistentData().getString(ContractMaidKeys.EMBEDDED_SPIRIT);
+        if ((FoxSpiritState.WHITE.equals(embedded)
+                || FoxSpiritState.BLACK.equals(embedded)
+                || FoxSpiritState.valid(entity.getPersistentData().getCompound(
+                        FoxSpiritState.ROOT)))
+                && !FoxSpiritState.hasResident(weaponStack)) return false;
         if (ContractCarrierData.isContractSuperseded(weaponStack)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.superseded_contract"), true);
@@ -140,7 +159,6 @@ public final class ContractMaidLifecycleService {
 
         String entityBinding = entity.getPersistentData().getString(
                 ContractMaidKeys.ENTITY_BINDING_ID);
-        com.maidweapon.forge.system.interior.ContractResidentPositionService.remember(entity);
         String originalEntityBinding = entityBinding;
         String weaponBinding = ContractCarrierData.getBindingId(weaponStack);
         if (!entityBinding.isEmpty()
@@ -152,79 +170,102 @@ public final class ContractMaidLifecycleService {
 
         CompoundTag rootTag = weaponStack.getTag();
         CompoundTag originalWeaponTag = rootTag == null ? null : rootTag.copy();
-        weaponBinding = ContractCarrierData.ensureBindingId(weaponStack);
-        entity.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, weaponBinding);
-
-        MaidCareTaskSystem.restoreOriginalTask(weaponStack, entity);
-        if (entity instanceof LivingEntity living) {
-            TripleMagicCompat.clearPhantoms(living, weaponStack);
-            TaczCompat.clear(player, living, weaponStack);
-        }
-
+        CompoundTag previousDestination = ContractRecoveryJournal.get(player.getServer()).transfer(entity.getStringUUID());
+        String originalTask = TlmEntityAdapter.taskId(entity);
+        String originalSchedule = TlmEntityAdapter.scheduleName(entity);
         CompoundTag emergencyProgress = entity.getPersistentData().getCompound(
                 ContractMaidKeys.EMERGENCY_FILM_PROGRESS).copy();
-        CompoundTag maidEntityTag;
-        try { maidEntityTag = TlmEntityAdapter.save(entity); }
-        catch (RuntimeException failure) {
-            weaponStack.setTag(originalWeaponTag);
-            if (originalEntityBinding.isEmpty()) entity.getPersistentData().remove(ContractMaidKeys.ENTITY_BINDING_ID);
-            else entity.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, originalEntityBinding);
-            LOGGER.error("[Contract Blade] Serialization failed; live maid retained", failure);
-            return false;
-        }
-        if (!emergencyProgress.isEmpty()) {
-            CompoundTag storedForgeData = maidEntityTag.getCompound("ForgeData");
-            storedForgeData.remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
-            maidEntityTag.put("ForgeData", storedForgeData);
-        }
-
         boolean firstCapture = !ContractCarrierData.hasMaidData(weaponStack);
-        MaidWeaponData data;
-        if (firstCapture) {
-            if (emergencyProgress.isEmpty()) {
-                data = new MaidWeaponData("");
-            } else {
-                ItemStack progressCarrier = new ItemStack(net.minecraft.world.item.Items.STICK);
-                progressCarrier.getOrCreateTag().put("MaidData", emergencyProgress.copy());
-                data = ContractCarrierData.getMaidData(progressCarrier);
-            }
-            ContractCarrierData.setOwner(weaponStack, player);
-            ContractCarrierData.setBoundMaidUUID(weaponStack, entity.getStringUUID());
-        } else {
-            data = ContractCarrierData.getMaidData(weaponStack);
-        }
-        // Preserve an old emergency-film growth archive until the player authority imports it.
-        if (firstCapture && !emergencyProgress.isEmpty()) weaponStack.getOrCreateTag().put("MaidData", emergencyProgress.copy());
-        data.setMaidName(entity.getName().getString());
-        data.setFavorability(Math.min(MaidWeaponData.MAX_FAVORABILITY,
-                Math.max(0, TlmEntityAdapter.favorability(entity))));
-        ContractCarrierData.setMaidData(weaponStack, data);
 
-        if (!ContractMaidStorage.commit(player, weaponStack, maidEntityTag)) {
-            weaponStack.setTag(originalWeaponTag);
-            if (originalEntityBinding.isEmpty()) {
-                entity.getPersistentData().remove(ContractMaidKeys.ENTITY_BINDING_ID);
-            } else {
-                entity.getPersistentData().putString(
-                        ContractMaidKeys.ENTITY_BINDING_ID, originalEntityBinding);
+        // Preparation is reversible for identity/task state. Optional projections are cleaned
+        // deliberately even on rejection; live runtime maintenance can recreate them next tick.
+        try {
+            ContractResidentPositionService.remember(entity);
+            weaponBinding = ContractCarrierData.ensureBindingId(weaponStack);
+            entity.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, weaponBinding);
+            MaidCareTaskSystem.restoreOriginalTask(weaponStack, entity);
+            if (entity instanceof LivingEntity living) {
+                TripleMagicCompat.clearPhantoms(living, weaponStack);
+                TaczCompat.clear(player, living, weaponStack);
             }
+            CompoundTag maidEntityTag = TlmEntityAdapter.save(entity);
+            if (!maidEntityTag.hasUUID("Owner") || !player.getUUID().equals(maidEntityTag.getUUID("Owner"))
+                    || !maidEntityTag.hasUUID("UUID") || !entity.getUUID().equals(maidEntityTag.getUUID("UUID"))
+                    || !weaponBinding.equals(maidEntityTag.getCompound("ForgeData").getString(ContractMaidKeys.ENTITY_BINDING_ID))) {
+                rollbackCapture(weaponStack, originalWeaponTag, entity, originalEntityBinding,
+                        originalTask, originalSchedule);
+                return false;
+            }
+            if (!emergencyProgress.isEmpty()) {
+                CompoundTag storedForgeData = maidEntityTag.getCompound("ForgeData");
+                storedForgeData.remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
+                maidEntityTag.put("ForgeData", storedForgeData);
+            }
+
+            MaidWeaponData data;
+            if (firstCapture) {
+                if (emergencyProgress.isEmpty()) {
+                    data = new MaidWeaponData("");
+                } else {
+                    ItemStack progressCarrier = new ItemStack(net.minecraft.world.item.Items.STICK);
+                    progressCarrier.getOrCreateTag().put("MaidData", emergencyProgress.copy());
+                    data = ContractCarrierData.getMaidData(progressCarrier);
+                }
+                ContractCarrierData.setOwner(weaponStack, player);
+                ContractCarrierData.setBoundMaidUUID(weaponStack, entity.getStringUUID());
+            } else {
+                data = ContractCarrierData.getMaidData(weaponStack);
+            }
+            // Preserve an old emergency-film growth archive until the player authority imports it.
+            if (firstCapture && !emergencyProgress.isEmpty()) weaponStack.getOrCreateTag().put("MaidData", emergencyProgress.copy());
+            data.setMaidName(entity.getName().getString());
+            data.setFavorability(Math.min(MaidWeaponData.MAX_FAVORABILITY,
+                    Math.max(0, TlmEntityAdapter.favorability(entity))));
+            ContractCarrierData.setMaidData(weaponStack, data);
+
+            if (!ContractMaidStorage.commit(player, weaponStack, maidEntityTag)) {
+                rollbackCapture(weaponStack, originalWeaponTag, entity, originalEntityBinding,
+                        originalTask, originalSchedule);
+                return false;
+            }
+        } catch (RuntimeException failure) {
+            rollbackCapture(weaponStack, originalWeaponTag, entity, originalEntityBinding,
+                    originalTask, originalSchedule);
+            LOGGER.error("[Contract Blade] Capture preparation failed; live maid retained", failure);
             return false;
         }
 
+        // Commit succeeded: never report a failed capture because a notification listener failed.
         SoulTalismanService.captured(player, weaponStack);
-        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weaponStack);
-        com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.stored(player, weaponStack);
+        afterCommit("capture mastery", () -> ContractMasteryService.observe(player, weaponStack));
+        afterCommit("capture reconciliation", () -> ContractAnomalyRecoveryService.stored(player, weaponStack));
         entity.getPersistentData().remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
-        entity.getPersistentData().putBoolean("MaidWeaponCoreStorageTransfer", true);
-        entity.discard();
-        com.maidweapon.forge.system.deployment.ContractCompanionState.clear(weaponStack);
+        entity.getPersistentData().putBoolean(ContractMaidKeys.CORE_STORAGE_TRANSFER, true);
+        try { entity.discard(); }
+        catch (RuntimeException failure) {
+            if (!entity.isRemoved()) {
+                // An unusual override may fail before Entity.remove. Storage must not claim
+                // the still-live maid; restore the pre-operation destination as well.
+                rollbackCapture(weaponStack, originalWeaponTag, entity, originalEntityBinding,
+                        originalTask, originalSchedule);
+                entity.getPersistentData().remove(ContractMaidKeys.CORE_STORAGE_TRANSFER);
+                if (!emergencyProgress.isEmpty()) entity.getPersistentData().put(
+                        ContractMaidKeys.EMERGENCY_FILM_PROGRESS, emergencyProgress);
+                var journal = ContractRecoveryJournal.get(player.getServer());
+                if (journal.knownSchema()) journal.transfer(entity.getStringUUID(), previousDestination);
+                LOGGER.error("[Contract Blade] Entity removal failed before commit; live maid retained", failure);
+                return false;
+            }
+            LOGGER.error("[Contract Blade] Removal observer failed after capture; stored snapshot remains authoritative", failure);
+        }
+        ContractCompanionState.clear(weaponStack);
         MaidCareTaskSystem.clearOriginalTask(weaponStack);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(
-                new ContractMaidCapturedEvent(player, entity, weaponStack, firstCapture));
+        afterCommit("capture event", () -> MinecraftForge.EVENT_BUS.post(
+                new ContractMaidCapturedEvent(player, entity, weaponStack, firstCapture)));
 
         if (notifyPlayer) {
-            player.displayClientMessage(Component.translatable(
-                    "maid_weapon.message.maid_bound", entity.getName().getString()), true);
+            afterCommit("capture message", () -> player.displayClientMessage(Component.translatable(
+                    "maid_weapon.message.maid_bound", entity.getName().getString()), true));
         }
         return true;
     }
@@ -234,10 +275,10 @@ public final class ContractMaidLifecycleService {
     }
 
     public static boolean manifest(Player player, ItemStack weaponStack, boolean notifyPlayer,
-                                   java.util.function.Consumer<Entity> beforeSpawn) {
+                                   Consumer<Entity> beforeSpawn) {
         if (player == null || player.level().isClientSide
-                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, weaponStack)
-                || !com.maidweapon.forge.system.deployment.ContractWeaponLocator.mayManifest(player, ContractCarrierData.getBoundMaidUUID(weaponStack))
+                || !ContractAuthorization.allows(player, weaponStack)
+                || !ContractWeaponLocator.mayManifest(player, ContractCarrierData.getBoundMaidUUID(weaponStack))
                 || weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)
                 || !ContractCarrierData.hasMaidData(weaponStack)
@@ -263,63 +304,107 @@ public final class ContractMaidLifecycleService {
         String storedBinding = maidEntityTag.getCompound("ForgeData").getString(ContractMaidKeys.ENTITY_BINDING_ID);
         if (!storedBinding.isEmpty() && !storedBinding.equals(ContractCarrierData.getBindingId(weaponStack))) return false;
 
+        Entity maid = null;
+        CompoundTag originalWeaponTag = weaponStack.getTag().copy();
         try {
             Class<?> maidClass = TlmEntityAdapter.maidClass();
             if (maidClass == null) return false;
-            Entity maid = (Entity) maidClass.getConstructor(net.minecraft.world.level.Level.class)
+            maid = (Entity) maidClass.getConstructor(Level.class)
                     .newInstance(player.level());
 
             TlmEntityAdapter.load(maid, maidEntityTag);
-            maid.getPersistentData().remove("MaidWeaponNativeStorageTransfer");
+            maid.getPersistentData().remove(ContractMaidKeys.NATIVE_STORAGE_TRANSFER);
+            maid.getPersistentData().remove(ContractMaidKeys.CORE_STORAGE_TRANSFER);
             String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
             TlmEntityAdapter.tame(maid, player);
             if (player.level().dimension().equals(
-                    com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
-                    && player.level() instanceof net.minecraft.server.level.ServerLevel level) {
-                var saved = com.maidweapon.forge.system.interior.ContractInteriorSavedData.get(level.getServer());
+                    ContractInteriorService.INTERIOR_LEVEL)
+                    && player.level() instanceof ServerLevel level) {
+                var saved = ContractInteriorSavedData.get(level.getServer());
                 var plot = saved.find(bindingId);
                 // Decide the resident location before publishing a spawn packet.
                 // Never expose the ordinary combat manifestation at the player's feet.
-                if (plot == null || !plot.hasTerrainTheme()) return false;
-                com.maidweapon.forge.system.interior.ContractResidentPositionService.restore(maid, plot);
+                if (plot == null || !plot.hasTerrainTheme()) { weaponStack.setTag(originalWeaponTag); return false; }
+                ContractResidentPositionService.restore(maid, plot);
             } else {
                 maid.setPos(player.getX(), player.getY(), player.getZ());
             }
             beforeSpawn.accept(maid);
+            // The callback can mutate the candidate or world. Revalidate at this commit
+            // boundary; entry checks cannot protect a later caller-controlled mutation.
+            if (!maid.getStringUUID().equals(ContractCarrierData.getBoundMaidUUID(weaponStack))
+                    || !TlmEntityAdapter.isOwnedByPlayer(maid, player)
+                    || !bindingId.equals(maid.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID))
+                    || !ContractAuthorization.allows(player, weaponStack)
+                    || !ContractWeaponLocator.mayManifest(player, maid.getStringUUID())) {
+                weaponStack.setTag(originalWeaponTag);
+                return false;
+            }
 
             if (!player.level().isClientSide && !player.level().addFreshEntity(maid)) {
-                com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer()).worldPresent(maid.getStringUUID(), false);
+                weaponStack.setTag(originalWeaponTag);
                 LOGGER.warn("[MaidWeapon] Maid entity {} could not be added; keeping weapon data for retry",
                         maid.getUUID());
                 return false;
             }
 
-            prepareManifestedMaid(player, weaponStack, maid);
-            SoulTalismanService.manifested(player, weaponStack);
-            ContractMaidStorage.remove(weaponStack);
-            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new com.maidweapon.forge.api.event.ContractMaidManifestedEvent(player,maid,weaponStack));
-
-            if (notifyPlayer) {
-                player.displayClientMessage(Component.translatable(
-                        "maid_weapon.message.maid_released", maid.getName().getString()), true);
-            }
-            MaidAttentionSystem.onManifested(player, weaponStack, maid);
-            return true;
         } catch (Exception exception) {
-            LOGGER.error("[MaidWeapon] Failed to restore maid from stored contract; data was retained",
-                    exception);
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.contract_nbt_restore_failed"), false);
-            return false;
+            // A join listener may throw during addFreshEntity. Inspect publication, not just
+            // the return value: an already-published real entity must become authoritative.
+            if (!(player.level() instanceof ServerLevel level)
+                    || maid == null || level.getEntity(maid.getUUID()) != maid) {
+                weaponStack.setTag(originalWeaponTag);
+                LOGGER.error("[Contract Blade] Restore failed before publication; snapshot retained", exception);
+                player.displayClientMessage(Component.translatable(
+                        "maid_weapon.message.contract_nbt_restore_failed"), false);
+                return false;
+            }
+            LOGGER.error("[Contract Blade] Spawn callback failed after publication; completing manifestation", exception);
+        }
+
+        Entity manifested = maid;
+        // Keep successful-path event order: runtime preparation, destination, payload removal,
+        // manifested event, message, attention. A failed optional step cannot undo publication.
+        afterCommit("manifest runtime", () -> prepareManifestedMaid(player, weaponStack, manifested));
+        SoulTalismanService.manifested(player, weaponStack);
+        ContractMaidStorage.remove(weaponStack);
+        afterCommit("manifest event", () -> MinecraftForge.EVENT_BUS.post(
+                new ContractMaidManifestedEvent(player, manifested, weaponStack)));
+        if (notifyPlayer) {
+            afterCommit("manifest message", () -> player.displayClientMessage(Component.translatable(
+                    "maid_weapon.message.maid_released", manifested.getName().getString()), true));
+        }
+        afterCommit("manifest attention", () -> MaidAttentionSystem.onManifested(player, weaponStack, manifested));
+        return true;
+    }
+
+    private static void rollbackCapture(ItemStack weapon, CompoundTag previous, Entity maid,
+                                        String binding, String task, String schedule) {
+        weapon.setTag(previous);
+        if (binding.isEmpty()) maid.getPersistentData().remove(ContractMaidKeys.ENTITY_BINDING_ID);
+        else maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, binding);
+        // Best effort applies only to native task APIs; the sole live maid is never discarded.
+        if (!task.isEmpty() && !task.equals(TlmEntityAdapter.taskId(maid))
+                && !TlmEntityAdapter.switchTask(maid, task))
+            LOGGER.warn("[Contract Blade] Retained live maid {}; native task rollback to {} refused", maid.getUUID(), task);
+        if (!schedule.isEmpty() && !schedule.equals(TlmEntityAdapter.scheduleName(maid))
+                && !TlmEntityAdapter.setSchedule(maid, schedule))
+            LOGGER.warn("[Contract Blade] Retained live maid {}; native schedule rollback to {} refused", maid.getUUID(), schedule);
+    }
+
+    private static void afterCommit(String phase, Runnable action) {
+        try { action.run(); }
+        catch (RuntimeException failure) {
+            LOGGER.error("[Contract Blade] {} failed after authority commit; transition remains successful", phase, failure);
         }
     }
 
     public static void prepareManifestedMaid(Player player, ItemStack weaponStack, Entity maid) {
         if (!(maid instanceof LivingEntity living)) return;
         if (maid.level().dimension().equals(
-                com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)) return;
-        com.maidweapon.forge.system.deployment.ContractMaidRuntimeService.prepare(player, weaponStack, living);
+                ContractInteriorService.INTERIOR_LEVEL)) return;
+        ContractMaidRuntimeService.prepare(player, weaponStack, living);
     }
 
     public static void syncFavorabilityFromMaid(Entity maid, ItemStack weaponStack) {
