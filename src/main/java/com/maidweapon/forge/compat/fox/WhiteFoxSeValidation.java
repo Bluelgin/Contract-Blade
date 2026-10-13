@@ -82,6 +82,7 @@ public final class WhiteFoxSeValidation {
         state.getClass().getMethod("setRefine", int.class).invoke(state, 10);
         check(close(WhiteFoxSpecialEffectCompat.strength(donor), 20 * (2 - 1 / 1.5)), "native refine formula");
         player.getInventory().setItem(1, donor);
+        check(com.maidweapon.forge.system.fox.FoxSpiritCompanionService.initialize(player,white),"native White Fox contract stored for exclusive SE");
         var donorBefore = donor.save(new CompoundTag()).copy();
         var whiteBefore = white.save(new CompoundTag()).copy();
         var inactive = new LivingHurtEvent(boss, source, 8);

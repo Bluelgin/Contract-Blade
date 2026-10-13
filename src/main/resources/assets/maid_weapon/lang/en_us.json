@@ -398,5 +398,7 @@
   "maid_weapon.fox.sa.combo_locked": "Combo B unlocks at Contract Mastery Lv.5.",
   "maid_weapon.transfer.emergency": "Emergency film: actual carrier destruction only; not a normal contract transfer item.",
   "maid_weapon.transfer.soul": "Soul talisman: bind, unbind and move contracts at the Binding Table.",
-  "maid_weapon.transfer.legacy_film": "Film: native resurrection; historical contract payloads require operator migration checks."
+  "maid_weapon.transfer.legacy_film": "Film: native resurrection; historical contract payloads require operator migration checks.",
+  "maid_weapon.white_blessing.oath": "The fox oath protected you. It recharges in ten minutes.",
+  "maid_weapon.white_blessing.tooltip": "White Fox Blessing: after freeing Black Fox, held in either hand with the spirit stored; uses shared mastery."
 }

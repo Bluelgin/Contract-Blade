@@ -87,7 +87,8 @@ public final class BlackFoxSwordArtCompat {
     }
     /** Reward permission remains independent of shared mastery. */
     public static boolean progressionEntitled(ItemStack blade, ServerPlayer player) {
-        if (!entitled(blade, player) || !FoxSpiritState.isOriginalHome(blade)
+        if (!com.maidweapon.forge.system.fox.FoxSpiritAbilityAuthorization.allows(player,blade,FoxSpiritState.BLACK)
+                || !entitled(blade, player) || !FoxSpiritState.isOriginalHome(blade)
                 || !FoxSpiritState.BLACK.equals(FoxSpiritState.resident(blade).getString("SpiritId"))
                 || !FoxSpiritState.resident(blade).getUUID("OwnerUUID").equals(player.getUUID())
                 || !player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)
@@ -154,6 +155,8 @@ public final class BlackFoxSwordArtCompat {
     /** Central refresh on a real player/mastery or datapack change; executors only consume the resulting profile. */
     public static void refreshGrowth(ServerPlayer player) {
         var core = active(player); if (core == null) return;
+        var currentCredit = core.credit(player);
+        if (currentCredit == null) { clear(player); return; }
         var resolution = new Resolution(com.maidweapon.forge.system.mastery.ContractMasteryService.getLevel(player),
                 com.maidweapon.forge.api.ability.ContractAbilityRegistry.definition(ID));
         if (resolution.equals(RESOLUTIONS.get(player))) return;

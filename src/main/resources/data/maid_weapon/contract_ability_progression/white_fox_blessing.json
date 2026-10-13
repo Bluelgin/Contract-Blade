@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "ability": "maid_weapon:white_fox_blessing",
+  "level_source": "player_mastery",
+  "milestones": [
+    {
+      "level": 1,
+      "features": [
+        "maid_weapon:blessing_move"
+      ],
+      "parameters": {
+        "maid_weapon:move_speed": 0.03
+      }
+    },
+    {
+      "level": 2,
+      "features": [
+        "maid_weapon:blessing_fall"
+      ],
+      "parameters": {
+        "maid_weapon:fall_reduction": 0.1
+      }
+    },
+    {
+      "level": 3,
+      "features": [
+        "maid_weapon:blessing_attack"
+      ],
+      "parameters": {
+        "maid_weapon:attack_speed": 0.03
+      }
+    },
+    {
+      "level": 4,
+      "features": [
+        "maid_weapon:blessing_guard"
+      ],
+      "parameters": {
+        "maid_weapon:damage_reduction": 0.03
+      }
+    },
+    {
+      "level": 5,
+      "features": [
+        "maid_weapon:blessing_heal"
+      ],
+      "parameters": {
+        "maid_weapon:heal_delay": 200,
+        "maid_weapon:heal_interval": 80,
+        "maid_weapon:heal_amount": 1
+      }
+    },
+    {
+      "level": 6,
+      "features": [],
+      "parameters": {
+        "maid_weapon:move_speed": 0.05
+      }
+    },
+    {
+      "level": 7,
+      "features": [
+        "maid_weapon:blessing_knockback"
+      ],
+      "parameters": {
+        "maid_weapon:knockback": 0.1
+      }
+    },
+    {
+      "level": 8,
+      "features": [],
+      "parameters": {
+        "maid_weapon:attack_speed": 0.06
+      }
+    },
+    {
+      "level": 9,
+      "features": [],
+      "parameters": {
+        "maid_weapon:damage_reduction": 0.06
+      }
+    },
+    {
+      "level": 10,
+      "features": [
+        "maid_weapon:blessing_oath"
+      ],
+      "parameters": {
+        "maid_weapon:oath_cooldown": 12000,
+        "maid_weapon:oath_shield_ticks": 100
+      }
+    }
+  ]
+}

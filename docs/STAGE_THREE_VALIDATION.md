@@ -71,7 +71,7 @@ python tools/run_stage_three_tests.py --gradle gradle
 
 准备与基线文档相同的本地 TLM/SlashBlade 测试依赖。运行器新建仅监听回环地址、随机端口
 的临时世界，检查每个显式 PASS 标记；Gradle 退出 0 不等于夹具通过。
-可用 --fixture recovery/rebirth/fox/shrine/sword 选择场景，--offline 使用已齐备缓存。
+可用 --fixture recovery/rebirth/fox/shrine/sword/blessing/white-se 选择场景，--offline 使用已齐备缓存。
 日志、世界、原生备份与第三方 JAR 不提交。
 
 ## PR A 修改文件
@@ -114,4 +114,74 @@ python tools/run_stage_three_tests.py --gradle gradle
 - `src/main/java/com/maidweapon/forge/system/contract/ContractAnomalyRecoveryService.java`
 - `src/main/java/com/maidweapon/forge/system/contract/ContractRecoveryJournal.java`
 - `src/test/java/com/maidweapon/forge/system/contract/ContractRecoveryJournalTest.java`
+- `tools/run_stage_three_tests.py`
+
+## 阶段三 B：最终代码验证
+
+基于 PR A #13 的远端 HEAD 3dc01db246d0626e3edc414592dc3408e95d312c，
+分支 codex/white-fox-blessing-growth。能力/数值/兼容边界见 [白狐机制](WHITE_FOX_BLESSING.md)。
+
+- 最终 clean build 成功，JUnit **20 项，0 failure / 0 error**：原有熟练度 7、黑狐成长 5、
+  恢复账本 4、新增白狐配置/累积效果/冷却持久化/未知 schema 4。
+- 已重新执行 15 项源码/资源检查，全部通过；第 16 项狐模型 ZIP 白名单检查仍是上述 #12 基线失败。
+- 中间构建曾在追加 schema 禁用断言后读取旧编译类导致一项失败；保留断言，以最终 clean build
+  重新编译并验证通过。没有删除断言或将中间失败改写为通过。
+- 服务端夹具使用实际 Forge 47.4.10、TLM 1.5.3、SlashBlade Resharped 1.9.65；没有安装 BladeTetra。
+  属于 headless userdev 专服运行，不是生产重混淆 JAR 启动或图形客户端验收。
+
+### 最终原生专服回归（7 组 + 2 次同世界重启）
+
+| 场景 | 实际结果 |
+| --- | --- |
+| 异常恢复/重启 | CONTRACT_STAGE_THREE_PASS、CONTRACT_STAGE_THREE_RESTART_PASS；当前快照/真实 TLM 备份、胶片原生消费、原 UUID、拒绝重放、持久化隔离均通过 |
+| 精炼/损毁/预算 | CONTRACT_REBIRTH_PASS、NATIVE_STAND_TRANSFER_PASS、CONTRACT_DESTRUCTION_PASS、CONTRACT_STORAGE_LIMIT_VALIDATION_PASSED、CONTRACT_SERVER_BUDGET_VALIDATION_PASSED、MULTI_CARRIER_LOSS_VALIDATION_PASSED、COMPANION_VALIDATION_PASS |
+| 黑狐剧情/奖励 | BLACK_FOX_SHRINE_RETURN_PASS、CONTRACT_MASTERY_FOX_PASS |
+| 白狐神社/魂符/完整女仆 | SHRINE_NATIVE_PASS、FOX_TRANSFER_NATIVE_PASS、FOX_COMPANION_NATIVE_PASS |
+| 旧白狐净化 SE | WHITE_FOX_SE_PASS；为原有夹具补充实际合法驻留契约，保留原有攻击、武器数据断言 |
+| 十级加护 | WHITE_BLESSING_PASS；Lv1–10 的实际属性与服务端伤害处理器、剧情未解锁拒绝、已有 Lv8 直接启用、主副手、双狐、复制冲突拒绝、显现/收回、脱战延迟/回血、撤下撤销均通过 |
+| 黑狐活动剑核 | 同一加护夹具实际调用 SlashBlade releaseUsing；白狐副手共存，黑狐显现立即关闭原核心，收回后再次通过原生 SA 召唤 |
+| 狐之誓约 | 新鲜冷却时图腾优先且不消耗冷却；致命事件只限伤一次；显现撤销自己的吸收护盾；WHITE_BLESSING_RESTART_PASS 确认同世界重启后冷却仍在 |
+| #12 剑核十级回归 | SWORD_CORE_NATIVE_PASS、SWORD_CORE_RELEASE_PASS、SWORD_CORE_MASTERY_CREDIT_PASS、SWORD_CORE_GROWTH_PASS、SWORD_CORE_MULTI_CREDIT_PASS；原生 B1–B7、伤害/耀魂、400 tick、16/8 格、+7 跟随、有限协同与归因均保留 |
+
+每组使用新建临时世界，重启组复用自己的同一世界；运行器检查所有显式 PASS 标记、退出码
+与 FAIL 标记。没有向用户存档写入测试数据，也没有提交日志、世界或第三方 JAR。
+伤害/图腾/誓约是实际服务端玩家的事件处理器注入测试；不是真人操作图腾的图形客户端实测。
+
+### 未执行验收与下一阶段
+
+- 未执行图形客户端、真人联网多人、生产重混淆 JAR 启动，以及真实登出/重登/死亡复生/
+  维度旅行的白狐属性端到端验收；对应服务端撤销/重算处理器已实现，不能据此宣称实测通过。
+- 未验证所有第三方保命事件优先级、墓碑、直接实体删除 Mod、强杀/断电或完整人工 Boss 战。
+  旧备份有装备/背包/未知 cap、未知提交中断和不可关联身份仍保守停止；备份救援需要管理员预检查与显式恢复。
+- 复制冲突测试覆盖可定位的同身份载体与旧授权/客户端复制保护；不会声称可以识别管理员
+  任意离线改写文件或第三方在未加载容器中制造的每一份字节相同副本。
+- 优先补充生产专服与图形/真人双狐验收；再设计损毁后自由狐灵重新安置接口、墓碑物品消费
+  的可验证协议与整合包免死兼容。不要以重新发奖励刀或自动回滚装备代替这些协议。
+
+### PR B 修改文件
+
+- `build.gradle`
+- `docs/STAGE_THREE_VALIDATION.md`
+- `docs/WHITE_FOX_BLESSING.md`
+- `src/main/java/com/maidweapon/forge/MaidWeaponMod.java`
+- `src/main/java/com/maidweapon/forge/api/IntrinsicSpiritApi.java`
+- `src/main/java/com/maidweapon/forge/api/event/ContractMaidManifestedEvent.java`
+- `src/main/java/com/maidweapon/forge/client/tooltip/FoxSoulTooltipHandler.java`
+- `src/main/java/com/maidweapon/forge/compat/BlackFoxSwordArtCompat.java`
+- `src/main/java/com/maidweapon/forge/compat/fox/BlackFoxSwordCoreValidation.java`
+- `src/main/java/com/maidweapon/forge/compat/fox/WhiteFoxBlessingValidation.java`
+- `src/main/java/com/maidweapon/forge/compat/fox/WhiteFoxSeValidation.java`
+- `src/main/java/com/maidweapon/forge/compat/tlm/ContractMaidLifecycleService.java`
+- `src/main/java/com/maidweapon/forge/system/contract/ContractAnomalyRecoveryService.java`
+- `src/main/java/com/maidweapon/forge/system/contract/ContractRecoveryJournal.java`
+- `src/main/java/com/maidweapon/forge/system/fox/FoxSpiritAbilityAuthorization.java`
+- `src/main/java/com/maidweapon/forge/system/fox/WhiteFoxBlessingCooldownData.java`
+- `src/main/java/com/maidweapon/forge/system/fox/WhiteFoxBlessingGrowth.java`
+- `src/main/java/com/maidweapon/forge/system/fox/WhiteFoxBlessingService.java`
+- `src/main/java/com/maidweapon/forge/system/fox/WhiteFoxPurifyingEdge.java`
+- `src/main/resources/assets/maid_weapon/lang/en_us.json`
+- `src/main/resources/assets/maid_weapon/lang/zh_cn.json`
+- `src/main/resources/data/maid_weapon/contract_ability_progression/white_fox_blessing.json`
+- `src/test/java/com/maidweapon/forge/system/contract/ContractRecoveryJournalTest.java`
+- `src/test/java/com/maidweapon/forge/system/contract/WhiteFoxBlessingTest.java`
 - `tools/run_stage_three_tests.py`

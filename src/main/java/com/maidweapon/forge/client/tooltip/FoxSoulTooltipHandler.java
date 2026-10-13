@@ -21,6 +21,7 @@ public final class FoxSoulTooltipHandler {
             event.getToolTip().add(Component.translatable(prefix + "tooltip.seal"));
         } else if (FoxSpiritState.hasResident(stack)) {
             event.getToolTip().add(Component.translatable(prefix + "tooltip.resident"));
+            if(!black)event.getToolTip().add(Component.translatable("maid_weapon.white_blessing.tooltip"));
             event.getToolTip().add(Component.translatable(FoxSpiritState.isOriginalHome(stack)
                     ? prefix + "tooltip.original" : prefix + "tooltip.away"));
         } else if (stack.hasTag() && stack.getTag().getBoolean(FoxSpiritState.OFFERING)

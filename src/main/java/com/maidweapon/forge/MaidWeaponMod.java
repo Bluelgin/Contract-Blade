@@ -70,6 +70,7 @@ public final class MaidWeaponMod {
             com.maidweapon.forge.api.ContractAuthorization.register("soul-transfer-receipt",
                     com.maidweapon.forge.compat.tlm.SoulTalismanService::authorizes);
             com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
+            com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();
             com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
             com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
             LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
