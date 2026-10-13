@@ -122,9 +122,8 @@ public final class ContractMaidStorage {
                 ContractNbtGuard.formatBytes(result.bytes())), false);
         if (rawMaid == null) return;
         for (ContractNbtGuard.ItemContribution item : rawMaid.largestItems()) {
-            player.displayClientMessage(Component.translatable(
-                    "maid_weapon.message.contract_nbt_largest",
-                    item.itemId(), ContractNbtGuard.formatBytes(item.bytes()), item.path()), false);
+            LOGGER.warn("[Contract Blade] Large stored item {}: {} at {}", item.itemId(),
+                    ContractNbtGuard.formatBytes(item.bytes()), item.path());
         }
     }
 

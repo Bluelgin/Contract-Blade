@@ -17,16 +17,9 @@ import java.util.UUID;
 /** Reads metadata only. Never manifests, captures, decompresses, or changes a maid/channel. */
 public final class ContractMasteryMigration {
     public static List<CompoundTag> channels(ItemStack carrier) {
-        var result = new ArrayList<CompoundTag>();
+        var result = new ArrayList<>(com.maidweapon.forge.system.contract.ContractChannelStorage.channels(carrier));
         if (!carrier.hasTag()) return result;
-        var root = carrier.getTag(); result.add(root);
-        if (root.contains("MaidWeaponExternalContract", Tag.TAG_COMPOUND)) result.add(root.getCompound("MaidWeaponExternalContract"));
-        var spirits = root.getCompound("MaidWeaponIntrinsicSpirits");
-        // Existing contract safety bounds spirit archives. Do not recursively scan arbitrary NBT.
-        if (spirits.getAllKeys().size() <= 64) for (String id : spirits.getAllKeys()) {
-            var entry = spirits.getCompound(id);
-            if (entry.contains("Contract", Tag.TAG_COMPOUND)) result.add(entry.getCompound("Contract"));
-        }
+        var root = carrier.getTag();
         var sealed = root.getCompound(FoxSpiritState.SEAL);
         if (sealed.contains("Contract", Tag.TAG_COMPOUND)) result.add(sealed.getCompound("Contract"));
         return result;
@@ -76,6 +69,8 @@ public final class ContractMasteryMigration {
             com.maidweapon.forge.system.contract.ContractChannelStorage.restoreContract(view, channel);
             if (!seal && !ContractAuthorization.allows(owner, view)) continue;
             String source = source(channel);
+            if (carrier.getTag().getBoolean("MaidWeaponClientSuppliedContract")
+                    && !storage.matchesSource(owner.getUUID(), source, ContractMasteryCodec.read(channel.getCompound("MaidData")))) continue;
             if (!storage.hasSource(source)) {
                 boolean imported = storage.importSource(owner.getUUID(), source, ContractMasteryCodec.read(channel.getCompound("MaidData")));
                 changed |= imported;

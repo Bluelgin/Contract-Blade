@@ -367,38 +367,15 @@ public final class ContractInteriorService {
         Entity maid = maidId == null || maidId.isEmpty()
                 ? null : ContractWeaponLocator.findManifestedMaid(player, maidId);
 
-        boolean homeReleased = ContractHomeRuntime.stop(player);
-        boolean maidReleased = maid == null
-                || homeReleased && ContractHomeRuntime.prepareCapture(maid);
-
-        ItemStack film = maidReleased
-                ? TouhouLittleMaidHelper.createEmergencyResurrectionFilm(player, destroyed, maid)
-                : ItemStack.EMPTY;
-        if (!film.isEmpty() && deliverEmergencyFilm(player, film)) {
-            if (maid != null && !maid.isRemoved()) maid.discard();
-            restoreReturn(player);
-            clearReturn(player);
-            player.displayClientMessage(Component.translatable(
-                    "maid_weapon.message.carrier_destroyed_film_created"), false);
-            return true;
-        }
-
-        if (maid != null && !maid.isRemoved()) {
-            ContractHomeRuntime.pauseUncaptured(maid, binding);
-        }
+        ContractHomeRuntime.stop(player);
+        if (maid != null && !maid.isRemoved()) ContractHomeRuntime.prepareCapture(maid);
         restoreReturn(player);
         clearReturn(player);
-        player.displayClientMessage(Component.translatable(
-                "maid_weapon.message.emergency_film_failed"), false);
+        // Continue through the single confirmed-durability rescue path. Never discard a live resident for a film.
         return false;
     }
 
-    private static boolean deliverEmergencyFilm(ServerPlayer player, ItemStack film) {
-        ItemStack remainder = film.copy();
-        player.getInventory().add(remainder);
-        if (remainder.isEmpty()) return true;
-        return player.drop(remainder, false) != null;
-    }
+
 
     private static boolean recallInteriorMaid(ServerPlayer player, ItemStack contract) {
         boolean homeReleased = ContractHomeRuntime.stop(player);

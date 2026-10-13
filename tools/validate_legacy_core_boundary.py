@@ -17,8 +17,9 @@ shim = read("src/main/java/com/maidweapon/forge/system/SinFragmentSystem.java")
 # Old saves retain their serialized field.
 if 'KEY_EMBEDDED_SINS = "EmbeddedSins"' not in serializer:
     raise SystemExit("legacy seven-sins NBT would be lost during rewrite")
-if "LegacySinArchive.hasData(data)" not in tooltip:
-    raise SystemExit("old Part data is no longer surfaced as archived metadata")
+# Legacy storage remains, but player tooltips must not advertise inactive internal archives.
+if "LegacySinArchive" in tooltip or "legacy_sin_data" in tooltip:
+    raise SystemExit("inactive legacy metadata leaked into the player tooltip")
 
 # Core gameplay must not execute the paused Part rules.
 for name, source in {

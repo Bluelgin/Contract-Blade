@@ -90,7 +90,6 @@ public final class MaidBondCombatHandler {
             carrier.publish(owner);
             return DeathProtection.RECALLED;
         }
-        com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.recallFailed(owner, weapon);
         return DeathProtection.LIVE_PROTECTED_RECALL_FAILED;
     }
 

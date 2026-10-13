@@ -4,7 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 
-/** Durable incident facts and single-use receipts. Never a second entity inventory or lifecycle authority. */
+/** Current maid location/binding plus read-compatible legacy recovery archives. No incident authorizes a spawn. */
 public final class ContractRecoveryJournal extends SavedData {
     private final CompoundTag incidents;
     private final CompoundTag transfers;
@@ -24,14 +24,19 @@ public final class ContractRecoveryJournal extends SavedData {
         if (root.contains("Schema") && root.getInt("Schema") != 1) journal.future = root.copy();
         return journal;
     }
-    public boolean blocksAbility(String binding) {
-        if (future != null) return true;
-        var data=incidents.getCompound(binding);String status=data.getString("Status");
-        return status.equals("COMMITTING")||status.equals("REVIEW_REQUIRED")||status.equals("PENDING")&&data.getBoolean("Confirmed");
+    public void clearIncident(String binding) {
+        if (future == null && binding != null && incidents.contains(binding)) { incidents.remove(binding); setDirty(); }
     }
-    public CompoundTag incident(String binding) { return incidents.getCompound(binding).copy(); }
+    public void worldPresent(String maid, boolean present) {
+        if (future != null || maid == null || maid.isBlank()) return;
+        var record = transfer(maid);
+        if (record.contains("WorldPresent") && record.getBoolean("WorldPresent") == present) return;
+        record.putBoolean("WorldPresent", present);
+        transfer(maid, record);
+    }
+    public CompoundTag incident(String binding) { return binding == null ? new CompoundTag() : incidents.getCompound(binding).copy(); }
     public void incident(String binding, CompoundTag value) { writable(); incidents.put(binding, value.copy()); setDirty(); }
-    public CompoundTag transfer(String maid) { return transfers.getCompound(maid).copy(); }
+    public CompoundTag transfer(String maid) { return maid == null ? new CompoundTag() : transfers.getCompound(maid).copy(); }
     public void transfer(String maid, CompoundTag value) { writable(); transfers.put(maid, value.copy()); setDirty(); }
     @Override public CompoundTag save(CompoundTag root) {
         if (future != null) return future.copy();

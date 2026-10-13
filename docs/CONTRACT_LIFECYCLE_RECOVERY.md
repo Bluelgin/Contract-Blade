@@ -1,3 +1,5 @@
+> 本文记录 PR #13/#14 的历史机制与当时验证。当前精简分支请阅读 [契约生命周期精简](CONTRACT_LIFECYCLE_SIMPLIFICATION.md) 和 [当前验证记录](SIMPLIFICATION_VALIDATION.md)；旧备份回执/待审查流程已不再作为操作权限。
+
 # Stage three A: contract lifecycle, transfer and incident recovery
 
 Base: PR #12 b9a8c74d44d52a8846926703596824f677fc51bd. PR #10 and #11

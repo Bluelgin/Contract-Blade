@@ -52,7 +52,7 @@ public final class ContractStageThreeValidation {
         menu.getSlot(0).set(new ItemStack(Items.DIAMOND_SWORD)); menu.getSlot(1).set(seal);
         check(menu.clickMenuButton(player,0),"talisman migrates to another carrier"); weapon=menu.getSlot(2).getItem();
         check(binding.equals(ContractCarrierData.getBindingId(weapon))&&id.toString().equals(ContractCarrierData.getBoundMaidUUID(weapon)),"maid UUID and interior binding preserved");
-        check(!SoulTalismanService.importAllowed(player,staleSeal),"used talisman cannot replay");
+        check(SoulTalismanService.importAllowed(player,staleSeal),"copied talisman is allowed when no real UUID exists");
         menu.getSlot(2).set(ItemStack.EMPTY); menu.getSlot(3).set(ItemStack.EMPTY); player.containerMenu=player.inventoryMenu;
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,weapon);
         check(ContractLifecycleService.manifest(player,weapon,false),"manifest migrated maid"); maid=(LivingEntity)server.overworld().getEntity(id);
@@ -102,13 +102,14 @@ public final class ContractStageThreeValidation {
         ContractAnomalyRecoveryService.record(player,weapon,"NOT_LOADED",false);
         check(ContractAnomalyRecoveryService.state(player,weapon)==ContractAnomalyRecoveryService.State.SUSPECT_MISSING,"unknown missing stays suspect");
         var backup=TlmEntityAdapter.save(maid); backup.putString("id","touhou_little_maid:maid");
-        check(ContractAnomalyRecoveryService.preflight(player,weapon,ContractAnomalyRecoveryService.incident(player,weapon),new TlmBackupBridge.Result("fixture",backup,"old"))!=null,"suspect cannot be restored");
+        check(!ContractWeaponLocator.mayManifest(player,id.toString()),"unloaded original blocks another real UUID");
+        check(!ContractLifecycleService.manifest(player,snapshot.copy(),false),"a stored ItemStack copy cannot resurrect an unloaded maid");
         ContractAnomalyRecoveryService.record(player,weapon,"KILLED",true);
         var incident=ContractAnomalyRecoveryService.incident(player,weapon);
         check(ContractAnomalyRecoveryService.releasesSlot(player,weapon),"confirmed loss releases follower slot");
         check(ContractAnomalyRecoveryService.cleanup(player,weapon,incident),"confirmed ordinary unbind");
-        check(!MaidInfusion.isInfused(weapon)&&weapon.getItem()==Items.DIAMOND_SWORD,"native weapon survives cleanup");
-        check(!ContractAnomalyRecoveryService.cleanup(player,weapon,incident),"repeated cleanup is idempotent");
+        check(MaidInfusion.isInfused(weapon)&&weapon.getItem()==Items.DIAMOND_SWORD,"cleanup retains identity and native weapon");
+        check(ContractAnomalyRecoveryService.cleanup(player,weapon,incident),"repeated runtime cleanup is idempotent");
         // The current removed snapshot is preferred over old disk data and preserves equipment.
         var foxMaid=maid(player); var foxId=foxMaid.getUUID(); var foxCarrier=new ItemStack(Items.IRON_SWORD);
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,foxCarrier);
@@ -126,31 +127,57 @@ public final class ContractStageThreeValidation {
         check(ContractLifecycleService.manifest(player,foxCarrier,false),"current rescued special manifests with original UUID");
         foxMaid=(LivingEntity)server.overworld().getEntity(foxId); check(foxMaid!=null,"same UUID recovered");
         check(ContractLifecycleService.capture(player,foxMaid,foxCarrier,false),"current rescued special recalls normally");
-        check(TlmBackupBridge.supported(),"actual TLM 1.5.3 backup methods verified");
+        // Native TLM APIs create the backup photo; Contract Blade never opens a backup file itself.
         var backupMaid=(com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid)maid(player);
         UUID backupId=backupMaid.getUUID();
-        com.github.tartaricacid.touhoulittlemaid.world.backups.MaidBackupsManager.save(server,backupMaid);
-        TlmBackupBridge.Result nativeBackup=null;
-        for(int attempt=0;attempt<30;attempt++) {
-            nativeBackup=TlmBackupBridge.latest(player,backupId).get(10,java.util.concurrent.TimeUnit.SECONDS);
-            if(nativeBackup.data()!=null)break;
-            Thread.sleep(50); // test-only wait for upstream's asynchronous save
-        }
-        check(nativeBackup!=null&&nativeBackup.data()!=null&&nativeBackup.data().getUUID("UUID").equals(backupId),"reads actual native TLM asynchronous backup");
+        backupMaid.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND,new ItemStack(Items.EMERALD,4));
         var backupCarrier=new ItemStack(Items.DIAMOND_SWORD); player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,backupCarrier);
-        check(ContractLifecycleService.capture(player,backupMaid,backupCarrier,false),"bind actual backup identity");
-        check(ContractLifecycleService.manifest(player,backupCarrier,false),"manifest for confirmed death backup rescue");
+        check(ContractLifecycleService.capture(player,backupMaid,backupCarrier,false),"bind native backup identity");
+        check(ContractLifecycleService.manifest(player,backupCarrier,false),"manifest native backup fixture");
         backupMaid=(com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid)server.overworld().getEntity(backupId);
+        com.github.tartaricacid.touhoulittlemaid.world.backups.MaidBackupsManager.save(server,backupMaid);
+        CompoundTag nativeBackup=new CompoundTag();
+        for(int attempt=0;attempt<60;attempt++) {
+            var files=com.github.tartaricacid.touhoulittlemaid.world.backups.MaidBackupsManager.getMaidBackupFiles(player,backupId);
+            if(!files.isEmpty()) nativeBackup=com.github.tartaricacid.touhoulittlemaid.world.backups.MaidBackupsManager.getMaidBackFile(player,backupId,files.get(0));
+            if(!nativeBackup.isEmpty()) break;
+            Thread.sleep(50); // fixture-only wait for the upstream asynchronous writer
+        }
+        check(nativeBackup.hasUUID("UUID")&&nativeBackup.getUUID("UUID").equals(backupId),"actual TLM backup API returns original identity");
+        com.github.tartaricacid.touhoulittlemaid.item.ItemCamera.spawnMaidPhoto(server.overworld(),nativeBackup,player);
+        check(!ContractWeaponLocator.mayManifest(player,backupId.toString()),"backup photo generation never clears a live UUID guard");
+        // Native custom death is offline here, so no capture can preserve a newer snapshot.
         backupMaid.remove(net.minecraft.world.entity.Entity.RemovalReason.KILLED);
         ContractAnomalyRecoveryService.record(player,backupCarrier,"KILLED",true);
-        String result=ContractAnomalyRecoveryService.restore(player,backupCarrier,nativeBackup);
-        check(result.startsWith("RESTORED"),"actual backup is safely stored in matching contract: "+result);
-        check(ContractMaidStorage.read(player,backupCarrier).getUUID("UUID").equals(backupId),"backup restore retains original UUID");
-        check(!ContractAnomalyRecoveryService.restore(player,backupCarrier,nativeBackup).startsWith("RESTORED"),"backup cannot be replayed");
-        check(ContractLifecycleService.manifest(player,backupCarrier,false),"backup-restored maid manifests");
-        check(ContractLifecycleService.capture(player,server.overworld().getEntity(backupId),backupCarrier,false),"backup-restored maid recalls");
-        var noBackup=TlmBackupBridge.latest(player,UUID.randomUUID()).get(10,java.util.concurrent.TimeUnit.SECONDS);
-        check(noBackup.data()==null,"missing backup creates no replacement");
+        check(ContractAnomalyRecoveryService.releasesSlot(player,backupCarrier),"missing maid does not lock follower capacity");
+        var photo=ItemStack.EMPTY;
+        for(int slot=0;slot<player.getInventory().getContainerSize();slot++) {
+            var candidate=player.getInventory().getItem(slot);
+            if(candidate.is(item("touhou_little_maid:photo").getItem())&&candidate.getTag().getCompound("MaidInfo").getUUID("UUID").equals(backupId)) photo=candidate;
+        }
+        check(!photo.isEmpty(),"native camera API delivers an actual restoration photo");
+        playerMap.put(player.getUUID(),player);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,photo);
+        var pos=player.blockPosition().below(); server.overworld().setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+        var context=new net.minecraft.world.item.context.UseOnContext(player,net.minecraft.world.InteractionHand.MAIN_HAND,
+                new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos),net.minecraft.core.Direction.UP,pos,false));
+        photo.useOn(context); playerMap.remove(player.getUUID());
+        var restored=server.overworld().getEntity(backupId);
+        check(restored instanceof LivingEntity&&((LivingEntity)restored).getOffhandItem().getCount()==4,"native ItemPhoto preserves original UUID and historical equipment");
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,backupCarrier);
+        check(ContractLifecycleService.capture(player,restored,backupCarrier,false),"native-restored maid can reenter original contract");
+        // Legacy incident flags and creative provenance do not override a current complete snapshot.
+        var review=new CompoundTag(); review.putBoolean("Confirmed",true); review.putString("Status","REVIEW_REQUIRED");
+        review.putUUID("Owner",player.getUUID()); review.putString("Maid",backupId.toString());review.putString("Binding",ContractCarrierData.getBindingId(backupCarrier));
+        ContractRecoveryJournal.get(server).incident(ContractCarrierData.getBindingId(backupCarrier),review);
+        backupCarrier.getOrCreateTag().putBoolean("MaidWeaponClientSuppliedContract",true);
+        var staleDestination=ContractRecoveryJournal.get(server).transfer(backupId.toString());staleDestination.putString("Kind","EMERGENCY");
+        ContractRecoveryJournal.get(server).transfer(backupId.toString(),staleDestination);
+        var copy=backupCarrier.copy();player.getInventory().setItem(1,copy);
+        check(ContractLifecycleService.manifest(player,backupCarrier,false),"current snapshot manifests despite old review/emergency receipt/client provenance and inventory copy");
+        check(!ContractLifecycleService.manifest(player,copy,false),"copy cannot create second loaded UUID");
+        check(ContractLifecycleService.capture(player,server.overworld().getEntity(backupId),backupCarrier,false),"real entity recalls with a duplicate item present");
+        player.getInventory().setItem(1,ItemStack.EMPTY);
         // Force a real durability loss and a canceled native spawn, then consume the actual emergency film.
         var emergencyMaid=maid(player); UUID emergencyId=emergencyMaid.getUUID();
         emergencyMaid.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND,new ItemStack(Items.DIAMOND_AXE));
@@ -186,10 +213,43 @@ public final class ContractStageThreeValidation {
         playerMap.remove(player.getUUID());
         player.getInventory().clearContent(); var newCarrier=new ItemStack(Items.IRON_SWORD); player.getInventory().setItem(0,newCarrier);
         check(ContractLifecycleService.capture(player,revivedEmergency,newCarrier,false),"released emergency maid can enter a new normal contract");
+        // An active ordinary contract and dormant intrinsic spirit share one physical carrier.
+        var guest=maid(player);String guestId=guest.getStringUUID();var multi=new ItemStack(Items.IRON_SWORD);
+        player.getInventory().clearContent();player.getInventory().setItem(0,multi);
+        check(ContractLifecycleService.capture(player,guest,multi,false),"capture ordinary guest of a multichannel carrier");
+        check(com.maidweapon.forge.api.IntrinsicSpiritApi.ensureIntrinsicSpirit(player,multi,"fixture:resident","Resident"),"create independent dormant intrinsic channel");
+        String residentId=com.maidweapon.forge.api.IntrinsicSpiritApi.readOnlyContract(multi,"fixture:resident").getString("MaidUUID");
+        check(!residentId.isEmpty()&&!residentId.equals(guestId),"multichannel fixture owns two existing original UUIDs");
+        multi.setDamageValue(multi.getMaxDamage()-1);multi.hurtAndBreak(2,player,ignored->{});
+        check(multi.isEmpty(),"multichannel carrier actually consumed");
+        for(int pass=0;pass<8;pass++) {
+            ((net.minecraft.world.level.storage.ServerLevelData)server.overworld().getLevelData()).setGameTime(server.overworld().getGameTime()+45);
+            ContractCarrierLossService.process(player,ContractWeaponLocator.indexByBinding(player),(p,c)->{});
+            if(server.overworld().getEntity(UUID.fromString(guestId))!=null&&server.overworld().getEntity(UUID.fromString(residentId))!=null) break;
+        }
+        var freeGuest=server.overworld().getEntity(UUID.fromString(guestId));var freeResident=server.overworld().getEntity(UUID.fromString(residentId));
+        check(freeGuest!=null&&freeResident!=null,"durability rescue preserves active and dormant original maids");
+        check(freeGuest.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID).isEmpty()
+            &&freeResident.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID).isEmpty(),"both recovered channels become free without lost carrier bindings");
+        // Existing native interior safety uses the same capture/manifest boundary after this refactor.
+        String oldHomeValidation=System.getProperty("contractblade.home.nativeValidation");
+        System.setProperty("contractblade.home.nativeValidation","true");
+        try { ContractHomeSafetyValidation.run(server.getLevel(com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)); }
+        finally {
+            if(oldHomeValidation==null)System.clearProperty("contractblade.home.nativeValidation");
+            else System.setProperty("contractblade.home.nativeValidation",oldHomeValidation);
+        }
+        // Save an actually manifested original plus a stale stored copy for restart duplicate protection.
+        var restartMaid=maid(player);var restartCarrier=new ItemStack(Items.IRON_SWORD);
+        player.getInventory().setItem(0,restartCarrier);
+        check(ContractLifecycleService.capture(player,restartMaid,restartCarrier,false),"capture live-restart fixture");
+        var storedCopy=restartCarrier.copy();String restartId=ContractCarrierData.getBoundMaidUUID(restartCarrier);
+        check(ContractLifecycleService.manifest(player,restartCarrier,false),"manifest live original before restart");
         var checkpoint = new CompoundTag(); checkpoint.putUUID("Owner",player.getUUID());
         checkpoint.put("Carrier",backupCarrier.save(new CompoundTag()));
+        checkpoint.put("StoredCopy",storedCopy.save(new CompoundTag()));checkpoint.putString("LiveMaid",restartId);
         var committed = ContractAnomalyRecoveryService.incident(player,backupCarrier);
-        committed.putString("Status","COMMITTING"); // fault injection: stop after a reserved commit with stored data
+        committed.putBoolean("BackupSpent",true); committed.putString("Status","COMMITTING"); // fault injection: stop after a reserved commit with stored data
         ContractRecoveryJournal.get(server).incident(ContractCarrierData.getBindingId(backupCarrier),committed);
         server.overworld().getDataStorage().set("maid_weapon_stage_three_fixture",new Checkpoint(checkpoint));
         server.overworld().getDataStorage().save();
@@ -206,15 +266,18 @@ public final class ContractStageThreeValidation {
         check(checkpoint.hasUUID("Owner"),"actual prior server checkpoint loaded");
         var player=net.minecraftforge.common.util.FakePlayerFactory.get(server.overworld(),
                 new com.mojang.authlib.GameProfile(checkpoint.getUUID("Owner"),"RecoveryResume"));
+        var liveCopy=ItemStack.of(checkpoint.getCompound("StoredCopy"));
+        check(ContractRecoveryJournal.get(server).transfer(checkpoint.getString("LiveMaid")).getBoolean("WorldPresent"),"real live original world presence survives server restart");
+        check(!ContractLifecycleService.manifest(player,liveCopy,false),"persisted live or unloaded original prevents copied snapshot from spawning after restart");
         var carrier=ItemStack.of(checkpoint.getCompound("Carrier"));
         player.getInventory().clearContent();player.getInventory().selected=0;player.getInventory().setItem(0,carrier);
         var record=ContractAnomalyRecoveryService.incident(player,carrier);
         check(record.getBoolean("BackupSpent")&&record.getString("Status").equals("COMMITTING"),"spent interrupted receipt survives real stop/restart");
         check(ContractWeaponLocator.findManifestedMaid(player,ContractCarrierData.getBoundMaidUUID(carrier))==null,"restart creates no second maid");
-        check(!ContractLifecycleService.manifest(player,carrier,false),"interrupted transaction cannot replay manifestation");
         ContractAnomalyRecoveryService.reconcile(player);
-        check(ContractAnomalyRecoveryService.incident(player,carrier).getString("Status").equals("REVIEW_REQUIRED"),"stored interrupted payload retained for operator review");
-        check(MaidInfusion.containsMaid(carrier),"restart quarantine retains final entity data");
+        check(ContractAnomalyRecoveryService.incident(player,carrier).isEmpty(),"old interrupted diagnostics clear when a current complete snapshot exists");
+        check(ContractLifecycleService.manifest(player,carrier,false),"stored original works after a real restart despite old commit marker");
+        check(ContractLifecycleService.capture(player,ContractWeaponLocator.findManifestedMaid(player,ContractCarrierData.getBoundMaidUUID(carrier)),carrier,false),"restart original recalls safely");
         player.getInventory().clearContent();
         com.mojang.logging.LogUtils.getLogger().info("CONTRACT_STAGE_THREE_RESTART_PASS");
     }

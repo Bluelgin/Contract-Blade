@@ -176,7 +176,7 @@ public final class ContractCompanionService {
             ItemStack activeCarrier = ContractWeaponLocator.findBoundWeaponByBinding(owner, active.bindingId());
             if (!activeCarrier.isEmpty() && com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.releasesSlot(owner, activeCarrier)) continue;
             Entity maid = ContractWeaponLocator.findManifestedMaid(owner, active.maidId());
-            if (maid == null || !TlmResidenceAdapter.isResident(maid)
+            if (maid != null && !TlmResidenceAdapter.isResident(maid)
                     && ContractCompanionState.mode(maid) != ContractCompanionState.Mode.RESIDENT) seen.add(active.bindingId());
         }
         return seen.size() < ContractRulesConfig.MAX_FOLLOWERS.get();

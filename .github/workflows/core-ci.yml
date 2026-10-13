@@ -11,6 +11,7 @@ on:
       - codex/fox-native-sword-art
       - codex/black-fox-sword-core-growth
       - codex/contract-lifecycle-recovery
+      - codex/white-fox-blessing-growth
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
@@ -71,4 +72,5 @@ jobs:
           python tools/validate_projection_baubles.py
           python tools/validate_companion.py
           python tools/validate_shrine.py
+          python tools/validate_player_tooltips.py
           python tools/validate_fox_models.py

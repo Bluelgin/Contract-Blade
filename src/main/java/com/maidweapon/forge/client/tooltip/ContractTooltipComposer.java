@@ -3,7 +3,6 @@ package com.maidweapon.forge.client.tooltip;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 
 import com.maidweapon.common.data.MaidWeaponData;
-import com.maidweapon.common.legacy.LegacySinArchive;
 import com.maidweapon.common.system.LoyaltySystem;
 import com.maidweapon.forge.compat.SlashBladeCompat;
 import com.maidweapon.forge.item.MaidInfusion;
@@ -14,7 +13,6 @@ import net.minecraft.world.item.ItemStack;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Builds the compact/expanded contract tooltip shared by dedicated and infused weapons.
@@ -27,23 +25,17 @@ public final class ContractTooltipComposer {
     public static void append(ItemStack stack, @Nullable Player viewer, List<Component> tooltip) {
         MaidWeaponData data = MaidInfusion.data(stack);
         var mastery = com.maidweapon.forge.system.mastery.ContractMasteryService.getProgress(viewer);
-        boolean dedicated = MaidInfusion.isContractBlade(stack);
         boolean stored = MaidInfusion.containsMaid(stack);
         boolean superseded = ContractCarrierData.isContractSuperseded(stack);
         boolean ownerAccess = viewer == null || ContractCarrierData.isOwner(stack, viewer);
         boolean expanded = Screen.hasShiftDown();
 
         tooltip.add(Component.empty());
-        tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
         tooltip.add(Component.translatable("maid_weapon.tooltip.maid_name", data.getMaidName()));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.level", mastery.getLevel()));
         tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
                 data.getResonance(), MaidWeaponData.maximumResonance()));
         tooltip.add(Component.translatable(statusKey(stored, superseded)));
 
-        if (superseded) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.superseded_contract"));
-        }
         if (!ownerAccess) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.borrowed_contract_locked"));
         }
@@ -54,16 +46,14 @@ public final class ContractTooltipComposer {
 
         if (!expanded) return;
 
-        appendContractSection(stack, data, mastery, tooltip);
-        appendGrowthSection(data, mastery, tooltip);
-        appendPowerSection(data, mastery, dedicated, ownerAccess && viewer != null, tooltip);
-        appendUsageSection(stack, stored, superseded, dedicated, ownerAccess, tooltip);
+        appendContractSection(stack, data, tooltip);
+        appendGrowthSection(mastery, tooltip);
+        appendUsageSection(stack, stored, superseded, ownerAccess, tooltip);
     }
 
     private static void appendContractSection(
             ItemStack stack,
             MaidWeaponData data,
-            com.maidweapon.common.data.ContractMasteryData mastery,
             List<Component> tooltip
     ) {
         tooltip.add(Component.empty());
@@ -77,9 +67,9 @@ public final class ContractTooltipComposer {
                 data.getFavorability(), LoyaltySystem.getFavorabilityTitle(data.getFavorability())));
     }
 
-    private static void appendGrowthSection(MaidWeaponData data, com.maidweapon.common.data.ContractMasteryData mastery, List<Component> tooltip) {
+    private static void appendGrowthSection(com.maidweapon.common.data.ContractMasteryData mastery, List<Component> tooltip) {
         tooltip.add(Component.empty());
-        tooltip.add(Component.translatable("maid_weapon.tooltip.section.growth"));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.level", mastery.getLevel()));
         tooltip.add(Component.translatable("maid_weapon.tooltip.kills", mastery.getTotalKills()));
         tooltip.add(Component.translatable(
                 "maid_weapon.tooltip.unlocked_tier",
@@ -99,54 +89,12 @@ public final class ContractTooltipComposer {
                 nextUpgradeRequirement(mastery)
         ));
 
-        if (LegacySinArchive.hasData(data)) {
-            tooltip.add(Component.translatable(
-                    "maid_weapon.tooltip.legacy_sin_data",
-                    LegacySinArchive.entryCount(data)
-            ));
-        }
-    }
-
-    private static void appendPowerSection(
-            MaidWeaponData data,
-            com.maidweapon.common.data.ContractMasteryData mastery,
-            boolean dedicated,
-            boolean ownerAccess,
-            List<Component> tooltip
-    ) {
-        if (!ownerAccess) return;
-
-        tooltip.add(Component.empty());
-        tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
-        tooltip.add(Component.translatable(
-                "maid_weapon.tooltip.level_damage_bonus",
-                oneDecimal(mastery.getAttackDamageBonus())
-        ));
-        tooltip.add(Component.translatable(
-                "maid_weapon.tooltip.favorability_bonus",
-                oneDecimal((data.getFavorabilityDamageMultiplier() - 1.0f) * 100.0f)
-        ));
-
-        if (dedicated) {
-            float totalDamage =
-                    (3.0f + mastery.getAttackDamageBonus()) * data.getFavorabilityDamageMultiplier();
-            tooltip.add(Component.translatable(
-                    "maid_weapon.tooltip.dedicated_damage",
-                    oneDecimal(totalDamage)
-            ));
-        } else {
-            tooltip.add(Component.translatable(
-                    "maid_weapon.tooltip.additive_damage",
-                    oneDecimal(Math.max(0, mastery.getAttackDamageBonus() * data.getFavorabilityDamageMultiplier()))
-            ));
-        }
     }
 
     private static void appendUsageSection(
             ItemStack stack,
             boolean stored,
             boolean superseded,
-            boolean dedicated,
             boolean ownerAccess,
             List<Component> tooltip
     ) {
@@ -163,8 +111,7 @@ public final class ContractTooltipComposer {
 
         if (SlashBladeCompat.usesMaidSlashBladeTask(stack)) {
             tooltip.add(Component.translatable(
-                    "maid_weapon.tooltip.maid_slashblade_task",
-                    SlashBladeCompat.getMaidSlashBladeProviderName()
+                    "maid_weapon.tooltip.maid_slashblade_task"
             ));
         }
     }
@@ -173,7 +120,7 @@ public final class ContractTooltipComposer {
         if (superseded) return "maid_weapon.tooltip.status.superseded";
         return stored
                 ? "maid_weapon.tooltip.status.stored"
-                : "maid_weapon.tooltip.status.manifested";
+                : "maid_weapon.tooltip.status.away";
     }
 
     private static Component tierName(int tier) {
@@ -194,8 +141,8 @@ public final class ContractTooltipComposer {
         }
         if (com.maidweapon.common.ContractRulesConfig.LEVELS[level + 1].custom()) {
             var rule = com.maidweapon.common.ContractRulesConfig.LEVELS[level + 1];
-            String target = rule.mode().get().equals("entities")
-                    ? String.join(" / ", rule.entities().get()) : "TIER " + rule.tier().get();
+            Component target = rule.mode().get().equals("entities")
+                    ? Component.translatable("maid_weapon.tooltip.upgrade.targets") : tierName(rule.tier().get());
             return Component.translatable("maid_weapon.tooltip.upgrade.configured",
                     target, mastery.getNextUpgradeProgress(), rule.kills().get());
         }
@@ -210,10 +157,6 @@ public final class ContractTooltipComposer {
                     com.maidweapon.common.data.ContractMasteryData.TIER_REQUIREMENT[level - 1]
             );
         };
-    }
-
-    private static String oneDecimal(float value) {
-        return String.format(Locale.ROOT, "%.1f", value);
     }
 
     private ContractTooltipComposer() {

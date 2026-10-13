@@ -179,6 +179,7 @@ public final class ContractCarrierLossValidation {
         var budgets = (Map<?, ?>) budgetField.get(null);
         budgets.clear();
         var players = new net.minecraft.server.level.ServerPlayer[5];
+        int[] completed={0};
         try {
             for (int i = 0; i < players.length; i++) {
                 var owner = net.minecraftforge.common.util.FakePlayerFactory.get(level,
@@ -193,24 +194,18 @@ public final class ContractCarrierLossValidation {
                     field.set(task, new ContractCarrierLossService.Candidate(candidate.maidId(), binding,
                             candidate.snapshot(), level.getGameTime() - 45));
                 }
-                ContractCarrierLossService.process(owner, Map.of(), (p, c) -> { throw new IllegalStateException("missing maid released"); });
+                ContractCarrierLossService.process(owner, Map.of(), (p, c) -> {
+                    check(ContractWeaponLocator.findManifestedMaid(p,c.maidId())==null,"missing snapshot creates no default entity"); completed[0]++;
+                });
             }
-            int attempted = 0;
-            for (var owner : players) {
-                for (Object task : pending.get(owner.getUUID()).values()) {
-                    var retry = task.getClass().getDeclaredField("nextAttempt"); retry.setAccessible(true);
-                    if (retry.getLong(task) > level.getGameTime()) attempted++;
-                }
-                ContractCarrierLossService.process(owner, Map.of(), (p, c) -> { });
-            }
-            check(attempted == 8, "global restoration budget across five players");
-            check(pending.get(players[4].getUUID()).size() == 2, "over-budget tasks retained");
+            check(completed[0]==8,"global rescue budget across five players");
+            check(pending.get(players[4].getUUID()).size()==2,"over-budget no-snapshot tasks remain for the next pass");
+            for(var owner:players) ContractCarrierLossService.process(owner,Map.of(),(p,c)->completed[0]++);
+            check(completed[0]==8,"the same server tick cannot exceed its global budget");
             budgets.clear();
-            for (var owner : players) ContractCarrierLossService.process(owner, Map.of(), (p, c) -> { });
-            var used = budgets.get(level.getServer()).getClass().getDeclaredField("used");
-            used.setAccessible(true);
-            check(used.getInt(budgets.get(level.getServer())) == 2, "failed jobs do not retry before backoff");
-            check(pending.get(players[0].getUUID()).size() == 2, "failed tasks retained with retry backoff");
+            for(var owner:players) ContractCarrierLossService.process(owner,Map.of(),(p,c)->completed[0]++);
+            check(completed[0]==10,"next budget pass completes missing-data guidance without endless retries");
+            for(var owner:players) check(!ContractCarrierLossService.hasPending(owner),"no-snapshot completion does not leave blocked tasks");
             System.out.println("CONTRACT_SERVER_BUDGET_VALIDATION_PASSED");
         } finally {
             for (var owner : players) if (owner != null) pending.remove(owner.getUUID());

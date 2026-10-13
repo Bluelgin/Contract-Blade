@@ -67,7 +67,7 @@ public final class MaidWeaponMod {
             if (net.minecraftforge.fml.ModList.get().isLoaded("touhou_little_maid"))
                 com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.register();
             com.maidweapon.forge.system.fox.challenge.BlackFoxEncounters.setup();
-            com.maidweapon.forge.api.ContractAuthorization.register("soul-transfer-receipt",
+            com.maidweapon.forge.api.ContractAuthorization.register("contract-destination",
                     com.maidweapon.forge.compat.tlm.SoulTalismanService::authorizes);
             com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
             com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();

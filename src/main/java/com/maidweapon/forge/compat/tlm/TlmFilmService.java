@@ -149,21 +149,8 @@ public final class TlmFilmService {
                 || !ContractCarrierData.isOwner(contract, player)) return ItemStack.EMPTY;
         try {
             CompoundTag maidData;
-            if (liveMaid != null) {
-                if (!TlmEntityAdapter.isOwnedMaid(liveMaid, player)
-                        || !ContractCarrierData.isBoundMaid(contract, liveMaid)) {
-                    return ItemStack.EMPTY;
-                }
-                MaidCareTaskSystem.restoreOriginalTask(contract, liveMaid);
-                if (liveMaid instanceof LivingEntity living) {
-                    TripleMagicCompat.clearPhantoms(living, contract);
-                    TaczCompat.clear(player, living, contract);
-                }
-                maidData = TlmEntityAdapter.save(liveMaid);
-            } else {
-                maidData = ContractMaidStorage.read(player, contract);
-                if (maidData == null) return ItemStack.EMPTY;
-            }
+            maidData = ContractMaidStorage.read(player, contract);
+            if (maidData == null) return ItemStack.EMPTY;
 
             if (!maidData.hasUUID("Owner") || !player.getUUID().equals(maidData.getUUID("Owner"))
                     || !maidData.hasUUID("UUID") || !maidData.getUUID("UUID").toString()
@@ -188,7 +175,6 @@ public final class TlmFilmService {
             emergency.putUUID("Owner", player.getUUID());
             emergency.putString("Binding", ContractCarrierData.getBindingId(contract));
             emergency.putString("Maid", ContractCarrierData.getBoundMaidUUID(contract));
-            emergency.putUUID("Token", java.util.UUID.randomUUID());
             if (com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(contract))
                 emergency.put("Fox", com.maidweapon.forge.system.fox.FoxSpiritState.resident(contract).copy());
             filmTag.put(SoulTalismanService.EMERGENCY, emergency);

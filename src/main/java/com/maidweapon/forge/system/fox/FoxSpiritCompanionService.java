@@ -20,7 +20,11 @@ public final class FoxSpiritCompanionService {
         var identity = FoxSpiritState.resident(weapon);
         if (!FoxSpiritState.valid(identity) || !identity.getUUID("OwnerUUID").equals(owner.getUUID())
                 || !FoxSpiritLedger.get(owner.getServer()).owns(identity, "WEAPON")) return false;
-        if (identity.getBoolean(INITIALIZED)) return true;
+        if (identity.getBoolean(INITIALIZED)) {
+            String id = IntrinsicSpiritApi.readOnlyContract(weapon, identity.getString("SpiritId")).getString("MaidUUID");
+            FoxSpiritLedger.get(owner.getServer()).rememberMaid(identity, id);
+            return true;
+        }
         String spirit = identity.getString("SpiritId");
         boolean black = FoxSpiritState.BLACK.equals(spirit);
         String model = black ? FoxModelPackBootstrap.BLACK_MODEL : FoxModelPackBootstrap.WHITE_MODEL;
@@ -37,6 +41,7 @@ public final class FoxSpiritCompanionService {
                 || !IntrinsicSpiritApi.setIntrinsicSpiritActive(owner, prepared, spirit, true)) return false;
         FoxSpiritState.resident(prepared).putBoolean(INITIALIZED, true);
         weapon.setTag(prepared.getTag());
+        FoxSpiritLedger.get(owner.getServer()).rememberMaid(identity, ContractCarrierData.getBoundMaidUUID(prepared));
         owner.getInventory().setChanged();
         return true;
     }

@@ -67,9 +67,11 @@ public final class ContractLifecycleService {
                 || !com.maidweapon.forge.api.ContractAuthorization.allows(player, contract)) {
             return false;
         }
-        if (ContractAnomalyRecoveryService.state(player, contract) == ContractAnomalyRecoveryService.State.RECOVERY_PENDING) return false;
         String id = ContractCarrierData.getBoundMaidUUID(contract);
-        if (id != null && ContractWeaponLocator.findManifestedMaid(player, id) != null) return false;
+        if (!ContractWeaponLocator.mayManifest(player, id)) {
+            if (notifyPlayer) player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.recovery.still_away"), true);
+            return false;
+        }
         ContractAnomalyRecoveryService.begin(contract);
         try { return TouhouLittleMaidHelper.convertWeaponToMaid(player, contract, notifyPlayer, beforeSpawn); }
         finally { ContractAnomalyRecoveryService.end(contract); }

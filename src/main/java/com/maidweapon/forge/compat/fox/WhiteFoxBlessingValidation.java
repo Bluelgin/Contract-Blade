@@ -159,8 +159,15 @@ public final class WhiteFoxBlessingValidation {
     BlackFoxSwordArtCompat.clear(player);
     var clone = white.copy();
     player.getInventory().setItem(1, clone);
-    check(
-        WhiteFoxBlessingService.profile(player) == null, "copied white cannot stack or authorize");
+    player.getInventory().setItem(0, clone.copy());
+    check(WhiteFoxBlessingService.profile(player) != null, "copied white remains usable alongside the original");
+    WhiteFoxBlessingService.refresh(player); WhiteFoxBlessingService.refresh(player);
+    check(Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED)-.105)<.00001
+            && Math.abs(player.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE)-.10)<.00001,
+        "mainhand/offhand copied whites apply one set of attributes");
+    var duplicateDamage=new net.minecraftforge.event.entity.living.LivingDamageEvent(player,player.damageSources().generic(),10);
+    WhiteFoxBlessingService.damage(duplicateDamage);
+    check(Math.abs(duplicateDamage.getAmount()-9.4)<.00001,"copied whites reduce damage once");
     player.getInventory().setItem(1, ItemStack.EMPTY);
     player.getInventory().setItem(0, new ItemStack(Items.TOTEM_OF_UNDYING));
     var totem =
@@ -216,6 +223,30 @@ public final class WhiteFoxBlessingValidation {
     check(
         Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - .1) < .00001,
         "unequip removes attributes");
+    // The same ledger-owned spirit survives real carrier consumption and can be rehoused normally.
+    var emptySoul=new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:smart_slab_empty")));
+    var extracted=FoxSpiritTransferService.transfer(player,white,emptySoul);
+    check(extracted!=null,"white soul extracts before durability-rescue regression");
+    var housed=FoxSpiritTransferService.transfer(player,new ItemStack(Items.IRON_SWORD),extracted.seal());
+    check(housed!=null,"white soul moves into an ordinary destructible carrier");
+    var doomed=housed.weapon();String maidId=ContractCarrierData.getBoundMaidUUID(doomed);
+    player.getInventory().clearContent();player.getInventory().setItem(0,doomed);
+    doomed.setDamageValue(doomed.getMaxDamage()-1);doomed.hurtAndBreak(2,player,ignored->{});
+    check(doomed.isEmpty(),"fox carrier was consumed by real native durability");
+    data.setGameTime(level.getGameTime()+45);
+    com.maidweapon.forge.system.deployment.ContractCarrierLossService.process(player,
+        com.maidweapon.forge.system.deployment.ContractWeaponLocator.indexByBinding(player),(p,c)->{});
+    var free=level.getEntity(UUID.fromString(maidId));
+    check(free!=null&&free.getPersistentData().getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID).isEmpty(),
+        "same original white is released as a free maid");
+    var originalIdentity=free.getPersistentData().getCompound(FoxSpiritState.ROOT).copy();
+    check(FoxSpiritLedger.get(server).owns(originalIdentity,"FREE_MAID"),"released white retains story identity");
+    var newHome=new ItemStack(Items.DIAMOND_SWORD);player.getInventory().setItem(0,newHome);
+    check(ContractLifecycleService.capture(player,free,newHome,false),"ordinary right-click capture rehouses the original free fox");
+    check(FoxSpiritLedger.get(server).owns(FoxSpiritState.resident(newHome),"WEAPON")
+        && FoxSpiritState.sameIdentity(originalIdentity,FoxSpiritState.resident(newHome))
+        && maidId.equals(ContractCarrierData.getBoundMaidUUID(newHome)),"rehousing preserves UUID, origin, owner and fox identity");
+    check(WhiteFoxBlessingService.profile(player)==null,"an ordinary new home does not masquerade as the original reward blade");
     var checkpoint = new CompoundTag();
     checkpoint.putUUID("Owner", player.getUUID());
     level.getDataStorage().set("maid_weapon_blessing_fixture", new Checkpoint(checkpoint));

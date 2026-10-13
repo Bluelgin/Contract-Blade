@@ -69,7 +69,9 @@ container_close = deployment.split('public static void onContainerClose', 1)[1].
 assert 'ContractInteriorService.INTERIOR_LEVEL' in container_close and 'return;' in container_close
 assert 'Same-dimension teleport mods' in service and 'insidePlot(player.blockPosition(), plot)' in service
 assert 'recoverDestroyedActiveContract' in service
-assert 'createEmergencyResurrectionFilm' in service
+# Home destruction exits safely and delegates to the common durability rescue.
+assert 'Never discard a live resident for a film' in service
+assert 'maid.discard()' not in service.split('public static boolean recoverDestroyedActiveContract', 1)[1].split('    public static', 1)[0]
 interior_events = (JAVA / 'system/interior/ContractInteriorEvents.java').read_text()
 assert 'PlayerDestroyItemEvent' not in interior_events
 assert 'ContractTransferSafetyService.rescueSelfStoredContract(player)' in interior_events
