@@ -17,6 +17,8 @@ import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.*;
 import net.minecraftforge.fml.common.Mod;
 import java.util.*;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.projectile.Projectile;
 import static com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth.has;
 import static com.maidweapon.forge.network.AkatsukiDomainNetwork.*;
 
@@ -24,6 +26,9 @@ import static com.maidweapon.forge.network.AkatsukiDomainNetwork.*;
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class AkatsukiDomainService {
     private static final Map<ServerPlayer, AkatsukiDomainSession> SESSIONS = new WeakHashMap<>();
+    private record Chain(Vec3 center, long expires) {}
+    private static final Map<ServerPlayer, Chain> CHAINS = new WeakHashMap<>();
+    private static boolean chaining;
     public static boolean hostile(ServerPlayer player, LivingEntity target) {
         return target != player && target.isAlive() && !target.isInvulnerable() && !(target instanceof Player)
                 && !(target instanceof TamableAnimal) && !player.isAlliedTo(target) && !target.isAlliedTo(player)
@@ -95,6 +100,33 @@ public final class AkatsukiDomainService {
             }
             if (target != null) cue(player, state, features, LOCK, target);
         }
+        if (has(features, "counter") && state.due("counter", now, AkatsukiDomainConfig.COUNTER_INTERVAL.get()))
+            counter(player, state, features);
+        var chain = CHAINS.remove(player);
+        if (has(features, "chain") && chain != null && now <= chain.expires()) {
+            chaining = true;
+            try {
+                for (var enemy : nearby(player, AkatsukiDomainConfig.RADIUS.get()).stream()
+                        .filter(t -> t.position().distanceToSqr(chain.center()) <= 16).limit(3).toList()) {
+                    cue(player, state, features, CHAIN, enemy);
+                    AkatsukiDomainDamage.pulse(player, enemy, state, has(features, "adaptation"));
+                }
+            } finally { chaining = false; }
+        }
+        if (has(features, "cloak") && state.due("cloak", now, AkatsukiDomainConfig.CLOAK_INTERVAL.get())) {
+            state.cloakUntil = now + 20;
+            cue(player, state, features, CLOAK, null);
+        }
+        if (has(features, "rain") && state.due("rain", now, AkatsukiDomainConfig.RAIN_INTERVAL.get())) {
+            cue(player, state, features, RAIN, target);
+            for (var enemy : nearby(player, AkatsukiDomainConfig.RADIUS.get()))
+                AkatsukiDomainDamage.pulse(player, enemy, state, has(features, "adaptation"));
+        }
+        if (has(features, "complete") && state.due("complete", now, 80)) {
+            cue(player, state, features, FINAL, target);
+            // One focused pulse; the client unfolds dozens of converging cuts independently.
+            if (target != null) AkatsukiDomainDamage.pulse(player, target, state, has(features, "adaptation"));
+        }
     }
     private static boolean validTarget(ServerPlayer player, LivingEntity target) {
         double radius = AkatsukiDomainConfig.RADIUS.get();
@@ -105,6 +137,36 @@ public final class AkatsukiDomainService {
                         t -> validTarget(player, t) && player.distanceToSqr(t) <= radius * radius)
                 .stream().sorted(Comparator.comparingDouble(player::distanceToSqr))
                 .limit(AkatsukiDomainConfig.MAX_TARGETS.get()).toList();
+    }
+    private static void counter(ServerPlayer player, AkatsukiDomainSession state, ContractAbilityFeatureSet features) {
+        var shots = player.level().getEntitiesOfClass(Projectile.class, player.getBoundingBox().inflate(4),
+                shot -> (shot.getType() == EntityType.ARROW || shot.getType() == EntityType.SPECTRAL_ARROW
+                        || shot.getType() == EntityType.SMALL_FIREBALL)
+                        && shot.getOwner() instanceof LivingEntity owner && hostile(player, owner)
+                        && shot.getDeltaMovement().dot(player.getEyePosition().subtract(shot.position())) > 0
+                        && player.hasLineOfSight(shot));
+        if (shots.isEmpty()) return;
+        var shot = shots.get(0);
+        var owner = (LivingEntity) shot.getOwner();
+        shot.discard(); // Explicit vanilla whitelist, one projectile per interval; no boss projectile removal.
+        cue(player, state, features, COUNTER, owner);
+        if (validTarget(player, owner)) AkatsukiDomainDamage.pulse(player, owner, state, has(features, "adaptation"));
+    }
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void cloak(LivingHurtEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p && protectedByCloak(p)
+                && !e.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
+            e.setAmount(Math.max(0, e.getAmount() - Math.min(2, e.getAmount() * .15f)));
+    }
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void knockback(LivingKnockBackEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p && protectedByCloak(p)) e.setCanceled(true);
+    }
+    private static boolean protectedByCloak(ServerPlayer p) {
+        var s = SESSIONS.get(p);
+        return s != null && s.active(now(p)) && now(p) < s.cloakUntil
+                && now(p) - s.lastContact <= AkatsukiDomainConfig.CONTACT_GAP.get()
+                && has(AkatsukiDomainGrowth.capabilities(p), "cloak");
     }
     private static void cue(ServerPlayer player, AkatsukiDomainSession state, ContractAbilityFeatureSet f, int kind, LivingEntity target) {
         AkatsukiDomainNetwork.send(player, kind, target == null ? player.position() : target.getBoundingBox().getCenter(),
@@ -118,7 +180,19 @@ public final class AkatsukiDomainService {
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e) { if (e.getEntity() instanceof ServerPlayer p) remove(p); }
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e) { if (e.getEntity() instanceof ServerPlayer p) remove(p); }
-    @SubscribeEvent public static void death(LivingDeathEvent e) { if (e.getEntity() instanceof ServerPlayer p) remove(p); }
+    @SubscribeEvent(priority = EventPriority.LOWEST) public static void death(LivingDeathEvent e) {
+        if (e.getEntity() instanceof ServerPlayer p) { remove(p); return; }
+        AkatsukiDomainDamage.forget(e.getEntity());
+        if (chaining || !(e.getSource().getEntity() instanceof ServerPlayer p)) return;
+        var state = SESSIONS.get(p);
+        if (state == null || !state.active(now(p)) || !has(AkatsukiDomainGrowth.capabilities(p), "chain")
+                || p.distanceToSqr(e.getEntity()) > AkatsukiDomainConfig.RADIUS.get() * AkatsukiDomainConfig.RADIUS.get()
+                || !(e.getEntity() instanceof Enemy) || e.getEntity().isAlliedTo(p)
+                || !AkatsukiDomainDamage.domain(e.getSource()) && (AkatsukiCombatCompat.secondary(e.getSource())
+                    || ContractCombatCredits.resolveHit(e.getSource()) == null)
+                || !state.due("chain", now(p), AkatsukiDomainConfig.CHAIN_INTERVAL.get())) return;
+        CHAINS.put(p, new Chain(e.getEntity().position(), now(p) + 10));
+    }
     @SubscribeEvent public static void serverTick(TickEvent.ServerTickEvent e) {
         if (e.phase == TickEvent.Phase.END && e.getServer().getTickCount() % 40 == 0)
             AkatsukiDomainDamage.prune(e.getServer().overworld().getGameTime());
@@ -126,9 +200,9 @@ public final class AkatsukiDomainService {
     @SubscribeEvent public static void leave(net.minecraftforge.event.entity.EntityLeaveLevelEvent e) {
         if (!e.getLevel().isClientSide() && e.getEntity() instanceof LivingEntity living) AkatsukiDomainDamage.forget(living);
     }
-    private static void remove(ServerPlayer p) { var s = SESSIONS.remove(p); if (s != null) stop(p, s); }
+    private static void remove(ServerPlayer p) { CHAINS.remove(p); var s = SESSIONS.remove(p); if (s != null) stop(p, s); }
     @SubscribeEvent public static void stopped(ServerStoppedEvent e) {
-        SESSIONS.clear(); AkatsukiDomainAuthorization.clear(); AkatsukiDomainDamage.clear();
+        SESSIONS.clear(); CHAINS.clear(); AkatsukiDomainAuthorization.clear(); AkatsukiDomainDamage.clear();
     }
     private AkatsukiDomainService() {}
 }

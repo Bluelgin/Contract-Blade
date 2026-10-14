@@ -14,6 +14,7 @@ on:
       - codex/white-fox-blessing-growth
       - codex/simplify-contract-lifecycle
       - codex/architecture-refinement
+      - codex/white-fox-growth-rework
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
