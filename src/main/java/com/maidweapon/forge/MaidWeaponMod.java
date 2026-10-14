@@ -36,6 +36,12 @@ public final class MaidWeaponMod {
         com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.install();
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+                com.maidweapon.common.AkatsukiDomainConfig.SPEC, "maid_weapon-akatsuki-server.toml");
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+                com.maidweapon.common.AkatsukiDomainConfig.CLIENT_SPEC, "maid_weapon-akatsuki-client.toml");
+        com.maidweapon.forge.network.AkatsukiDomainNetwork.register();
+
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
                 net.minecraftforge.fml.config.ModConfig.Type.COMMON, MaidWeaponConfig.SPEC);
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
@@ -71,6 +77,7 @@ public final class MaidWeaponMod {
                     com.maidweapon.forge.compat.tlm.SoulTalismanService::authorizes);
             com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
             com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();
+            com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth.register();
             com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
             com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
             LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
