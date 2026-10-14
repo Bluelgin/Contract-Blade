@@ -19,72 +19,93 @@ import org.slf4j.Logger;
 /**
  * Forge bootstrap for Contract Blade Core.
  *
- * <p>Gameplay interaction events are deliberately owned by the item/event
- * handlers and {@code ContractInteractionService}. The bootstrap only wires
- * registries, configuration and compatibility diagnostics.</p>
+ * <p>Gameplay interaction events are deliberately owned by the item/event handlers and {@code
+ * ContractInteractionService}. The bootstrap only wires registries, configuration and compatibility
+ * diagnostics.
  */
 @Mod(MaidWeaponConstants.MOD_ID)
 public final class MaidWeaponMod {
-    private static final Logger LOGGER = LogUtils.getLogger();
+  private static final Logger LOGGER = LogUtils.getLogger();
 
-    public MaidWeaponMod() {
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
-                com.maidweapon.common.BlackFoxClientConfig.SPEC, "maid_weapon-client.toml");
-        com.maidweapon.forge.api.ContractAuthorization.register("maid_weapon:fox_spirit",
-                com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
-        com.maidweapon.forge.compat.fox.FoxModelPackBootstrap.install();
-        com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.install();
-        var modBus = FMLJavaModLoadingContext.get().getModEventBus();
+  public MaidWeaponMod() {
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+            com.maidweapon.common.BlackFoxClientConfig.SPEC,
+            "maid_weapon-client.toml");
+    com.maidweapon.forge.api.ContractAuthorization.register(
+        "maid_weapon:fox_spirit",
+        com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
+    com.maidweapon.forge.compat.fox.FoxModelPackBootstrap.install();
+    com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.install();
+    var modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.SERVER,
-                com.maidweapon.common.AkatsukiDomainConfig.SPEC, "maid_weapon-akatsuki-server.toml");
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
-                com.maidweapon.common.AkatsukiDomainConfig.CLIENT_SPEC, "maid_weapon-akatsuki-client.toml");
-        com.maidweapon.forge.network.AkatsukiDomainNetwork.register();
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+            com.maidweapon.common.AkatsukiDomainConfig.SPEC,
+            "maid_weapon-akatsuki-server.toml");
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+            com.maidweapon.common.AkatsukiDomainConfig.CLIENT_SPEC,
+            "maid_weapon-akatsuki-client.toml");
+    com.maidweapon.forge.network.AkatsukiDomainNetwork.register();
 
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
-                net.minecraftforge.fml.config.ModConfig.Type.COMMON, MaidWeaponConfig.SPEC);
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
-                net.minecraftforge.fml.config.ModConfig.Type.SERVER,
-                com.maidweapon.common.ContractRulesConfig.SPEC, "maid_weapon-server.toml");
-        ModItems.ITEMS.register(modBus);
-        ModBlocks.BLOCKS.register(modBus);
-        ModMenus.MENUS.register(modBus);
-        ModRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
-        ModCreativeTab.TABS.register(modBus);
-        com.maidweapon.forge.worldgen.ShrineWorldgen.register(modBus);
-        com.maidweapon.forge.network.ContractCompanionNetwork.register();
-        com.maidweapon.forge.network.ContractMasteryNetwork.register();
-        com.maidweapon.forge.api.ContractCombatCreditResolver.register("maid_weapon:sword_actor",
-                actor -> actor instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity sword ? sword.masteryCredit() : null);
-        TaczCompat.bootstrap(modBus);
-        com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.bootstrap(modBus);
-        com.maidweapon.forge.compat.BlackFoxSwordArtCompat.bootstrap(modBus);
-        com.maidweapon.forge.compat.fox.BlackFoxBossCompat.bootstrap(modBus);
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON, MaidWeaponConfig.SPEC);
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+            com.maidweapon.common.ContractRulesConfig.SPEC,
+            "maid_weapon-server.toml");
+    ModItems.ITEMS.register(modBus);
+    ModBlocks.BLOCKS.register(modBus);
+    ModMenus.MENUS.register(modBus);
+    ModRecipeSerializers.RECIPE_SERIALIZERS.register(modBus);
+    ModCreativeTab.TABS.register(modBus);
+    com.maidweapon.forge.worldgen.ShrineWorldgen.register(modBus);
+    com.maidweapon.forge.network.ContractCompanionNetwork.register();
+    com.maidweapon.forge.network.ContractMasteryNetwork.register();
+    com.maidweapon.forge.api.ContractCombatCreditResolver.register(
+        "maid_weapon:sword_actor",
+        actor ->
+            actor instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity sword
+                ? sword.masteryCredit()
+                : null);
+    TaczCompat.bootstrap(modBus);
+    com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.bootstrap(modBus);
+    com.maidweapon.forge.compat.BlackFoxSwordArtCompat.bootstrap(modBus);
+    com.maidweapon.forge.compat.fox.BlackFoxBossCompat.bootstrap(modBus);
 
-        modBus.addListener(this::commonSetup);
+    modBus.addListener(this::commonSetup);
 
-        LOGGER.info("[{}] Loading Contract Blade Core {}", MaidWeaponConstants.MOD_ID,
-                MaidWeaponConstants.MOD_VERSION);
-    }
+    LOGGER.info(
+        "[{}] Loading Contract Blade Core {}",
+        MaidWeaponConstants.MOD_ID,
+        MaidWeaponConstants.MOD_VERSION);
+  }
 
-    private void commonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> {
-            if (net.minecraftforge.fml.ModList.get().isLoaded("touhou_little_maid"))
-                com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.register();
-            com.maidweapon.forge.system.fox.challenge.BlackFoxEncounters.setup();
-            com.maidweapon.forge.api.ContractAuthorization.register("contract-destination",
-                    com.maidweapon.forge.compat.tlm.SoulTalismanService::authorizes);
-            com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
-            com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();
-            com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth.register();
-            com.maidweapon.forge.compat.DomainTargetCompatibility.bootstrap();
-            com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
-            com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
-            LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
-            LOGGER.info("[MaidWeapon] SlashBlade compatibility: {}", SlashBladeCompat.diagnostics());
-            LOGGER.info("[MaidWeapon] TACZ compatibility: {}",
-                    TaczCompat.isLoaded() ? "enabled" : "not installed");
+  private void commonSetup(final FMLCommonSetupEvent event) {
+    event.enqueueWork(
+        () -> {
+          if (net.minecraftforge.fml.ModList.get().isLoaded("touhou_little_maid"))
+            com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.register();
+          com.maidweapon.forge.system.fox.challenge.BlackFoxEncounters.setup();
+          com.maidweapon.forge.api.ContractAuthorization.register(
+              "contract-destination",
+              com.maidweapon.forge.compat.tlm.SoulTalismanService::authorizes);
+          com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
+          com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();
+          com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth.register();
+          com.maidweapon.forge.compat.DomainTargetCompatibility.bootstrap();
+          com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
+          com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
+          LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
+          LOGGER.info("[MaidWeapon] SlashBlade compatibility: {}", SlashBladeCompat.diagnostics());
+          LOGGER.info(
+              "[MaidWeapon] TACZ compatibility: {}",
+              TaczCompat.isLoaded() ? "enabled" : "not installed");
         });
-    }
+  }
 }

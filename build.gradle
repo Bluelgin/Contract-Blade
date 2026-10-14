@@ -110,6 +110,7 @@ minecraft {
             property 'contractblade.mastery.validation', providers.gradleProperty('masteryTest').orElse('false').get()
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
             property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
+            property 'contractblade.akatsukiDomain.validation', providers.gradleProperty('akatsukiDomainTest').orElse('false').get()
             property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
             property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
             property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
