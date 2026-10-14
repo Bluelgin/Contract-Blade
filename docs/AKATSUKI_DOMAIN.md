@@ -105,7 +105,7 @@ DomainHitWindow 保存/恢复仅由这次领域脉冲触碰的原版 invulnerabl
 | 毁灭者 | 独立 InvulnerabilityTime、状态/瞬移/振刀拒伤、自定义生命；读取 damageCap 与 getPhase；保留无条件拒伤，不强行模拟成功 | 源码审阅；未装真实 Boss JAR 做实机验收 |
 | Ignis | DamageCap 和 DpsCap 分开；damageBucket 按 DpsCap/20 恢复；盾、反击、阶段保护独立；强通道有限绕过一般防御，PHASE_2/3、STRIKE、ULTIMATE_ATTACK 保护 | 源码审阅；未装真实 Boss JAR 做实机验收 |
 
-仅在 Mod ID、版本前缀和实体类族均匹配时启用内置专用适配。其他版本走通用保守路径；匹配版本缺少预期反射成员时拒绝额外伤害并 warnOnce。对任意第三方版本和自定义硬无敌不宣称全兼容。
+仅在 Mod ID、版本前缀和实体类族均匹配时启用内置专用适配。传奇怪物实际 Mod ID 为 `legendary_monsters`；其 mods.toml 把版本硬编码为 `1.20.1`，因此从所属 Mod 文件的 MANIFEST.MF 读取 Implementation-Version 校验 2.1.15；缺失时保守回退。其他版本走通用保守路径；匹配版本缺少预期反射成员时拒绝额外伤害并 warnOnce。对任意第三方版本和自定义硬无敌不宣称全兼容。
 
 SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶段适配，无需修改提供者源码。强穿透不是通用保证。
 
@@ -138,6 +138,7 @@ SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶�
 
 ```sh
 gradle --no-daemon clean build -Pci=true
+python tools/run_stage_three_tests.py --fixture akatsuki-domain --compat vanilla
 python tools/run_stage_three_tests.py --fixture akatsuki-domain
 python tools/run_stage_three_tests.py --fixture akatsuki-provider
 python tools/run_stage_three_tests.py --fixture architecture

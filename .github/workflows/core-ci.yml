@@ -87,14 +87,6 @@ jobs:
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
             -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
 
-      - name: Native dedicated-server domain and regression fixtures
-        run: |
-          python tools/run_stage_three_tests.py --fixture akatsuki-domain
-          python tools/run_stage_three_tests.py --fixture architecture
-          python tools/run_stage_three_tests.py --fixture blessing
-          python tools/run_stage_three_tests.py --fixture sword
-          python tools/run_stage_three_tests.py --fixture recovery
-
       - name: Prepare optional BladeTetra provider runtime
         run: |
           curl -fL --retry 3 "https://github.com/Bluelgin/Blade-Tetra-Forged-Styles/releases/download/v1.5.9/blade_tetra-1.5.9.jar" \
@@ -106,6 +98,16 @@ jobs:
 
       - name: Native awakened Akatsuki provider fixture
         run: python tools/run_stage_three_tests.py --fixture akatsuki-provider
+
+      - name: Native dedicated-server domain and regression fixtures
+        run: |
+          python tools/run_stage_three_tests.py --fixture akatsuki-domain --compat vanilla
+          python tools/run_stage_three_tests.py --fixture akatsuki-domain
+          python tools/run_stage_three_tests.py --fixture architecture
+          python tools/run_stage_three_tests.py --fixture blessing
+          python tools/run_stage_three_tests.py --fixture sword
+          python tools/run_stage_three_tests.py --fixture recovery
+          python tools/run_stage_three_tests.py --fixture white-se
 
       - name: Upload test build and validation logs
         if: always()

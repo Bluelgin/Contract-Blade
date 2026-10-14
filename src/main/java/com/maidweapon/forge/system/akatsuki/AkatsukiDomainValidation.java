@@ -150,6 +150,8 @@ public final class AkatsukiDomainValidation {
   private static void provider(
       net.minecraft.server.MinecraftServer server, net.minecraft.server.level.ServerPlayer owner)
       throws Exception {
+    var level = server.overworld();
+    var clock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
     var item =
         net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
             net.minecraft.resources.ResourceLocation.parse("blade_tetra:modular_slashblade"));
@@ -194,14 +196,15 @@ public final class AkatsukiDomainValidation {
           "real authorized level " + lv);
     }
     String maid = ContractCarrierData.getBoundMaidUUID(blade);
+    clock.setGameTime(
+        level.getGameTime() + 11); // Respect the previous fixture's real 10-tick summon cooldown.
     ContractCompanionService.toggle(owner);
+    check(level.getEntity(UUID.fromString(maid)) != null, "real provider manifestation succeeds");
     check(
         !AkatsukiDomainAuthorization.allows(owner, blade),
         "real provider manifestation suspends growth");
     check(InfusedMaidDeploymentSystem.forceRecall(owner, maid, 0), "real provider recall");
     check(AkatsukiDomainAuthorization.allows(owner, blade), "real provider recall restores growth");
-    var level = server.overworld();
-    var clock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
     var target = EntityType.ZOMBIE.create(level);
     target.moveTo(2, 150, 2, 0, 0);
     target.getAttribute(Attributes.ARMOR).setBaseValue(0);

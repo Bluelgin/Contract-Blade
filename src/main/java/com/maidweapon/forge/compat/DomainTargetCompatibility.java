@@ -28,11 +28,33 @@ public final class DomainTargetCompatibility {
   }
 
   private static boolean version(String mod, String prefix) {
-    return ModList.get()
-        .getModContainerById(mod)
-        .map(c -> c.getModInfo().getVersion().toString().startsWith(prefix))
-        .orElse(false);
+    if (!ModList.get().isLoaded(mod)) return false;
+    return VERSIONS
+        .computeIfAbsent(
+            mod,
+            id -> {
+              var info = ModList.get().getModContainerById(id).orElseThrow().getModInfo();
+              String declared = info.getVersion().toString();
+              // This mod hardcodes Minecraft's version in mods.toml; its release version is in the
+              // manifest.
+              if (!id.equals("legendary_monsters") || !declared.equals("1.20.1")) return declared;
+              try (var input =
+                  java.nio.file.Files.newInputStream(
+                      info.getOwningFile().getFile().findResource("META-INF", "MANIFEST.MF"))) {
+                String release =
+                    new java.util.jar.Manifest(input)
+                        .getMainAttributes()
+                        .getValue("Implementation-Version");
+                return release == null ? "unknown" : release;
+              } catch (java.io.IOException | RuntimeException failure) {
+                CompatDiagnostics.warnOnce("domain-target-version:" + id, failure);
+                return "unknown";
+              }
+            })
+        .startsWith(prefix);
   }
+
+  private static final Map<String, String> VERSIONS = new HashMap<>();
 
   private static final ClassValue<Map<String, Method>> METHODS =
       new ClassValue<>() {
@@ -71,7 +93,7 @@ public final class DomainTargetCompatibility {
         "maid_weapon:legendary_monsters",
         new Adapter() {
           public boolean supports(LivingEntity t) {
-            return version("legendarymonsters", "2.1.15")
+            return version("legendary_monsters", "2.1.15")
                 && family(
                     t,
                     "net.miauczel.legendary_monsters.entity.AnimatedMonster.OriginClasses.IAnimatedBoss");
@@ -148,7 +170,7 @@ public final class DomainTargetCompatibility {
     var fields = new LinkedHashMap<Field, Object>();
     var names = new ArrayList<String>();
     if (AkatsukiDomainConfig.BOSS_ADAPTERS.get()
-        && version("legendarymonsters", "2.1.15")
+        && version("legendary_monsters", "2.1.15")
         && family(
             target,
             "net.miauczel.legendary_monsters.entity.AnimatedMonster.OriginClasses.IAnimatedBoss")) {

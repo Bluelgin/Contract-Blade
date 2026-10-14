@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
+parser.add_argument('--compat', choices=['vanilla','slashblade'], default='slashblade')
 parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider'])
 args = parser.parse_args()
 root = Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
@@ -39,7 +40,7 @@ for name, flags, markers in fixtures:
     (directory / 'server.properties').write_text('online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\n'
         'level-type=minecraft:flat\ngenerate-structures=false\nview-distance=2\nsimulation-distance=2\nspawn-protection=0\n')
     cmd = [args.gradle,'--no-daemon','runServer','-x','downloadAssets','-Pci=true','-PtlmRuntimeTest=true',
-           '-PcompatTest=slashblade',f'-PcompatRunDir={directory}',*flags]
+           f'-PcompatTest={args.compat}',f'-PcompatRunDir={directory}',*flags]
     if args.offline:
         cmd.append('--offline')
     log = root / f'{name}.log'
