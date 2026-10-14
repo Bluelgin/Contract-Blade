@@ -78,6 +78,7 @@ public final class MaidWeaponMod {
             com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
             com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();
             com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth.register();
+            com.maidweapon.forge.compat.DomainTargetCompatibility.bootstrap();
             com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
             com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
             LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());

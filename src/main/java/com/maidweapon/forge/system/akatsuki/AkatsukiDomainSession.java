@@ -6,6 +6,7 @@ import java.util.*;
 public final class AkatsukiDomainSession {
     public long lastContact = Long.MIN_VALUE / 2, expires, readyAt, openedAt, cloakUntil;
     public int contacts;
+    public double spent;
     public UUID target;
     public String binding = "";
     private final Map<String, Long> next = new HashMap<>();
@@ -18,7 +19,7 @@ public final class AkatsukiDomainSession {
         if (active(now)) return false; // Fixed episode prevents infinite renewal and budget refill.
         if (now < readyAt || contacts < required) return false;
         openedAt = now; expires = now + duration; readyAt = now + Math.max(duration, cooldown);
-        next.clear(); contacts = 0;
+        next.clear(); contacts = 0; spent = 0;
         return true;
     }
     public boolean due(String ability, long now, long interval) {

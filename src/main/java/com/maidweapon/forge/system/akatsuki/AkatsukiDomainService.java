@@ -119,6 +119,13 @@ public final class AkatsukiDomainService {
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent e) { if (e.getEntity() instanceof ServerPlayer p) remove(p); }
     @SubscribeEvent public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e) { if (e.getEntity() instanceof ServerPlayer p) remove(p); }
     @SubscribeEvent public static void death(LivingDeathEvent e) { if (e.getEntity() instanceof ServerPlayer p) remove(p); }
+    @SubscribeEvent public static void serverTick(TickEvent.ServerTickEvent e) {
+        if (e.phase == TickEvent.Phase.END && e.getServer().getTickCount() % 40 == 0)
+            AkatsukiDomainDamage.prune(e.getServer().overworld().getGameTime());
+    }
+    @SubscribeEvent public static void leave(net.minecraftforge.event.entity.EntityLeaveLevelEvent e) {
+        if (!e.getLevel().isClientSide() && e.getEntity() instanceof LivingEntity living) AkatsukiDomainDamage.forget(living);
+    }
     private static void remove(ServerPlayer p) { var s = SESSIONS.remove(p); if (s != null) stop(p, s); }
     @SubscribeEvent public static void stopped(ServerStoppedEvent e) {
         SESSIONS.clear(); AkatsukiDomainAuthorization.clear(); AkatsukiDomainDamage.clear();
