@@ -67,6 +67,11 @@ public final class ContractCombatCredits {
         if (scoped != null) return null; // An unstamped area attack cannot borrow the current hand.
         return stamp(ContractCombatCreditResolver.direct(source));
     }
+    /** Read-only reuse of the launch/current-carrier proof for on-hit abilities. */
+    public static ContractCombatCreditResolver.Credit resolveHit(DamageSource source) {
+        Stamp proof = resolve(source);
+        return valid(proof) ? proof.credit() : null;
+    }
     public static void record(LivingEntity target, DamageSource source) {
         Stamp stamp = resolve(source);
         if (valid(stamp) && !SETTLED.contains(target)) HITS.put(target, stamp);
