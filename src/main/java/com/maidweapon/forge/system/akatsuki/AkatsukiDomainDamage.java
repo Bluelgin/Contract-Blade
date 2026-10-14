@@ -39,6 +39,11 @@ public final class AkatsukiDomainDamage {
         || !AkatsukiDomainAuthorization.allows(player, player.getMainHandItem())
         || !AkatsukiDomainService.hostile(player, target)) return;
     long now = player.getServer().overworld().getGameTime();
+    if (!session.active(now)
+        || now - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()
+        || !session.binding.equals(
+            com.maidweapon.forge.system.contract.ContractCarrierData.getBindingId(
+                player.getMainHandItem()))) return;
     if (now < session.executionPulseUntil) return;
     var beforeState = DomainTargetCompatibility.inspect(target);
     if (beforeState.protectedPhase()) return;

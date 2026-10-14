@@ -144,6 +144,95 @@ public final class AkatsukiDomainValidation {
     zombie.discard();
     if (!BladeTetraStoryCompat.isLoaded())
       LogUtils.getLogger().info("AKATSUKI_DOMAIN_NO_PROVIDER_PASS");
+    else provider(server, owner);
+  }
+
+  private static void provider(
+      net.minecraft.server.MinecraftServer server, net.minecraft.server.level.ServerPlayer owner)
+      throws Exception {
+    var item =
+        net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+            net.minecraft.resources.ResourceLocation.parse("blade_tetra:modular_slashblade"));
+    var blade = (ItemStack) item.getClass().getMethod("createDefaultStack").invoke(item);
+    Class<?> module = Class.forName("dev.bladetetra.item.ModularSlashBladeItem");
+    String slot = (String) module.getField("INSCRIPTION_SLOT").get(null);
+    String inscription = (String) module.getField("AWAKENED_SOUL_INSCRIPTION_MODULE").get(null);
+    blade.getOrCreateTag().putString(slot, inscription);
+    blade
+        .getOrCreateTag()
+        .putString(inscription + "_material", "awakened_soul_inscription/blood_crystal");
+    Class<?> skin = Class.forName("dev.bladetetra.visual.SayaPresetSkin");
+    Object akatsuki =
+        java.util.Arrays.stream(skin.getEnumConstants())
+            .filter(v -> ((Enum<?>) v).name().equals("AKATSUKI"))
+            .findFirst()
+            .orElseThrow();
+    skin.getMethod("apply", ItemStack.class, skin).invoke(null, blade, akatsuki);
+    var awakening = Class.forName("dev.bladetetra.easteregg.AkatsukiAwakening");
+    owner.getInventory().setItem(0, blade);
+    check(!BladeTetraStoryCompat.isAkatsuki(blade), "unawakened real provider blade rejected");
+    check(
+        (Boolean) awakening.getMethod("unlockForDebug", ItemStack.class).invoke(null, blade),
+        "real provider public debug awakening");
+    Class.forName("dev.bladetetra.compat.ContractBladeCompat")
+        .getMethod(
+            "syncAkatsuki",
+            net.minecraft.world.entity.player.Player.class,
+            ItemStack.class,
+            boolean.class)
+        .invoke(null, owner, blade, true);
+    check(BladeTetraStoryCompat.isAkatsuki(blade), "real awakened modular blade identity");
+    check(
+        AkatsukiDomainAuthorization.allows(owner, blade),
+        "provider and full server-origin residency authorized");
+    for (int lv = 1; lv <= 10; lv++) {
+      ContractMasteryService.setLevel(server.createCommandSourceStack(), owner, lv);
+      var result = ContractAbilityProgressionService.query(owner, blade, AkatsukiDomainGrowth.ID);
+      check(
+          result.status() == ContractAbilityProgressionService.Status.READY
+              && result.capabilities().features().size() == lv,
+          "real authorized level " + lv);
+    }
+    String maid = ContractCarrierData.getBoundMaidUUID(blade);
+    ContractCompanionService.toggle(owner);
+    check(
+        !AkatsukiDomainAuthorization.allows(owner, blade),
+        "real provider manifestation suspends growth");
+    check(InfusedMaidDeploymentSystem.forceRecall(owner, maid, 0), "real provider recall");
+    check(AkatsukiDomainAuthorization.allows(owner, blade), "real provider recall restores growth");
+    var level = server.overworld();
+    var clock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
+    var target = EntityType.ZOMBIE.create(level);
+    target.moveTo(2, 150, 2, 0, 0);
+    target.getAttribute(Attributes.ARMOR).setBaseValue(0);
+    check(level.addFreshEntity(target), "domain target actually loaded");
+    for (int i = 0; i < 3; i++) {
+      clock.setGameTime(level.getGameTime() + 8);
+      target.invulnerableTime = 0;
+      target.hurt(owner.damageSources().playerAttack(owner), 1);
+    }
+    var field = AkatsukiDomainService.class.getDeclaredField("SESSIONS");
+    field.setAccessible(true);
+    var session = (AkatsukiDomainSession) ((java.util.Map<?, ?>) field.get(null)).get(owner);
+    check(
+        session != null && session.active(level.getGameTime()),
+        "three real provider hits open domain automatically");
+    target.invulnerableTime = 0;
+    float hp = target.getHealth();
+    AkatsukiDomainDamage.pulse(owner, target, session, true);
+    check(
+        target.getHealth() < hp && hp - target.getHealth() <= .501f,
+        "actual isolated bounded domain damage through provider guard");
+    float after = target.getHealth();
+    AkatsukiDomainDamage.pulse(owner, target, session, true);
+    check(target.getHealth() == after, "second same-tick candidate cannot claim extra budget");
+    check(session.spent > 0 && session.spent <= .501, "one shared reservation");
+    awakening.getMethod("resetForDebug", ItemStack.class).invoke(null, blade);
+    check(
+        !AkatsukiDomainAuthorization.allows(owner, blade),
+        "loss of actual awakening suspends domain");
+    target.discard();
+    LogUtils.getLogger().info("AKATSUKI_DOMAIN_PROVIDER_PASS");
   }
 
   private static void check(boolean passed, String message) {

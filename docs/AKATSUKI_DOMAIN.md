@@ -139,14 +139,15 @@ SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶�
 ```sh
 gradle --no-daemon clean build -Pci=true
 python tools/run_stage_three_tests.py --fixture akatsuki-domain
+python tools/run_stage_three_tests.py --fixture akatsuki-provider
 python tools/run_stage_three_tests.py --fixture architecture
 python tools/run_stage_three_tests.py --fixture blessing
 python tools/run_stage_three_tests.py --fixture sword
 python tools/run_stage_three_tests.py --fixture recovery
 ```
 
-CI 下载 TLM 1.5.3、SlashBlade 1.9.65 到本地 runtimeOnly 目录，运行一次性专服世界，不访问用户存档。akatsuki-domain 夹具覆盖完整驻留证明、伪造全套身份、普通物品冒认、显现/收回、十级解析，以及真实原版 hurt 窗口和后续普通攻击伤害差额。它在**没有 BladeTetra** 的环境运行，不能替代真实觉醒赤月授权成功和全部能力实机验证。
+CI 下载 TLM 1.5.3、SlashBlade 1.9.65 到本地 runtimeOnly 目录，运行一次性专服世界，不访问用户存档。akatsuki-domain 夹具覆盖完整驻留证明、伪造全套身份、普通物品冒认、显现/收回、十级解析，以及真实原版 hurt 窗口和后续普通攻击伤害差额。基础夹具在**没有 BladeTetra** 的环境运行。另有 akatsuki-provider 夹具安装公开 BladeTetra 1.5.9、Tetra 6.3.0、mutil 6.2.0，通过提供者公开 debug 觉醒方法构造真实 ModularSlashBladeItem，验证实际身份、十级授权、显现/收回、三次真实伤害事件自动开庭、公开 secondary guard 中的追加伤害与同 tick 去重。该夹具不替代真人游戏输入和客户端演出验收。
 
 JUnit 另测十级 JSON/fallback 等价、各级独立能力、预算硬上限和多人共享、原生单次/DPS 分离、换手/空挥、通道探测、阶段/异常生命反馈、来源重载和未来 schema。
 
-图形客户端、真实 BladeTetra 安装组合、三种 Boss 实战、真人多客户端和重混淆产物启动尚需游戏内验收；不得用“编译通过”替代这些结果。最新实际运行结论见 PR 验证段落及其 Actions 日志。
+图形客户端、三种 Boss 实战、真人多客户端和重混淆产物启动尚需游戏内验收；不得用“编译通过”替代这些结果。最新实际运行结论见 PR 验证段落及其 Actions 日志。
