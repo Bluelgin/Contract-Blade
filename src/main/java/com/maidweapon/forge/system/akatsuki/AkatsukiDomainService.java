@@ -239,9 +239,8 @@ public final class AkatsukiDomainService {
     if (shots.isEmpty()) return;
     var shot = shots.get(0);
     var owner = (LivingEntity) shot.getOwner();
-    shot
-        .discard(); // Explicit vanilla whitelist, one projectile per interval; no boss projectile
-                    // removal.
+    shot.discard(); // Explicit vanilla whitelist, one projectile per interval; no boss projectile
+    // removal.
     cue(player, state, features, COUNTER, owner);
     if (validTarget(player, owner))
       AkatsukiDomainDamage.pulse(player, owner, state, has(features, "adaptation"));
@@ -342,6 +341,7 @@ public final class AkatsukiDomainService {
   }
 
   private static void remove(ServerPlayer p) {
+    AkatsukiDomainAuthorization.clear(p);
     CHAINS.remove(p);
     var s = SESSIONS.remove(p);
     if (s != null) stop(p, s);

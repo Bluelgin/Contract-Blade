@@ -16,7 +16,12 @@ import net.minecraft.world.item.ItemStack;
 public final class AkatsukiDomainAuthorization {
   public static final String SPIRIT = "blade_tetra:akatsuki";
 
-  private record Proof(ServerPlayer owner, long tick, CompoundTag contract, boolean allowed) {}
+  private record Proof(
+      net.minecraft.server.MinecraftServer server,
+      UUID owner,
+      long tick,
+      CompoundTag contract,
+      boolean allowed) {}
 
   private static final Map<ItemStack, Proof> PROOFS = new WeakHashMap<>();
 
@@ -54,7 +59,8 @@ public final class AkatsukiDomainAuthorization {
     long now = owner.getServer().overworld().getGameTime();
     var proof = PROOFS.get(carrier);
     if (proof != null
-        && proof.owner() == owner
+        && proof.server() == owner.getServer()
+        && proof.owner().equals(owner.getUUID())
         && now >= proof.tick()
         && now - proof.tick() < 20
         && proof.contract().equals(contract)) return proof.allowed();
@@ -77,12 +83,16 @@ public final class AkatsukiDomainAuthorization {
     } catch (java.io.IOException | RuntimeException rejected) {
       valid = false;
     }
-    PROOFS.put(carrier, new Proof(owner, now, contract, valid));
+    PROOFS.put(carrier, new Proof(owner.getServer(), owner.getUUID(), now, contract, valid));
     return valid;
   }
 
   public static void clear() {
     PROOFS.clear();
+  }
+
+  public static void clear(ServerPlayer player) {
+    PROOFS.values().removeIf(proof -> proof.owner().equals(player.getUUID()));
   }
 
   private AkatsukiDomainAuthorization() {}

@@ -234,6 +234,16 @@ public final class AkatsukiDomainValidation {
     check(
         !AkatsukiDomainAuthorization.allows(owner, blade),
         "loss of actual awakening suspends domain");
+    AkatsukiDomainService.logout(
+        new net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(owner));
+    check(
+        !((java.util.Map<?, ?>) field.get(null)).containsKey(owner),
+        "logout clears live domain session");
+    var proofs = AkatsukiDomainAuthorization.class.getDeclaredField("PROOFS");
+    proofs.setAccessible(true);
+    check(
+        !((java.util.Map<?, ?>) proofs.get(null)).containsKey(blade),
+        "logout clears held and dropped carrier proofs without retaining player objects");
     target.discard();
     LogUtils.getLogger().info("AKATSUKI_DOMAIN_PROVIDER_PASS");
   }
