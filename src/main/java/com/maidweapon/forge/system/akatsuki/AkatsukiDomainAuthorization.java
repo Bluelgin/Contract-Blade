@@ -44,6 +44,12 @@ public final class AkatsukiDomainAuthorization {
         || ContractAnomalyRecoveryService.transitioning(carrier)
         || !IntrinsicSpiritApi.stored(carrier, SPIRIT)) return false;
     var contract = IntrinsicSpiritApi.readOnlyContract(carrier, SPIRIT);
+    if (!com.maidweapon.forge.system.contract.IntrinsicSpiritOriginData.get(owner.getServer())
+        .matches(
+            owner.getUUID(),
+            contract.getString("MaidUUID"),
+            contract.getString("MaidBindingId"),
+            SPIRIT)) return false;
     if (!ContractWeaponLocator.mayManifest(owner, contract.getString("MaidUUID"))) return false;
     long now = owner.getServer().overworld().getGameTime();
     var proof = PROOFS.get(carrier);

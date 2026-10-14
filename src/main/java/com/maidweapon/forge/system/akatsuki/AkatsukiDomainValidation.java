@@ -73,6 +73,20 @@ public final class AkatsukiDomainValidation {
     weapon.getOrCreateTag().putUUID("OwnerUUID", UUID.randomUUID());
     check(!AkatsukiDomainAuthorization.resident(owner, weapon), "wrong carrier owner");
     weapon.setTag(original.copy());
+    var fabricated = weapon.copy();
+    var fabricatedData = MaidEntityDataCodec.read(fabricated.getTag());
+    var inventedMaid = UUID.randomUUID();
+    var inventedBinding = UUID.randomUUID().toString();
+    fabricatedData.putUUID("UUID", inventedMaid);
+    fabricatedData.getCompound("ForgeData").putString("MaidWeaponBindingId", inventedBinding);
+    fabricated.getOrCreateTag().putString("MaidUUID", inventedMaid.toString());
+    fabricated.getOrCreateTag().putString("MaidBindingId", inventedBinding);
+    MaidEntityDataCodec.write(fabricated.getTag(), fabricatedData);
+    owner.getInventory().setItem(0, fabricated);
+    check(
+        !AkatsukiDomainAuthorization.resident(owner, fabricated),
+        "coherent fabricated full NBT has no server origin");
+    owner.getInventory().setItem(0, weapon);
     var fake = new ItemStack(Items.PAPER);
     fake.getOrCreateTag().putString(EmbeddedSpiritApi.TAG_SPIRIT_ID, spirit);
     fake.getOrCreateTag().putBoolean("blade_tetra_akatsuki_unlocked", true);

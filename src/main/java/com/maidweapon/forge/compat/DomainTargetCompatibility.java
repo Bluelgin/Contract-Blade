@@ -89,7 +89,13 @@ public final class DomainTargetCompatibility {
                       || yes(t, "isParrying")
                       || yes(t, "canParry")
                       || yes(t, "canReduceDamageDuringPhaseTransition");
-            return new State(number(t, "damageCap"), 0, protectedPhase, "lm:" + state);
+            String phase =
+                name.equals("Cloud_GolemEntity")
+                    ? String.valueOf(read(t, "isAngry"))
+                    : name.equals("TheObliteratorEntity")
+                        ? String.valueOf(read(t, "getPhase"))
+                        : "generic";
+            return new State(number(t, "damageCap"), 0, protectedPhase, "lm:" + phase);
           }
         });
     register(
@@ -109,7 +115,7 @@ public final class DomainTargetCompatibility {
               Object animation = read(t, "getAnimation");
               for (String name : List.of("PHASE_2", "PHASE_3", "STRIKE", "ULTIMATE_ATTACK"))
                 protectedPhase |= animation == t.getClass().getField(name).get(null);
-              phase += ":" + read(t, "getBossPhase") + ":" + System.identityHashCode(animation);
+              phase += ":" + read(t, "getBossPhase");
             }
             return new State(number(t, "DamageCap"), number(t, "DpsCap"), protectedPhase, phase);
           }

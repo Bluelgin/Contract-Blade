@@ -411,5 +411,9 @@
   "maid_weapon.recovery.still_away": "女仆可能仍在外活动。请先召回她，或靠近上次停留的地方重试。",
   "maid_weapon.white_blessing.early": "§7Lv.1–5：受击护主、定时净化、命中灵愈；护主后短时加速与吸收。",
   "maid_weapon.white_blessing.middle": "§7Lv.6–8：轻量追加斩击；黑狐主手可共鸣，灵愈兼顾附近己方女仆。",
-  "maid_weapon.white_blessing.late": "§7Lv.9–10：危急自动守护；致命伤发动狐之誓约，保命并净化。"
+  "maid_weapon.white_blessing.late": "§7Lv.9–10：危急自动守护；致命伤发动狐之誓约，保命并净化。",
+  "maid_weapon.tooltip.akatsuki_domain": "§c无归之庭：剑灵驻留时，连续攻击自动开庭",
+  "maid_weapon.tooltip.akatsuki_domain.early": "§7Lv1–4：血月、追剑、环斩与锁敌",
+  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8：有限破限、反噬、葬阵与月衣",
+  "maid_weapon.tooltip.akatsuki_domain.late": "§7Lv9–10：万刃天倾与完整领域"
 }

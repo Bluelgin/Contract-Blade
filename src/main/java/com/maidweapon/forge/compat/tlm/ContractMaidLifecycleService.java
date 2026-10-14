@@ -85,6 +85,7 @@ public final class ContractMaidLifecycleService {
                 weaponStack.setTag(originalWeaponTag);
                 return false;
             }
+            afterCommit("intrinsic origin", () -> com.maidweapon.forge.system.contract.IntrinsicSpiritOriginData.observed(player, maid, weaponStack));
             return true;
         } catch (ReflectiveOperationException | RuntimeException exception) {
             weaponStack.setTag(originalWeaponTag);
