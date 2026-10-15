@@ -110,6 +110,8 @@ minecraft {
             property 'contractblade.mastery.validation', providers.gradleProperty('masteryTest').orElse('false').get()
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
             property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
+            property 'contractblade.akatsukiVisual.validation', providers.gradleProperty('akatsukiVisualTest').orElse('false').get()
+            property 'contractblade.akatsukiDomain.resume', providers.gradleProperty('akatsukiDomainResume').orElse('false').get()
             property 'contractblade.akatsukiDomain.validation', providers.gradleProperty('akatsukiDomainTest').orElse('false').get()
             property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
             property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
@@ -129,6 +131,9 @@ minecraft {
         }
 
         client {
+            if (providers.gradleProperty('akatsukiVisualWorld').isPresent()) {
+                args '--quickPlaySingleplayer', providers.gradleProperty('akatsukiVisualWorld').get()
+            }
             property 'forge.enabledGameTestNamespaces', mod_id
             jvmArgs '-Xms384m', compatTestMode == 'epicfight' ? '-Xmx3072m' : '-Xmx1280m'
         }

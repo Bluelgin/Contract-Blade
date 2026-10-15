@@ -40,7 +40,18 @@ public final class AkatsukiDomainValidation {
 
   private static void run(net.minecraft.server.MinecraftServer server) throws Exception {
     var level = server.overworld();
-    var owner = FakePlayerFactory.get(level, new GameProfile(UUID.randomUUID(), "DomainFixture"));
+    var owner =
+        FakePlayerFactory.get(
+            level,
+            new GameProfile(
+                UUID.fromString("277e986c-c78b-42a1-8e4a-a6ac5d4308b1"), "DomainFixture"));
+    if (Boolean.getBoolean("contractblade.akatsukiDomain.resume")) {
+      check(
+          AkatsukiRescueSavedData.get(server).readyAt(owner.getUUID()) > level.getGameTime(),
+          "real stop/restart retains rescue deadline");
+      LogUtils.getLogger().info("AKATSUKI_RESCUE_RESTART_PASS");
+      return;
+    }
     owner.getInventory().clearContent();
     owner.getInventory().selected = 0;
     owner.moveTo(.5, 150, .5, 0, 0);
@@ -152,6 +163,122 @@ public final class AkatsukiDomainValidation {
       throws Exception {
     var level = server.overworld();
     var clock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
+    var blade = prepareBlade(owner);
+    var awakening = Class.forName("dev.bladetetra.easteregg.AkatsukiAwakening");
+    for (int lv = 1; lv <= 10; lv++) {
+      ContractMasteryService.setLevel(server.createCommandSourceStack(), owner, lv);
+      var result = ContractAbilityProgressionService.query(owner, blade, AkatsukiDomainGrowth.ID);
+      check(
+          result.status() == ContractAbilityProgressionService.Status.READY
+              && result.capabilities().features().size() == lv,
+          "real authorized level " + lv);
+    }
+    String maid = ContractCarrierData.getBoundMaidUUID(blade);
+    clock.setGameTime(
+        level.getGameTime() + 11); // Respect the previous fixture's real 10-tick summon cooldown.
+    ContractCompanionService.toggle(owner);
+    check(level.getEntity(UUID.fromString(maid)) != null, "real provider manifestation succeeds");
+    check(
+        !AkatsukiDomainAuthorization.allows(owner, blade),
+        "real provider manifestation suspends growth");
+    check(InfusedMaidDeploymentSystem.forceRecall(owner, maid, 0), "real provider recall");
+    check(AkatsukiDomainAuthorization.allows(owner, blade), "real provider recall restores growth");
+    var target = EntityType.ZOMBIE.create(level);
+    target.moveTo(2, 150, 2, 0, 0);
+    target.getAttribute(Attributes.ARMOR).setBaseValue(0);
+    check(level.addFreshEntity(target), "domain target actually loaded");
+    AkatsukiDomainService.tick(
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner));
+    var field = AkatsukiDomainService.class.getDeclaredField("SESSIONS");
+    field.setAccessible(true);
+    var session = (AkatsukiDomainSession) ((java.util.Map<?, ?>) field.get(null)).get(owner);
+    check(
+        session != null && session.active(), "held authorized blade opens domain without any hit");
+    target.invulnerableTime = 0;
+    target.hurt(owner.damageSources().playerAttack(owner), 1);
+    float hp = target.getHealth();
+    AkatsukiDomainDamage.pulse(owner, target, session, true);
+    check(
+        target.getHealth() < hp && hp - target.getHealth() <= .501f,
+        "actual isolated bounded domain damage through provider guard");
+    float after = target.getHealth();
+    AkatsukiDomainDamage.pulse(owner, target, session, true);
+    check(target.getHealth() == after, "second same-tick candidate cannot claim extra budget");
+    owner.setHealth(9);
+    AkatsukiDomainService.tick(
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner));
+    check(session.lifecycle.rampage(), "below half automatically rampages");
+    owner.setHealth(10.8f);
+    AkatsukiDomainService.tick(
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner));
+    check(session.lifecycle.rampage(), "hysteresis retains rampage at 54 percent");
+    owner.setHealth(11);
+    AkatsukiDomainService.tick(
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner));
+    check(!session.lifecycle.rampage(), "55 percent exits rampage");
+    owner.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);
+    owner.getInventory().offhand.set(0, new ItemStack(Items.TOTEM_OF_UNDYING));
+    owner.invulnerableTime = 0;
+    owner.hurt(owner.damageSources().mobAttack(target), 30);
+    check(
+        owner.isAlive() && Math.abs(owner.getHealth() - 5) < .001,
+        "real lethal hit restores 25 percent");
+    check(!owner.getOffhandItem().isEmpty(), "rescue does not consume totem");
+    check(!session.attacking(), "collapse pauses all domain damage");
+    hp = target.getHealth();
+    AkatsukiDomainDamage.pulse(owner, target, session, true);
+    check(target.getHealth() == hp, "no collapse damage");
+    var receipt = AkatsukiRescueSavedData.get(server);
+    var restored = AkatsukiRescueSavedData.load(receipt.save(new net.minecraft.nbt.CompoundTag()));
+    check(
+        !restored.claim(owner.getUUID(), level.getGameTime(), 3600),
+        "cooldown survives serialized reload");
+    clock.setGameTime(level.getGameTime() + 16);
+    AkatsukiDomainService.tick(
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner));
+    check(session.attacking() && session.lifecycle.rampage(), "rescue reignites in rampage");
+    var second =
+        new net.minecraftforge.event.entity.living.LivingDamageEvent(
+            owner, owner.damageSources().mobAttack(target), 30);
+    AkatsukiDomainService.rescueDamage(second);
+    check(!second.isCanceled() && owner.getHealth() == 5, "cooldown prevents second fake success");
+    var forced =
+        new net.minecraftforge.event.entity.living.LivingDamageEvent(
+            owner, owner.damageSources().genericKill(), 1000);
+    AkatsukiDomainService.rescueDamage(forced);
+    check(!forced.isCanceled(), "forced kill not rescued");
+    clock.setGameTime(level.getGameTime() + 40);
+    owner.invulnerableTime = 0;
+    owner.hurt(owner.damageSources().mobAttack(target), 30);
+    check(
+        owner.isAlive() && owner.getOffhandItem().isEmpty(),
+        "cooldown allows vanilla totem fallback exactly once");
+    owner.setHealth(20);
+    server.overworld().getDataStorage().save();
+    awakening.getMethod("resetForDebug", ItemStack.class).invoke(null, blade);
+    check(
+        !AkatsukiDomainAuthorization.allows(owner, blade),
+        "loss of actual awakening suspends domain");
+    AkatsukiDomainService.logout(
+        new net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(owner));
+    check(
+        !((java.util.Map<?, ?>) field.get(null)).containsKey(owner),
+        "logout clears live domain session");
+    var proofs = AkatsukiDomainAuthorization.class.getDeclaredField("PROOFS");
+    proofs.setAccessible(true);
+    check(
+        !((java.util.Map<?, ?>) proofs.get(null)).containsKey(blade),
+        "logout clears held and dropped carrier proofs without retaining player objects");
+    target.discard();
+    LogUtils.getLogger().info("AKATSUKI_DOMAIN_PROVIDER_PASS");
+  }
+
+  static ItemStack prepareBlade(net.minecraft.server.level.ServerPlayer owner) throws Exception {
     var item =
         net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
             net.minecraft.resources.ResourceLocation.parse("blade_tetra:modular_slashblade"));
@@ -187,65 +314,7 @@ public final class AkatsukiDomainValidation {
     check(
         AkatsukiDomainAuthorization.allows(owner, blade),
         "provider and full server-origin residency authorized");
-    for (int lv = 1; lv <= 10; lv++) {
-      ContractMasteryService.setLevel(server.createCommandSourceStack(), owner, lv);
-      var result = ContractAbilityProgressionService.query(owner, blade, AkatsukiDomainGrowth.ID);
-      check(
-          result.status() == ContractAbilityProgressionService.Status.READY
-              && result.capabilities().features().size() == lv,
-          "real authorized level " + lv);
-    }
-    String maid = ContractCarrierData.getBoundMaidUUID(blade);
-    clock.setGameTime(
-        level.getGameTime() + 11); // Respect the previous fixture's real 10-tick summon cooldown.
-    ContractCompanionService.toggle(owner);
-    check(level.getEntity(UUID.fromString(maid)) != null, "real provider manifestation succeeds");
-    check(
-        !AkatsukiDomainAuthorization.allows(owner, blade),
-        "real provider manifestation suspends growth");
-    check(InfusedMaidDeploymentSystem.forceRecall(owner, maid, 0), "real provider recall");
-    check(AkatsukiDomainAuthorization.allows(owner, blade), "real provider recall restores growth");
-    var target = EntityType.ZOMBIE.create(level);
-    target.moveTo(2, 150, 2, 0, 0);
-    target.getAttribute(Attributes.ARMOR).setBaseValue(0);
-    check(level.addFreshEntity(target), "domain target actually loaded");
-    for (int i = 0; i < 3; i++) {
-      clock.setGameTime(level.getGameTime() + 8);
-      target.invulnerableTime = 0;
-      target.hurt(owner.damageSources().playerAttack(owner), 1);
-    }
-    var field = AkatsukiDomainService.class.getDeclaredField("SESSIONS");
-    field.setAccessible(true);
-    var session = (AkatsukiDomainSession) ((java.util.Map<?, ?>) field.get(null)).get(owner);
-    check(
-        session != null && session.active(level.getGameTime()),
-        "three real provider hits open domain automatically");
-    target.invulnerableTime = 0;
-    float hp = target.getHealth();
-    AkatsukiDomainDamage.pulse(owner, target, session, true);
-    check(
-        target.getHealth() < hp && hp - target.getHealth() <= .501f,
-        "actual isolated bounded domain damage through provider guard");
-    float after = target.getHealth();
-    AkatsukiDomainDamage.pulse(owner, target, session, true);
-    check(target.getHealth() == after, "second same-tick candidate cannot claim extra budget");
-    check(session.spent > 0 && session.spent <= .501, "one shared reservation");
-    awakening.getMethod("resetForDebug", ItemStack.class).invoke(null, blade);
-    check(
-        !AkatsukiDomainAuthorization.allows(owner, blade),
-        "loss of actual awakening suspends domain");
-    AkatsukiDomainService.logout(
-        new net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(owner));
-    check(
-        !((java.util.Map<?, ?>) field.get(null)).containsKey(owner),
-        "logout clears live domain session");
-    var proofs = AkatsukiDomainAuthorization.class.getDeclaredField("PROOFS");
-    proofs.setAccessible(true);
-    check(
-        !((java.util.Map<?, ?>) proofs.get(null)).containsKey(blade),
-        "logout clears held and dropped carrier proofs without retaining player objects");
-    target.discard();
-    LogUtils.getLogger().info("AKATSUKI_DOMAIN_PROVIDER_PASS");
+    return blade;
   }
 
   private static void check(boolean passed, String message) {

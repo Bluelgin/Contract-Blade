@@ -2,33 +2,30 @@ package com.maidweapon.forge.system.akatsuki;
 
 import java.util.*;
 
-/** Tick state has no saved NBT. One per player; changing hands cannot reset its timers. */
+/** Ephemeral targeting/scheduling only. No damage balance or rescue cooldown belongs to a blade. */
 public final class AkatsukiDomainSession {
-  public long lastContact = Long.MIN_VALUE / 2, expires, readyAt, openedAt, cloakUntil;
-  public int contacts;
-  public double spent;
-  public long executionPulseUntil;
+  public final AkatsukiDomainState lifecycle = new AkatsukiDomainState();
+  public long lastContact = Long.MIN_VALUE / 2, executionPulseUntil, protectionUntil;
   public UUID target;
   public String binding = "";
+  private long visualContact = Long.MIN_VALUE;
+  private UUID visualVictim;
   private final Map<String, Long> next = new HashMap<>();
 
-  public boolean active(long now) {
-    return expires > now;
+  public boolean active() {
+    return lifecycle.valid();
   }
 
-  public boolean contact(long now, UUID victim, int required, int gap, int duration, int cooldown) {
-    if (now - lastContact < 8) return false;
-    contacts = now - lastContact > gap ? 1 : contacts + 1;
+  public boolean attacking() {
+    return lifecycle.attacking();
+  }
+
+  public boolean contact(long now, UUID victim) {
     lastContact = now;
     target = victim;
-    if (active(now)) return false; // Fixed episode prevents infinite renewal and budget refill.
-    if (now < readyAt || contacts < required) return false;
-    openedAt = now;
-    expires = now + duration;
-    readyAt = now + Math.max(duration, cooldown);
-    next.clear();
-    contacts = 0;
-    spent = 0;
+    if (visualContact == now && victim.equals(visualVictim)) return false;
+    visualContact = now;
+    visualVictim = victim;
     return true;
   }
 
@@ -39,9 +36,9 @@ public final class AkatsukiDomainSession {
   }
 
   public void suspend() {
-    expires = 0;
-    cloakUntil = 0;
-    contacts = 0;
+    lifecycle.suspend();
     target = null;
+    lastContact = Long.MIN_VALUE / 2;
+    // Do not reset attack timers or the finite protection window on a hand/state change.
   }
 }

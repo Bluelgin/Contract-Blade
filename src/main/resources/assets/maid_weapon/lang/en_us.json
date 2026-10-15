@@ -410,8 +410,8 @@
   "maid_weapon.white_blessing.early": "§7Lv.1–5: guard on hurt, periodic cleanse, healing on hits; brief speed and absorption after guarding.",
   "maid_weapon.white_blessing.middle": "§7Lv.6–8: assist slash; main-hand Black Fox can resonate, healing also helps one nearby owned maid.",
   "maid_weapon.white_blessing.late": "§7Lv.9–10: emergency guard; lethal damage invokes the oath, sparing your life and cleansing.",
-  "maid_weapon.tooltip.akatsuki_domain": "§cGarden of No Return: sustained attacks unfold the resident spirit’s domain",
+  "maid_weapon.tooltip.akatsuki_domain": "§cGarden of No Return: hold the resident spirit’s blade; rampage below half health",
   "maid_weapon.tooltip.akatsuki_domain.early": "§7Lv1–4: blood moon, pursuing blades, ring cuts and tracking",
-  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8: limited piercing, counters, chains and moon cloak",
+  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8: limited piercing, counters, chains and death rescue",
   "maid_weapon.tooltip.akatsuki_domain.late": "§7Lv9–10: blade rain and the complete domain"
 }

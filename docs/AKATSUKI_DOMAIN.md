@@ -2,7 +2,7 @@
 
 ## 范围与基线
 
-本实现只属于 Contract-Blade，基于 PR #17 `450692a644dbd1b0484a27fdc75f39323699cbd9`。
+本实现只属于 Contract-Blade。第二阶段基于 PR #18 `a5db47f5d55b6725b0b849429fee7a02a0e3d3d2`，继续更新 `codex/akatsuki-domain`；底层仍依赖 PR #17 的白狐成长基线。
 BladeTetra、传奇怪物、灾变全部为只读参考和可选运行环境。本次没有修改它们的仓库、伤害注册、觉醒、原生技能或处决阈值。
 
 能力 ID：`maid_weapon:akatsuki_domain`。等级直接取玩家全局 ContractMastery，无赤月私有经验。
@@ -21,27 +21,41 @@ BladeTetra、传奇怪物、灾变全部为只读参考和可选运行环境。�
 
 | 等级 | 名称 | 服务端能力与可见表现 |
 |---|---|---|
-| 1 | 绯月之庭 | 合法连续接触开庭；血月、圆形边界、空间残影；20 tick 斩影脉冲 |
-| 2 | 百刃追斩 | 30 tick 幻影剑追击当前目标；客户端多剑只对应一个候选脉冲 |
-| 3 | 月轮断空 | 60 tick 环斩；半径最多 5 格，最多 4 个敌人，共享全部额度 |
-| 4 | 血月锁敌 | 每 20 tick 标记主目标；原目标失效后自动捕获领域内最近合法敌人 |
-| 5 | 蓄月裁断 | 解锁五种伤害通道探测、实际生命反馈缓存及 10% 有限额度；内圈亮起 |
-| 6 | 赤月反噬 | 每 40 tick 最多拦截一枚朝玩家飞来的普通敌对箭/光灵箭/小火球，反击射手 |
-| 7 | 绯樱葬阵 | 合法击杀排队一次连锁；下一领域 tick 最多斩 3 名死亡地点 4 格内的敌人，30 tick 冷却；连锁不能产生连锁 |
-| 8 | 不灭月衣 | 每 60 tick 获得 20 tick 月衣，减伤 15%、单次最多 2 HP，防普通击退；不覆盖其他药水/属性 |
-| 9 | 万刃天倾 | 每 100 tick 血月剑雨；默认 48 把视觉剑，最多 4 个真实目标，额度升至 15% |
-| 10 | 无归之庭 | 双环、空间穹顶、巨大血月与集中裁断；每 80 tick 单次焦点脉冲，额度升至 20%；观察到原生终月脉冲时压暗血月、收束剑刃 |
+| 1 | 绯月之庭 | 持合法觉醒赤月自动开庭；正常挥刀即时空间斩，常态不染色 |
+| 2 | 百刃追斩 | 客户端原生幻影剑编队、加速追击和消散；真实脉冲独立计费 |
+| 3 | 月轮断空 | 最多 5 格、4 个敌人的范围脉冲；交错裂痕，无圆柱结界 |
+| 4 | 血月锁敌 | 主目标失效后每 20 tick 最多重捕获最近合法敌人 |
+| 5 | 蓄月裁断 | 保留五伤害通道与 10% 破限比例 |
+| 6 | 赤月反噬 | 保留普通箭/光灵箭/小火球白名单拦截与反击 |
+| 7 | 绯樱葬阵 | 保留最多 3 名目标、有冷却且不可递归的击杀连锁 |
+| 8 | 残月·不归 | 10% 血量或致命伤救援；25% 恢复、40 tick 保护、3600 tick 世界持久冷却 |
+| 9 | 万刃天倾 | 原生模型剑雨；暴走视觉数量翻倍，真实伤害仍共享预算；比例 15% |
+| 10 | 无归之庭 | 巨型瞬间裁断、20% 比例、原生终月脉冲的保守协同 |
 
-所有能力仍受同一伤害预算约束，同时到期不等于同时领取多份伤害。
-Lv8 防打断指原版击退，不声称能取消其他模组自定义硬控、动作系统或脚本。
+Lv8 仍沿用数据包 capability ID `akatsuki_cloak`，以保持既有十级路线和整合包授权兼容；不再执行旧周期月衣。
 
-## 领域规则
+## 自动领域状态机
 
-默认 9 格半径、220 tick 最长持续、320 tick 开庭冷却。40 tick 内至少 3 次合法接触开庭，接触计数最短间隔 8 tick。只认主手近战真实触及目标，或现有服务证明归因成功的本体/原生发射物伤害；不借玩家当前持刀给陌生弹幕归因。
+`AkatsukiDomainState` 为纯状态机；`AkatsukiDomainSession` 仅保存临时目标、接触时间、能力调度和有限保护期限。预算属于独立玩家/目标服务，救援冷却属于世界 SavedData。
 
-目标限定敌对生物或正在攻击玩家的 Mob，排除玩家、驯养物、盟友、无敌实体，要求同维度、距离和视线。无有效接触超过 40 tick 即停止；攻击空气不计数。不无限续期：每个领域固定寿命和总额度，达到寿命后必须遵守开庭冷却重新开始。冷却按服务器玩家 UUID 保留至到期，换手、死亡、换维度和重连不刷新；正常重启清理临时会话。
+- `INACTIVE`：玩家死亡。
+- `SUSPENDED`：失去授权、切换武器、剑灵显现或旁观模式。
+- `NORMAL`：合法持刀自动展开，无需接触、不设固定寿命或重开冷却。
+- `RAMPAGE`：当前生命/当前最大生命低于 50% 进入，达到 55% 才退出。支持动态最大血量。
+- `RESCUE_COLLAPSE`：救援后 12 tick 停止领域追加攻击、裂痕收束、暂停染色续期。
+- `RESCUE_REIGNITE`：接下来的 4 tick 再展开演出，之后按真实血量恢复领域（默认恢复 25%，因此暴走）。
 
-先在攻击事件记录接触，再由后续玩家 tick 执行独立脉冲。被 Boss 在 Forge 受伤事件前拒绝的普通近战，仍可通过服务端 AttackEntityEvent 的真实触及检查维持接触，但不会假装原攻击已扣血。
+没有战斗时只维持状态同步，领域不扫描敌人、不伤害、不生成常驻边界或粒子。只有合法接触之后 40 tick 内调度追加攻击；停止攻击后客户端视觉渐弱。每次真实接触即时反馈，重复的同 tick 同目标事件只生成一次即时演出。普通近战即使被 Boss 提前拒伤，仍可由 AttackEntityEvent 的服务端触及检查提供反馈。
+
+目标仍限敌对生物或攻击玩家的 Mob，排除玩家、驯养物、盟友、无敌实体；必须同维度、范围和视线合法。手持切换不会清除技能调度，预算更不会重置。
+
+## 残月救援与图腾
+
+`LivingDamageEvent` LOWEST 在护甲、吸收结算后、原版图腾处理前检查真实剩余生命；合法救援取消当前伤害并恢复 25% 当前最大生命。已处于 10% 或以下也会在服务端玩家 tick 检查。`LivingAttackEvent` 在有限保护期限内取消普通伤害；期限至少覆盖收束及再燃，并始终有限。
+
+只有生存/冒险、Lv8、合法驻留赤月且领域可攻击时才可领取。`/kill`、虚空、`bypasses_invulnerability` 来源不救援，也不受保护；虚空深处的低血量 tick 检查同样拒绝。成功时先领取冷却，再切状态、恢复生命和发送演出。冷却拒绝时不恢复、不播放成功。原版图腾保持原处理：赤月可用时图腾不消耗，冷却时由原版正常救援。
+
+`AkatsukiRescueSavedData` 位于主世界 `data/maid_weapon_akatsuki_rescue.dat`，按玩家 UUID 保存主世界 gameTime 截止值。所有赤月共用一条记录，换刀/丢刀、显现、死亡克隆、重连、换维度均不改写。正常停服会保存并跨重启继续倒计时；时间按服务器运行 tick 计算，停服期间不倒计时。与其他 SavedData 一样，进程崩溃发生于自动保存前的持久性依赖世界存盘；不宣称抗世界回档。
 
 ## 伤害类型及标签
 
@@ -72,12 +86,12 @@ Lv8 防打断指原版击退，不声称能取消其他模组自定义硬控、�
 - C 可读而 D 未知：本模组制定“每 20 tick 至多一个单击额度”的额外速率策略；这不是把 C 声称为 Boss 原生 DPS。
 - C、D 都未知：单次最多 0.5 HP，单目标共享最多 1 HP/20 tick。
 - 所有来源、所有玩家对同一 UUID 最短 10 tick 才能发起另一次真实脉冲；共享目标滑动窗口没有固定秒边界翻倍漏洞。
-- 每玩家所有目标累计最多 6 HP/20 tick；每个领域所有目标总计最多 24 HP。
+- 每玩家所有目标累计最多 6 HP/20 tick；每玩家滚动 220 tick 所有目标总计最多 24 HP（可配置窗口 20–1200 tick）。
 - 数值、适配器和配置无法超出代码里的 4/4/6/24 硬上限；比例硬上限 20%。
 
 例如 C=20、D 未知、Lv10 时：单次最多 4 HP，且全体玩家对这个目标每 20 tick 共用 4 HP，不是每一刀追加 4 HP。如果 D=5，则目标额度进一步收紧为 1 HP/20 tick。
 
-缓存清理不删除仍在时间窗内的共享扣费。实体卸载/死亡清理反馈；离线清理领域对象；短期预算到期后回收，正常停服清空运行时。
+缓存清理不删除仍在时间窗内的共享扣费。实体卸载/死亡清理反馈；离线清理领域对象；短期预算到期后回收，正常停服清空短期伤害运行时。救援冷却独立持久化，不随运行时清理。
 
 ## 原攻击与终月隔离
 
@@ -89,7 +103,7 @@ DomainHitWindow 保存/恢复仅由这次领域脉冲触碰的原版 invulnerabl
 
 受控版本的 Boss 适配同样保存/恢复伤害桶和受伤计时。云傀儡的额外前置计时只有在已扣预算的 absolute 通道期间临时放行，并立即恢复原值；休眠、转换、特定阶段保护仍拒绝。无全局清零、永久去防御或生命直写。
 
-终月同步只观察真实 `blade_tetra:akatsuki_execution` LivingDamageEvent 脉冲；Lv10 暗月和剑刃收束持续短时，领域追加伤害暂停 20 tick，交由原生处决继续。不访问私有 EXECUTIONS，不修改开始条件，不再次发起处决。**无法识别首个脉冲之前的开始、未造成伤害的执行过程和精确结束回调**；这些情况下只显示通用领域演出。
+终月同步只观察真实 `blade_tetra:akatsuki_execution` LivingDamageEvent 脉冲；Lv10 空间裁断配合真实脉冲持续短时，领域追加伤害暂停 20 tick，交由原生处决继续。不访问私有 EXECUTIONS，不修改开始条件，不再次发起处决。**无法识别首个脉冲之前的开始、未造成伤害的执行过程和精确结束回调**；这些情况下只显示通用领域演出。
 
 ## Boss 源码研究和适配边界
 
@@ -109,14 +123,28 @@ DomainHitWindow 保存/恢复仅由这次领域脉冲触碰的原版 invulnerabl
 
 SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶段适配，无需修改提供者源码。强穿透不是通用保证。
 
+## 视觉与可选桥接
+
+只读核实 SlashBlade Resharped **1.20.1-1.9.65** 发布 JAR 的 `SummonedSwordRenderer` 字节码与公开方法签名。`AkatsukiNativeVisualBridge` 调用 `BladeModelManager.getInstance().getModel(slashblade:model/util/ss.obj)`、`BladeRenderState.setCol` 和 `renderOverridedLuminous`，使用模型组 `ss` 与 `slashblade:model/util/ss.png`、原生 .0075 缩放和发光通道。颜色为赤红，alpha 随消散变化；单帧多剑共享 buffer 批次。没有服务端剑实体、没有复制模型/材质，没有三角形假剑降级。
+
+空间斩是原创程序化裂隙网格：随机交错方向、分段尖端/不对称裂口、接近黑色内部、深红渐变边缘、粉白窄高光；约 1 tick 细线预兆，短促爆发，8 tick 内消散。巨型裁断最长 7 格，宽裂口短闪；没有缓慢飞行刀气。收束阶段现有裂隙向玩家移动缩小，再燃向外闪现交错裁断。音效复用原版锚耗尽及横扫音效的低音变调，不引入第三方素材。
+
+`AkatsukiVisualDirector` 与伤害调度分离，客户端只在最近战斗和有效目标存在时产生效果。常态每 2–3 tick 一组 1–3 裂痕、8 tick 一组追剑；暴走每 1–2 tick 一组 2–5 裂痕、4–6 tick 一组更多追剑。连续真实接触增加组合强度，停止后 40 tick 内衰减归零。标准档每组最多 4 裂痕、高档 5、低档 1；质量绝不影响伤害。
+
+暴走只有本地玩家请求 BladeTetra 的 `MikageBloodMoonDomainClient.beginAkatsuki(8)`，每 4 tick 续一次最多 8 tick 的短租期。退出、收束、换世界、断线停止续期，**永不调用 `endAkatsuki`**，不读写私有计时器。原生终月的较长请求通过提供者 `max()` 自然共享同一份染色。退出最多残留 8 tick 租期，之后按提供者 28 tick 淡出；不强行清除可能属于终月的效果。没有自建 PostChain 或修改真实天气、时间、天空。
+
+资源重载清理临时剑和裂隙，重试公开接口；Shader 包/低配可关闭 `rampageTint`，提供者自身的 Shader 加载失败和视觉开关继续有效。可选类缺失、签名变化、反射调用错误安全关闭对应效果并 warnOnce，其他斩击仍可运行。卸载 BladeTetra 时领域本身因真实赤月授权不可用而暂停，不会客户端崩溃。
+
+原生终月仍仅观察真实伤害脉冲；无法准确识别其完整开始/结束，故不依赖私有集合强行同步。提供者原生 `endAkatsuki` 可能临时缩短共享计时器，暴走下一次短续期会恢复；不承诺改写提供者行为。
+
 ## 配置和性能
 
 服务端：`serverconfig/maid_weapon-akatsuki-server.toml`；客户端：`config/maid_weapon-akatsuki-client.toml`。
-服务端配置覆盖开关、半径、寿命、冷却、接触维持、各能力间隔、剑雨视觉数量、三档破限比例、候选通道、强通道、适配器、共享目标/玩家/领域限额。客户端 quality=0/1/2 与 visualDensity 只影响演出。
+旧 duration/openingContacts/cooldown/cloakInterval 不再参与领域生命周期。配置包含暴走入/出比例、救援开关/阈值/恢复量/保护/收束/再燃/冷却、滚动预算窗口；旧 wholeDomainHP 改为 combatWindowHP，默认 24。整合包调整 rescueHealthFraction 高于暴走退出值时，会按真实生命退出暴走。
 
-服务端能力按 5 tick 调度；环斩和剑雨到期才作局部实体查询，截断真实目标数，不全世界扫描。每目标至少 10 tick 一次 hurt；所有视觉用一个客户端几何缓冲区。客户端最多保存 16 个领域、96 个短演出；每帧最多渲染最近 6 个领域/48 个短演出，低档更少；退出或换世界清理。
+服务端每 2 tick 调度战斗，空闲无广域查询，能力到期才查询有限范围并截断目标数。暴走候选间隔缩短一半、最低 10 tick，仍受全部共享预算和目标 10 tick 间隔限制。5 tick 一次短期状态快照，网络协议升级为 2，客户端与服务端必须更新为同一版本。
 
-客户端血月为领域上方的程序化几何圆盘及空间边界，遵守场景深度；不是全局换天、后处理 shader 或独立维度。没有新增外部美术资产。多剑/剑雨只是网格，数量不增加服务器伤害次数。
+客户端最多 16 领域；裂隙实例上限 48/192/192，剑实例上限 48/160/256（低/标准/高）；24/48 格距离裁剪。单几何批次绘制裂口、原生剑按其 RenderType 合批。实例到期、领域结束、退出世界和重载均清理。没有永久几何边界，也没有用粒子堆积营造密度。
 
 ## 文件与架构
 
@@ -124,13 +152,13 @@ SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶�
 |---|---|
 | 全局成长和声明式路线 | `system/akatsuki/AkatsukiDomainGrowth.java`；`data/maid_weapon/contract_ability_progression/akatsuki_domain.json` |
 | 固有身份、驻留及来源 | `AkatsukiDomainAuthorization.java`；`system/contract/IntrinsicSpiritOriginData.java`；真实 preset 工厂的一处 afterCommit 观察 |
-| 生命周期与各级执行 | `AkatsukiDomainService.java`；纯状态 `AkatsukiDomainSession.java` |
+| 生命周期与各级执行 | `AkatsukiDomainService.java`；`AkatsukiDomainSession.java`；纯状态 `AkatsukiDomainState.java`；持久救援 `AkatsukiRescueSavedData.java` |
 | 单一伤害入口 | `AkatsukiDomainDamage.java`；`DomainHitWindow.java` |
 | 预算与反馈 | 纯逻辑 `DomainDamageBudget.java`；`DomainDamageAdaptation.java` |
 | 可选联动 | `compat/AkatsukiCombatCompat.java`；`compat/DomainTargetCompatibility.java` |
-| 客户端与同步 | `client/AkatsukiDomainVisuals.java`；`network/AkatsukiDomainNetwork.java` |
+| 客户端与同步 | `client/AkatsukiDomainVisuals.java`；`AkatsukiVisualDirector.java`；`AkatsukiNativeVisualBridge.java`；`network/AkatsukiDomainNetwork.java` |
 | 配置、注册和资源 | `common/AkatsukiDomainConfig.java`；MaidWeaponMod 注册；5 个 damage_type JSON、9 个追加分类标签 |
-| 自动验证 | `DomainPolicyTest`、`AkatsukiGrowthTest`、`IntrinsicOriginTest`；`AkatsukiDomainValidation`；现有 fixture runner/CI |
+| 自动验证 | `DomainPolicyTest`、`AkatsukiGrowthTest`、`IntrinsicOriginTest`、`RescuePersistenceTest`、`VisualDirectorTest`；`AkatsukiDomainValidation`；现有 fixture runner/CI |
 
 实际修改文件清单以 PR Files changed 为准。没有重构黑白狐执行器、FoxSpiritState、终月计算、生命周期恢复状态机或 TLM 存储格式。
 
@@ -147,8 +175,8 @@ python tools/run_stage_three_tests.py --fixture sword
 python tools/run_stage_three_tests.py --fixture recovery
 ```
 
-CI 下载 TLM 1.5.3、SlashBlade 1.9.65 到本地 runtimeOnly 目录，运行一次性专服世界，不访问用户存档。akatsuki-domain 夹具覆盖完整驻留证明、伪造全套身份、普通物品冒认、显现/收回、十级解析，以及真实原版 hurt 窗口和后续普通攻击伤害差额。基础夹具在**没有 BladeTetra** 的环境运行。另有 akatsuki-provider 夹具安装公开 BladeTetra 1.5.9、Tetra 6.3.0、mutil 6.2.0，通过提供者公开 debug 觉醒方法构造真实 ModularSlashBladeItem，验证实际身份、十级授权、显现/收回、三次真实伤害事件自动开庭、公开 secondary guard 中的追加伤害与同 tick 去重。该夹具不替代真人游戏输入和客户端演出验收。
+CI 下载 TLM 1.5.3、SlashBlade 1.9.65 到本地 runtimeOnly 目录，运行一次性专服世界，不访问用户存档。akatsuki-domain 夹具覆盖完整驻留证明、伪造全套身份、普通物品冒认、显现/收回、十级解析，以及真实原版 hurt 窗口和后续普通攻击伤害差额。基础夹具在**没有 BladeTetra** 的环境运行。另有 akatsuki-provider 夹具安装公开 BladeTetra 1.5.9、Tetra 6.3.0、mutil 6.2.0，通过提供者公开 debug 觉醒方法构造真实 ModularSlashBladeItem，验证实际身份、十级授权、显现/收回、无攻击持刀自动开庭、半血滞回、真实致命伤救援、原版图腾回退、持久冷却与同世界真实重启、公开 secondary guard 中的追加伤害与同 tick 去重。该夹具不替代真人游戏输入和客户端演出验收。
 
-JUnit 另测十级 JSON/fallback 等价、各级独立能力、预算硬上限和多人共享、原生单次/DPS 分离、换手/空挥、通道探测、阶段/异常生命反馈、来源重载和未来 schema。
+JUnit 另测十级 JSON/fallback 等价、各级独立能力、预算硬上限和多人共享、原生单次/DPS 分离、常驻与换手、救援幂等/再燃、视觉频率/空闲、冷却序列化、通道探测、阶段/异常生命反馈、来源重载和未来 schema。
 
 图形客户端、三种 Boss 实战、真人多客户端和重混淆产物启动尚需游戏内验收；不得用“编译通过”替代这些结果。最新实际运行结论见 PR 验证段落及其 Actions 日志。

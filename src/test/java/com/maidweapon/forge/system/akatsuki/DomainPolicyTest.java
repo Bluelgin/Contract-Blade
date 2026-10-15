@@ -32,10 +32,10 @@ class DomainPolicyTest {
     var target = UUID.randomUUID();
     var p = UUID.randomUUID();
     var limit = new DomainDamageBudget.Limits(4, 4, 6, 24);
-    assertEquals(4, b.reserve(p, target, 100, 0, limit));
-    assertEquals(0, b.reserve(UUID.randomUUID(), target, 100, 0, limit));
-    assertEquals(0, b.reserve(UUID.randomUUID(), target, 119, 0, limit));
-    assertEquals(4, b.reserve(UUID.randomUUID(), target, 120, 0, limit));
+    assertEquals(4, b.reserve(p, target, 100, 220, limit));
+    assertEquals(0, b.reserve(UUID.randomUUID(), target, 100, 220, limit));
+    assertEquals(0, b.reserve(UUID.randomUUID(), target, 119, 220, limit));
+    assertEquals(4, b.reserve(UUID.randomUUID(), target, 120, 220, limit));
   }
 
   @Test
@@ -44,11 +44,18 @@ class DomainPolicyTest {
     var p = UUID.randomUUID();
     var t = UUID.randomUUID();
     var unbounded = new DomainDamageBudget.Limits(1000, 1000, 1000, 1000);
-    assertEquals(4, b.reserve(p, t, 0, 0, unbounded));
-    assertEquals(2, b.reserve(p, UUID.randomUUID(), 0, 0, unbounded));
-    assertEquals(0, b.reserve(p, UUID.randomUUID(), 0, 0, unbounded));
-    assertEquals(1, b.reserve(p, t, 20, 23, unbounded));
-    assertEquals(0, b.reserve(p, t, 40, 24, unbounded));
+    assertEquals(4, b.reserve(p, t, 0, 220, unbounded));
+    assertEquals(2, b.reserve(p, UUID.randomUUID(), 0, 220, unbounded));
+    assertEquals(0, b.reserve(p, UUID.randomUUID(), 0, 220, unbounded));
+    assertEquals(4, b.reserve(p, t, 20, 220, unbounded));
+    assertEquals(4, b.reserve(p, t, 40, 220, unbounded));
+    assertEquals(4, b.reserve(p, t, 60, 220, unbounded));
+    assertEquals(4, b.reserve(p, t, 80, 220, unbounded));
+    assertEquals(2, b.reserve(p, t, 100, 220, unbounded));
+    b.prune(201); // Cannot refund a recent long-window charge.
+    assertEquals(0, b.reserve(p, t, 201, 220, unbounded));
+    assertEquals(4, b.reserve(p, t, 220, 220, unbounded));
+    assertEquals(2, b.reserve(p, UUID.randomUUID(), 220, 220, unbounded));
   }
 
   @Test
@@ -57,10 +64,10 @@ class DomainPolicyTest {
     var t = UUID.randomUUID();
     var p = UUID.randomUUID();
     var limit = new DomainDamageBudget.Limits(.5, 1, 6, 24);
-    assertEquals(.5, b.reserve(p, t, 19, 0, limit));
-    assertEquals(0, b.reserve(p, t, 20, 0, limit));
-    assertEquals(.5, b.reserve(p, t, 29, 0, limit));
-    assertEquals(.5, b.reserve(p, t, 39, 0, limit));
+    assertEquals(.5, b.reserve(p, t, 19, 220, limit));
+    assertEquals(0, b.reserve(p, t, 20, 220, limit));
+    assertEquals(.5, b.reserve(p, t, 29, 220, limit));
+    assertEquals(.5, b.reserve(p, t, 39, 220, limit));
   }
 
   @Test
@@ -69,10 +76,10 @@ class DomainPolicyTest {
     var t = UUID.randomUUID();
     var p = UUID.randomUUID();
     var limit = new DomainDamageBudget.Limits(1, 1, 6, 24);
-    assertEquals(1, b.reserve(p, t, 0, 0, limit));
+    assertEquals(1, b.reserve(p, t, 0, 220, limit));
     b.prune(19);
-    assertEquals(0, b.reserve(p, t, 19, 0, limit));
-    assertEquals(1, b.reserve(p, t, 201, 0, limit));
+    assertEquals(0, b.reserve(p, t, 19, 220, limit));
+    assertEquals(1, b.reserve(p, t, 201, 220, limit));
     assertThrows(
         IllegalArgumentException.class, () -> new DomainDamageBudget.Limits(Double.NaN, 1, 1, 1));
   }
@@ -119,23 +126,55 @@ class DomainPolicyTest {
   }
 
   @Test
-  void noAirRenewalOrHandSwapCooldownReset() {
+  void automaticDomainHasNoExpiryAndHealthHysteresisIsStable() {
+    var s = new AkatsukiDomainState();
+    assertTrue(s.update(true, true, .5, 0, .5, .55));
+    assertEquals(AkatsukiDomainState.Phase.NORMAL, s.phase());
+    assertFalse(s.update(true, true, .5, 999999, .5, .55));
+    s.update(true, true, .499, 1000000, .5, .55);
+    assertEquals(AkatsukiDomainState.Phase.RAMPAGE, s.phase());
+    assertFalse(s.update(true, true, .54, 1000001, .5, .55));
+    s.update(true, true, .55, 1000002, .5, .55);
+    assertEquals(AkatsukiDomainState.Phase.NORMAL, s.phase());
+    s.update(false, true, .25, 1000003, .5, .55);
+    assertFalse(s.valid());
+    s.update(true, true, .25, 1000004, .5, .55);
+    assertTrue(s.rampage());
+    s.update(true, false, 0, 1000005, .5, .55);
+    assertFalse(s.valid());
+  }
+
+  @Test
+  void rescueIsIdempotentAndCannotAttackUntilReignitionCompletes() {
+    var s = new AkatsukiDomainState();
+    assertFalse(s.rescue(0, 12, 4));
+    s.update(true, true, .1, 0, .5, .55);
+    assertTrue(s.rescue(0, 12, 4));
+    assertFalse(s.rescue(1, 12, 4));
+    s.update(true, true, .25, 11, .5, .55);
+    assertEquals(AkatsukiDomainState.Phase.RESCUE_COLLAPSE, s.phase());
+    assertFalse(s.attacking());
+    s.update(true, true, .25, 12, .5, .55);
+    assertEquals(AkatsukiDomainState.Phase.RESCUE_REIGNITE, s.phase());
+    assertFalse(s.attacking());
+    s.update(true, true, .25, 16, .5, .55);
+    assertTrue(s.attacking());
+    assertTrue(s.rampage());
+    s.rescue(17, 12, 4);
+    s.update(false, true, .25, 18, .5, .55);
+    assertEquals(AkatsukiDomainState.Phase.SUSPENDED, s.phase());
+  }
+
+  @Test
+  void handChangesKeepAttackTimersAndAllBudgetsLiveOutsideSessions() {
     var s = new AkatsukiDomainSession();
-    var t = UUID.randomUUID();
-    assertFalse(s.contact(0, t, 3, 40, 220, 320));
-    assertFalse(s.contact(8, t, 3, 40, 220, 320));
-    assertTrue(s.contact(16, t, 3, 40, 220, 320));
-    s.spent = 12;
-    assertFalse(s.contact(24, t, 3, 40, 220, 320));
-    assertEquals(236, s.expires);
-    assertEquals(12, s.spent);
+    assertTrue(s.due("edge", 10, 20));
     s.suspend();
-    assertFalse(s.contact(32, t, 3, 40, 220, 320));
-    assertFalse(s.active(32));
-    assertEquals(336, s.readyAt);
-    assertFalse(s.contact(328, t, 3, 40, 220, 320));
-    assertFalse(s.contact(336, t, 3, 40, 220, 320));
-    assertTrue(s.contact(344, t, 3, 40, 220, 320));
-    assertEquals(0, s.spent);
+    assertFalse(s.due("edge", 11, 20));
+    assertTrue(s.due("edge", 30, 20));
+    var target = UUID.randomUUID();
+    assertTrue(s.contact(31, target));
+    assertFalse(s.contact(31, target));
+    assertTrue(s.contact(32, target));
   }
 }

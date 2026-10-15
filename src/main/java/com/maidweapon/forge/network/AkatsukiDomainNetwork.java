@@ -2,6 +2,7 @@ package com.maidweapon.forge.network;
 
 import com.maidweapon.forge.api.ability.ContractAbilityFeatureSet;
 import com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth;
+import com.maidweapon.forge.system.akatsuki.AkatsukiDomainState.Phase;
 import java.util.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,22 +15,21 @@ public final class AkatsukiDomainNetwork {
   public static final int STATE = 0,
       END = 1,
       EDGE = 2,
-      SWORDS = 3,
       RING = 4,
       LOCK = 5,
-      ADAPT = 6,
       COUNTER = 7,
       CHAIN = 8,
-      CLOAK = 9,
       RAIN = 10,
       FINAL = 11,
-      EXECUTION = 12;
+      EXECUTION = 12,
+      COLLAPSE = 13,
+      REIGNITE = 14;
   private static final SimpleChannel CHANNEL =
       NetworkRegistry.newSimpleChannel(
           ResourceLocation.parse("maid_weapon:akatsuki_domain"),
-          () -> "1",
-          "1"::equals,
-          "1"::equals);
+          () -> "2",
+          "2"::equals,
+          "2"::equals);
 
   public record Cue(
       UUID owner,
@@ -39,7 +39,9 @@ public final class AkatsukiDomainNetwork {
       float radius,
       int features,
       int ticks,
-      int blades) {}
+      int blades,
+      Phase phase,
+      int targetId) {}
 
   public static void register() {
     CHANNEL.registerMessage(
@@ -58,6 +60,8 @@ public final class AkatsukiDomainNetwork {
           b.writeVarInt(p.features());
           b.writeVarInt(p.ticks());
           b.writeVarInt(p.blades());
+          b.writeEnum(p.phase());
+          b.writeInt(p.targetId());
         },
         b ->
             new Cue(
@@ -68,7 +72,9 @@ public final class AkatsukiDomainNetwork {
                 b.readFloat(),
                 b.readVarInt(),
                 b.readVarInt(),
-                b.readVarInt()),
+                b.readVarInt(),
+                b.readEnum(Phase.class),
+                b.readInt()),
         (p, c) -> {
           var context = c.get();
           context.enqueueWork(
@@ -87,7 +93,9 @@ public final class AkatsukiDomainNetwork {
       Vec3 target,
       float radius,
       ContractAbilityFeatureSet features,
-      int ticks) {
+      int ticks,
+      Phase phase,
+      int targetId) {
     int mask = 0;
     for (int i = 0; i < AkatsukiDomainGrowth.ROUTE.size(); i++)
       if (AkatsukiDomainGrowth.has(features, AkatsukiDomainGrowth.ROUTE.get(i))) mask |= 1 << i;
@@ -100,7 +108,9 @@ public final class AkatsukiDomainNetwork {
             radius,
             mask,
             Math.min(400, Math.max(0, ticks)),
-            com.maidweapon.common.AkatsukiDomainConfig.RAIN_COUNT.get());
+            com.maidweapon.common.AkatsukiDomainConfig.RAIN_COUNT.get(),
+            phase,
+            targetId);
     CHANNEL.send(
         PacketDistributor.NEAR.with(
             () ->

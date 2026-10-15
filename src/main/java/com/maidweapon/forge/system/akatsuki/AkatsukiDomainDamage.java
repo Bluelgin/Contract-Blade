@@ -39,7 +39,7 @@ public final class AkatsukiDomainDamage {
         || !AkatsukiDomainAuthorization.allows(player, player.getMainHandItem())
         || !AkatsukiDomainService.hostile(player, target)) return;
     long now = player.getServer().overworld().getGameTime();
-    if (!session.active(now)
+    if (!session.attacking()
         || now - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()
         || !session.binding.equals(
             com.maidweapon.forge.system.contract.ContractCarrierData.getBindingId(
@@ -66,7 +66,7 @@ public final class AkatsukiDomainDamage {
             player.getUUID(),
             target.getUUID(),
             now,
-            session.spent,
+            AkatsukiDomainConfig.BUDGET_WINDOW.get(),
             DomainDamageBudget.policy(
                 beforeState.hitCap(),
                 beforeState.dpsCap(),
@@ -79,7 +79,6 @@ public final class AkatsukiDomainDamage {
                     AkatsukiDomainConfig.PLAYER_SECOND.get(),
                     AkatsukiDomainConfig.DOMAIN_CAP.get())));
     if (amount <= 0) return;
-    session.spent += amount;
     var vanillaWindow = DomainHitWindow.capture(target);
     var bossWindow = DomainTargetCompatibility.hitWindow(target, channel == Channel.ABSOLUTE);
     if (vanillaWindow == null || bossWindow == null) return;

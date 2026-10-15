@@ -20,8 +20,9 @@ public final class DomainDamageBudget {
     final Deque<Charge> charges = new ArrayDeque<>();
     long lastAttempt = Long.MIN_VALUE / 2, touched;
 
-    double used(long now) {
-      while (!charges.isEmpty() && now - charges.peekFirst().tick() >= 20) charges.removeFirst();
+    double used(long now, int duration) {
+      while (!charges.isEmpty() && now - charges.peekFirst().tick() >= duration)
+        charges.removeFirst();
       return charges.stream().mapToDouble(Charge::amount).sum();
     }
 
@@ -31,7 +32,9 @@ public final class DomainDamageBudget {
     }
   }
 
-  private final Map<UUID, Window> targets = new HashMap<>(), players = new HashMap<>();
+  private final Map<UUID, Window> targets = new HashMap<>(),
+      players = new HashMap<>(),
+      combat = new HashMap<>();
 
   public static Limits policy(
       double nativeHit,
@@ -53,13 +56,14 @@ public final class DomainDamageBudget {
         Math.min(24, ceilings.domain()));
   }
 
-  public double reserve(UUID player, UUID target, long now, double spent, Limits limits) {
-    if (!Double.isFinite(spent) || spent < 0) return 0;
+  public double reserve(UUID player, UUID target, long now, int windowTicks, Limits limits) {
+    if (windowTicks < 20 || windowTicks > 1200) return 0;
     // Saturation fails closed; never evict recent charges to make room for an extra entity.
     if (targets.size() >= 4096 && !targets.containsKey(target)
         || players.size() >= 1024 && !players.containsKey(player)) return 0;
     var t = targets.computeIfAbsent(target, id -> new Window());
     var p = players.computeIfAbsent(player, id -> new Window());
+    var c = combat.computeIfAbsent(player, id -> new Window());
     if (now - t.lastAttempt < 10) return 0;
     double amount =
         Math.max(
@@ -67,24 +71,27 @@ public final class DomainDamageBudget {
             Math.min(
                 Math.min(4, limits.hit()),
                 Math.min(
-                    Math.min(4, limits.targetSecond()) - t.used(now),
+                    Math.min(4, limits.targetSecond()) - t.used(now, 20),
                     Math.min(
-                        Math.min(6, limits.playerSecond()) - p.used(now),
-                        Math.min(24, limits.domain()) - spent))));
+                        Math.min(6, limits.playerSecond()) - p.used(now, 20),
+                        Math.min(24, limits.domain()) - c.used(now, windowTicks)))));
     if (amount < .001) return 0;
     t.lastAttempt = now;
     t.add(now, amount);
     p.add(now, amount);
+    c.add(now, amount);
     return amount;
   }
 
   public void prune(long now) {
     targets.values().removeIf(w -> now - w.touched > 200);
-    players.values().removeIf(w -> now - w.touched > 200);
+    players.values().removeIf(w -> now - w.touched > 1200);
+    combat.values().removeIf(w -> now - w.touched > 1200);
   }
 
   public void clear() {
     targets.clear();
     players.clear();
+    combat.clear();
   }
 }

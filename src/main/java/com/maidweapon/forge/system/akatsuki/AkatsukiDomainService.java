@@ -24,12 +24,11 @@ import net.minecraftforge.eventbus.api.*;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Contact observes original attacks; all independent pulse damage runs later on the server tick.
+ * Health drives lifecycle; contact only supplies targets. Bounded damage runs on the server tick.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class AkatsukiDomainService {
   private static final Map<ServerPlayer, AkatsukiDomainSession> SESSIONS = new WeakHashMap<>();
-  private static final Map<UUID, Long> OPEN_COOLDOWNS = new HashMap<>();
 
   private record Chain(Vec3 center, long expires) {}
 
@@ -60,21 +59,38 @@ public final class AkatsukiDomainService {
         || !player.hasLineOfSight(target)) return;
     var features = AkatsukiDomainGrowth.capabilities(player);
     if (!has(features, "garden")) return;
+    var state = refresh(player, features);
+    if (state.attacking() && state.contact(now(player), target.getUUID()))
+      cue(player, state, features, EDGE, target);
+  }
+
+  private static AkatsukiDomainSession refresh(ServerPlayer player, ContractAbilityFeatureSet f) {
     var state = SESSIONS.computeIfAbsent(player, p -> new AkatsukiDomainSession());
-    state.readyAt = Math.max(state.readyAt, OPEN_COOLDOWNS.getOrDefault(player.getUUID(), 0L));
     String binding = ContractCarrierData.getBindingId(player.getMainHandItem());
     if (!state.binding.equals(binding)) state.suspend();
     state.binding = binding;
-    if (state.contact(
-        now(player),
-        target.getUUID(),
-        AkatsukiDomainConfig.OPEN_HITS.get(),
-        AkatsukiDomainConfig.CONTACT_GAP.get(),
-        AkatsukiDomainConfig.DURATION.get(),
-        AkatsukiDomainConfig.COOLDOWN.get())) {
-      OPEN_COOLDOWNS.put(player.getUUID(), state.readyAt);
-      cue(player, state, features, STATE, target);
+    boolean changed =
+        state.lifecycle.update(
+            has(f, "garden") && !player.isSpectator(),
+            player.isAlive(),
+            player.getHealth() / Math.max(1f, player.getMaxHealth()),
+            now(player),
+            AkatsukiDomainConfig.RAMPAGE_ENTER.get(),
+            AkatsukiDomainConfig.RAMPAGE_EXIT.get());
+    if (changed) {
+      if (!state.active()) state.suspend();
+      cue(
+          player,
+          state,
+          f,
+          !state.active()
+              ? END
+              : state.lifecycle.phase() == AkatsukiDomainState.Phase.RESCUE_REIGNITE
+                  ? REIGNITE
+                  : STATE,
+          null);
     }
+    return state;
   }
 
   /** Explicit melee contact remains observable when a boss rejects hurt() before Forge events. */
@@ -100,8 +116,10 @@ public final class AkatsukiDomainService {
             .orElse(false)
         && event.getSource().getEntity() instanceof ServerPlayer p) {
       var session = SESSIONS.get(p);
-      if (session != null && session.active(now(p))) {
+      if (session != null && session.active()) {
         session.executionPulseUntil = now(p) + 20;
+        if (Boolean.getBoolean("contractblade.akatsukiVisual.validation"))
+          com.mojang.logging.LogUtils.getLogger().info("AKATSUKI_NATIVE_EXECUTION_OBSERVED");
         var f = AkatsukiDomainGrowth.capabilities(p);
         if (has(f, "complete") && session.due("execution_visual", now(p), 10))
           cue(p, session, f, EXECUTION, event.getEntity());
@@ -120,33 +138,41 @@ public final class AkatsukiDomainService {
   public static void tick(TickEvent.PlayerTickEvent event) {
     if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player))
       return;
-    var state = SESSIONS.get(player);
-    if (state == null) return;
     var features = AkatsukiDomainGrowth.capabilities(player);
+    var state = SESSIONS.get(player);
+    if (state == null && !has(features, "garden")) return;
+    state = refresh(player, features);
     long now = now(player);
-    if (!has(features, "garden")
-        || !state.binding.equals(ContractCarrierData.getBindingId(player.getMainHandItem()))
-        || !state.active(now)
-        || now - state.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) {
-      stop(player, state);
+    if (!state.active()) {
+      CHAINS.remove(player);
       return;
     }
-    if (now % 5 != 0) return; // No broad entity query each tick.
+    if (state.attacking()
+        && player.getHealth() <= player.getMaxHealth() * AkatsukiDomainConfig.RESCUE_THRESHOLD.get()
+        && player.getY() >= player.level().getMinBuildHeight() - 64
+        && (player.getLastDamageSource() == null || rescuable(player.getLastDamageSource())))
+      rescue(player, state, features);
+    if (state.due("snapshot", now, 5)) cue(player, state, features, STATE, null);
+    if (!state.attacking() || now - state.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) {
+      CHAINS.remove(player);
+      return; // Idle domains do not scan, damage or make combat effects.
+    }
+    if (now % 2 != 0) return;
     Entity found = state.target == null ? null : player.serverLevel().getEntity(state.target);
     LivingEntity target =
         found instanceof LivingEntity living && validTarget(player, living) ? living : null;
-    if (state.due("snapshot", now, 10)) cue(player, state, features, STATE, target);
-    if (target != null && state.due("edge", now, AkatsukiDomainConfig.EDGE_INTERVAL.get())) {
-      cue(player, state, features, EDGE, target);
+
+    if (target != null
+        && state.due("edge", now, interval(state, AkatsukiDomainConfig.EDGE_INTERVAL.get()))) {
       AkatsukiDomainDamage.pulse(player, target, state, has(features, "adaptation"));
     }
     if (has(features, "swords")
         && target != null
-        && state.due("swords", now, AkatsukiDomainConfig.SWORD_INTERVAL.get())) {
-      cue(player, state, features, SWORDS, target);
+        && state.due("swords", now, interval(state, AkatsukiDomainConfig.SWORD_INTERVAL.get()))) {
       AkatsukiDomainDamage.pulse(player, target, state, has(features, "adaptation"));
     }
-    if (has(features, "ring") && state.due("ring", now, AkatsukiDomainConfig.RING_INTERVAL.get())) {
+    if (has(features, "ring")
+        && state.due("ring", now, interval(state, AkatsukiDomainConfig.RING_INTERVAL.get()))) {
       cue(player, state, features, RING, null);
       for (var enemy : nearby(player, Math.min(5, AkatsukiDomainConfig.RADIUS.get())))
         AkatsukiDomainDamage.pulse(player, enemy, state, has(features, "adaptation"));
@@ -180,22 +206,24 @@ public final class AkatsukiDomainService {
         chaining = false;
       }
     }
-    if (has(features, "cloak")
-        && state.due("cloak", now, AkatsukiDomainConfig.CLOAK_INTERVAL.get())) {
-      state.cloakUntil = now + 20;
-      cue(player, state, features, CLOAK, null);
-    }
-    if (has(features, "rain") && state.due("rain", now, AkatsukiDomainConfig.RAIN_INTERVAL.get())) {
+    if (has(features, "rain")
+        && state.due("rain", now, interval(state, AkatsukiDomainConfig.RAIN_INTERVAL.get()))) {
       cue(player, state, features, RAIN, target);
       for (var enemy : nearby(player, AkatsukiDomainConfig.RADIUS.get()))
         AkatsukiDomainDamage.pulse(player, enemy, state, has(features, "adaptation"));
     }
-    if (has(features, "complete") && state.due("complete", now, 80)) {
+    if (has(features, "complete")
+        && target != null
+        && state.due("complete", now, state.lifecycle.rampage() ? 40 : 80)) {
       cue(player, state, features, FINAL, target);
       // One focused pulse; the client unfolds dozens of converging cuts independently.
       if (target != null)
         AkatsukiDomainDamage.pulse(player, target, state, has(features, "adaptation"));
     }
+  }
+
+  private static int interval(AkatsukiDomainSession state, int normal) {
+    return state.lifecycle.rampage() ? Math.max(10, normal / 2) : normal;
   }
 
   private static boolean validTarget(ServerPlayer player, LivingEntity target) {
@@ -246,26 +274,67 @@ public final class AkatsukiDomainService {
       AkatsukiDomainDamage.pulse(player, owner, state, has(features, "adaptation"));
   }
 
+  /**
+   * Runs after armor/absorption, before vanilla's totem check. A successful rescue consumes no
+   * totem.
+   */
   @SubscribeEvent(priority = EventPriority.LOWEST)
-  public static void cloak(LivingHurtEvent e) {
-    if (e.getEntity() instanceof ServerPlayer p
-        && protectedByCloak(p)
-        && !e.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY))
-      e.setAmount(Math.max(0, e.getAmount() - Math.min(2, e.getAmount() * .15f)));
+  public static void rescueDamage(LivingDamageEvent e) {
+    if (!(e.getEntity() instanceof ServerPlayer p)
+        || e.getAmount() <= 0
+        || !rescuable(e.getSource())) return;
+    var f = AkatsukiDomainGrowth.capabilities(p);
+    if (!has(f, "cloak")) return;
+    var s = refresh(p, f);
+    if (e.getAmount() >= p.getHealth()
+        || p.getHealth() - e.getAmount()
+            <= p.getMaxHealth() * AkatsukiDomainConfig.RESCUE_THRESHOLD.get()) {
+      if (rescue(p, s, f)) e.setCanceled(true);
+    }
   }
 
-  @SubscribeEvent(priority = EventPriority.LOWEST)
-  public static void knockback(LivingKnockBackEvent e) {
-    if (e.getEntity() instanceof ServerPlayer p && protectedByCloak(p)) e.setCanceled(true);
+  /** Short finite damage protection also covers the collapse/reignite window. */
+  @SubscribeEvent(priority = EventPriority.HIGHEST)
+  public static void protection(LivingAttackEvent e) {
+    if (e.getEntity() instanceof ServerPlayer p && rescuable(e.getSource())) {
+      var s = SESSIONS.get(p);
+      if (s != null && now(p) < s.protectionUntil && !p.isCreative() && !p.isSpectator())
+        e.setCanceled(true);
+    }
   }
 
-  private static boolean protectedByCloak(ServerPlayer p) {
-    var s = SESSIONS.get(p);
-    return s != null
-        && s.active(now(p))
-        && now(p) < s.cloakUntil
-        && now(p) - s.lastContact <= AkatsukiDomainConfig.CONTACT_GAP.get()
-        && has(AkatsukiDomainGrowth.capabilities(p), "cloak");
+  static boolean rescuable(net.minecraft.world.damagesource.DamageSource source) {
+    return !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)
+        && !source.is(net.minecraft.world.damagesource.DamageTypes.FELL_OUT_OF_WORLD)
+        && !source.is(net.minecraft.world.damagesource.DamageTypes.GENERIC_KILL);
+  }
+
+  private static boolean rescue(
+      ServerPlayer p, AkatsukiDomainSession s, ContractAbilityFeatureSet f) {
+    if (!AkatsukiDomainConfig.RESCUE.get()
+        || !has(f, "cloak")
+        || !s.attacking()
+        || !p.isAlive()
+        || p.isCreative()
+        || p.isSpectator()
+        || !AkatsukiDomainAuthorization.allows(p, p.getMainHandItem())) return false;
+    long time = now(p);
+    if (!AkatsukiRescueSavedData.get(p.getServer())
+        .claim(p.getUUID(), time, AkatsukiDomainConfig.RESCUE_COOLDOWN.get())) return false;
+    int collapse = AkatsukiDomainConfig.COLLAPSE_TICKS.get();
+    int reignite = AkatsukiDomainConfig.REIGNITE_TICKS.get();
+    s.lifecycle.rescue(time, collapse, reignite);
+    s.protectionUntil =
+        time + Math.max(collapse + reignite + 2, AkatsukiDomainConfig.PROTECTION_TICKS.get());
+    p.setHealth(
+        (float)
+            Math.min(
+                p.getMaxHealth(),
+                Math.max(1, p.getMaxHealth() * AkatsukiDomainConfig.RESCUE_HEALTH.get())));
+    CHAINS.remove(p);
+    cue(p, s, f, COLLAPSE, null);
+    cue(p, s, f, STATE, null);
+    return true;
   }
 
   private static void cue(
@@ -280,16 +349,25 @@ public final class AkatsukiDomainService {
         target == null ? player.position() : target.getBoundingBox().getCenter(),
         AkatsukiDomainConfig.RADIUS.get().floatValue(),
         f,
-        (int) Math.max(0, state.expires - now(player)));
+        15,
+        state.lifecycle.phase(),
+        target == null ? -1 : target.getId());
   }
 
   private static void stop(ServerPlayer player, AkatsukiDomainSession state) {
     CHAINS.remove(player);
-    if (state.expires != 0) {
+    if (state.active()) {
       AkatsukiDomainNetwork.send(
-          player, END, player.position(), 0, ContractAbilityFeatureSet.EMPTY, 0);
-      state.suspend();
+          player,
+          END,
+          player.position(),
+          0,
+          ContractAbilityFeatureSet.EMPTY,
+          0,
+          AkatsukiDomainState.Phase.INACTIVE,
+          -1);
     }
+    state.suspend();
   }
 
   @SubscribeEvent
@@ -312,7 +390,7 @@ public final class AkatsukiDomainService {
     if (chaining || !(e.getSource().getEntity() instanceof ServerPlayer p)) return;
     var state = SESSIONS.get(p);
     if (state == null
-        || !state.active(now(p))
+        || !state.attacking()
         || !has(AkatsukiDomainGrowth.capabilities(p), "chain")
         || p.distanceToSqr(e.getEntity())
             > AkatsukiDomainConfig.RADIUS.get() * AkatsukiDomainConfig.RADIUS.get()
@@ -330,7 +408,6 @@ public final class AkatsukiDomainService {
     if (e.phase == TickEvent.Phase.END && e.getServer().getTickCount() % 40 == 0) {
       long now = e.getServer().overworld().getGameTime();
       AkatsukiDomainDamage.prune(now);
-      OPEN_COOLDOWNS.values().removeIf(until -> until <= now);
     }
   }
 
@@ -351,7 +428,6 @@ public final class AkatsukiDomainService {
   public static void stopped(ServerStoppedEvent e) {
     SESSIONS.clear();
     CHAINS.clear();
-    OPEN_COOLDOWNS.clear();
     AkatsukiDomainAuthorization.clear();
     AkatsukiDomainDamage.clear();
   }
