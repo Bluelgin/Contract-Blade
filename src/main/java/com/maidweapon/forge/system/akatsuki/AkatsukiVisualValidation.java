@@ -74,6 +74,26 @@ public final class AkatsukiVisualValidation {
       }
       long age = p.level().getGameTime() - scene.started();
       var target = scene.target();
+      if (Boolean.getBoolean("contractblade.soulVisual.validation")) {
+        if (age == 160) p.setHealth(p.getMaxHealth() * .4f);
+        target.moveTo(.5, 81, 3.4, 180, 0);
+        if (age > 40 && age < 550 && age % 80 == 50) {
+          target.setHealth(1024);
+          target.invulnerableTime = 0;
+          target.hurt(p.damageSources().playerAttack(p), 1);
+        }
+        if (age > 40 && age < 550 && age % 80 == 70) {
+          var cores =
+              p.serverLevel()
+                  .getEntitiesOfClass(
+                      com.maidweapon.forge.entity.SoulAnchorEntity.class,
+                      p.getBoundingBox().inflate(8));
+          for (var core : cores)
+            com.maidweapon.forge.system.akatsuki.soul.SoulAnchorService.attack(
+                new net.minecraftforge.event.entity.player.AttackEntityEvent(p, core));
+        }
+        return;
+      }
       if (Boolean.getBoolean("contractblade.akatsukiRain.validation")) {
         // Same real authorization, contact and rain cue path, with isolated presentation scenarios.
         if (age == 340) p.setHealth(p.getMaxHealth() * .4f);
@@ -96,14 +116,17 @@ public final class AkatsukiVisualValidation {
         p.hurt(p.damageSources().mobAttack(target), 100);
       }
       if (age == 520) {
-        target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200);
-        target.setHealth(200);
+        // High native contribution and enough remaining HP for one stronger domain cut before
+        // the provider's first real execution pulse. No provider state or threshold is changed.
+        target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1024);
+        target.setHealth(1024);
         target.invulnerableTime = 0;
-        target.hurt(p.damageSources().playerAttack(p), 125);
+        target.hurt(p.damageSources().playerAttack(p), 640);
       }
       if (age == 528) {
+        target.setHealth(290);
         target.invulnerableTime = 0;
-        target.hurt(p.damageSources().playerAttack(p), 55);
+        target.hurt(p.damageSources().playerAttack(p), 250);
       }
       if (age > 40 && age < 500 && age % 8 == 0 && target.isAlive()) {
         target.setHealth(1024);

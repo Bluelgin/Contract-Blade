@@ -411,7 +411,9 @@
   "maid_weapon.white_blessing.middle": "§7Lv.6–8: assist slash; main-hand Black Fox can resonate, healing also helps one nearby owned maid.",
   "maid_weapon.white_blessing.late": "§7Lv.9–10: emergency guard; lethal damage invokes the oath, sparing your life and cleansing.",
   "maid_weapon.tooltip.akatsuki_domain": "§cGarden of No Return: hold the resident spirit’s blade; rampage below half health",
-  "maid_weapon.tooltip.akatsuki_domain.early": "§7Lv1–4: blood moon, pursuing blades, ring cuts and tracking",
-  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8: limited piercing, counters, chains and death rescue",
-  "maid_weapon.tooltip.akatsuki_domain.late": "§7Lv9–10: blade rain and the complete domain"
+  "maid_weapon.tooltip.akatsuki_domain.early": "§7Lv1–4: soul cuts, soul anchors, ring cuts and tracking",
+  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8: adaptive penetration, counters, chains and death rescue",
+  "maid_weapon.tooltip.akatsuki_domain.late": "§7Lv9–10: blade rain and the complete domain",
+  "entity.maid_weapon.soul_anchor": "Soul Anchor",
+  "maid_weapon.tooltip.akatsuki_soul_anchor": "§7Land a hit to peel a soul anchor; strike it to unleash a soul burst"
 }

@@ -19,6 +19,7 @@ parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--output', type=Path)
 parser.add_argument('--skip-assets', action='store_true', help='Use preseeded assets; audio may be incomplete')
 parser.add_argument('--rain', action='store_true', help='Static/moving targets, normal/rampage, high/low rain scenes')
+parser.add_argument('--soul', action='store_true', help='Soul anchor and real burst interaction scenes')
 parser.add_argument('--record', action='store_true', help='Record the real X11 display with ffmpeg after scene initialization')
 args = parser.parse_args()
 if args.record and (not os.environ.get('DISPLAY') or not shutil.which('ffmpeg') or not shutil.which('ffprobe')):
@@ -56,6 +57,7 @@ with (root / 'client.log').open('w') as log:
         process = subprocess.Popen([*common, 'runClient', *(['-x', 'downloadAssets'] if args.skip_assets else []), '-PfoxBladeTetraTest=true',
             '-PakatsukiVisualTest=true', '-PakatsukiVisualWorld=akatsuki-visual-validation',
             *(['-PakatsukiRainTest=true'] if args.rain else []),
+            *(['-PsoulVisualTest=true'] if args.soul else []),
             f'-PcompatRunDir={client}'], cwd=ROOT, env=os.environ.copy(), stdout=log,
             stderr=subprocess.STDOUT)
         deadline = time.monotonic() + 900
@@ -97,7 +99,7 @@ with (root / 'client.log').open('w') as log:
 print(f'Rendered frames: {client / "screenshots"}', flush=True)
 if result.returncode:
     raise SystemExit(f'Client failed; see {root / "client.log"}')
-marker = 'AKATSUKI_RAIN_CLIENT_COMPLETE' if args.rain else 'AKATSUKI_VISUAL_CLIENT_COMPLETE'
+marker = 'SOUL_VISUAL_CLIENT_COMPLETE' if args.soul else 'AKATSUKI_RAIN_CLIENT_COMPLETE' if args.rain else 'AKATSUKI_VISUAL_CLIENT_COMPLETE'
 if marker not in (root / 'client.log').read_text(errors='replace'):
     raise SystemExit(f'Client exited before completing fixture; inspect {root / "client.log"}')
 if args.record and recorder is None:

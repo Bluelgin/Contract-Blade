@@ -87,6 +87,35 @@ public final class AkatsukiDomainVisuals {
     }
   }
 
+  public static void soulBurst(com.maidweapon.forge.network.SoulBurstNetwork.Cue cue) {
+    world();
+    var mc = Minecraft.getInstance();
+    if (mc.level == null || mc.player == null) return;
+    long now = mc.level.getGameTime();
+    if (mc.player.distanceToSqr(cue.core()) <= 4096)
+      appendCut(
+          new Cut(
+              new UUID(0, cue.seed()),
+              cue.core(),
+              null,
+              now,
+              cue.seed() ^ 19349663L,
+              cue.stage() == cue.stages() - 1 ? 1.6 : .9,
+              cue.success() ? .045 : .015));
+    if (mc.player.distanceToSqr(cue.target()) > 4096) return;
+    int count = AkatsukiDomainConfig.QUALITY.get() == 0 ? 2 : cue.stage() == 0 ? 3 : 7;
+    for (int i = 0; i < count; i++)
+      appendCut(
+          new Cut(
+              new UUID(0, cue.seed()),
+              cue.target(),
+              cue.stage() == cue.stages() - 1 ? cue.target() : null,
+              now + i % 3,
+              cue.seed() + i * 19349663L,
+              cue.stage() == cue.stages() - 2 ? 7 : 4,
+              cue.success() ? .17 : .055));
+  }
+
   public static void accept(Cue p) {
     world();
     var level = Minecraft.getInstance().level;
@@ -248,7 +277,6 @@ public final class AkatsukiDomainVisuals {
             now + i % 2,
             2.5 + .3 * d.director.intensity(now),
             rampage ? .065 : .045);
-      if ((p.features() & 2) != 0 && d.director.swords(now, rampage)) formation(d, now);
       var motion = target.position().subtract(new Vec3(target.xo, target.yo, target.zo));
       if (d.director.intensity(now) <= 0) d.rain.cancel();
       for (var drop : d.rain.poll(now, motion.x, motion.z)) {
@@ -296,35 +324,6 @@ public final class AkatsukiDomainVisuals {
     int cap = AkatsukiDomainConfig.QUALITY.get() == 0 ? 48 : 192;
     while (CUTS.size() >= cap) CUTS.removeFirst();
     CUTS.addLast(cut);
-  }
-
-  private static void formation(Domain d, long now) {
-    int quality = AkatsukiDomainConfig.QUALITY.get();
-    boolean rampage = d.cue.phase() == RAMPAGE;
-    int count = rampage ? 6 : 3;
-    count =
-        Math.max(
-            1,
-            (int)
-                (count
-                    * AkatsukiDomainConfig.DENSITY.get()
-                    * (quality == 0 ? .25 : quality == 1 ? .7 : 1)));
-    var origin = center(d.cue, 1);
-    for (int i = 0; i < count; i++) {
-      double angle = (i + .5) * Math.PI * 2 / count;
-      Vec3 start = origin.add(Math.cos(angle) * 2.2, 2.5 + .3 * (i % 3), Math.sin(angle) * 2.2);
-      appendSword(
-          new Sword(
-              d.cue.owner(),
-              start,
-              d.target,
-              d.targetId,
-              now + i % 3,
-              2,
-              rampage ? 8 : 12,
-              false,
-              .0045f));
-    }
   }
 
   private static void appendSword(Sword sword) {

@@ -40,6 +40,7 @@ public final class ContractTooltipComposer {
             tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain"));
             if (expanded) {
                 tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.early"));
+                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_soul_anchor"));
                 tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.middle"));
                 tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.late"));
             }

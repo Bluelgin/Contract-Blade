@@ -210,8 +210,9 @@ public final class AkatsukiDomainValidation {
     float hp = target.getHealth();
     AkatsukiDomainDamage.pulse(owner, target, session, true);
     check(
-        target.getHealth() < hp && hp - target.getHealth() <= .501f,
-        "actual isolated bounded domain damage through provider guard");
+        target.getHealth() < hp
+            && hp - target.getHealth() <= com.maidweapon.common.SoulDamageConfig.HIT_CEILING.get(),
+        "actual isolated soul damage obeys configured safety ceiling through provider guard");
     float after = target.getHealth();
     AkatsukiDomainDamage.pulse(owner, target, session, true);
     check(target.getHealth() == after, "second same-tick candidate cannot claim extra budget");

@@ -38,7 +38,6 @@ public final class AkatsukiDomainService {
   public static boolean hostile(ServerPlayer player, LivingEntity target) {
     return target != player
         && target.isAlive()
-        && !target.isInvulnerable()
         && !(target instanceof Player)
         && !(target instanceof TamableAnimal)
         && !player.isAlliedTo(target)
@@ -91,6 +90,11 @@ public final class AkatsukiDomainService {
           null);
     }
     return state;
+  }
+
+  /** Refreshes the same authoritative lifecycle used by automatic cuts and rescue. */
+  public static AkatsukiDomainSession session(ServerPlayer player) {
+    return refresh(player, AkatsukiDomainGrowth.capabilities(player));
   }
 
   /** Explicit melee contact remains observable when a boss rejects hurt() before Forge events. */
@@ -163,12 +167,7 @@ public final class AkatsukiDomainService {
         found instanceof LivingEntity living && validTarget(player, living) ? living : null;
 
     if (target != null
-        && state.due("edge", now, interval(state, AkatsukiDomainConfig.EDGE_INTERVAL.get()))) {
-      AkatsukiDomainDamage.pulse(player, target, state, has(features, "adaptation"));
-    }
-    if (has(features, "swords")
-        && target != null
-        && state.due("swords", now, interval(state, AkatsukiDomainConfig.SWORD_INTERVAL.get()))) {
+        && state.due("edge", now, com.maidweapon.common.SoulDamageConfig.CUT_GAP.get())) {
       AkatsukiDomainDamage.pulse(player, target, state, has(features, "adaptation"));
     }
     if (has(features, "ring")

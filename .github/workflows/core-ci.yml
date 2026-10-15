@@ -99,6 +99,9 @@ jobs:
       - name: Native awakened Akatsuki provider fixture
         run: python tools/run_stage_three_tests.py --fixture akatsuki-provider
 
+      - name: Real soul damage and anchor interaction fixture
+        run: python tools/run_soul_damage_tests.py --gradle gradle
+
       - name: Native dedicated-server domain and regression fixtures
         run: |
           python tools/run_stage_three_tests.py --fixture akatsuki-domain --compat vanilla
@@ -118,4 +121,5 @@ jobs:
             build/libs/*.jar
             build/test-results/test/*.xml
             /tmp/contract-stage-three-*/*.log
+            /tmp/contract-soul-*/server.log
           if-no-files-found: warn

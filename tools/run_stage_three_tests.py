@@ -13,10 +13,12 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
+parser.add_argument('--output', type=Path, help='New disposable fixture directory')
 parser.add_argument('--compat', choices=['vanilla','slashblade'], default='slashblade')
 parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider'])
 args = parser.parse_args()
-root = Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
+root = args.output or Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
+root.mkdir(parents=True, exist_ok=True)
 print(f'Disposable fixtures: {root}', flush=True)
 fixtures = [
     ('akatsuki-domain', ['-PakatsukiDomainTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_NO_PROVIDER_PASS']),

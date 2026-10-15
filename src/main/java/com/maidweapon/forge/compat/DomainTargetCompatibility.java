@@ -6,7 +6,7 @@ import java.util.*;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.fml.ModList;
 
-/** Read-only limits/phase SPI, with scoped restoration of our own hit bookkeeping. */
+/** One versioned limits/phase/health SPI, with scoped restoration of hit bookkeeping. */
 public final class DomainTargetCompatibility {
   public record State(double hitCap, double dpsCap, boolean protectedPhase, String phase) {
     public static State unknown(LivingEntity t) {
@@ -14,7 +14,7 @@ public final class DomainTargetCompatibility {
     }
   }
 
-  public interface Adapter {
+  public interface Adapter extends BossLimitAdapter {
     boolean supports(LivingEntity target);
 
     State inspect(LivingEntity target) throws ReflectiveOperationException;
@@ -27,10 +27,10 @@ public final class DomainTargetCompatibility {
       throw new IllegalArgumentException("Duplicate domain adapter " + id);
   }
 
-  private static boolean version(String mod, String prefix) {
+  public static boolean version(String mod, String prefix) {
     if (!ModList.get().isLoaded(mod)) return false;
-    return VERSIONS
-        .computeIfAbsent(
+    String detected =
+        VERSIONS.computeIfAbsent(
             mod,
             id -> {
               var info = ModList.get().getModContainerById(id).orElseThrow().getModInfo();
@@ -50,8 +50,8 @@ public final class DomainTargetCompatibility {
                 CompatDiagnostics.warnOnce("domain-target-version:" + id, failure);
                 return "unknown";
               }
-            })
-        .startsWith(prefix);
+            });
+    return detected.equals(prefix) || detected.startsWith(prefix + " ");
   }
 
   private static final Map<String, String> VERSIONS = new HashMap<>();
@@ -119,6 +119,52 @@ public final class DomainTargetCompatibility {
                         : "generic";
             return new State(number(t, "damageCap"), 0, protectedPhase, "lm:" + phase);
           }
+
+          public boolean initializing(LivingEntity t) throws ReflectiveOperationException {
+            if (t.getClass().getSimpleName().equals("Cloud_GolemEntity"))
+              return ((Number) read(t, "getAttackState")).intValue() == 21;
+            if (t.getClass().getSimpleName().equals("TheObliteratorEntity"))
+              return Set.of(1, 2, 19, 40, 48)
+                  .contains(((Number) read(t, "getAttackState")).intValue());
+            return t.isRemoved();
+          }
+
+          public boolean compensate(
+              LivingEntity t, net.minecraft.world.damagesource.DamageSource source, float deficit)
+              throws ReflectiveOperationException {
+            // Audited cumulative-health API also updates vanilla synchronization and death
+            // handling.
+            if (!Set.of(
+                        "net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.CloudGolem.Cloud_GolemEntity",
+                        "net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.TheObliterator.TheObliteratorEntity")
+                    .contains(t.getClass().getName())
+                || initializing(t)) return false;
+            t.getClass()
+                .getMethod(
+                    "addDamage", float.class, net.minecraft.world.damagesource.DamageSource.class)
+                .invoke(t, deficit, source);
+            return true;
+          }
+        });
+    register(
+        "maid_weapon:goety",
+        new Adapter() {
+          public boolean supports(LivingEntity t) {
+            return version("goety", "2.5.58.4")
+                && family(t, "com.Polarice3.Goety.common.entities.boss.Apostle");
+          }
+
+          public State inspect(LivingEntity t) throws ReflectiveOperationException {
+            var config = Class.forName("com.Polarice3.Goety.config.AttributesConfig");
+            Object value = config.getField("ApostleDamageCap").get(null);
+            double cap = ((Number) value.getClass().getMethod("get").invoke(value)).doubleValue();
+            return new State(
+                cap, 0, yes(t, "isSettingUpSecond"), "goety:" + read(t, "isSecondPhase"));
+          }
+
+          public boolean initializing(LivingEntity t) throws ReflectiveOperationException {
+            return yes(t, "isSettingUpSecond");
+          }
         });
     register(
         "maid_weapon:cataclysm",
@@ -141,11 +187,25 @@ public final class DomainTargetCompatibility {
             }
             return new State(number(t, "DamageCap"), number(t, "DpsCap"), protectedPhase, phase);
           }
+
+          public boolean compensate(
+              LivingEntity t, net.minecraft.world.damagesource.DamageSource source, float deficit) {
+            if (!t.getClass()
+                .getName()
+                .equals(
+                    "com.github.L_Ender.cataclysm.entity.AnimationMonster.BossMonsters.Ignis_Entity"))
+              return false;
+            t.setHealth(Math.max(0, t.getHealth() - deficit));
+            if (t.getHealth() <= 0) t.die(source);
+            return true;
+          }
         });
   }
 
   public static State inspect(LivingEntity target) {
-    if (!AkatsukiDomainConfig.BOSS_ADAPTERS.get()) return State.unknown(target);
+    if (!AkatsukiDomainConfig.BOSS_ADAPTERS.get()
+        || !com.maidweapon.common.SoulDamageConfig.KNOWN_ADAPTERS.get())
+      return State.unknown(target);
     for (var e : ADAPTERS.entrySet())
       try {
         if (e.getValue().supports(target)) return e.getValue().inspect(target);
@@ -156,9 +216,44 @@ public final class DomainTargetCompatibility {
     return State.unknown(target);
   }
 
-  public interface HitWindow extends AutoCloseable {
-    default void before() {}
+  public static boolean verified(LivingEntity target) {
+    if (!AkatsukiDomainConfig.BOSS_ADAPTERS.get()
+        || !com.maidweapon.common.SoulDamageConfig.KNOWN_ADAPTERS.get()) return false;
+    return ADAPTERS.values().stream().anyMatch(a -> a.supports(target));
+  }
 
+  public static boolean initializing(LivingEntity target) {
+    if (!AkatsukiDomainConfig.BOSS_ADAPTERS.get()
+        || !com.maidweapon.common.SoulDamageConfig.KNOWN_ADAPTERS.get()) return false;
+    for (var a : ADAPTERS.values())
+      try {
+        if (a.supports(target)) return a.initializing(target);
+      } catch (ReflectiveOperationException | RuntimeException failure) {
+        CompatDiagnostics.warnOnce("soul-initialization", failure);
+        return true;
+      }
+    return false;
+  }
+
+  public static boolean compensate(
+      LivingEntity target, net.minecraft.world.damagesource.DamageSource source, float deficit) {
+    if (!AkatsukiDomainConfig.BOSS_ADAPTERS.get()
+        || !com.maidweapon.common.SoulDamageConfig.KNOWN_ADAPTERS.get()
+        || !target.isAlive()
+        || target.isRemoved()
+        || !Float.isFinite(deficit)
+        || deficit <= 0) return false;
+    for (var a : ADAPTERS.values())
+      try {
+        if (a.supports(target)) return a.compensate(target, source, deficit);
+      } catch (ReflectiveOperationException | RuntimeException failure) {
+        CompatDiagnostics.warnOnce("soul-life-compensation", failure);
+        return false;
+      }
+    return false;
+  }
+
+  public interface HitWindow extends AutoCloseable {
     @Override
     void close();
   }
@@ -166,7 +261,7 @@ public final class DomainTargetCompatibility {
   /**
    * Only the audited versions' cooldown/bucket fields; health and phase state are never written.
    */
-  public static HitWindow hitWindow(LivingEntity target, boolean absolute) {
+  public static HitWindow hitWindow(LivingEntity target, boolean legacyAbsolute) {
     var fields = new LinkedHashMap<Field, Object>();
     var names = new ArrayList<String>();
     if (AkatsukiDomainConfig.BOSS_ADAPTERS.get()
@@ -186,6 +281,13 @@ public final class DomainTargetCompatibility {
             target,
             "com.github.L_Ender.cataclysm.entity.AnimationMonster.BossMonsters.LLibrary_Boss_Monster"))
       names.add("damageBucket");
+    if (AkatsukiDomainConfig.BOSS_ADAPTERS.get()
+        && com.maidweapon.common.SoulDamageConfig.KNOWN_ADAPTERS.get()
+        && version("goety", "2.5.58.4")
+        && family(target, "com.Polarice3.Goety.common.entities.boss.Apostle")) {
+      names.add("moddedInvul");
+      names.add("obsidianInvul");
+    }
     try {
       for (String name : names) {
         Field found = null;
@@ -205,22 +307,6 @@ public final class DomainTargetCompatibility {
       return null;
     }
     return new HitWindow() {
-      @Override
-      public void before() {
-        // Audited Cloud Golem rejects even strong tags before Forge events. Temporarily
-        // admit ONLY this reserved absolute pulse; sleep/transition was checked above.
-        if (absolute)
-          fields.forEach(
-              (field, value) -> {
-                if (field.getName().equals("GolemInvulnerabilityTime"))
-                  try {
-                    field.setInt(target, 0);
-                  } catch (IllegalAccessException failure) {
-                    throw new IllegalStateException(failure);
-                  }
-              });
-      }
-
       @Override
       public void close() {
         fields.forEach(

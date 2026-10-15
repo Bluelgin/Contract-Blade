@@ -51,6 +51,11 @@ public final class MaidWeaponMod {
             com.maidweapon.common.AkatsukiDomainConfig.CLIENT_SPEC,
             "maid_weapon-akatsuki-client.toml");
     com.maidweapon.forge.network.AkatsukiDomainNetwork.register();
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+            com.maidweapon.common.SoulDamageConfig.SPEC,
+            "maid_weapon-soul-server.toml");
 
     net.minecraftforge.fml.ModLoadingContext.get()
         .registerConfig(net.minecraftforge.fml.config.ModConfig.Type.COMMON, MaidWeaponConfig.SPEC);
@@ -59,6 +64,8 @@ public final class MaidWeaponMod {
             net.minecraftforge.fml.config.ModConfig.Type.SERVER,
             com.maidweapon.common.ContractRulesConfig.SPEC,
             "maid_weapon-server.toml");
+    com.maidweapon.forge.init.ModSoulEntities.TYPES.register(modBus);
+    com.maidweapon.forge.network.SoulBurstNetwork.register();
     ModItems.ITEMS.register(modBus);
     ModBlocks.BLOCKS.register(modBus);
     ModMenus.MENUS.register(modBus);

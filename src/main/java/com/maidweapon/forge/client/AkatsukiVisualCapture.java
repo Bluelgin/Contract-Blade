@@ -67,6 +67,36 @@ public final class AkatsukiVisualCapture {
     if (start < 0) return;
     if (TAKEN.isEmpty()) mc.gui.getChat().clearMessages(true);
     long age = mc.level.getGameTime() - start;
+    if (Boolean.getBoolean("contractblade.soulVisual.validation")) {
+      mc.gui.getChat().clearMessages(true);
+      if (age >= 580) {
+        LogUtils.getLogger().info("SOUL_VISUAL_CLIENT_COMPLETE captures={}", TAKEN.size());
+        mc.stop();
+        return;
+      }
+      int quality = age >= 470 ? 0 : age >= 310 ? 2 : 1;
+      if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != quality)
+        com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
+      mc.options.setCameraType(age >= 310 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
+      String name =
+          age >= 551
+              ? "soul-06-low-burst"
+              : age >= 391
+                  ? "soul-05-high-burst"
+                  : age >= 375
+                      ? "soul-04-high-core"
+                      : age >= 231
+                          ? "soul-03-rampage-burst"
+                          : age >= 135 ? "soul-02-core" : age >= 71 ? "soul-01-normal-burst" : null;
+      if (name != null && TAKEN.add(name))
+        Screenshot.grab(
+            mc.gameDirectory,
+            "akatsuki-" + name + ".png",
+            mc.getMainRenderTarget(),
+            message ->
+                LogUtils.getLogger().info("SOUL_VISUAL_CAPTURE {} fps={}", name, mc.getFps()));
+      return;
+    }
     if (Boolean.getBoolean("contractblade.akatsukiRain.validation")) {
       rainFrame(mc, age);
       return;
@@ -124,7 +154,8 @@ public final class AkatsukiVisualCapture {
     }
     int quality = age >= 730 ? 0 : age >= 650 ? 2 : 1;
     if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != quality)
-      com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
+      if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != quality)
+        com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
     mc.options.setCameraType(age >= 650 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
     String name =
         age >= 765

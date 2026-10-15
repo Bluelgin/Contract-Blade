@@ -1,0 +1,9 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.maidweapon.forge.mixin",
+  "plugin": "com.maidweapon.forge.mixin.SoulBossMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": ["SoulCloudTimerMixin", "SoulApostleTimerMixin"],
+  "injectors": {"defaultRequire": 1}
+}

@@ -2,7 +2,11 @@ package com.maidweapon.forge.system.akatsuki;
 
 import java.util.*;
 
-/** Sliding 20-tick windows. Reservations are charged before hurt(), including failed probes. */
+/**
+ * Legacy pre-soul policy kept for API compatibility and historical regression tests. Live combat
+ * exclusively uses SoulDamagePolicy and SoulDamageSafetyBudget.
+ */
+@Deprecated
 public final class DomainDamageBudget {
   public record Limits(double hit, double targetSecond, double playerSecond, double domain) {
     public Limits {

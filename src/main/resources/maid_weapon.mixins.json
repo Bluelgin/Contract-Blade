@@ -7,7 +7,10 @@
     "FoxIngredientProtectionMixin",
     "ContractDurabilityMixin",
     "ContractCreativeGrowthMixin",
-    "ContractEntityPresenceMixin"
+    "ContractEntityPresenceMixin",
+    "SoulEventCancellationMixin",
+    "SoulHurtAmountMixin",
+    "SoulDamageAmountMixin"
   ],
   "injectors": {
     "defaultRequire": 1

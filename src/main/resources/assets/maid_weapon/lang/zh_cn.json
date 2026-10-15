@@ -413,7 +413,9 @@
   "maid_weapon.white_blessing.middle": "§7Lv.6–8：轻量追加斩击；黑狐主手可共鸣，灵愈兼顾附近己方女仆。",
   "maid_weapon.white_blessing.late": "§7Lv.9–10：危急自动守护；致命伤发动狐之誓约，保命并净化。",
   "maid_weapon.tooltip.akatsuki_domain": "§c无归之庭：剑灵驻留时持刀开庭，半血暴走",
-  "maid_weapon.tooltip.akatsuki_domain.early": "§7Lv1–4：血月、追剑、环斩与锁敌",
-  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8：有限破限、反噬、葬阵与濒死续命",
-  "maid_weapon.tooltip.akatsuki_domain.late": "§7Lv9–10：万刃天倾与完整领域"
+  "maid_weapon.tooltip.akatsuki_domain.early": "§7Lv1–4：灵魂斩、拘魂、环斩与锁敌",
+  "maid_weapon.tooltip.akatsuki_domain.middle": "§7Lv5–8：侵彻适应、反噬、葬阵与濒死续命",
+  "maid_weapon.tooltip.akatsuki_domain.late": "§7Lv9–10：万刃天倾与完整领域",
+  "entity.maid_weapon.soul_anchor": "拘魂·魂核",
+  "maid_weapon.tooltip.akatsuki_soul_anchor": "§7命中剥离魂核；挥刀攻击魂核发动拘魂·破界"
 }
