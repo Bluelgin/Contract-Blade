@@ -21,8 +21,8 @@ parser.add_argument('--skip-assets', action='store_true', help='Use preseeded as
 parser.add_argument('--rain', action='store_true', help='Static/moving targets, normal/rampage, high/low rain scenes')
 parser.add_argument('--record', action='store_true', help='Record the real X11 display with ffmpeg after scene initialization')
 args = parser.parse_args()
-if args.record and (not os.environ.get('DISPLAY') or not shutil.which('ffmpeg')):
-    parser.error('--record requires DISPLAY and ffmpeg; use a dedicated 854x480 X server')
+if args.record and (not os.environ.get('DISPLAY') or not shutil.which('ffmpeg') or not shutil.which('ffprobe')):
+    parser.error('--record requires DISPLAY, ffmpeg and ffprobe; use a dedicated 854x480 X server')
 root = args.output or Path(tempfile.mkdtemp(prefix='contract-akatsuki-visual-'))
 root.mkdir(parents=True, exist_ok=True)
 server = root / 'seed-server'
@@ -74,16 +74,25 @@ with (root / 'client.log').open('w') as log:
                     '-draw_mouse', '0', '-probesize', '32', '-analyzeduration', '0',
                     '-video_size', '854x480', '-framerate', '30', '-i', os.environ['DISPLAY'],
                     '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '20', '-pix_fmt', 'yuv420p',
+                    '-movflags', '+faststart',
                     str(root / 'gameplay.mp4')], stdout=recorder_log, stderr=subprocess.STDOUT)
             time.sleep(.25)
         result = process
     finally:
         if recorder is not None:
-            if recorder.poll() is None:
+            stopped = recorder.poll() is None
+            if stopped:
                 recorder.send_signal(signal.SIGINT)
-            recorder.wait(timeout=20)
-            recorder_log.close()
-            if recorder.returncode:
+            try:
+                recorder.wait(timeout=20)
+            except subprocess.TimeoutExpired:
+                recorder.kill()
+                recorder.wait()
+                raise SystemExit('Recorder did not finalize within 20 seconds')
+            finally:
+                recorder_log.close()
+            # ffmpeg returns 255 after a handled SIGINT even when the MP4 finalized normally.
+            if recorder.returncode != 0 and not (stopped and recorder.returncode == 255):
                 raise SystemExit(f'Recording failed; inspect {root / "recording.log"}')
 print(f'Rendered frames: {client / "screenshots"}', flush=True)
 if result.returncode:
@@ -93,3 +102,10 @@ if marker not in (root / 'client.log').read_text(errors='replace'):
     raise SystemExit(f'Client exited before completing fixture; inspect {root / "client.log"}')
 if args.record and recorder is None:
     raise SystemExit('Scene was not observed; no recording was produced')
+if args.record:
+    probe = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+        '-show_entries', 'stream=nb_frames', '-of', 'default=nw=1:nk=1',
+        str(root / 'gameplay.mp4')], capture_output=True, text=True, check=True)
+    if not probe.stdout.strip().isdigit() or int(probe.stdout.strip()) < 2:
+        raise SystemExit('Recording contains no usable video frames')
+    print(f'Recorded video: {root / "gameplay.mp4"}', flush=True)
