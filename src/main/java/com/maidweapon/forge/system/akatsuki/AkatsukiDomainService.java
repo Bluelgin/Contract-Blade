@@ -330,7 +330,7 @@ public final class AkatsukiDomainService {
         (float)
             Math.min(
                 p.getMaxHealth(),
-                Math.max(1, p.getMaxHealth() * AkatsukiDomainConfig.RESCUE_HEALTH.get())));
+                Math.max(.01, p.getMaxHealth() * AkatsukiDomainConfig.RESCUE_HEALTH.get())));
     CHAINS.remove(p);
     cue(p, s, f, COLLAPSE, null);
     cue(p, s, f, STATE, null);

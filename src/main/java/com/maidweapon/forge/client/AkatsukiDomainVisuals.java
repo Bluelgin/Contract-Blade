@@ -143,7 +143,7 @@ public final class AkatsukiDomainVisuals {
         point.x,
         point.y,
         point.z,
-        collapse ? SoundEvents.RESPAWN_ANCHOR_DEPLETE : SoundEvents.PLAYER_ATTACK_SWEEP,
+        collapse ? SoundEvents.RESPAWN_ANCHOR_DEPLETE.value() : SoundEvents.PLAYER_ATTACK_SWEEP,
         SoundSource.PLAYERS,
         collapse ? .8f : .45f,
         collapse ? .55f : .7f,

@@ -259,6 +259,7 @@ public final class AkatsukiDomainValidation {
         owner.isAlive() && owner.getOffhandItem().isEmpty(),
         "cooldown allows vanilla totem fallback exactly once");
     owner.setHealth(20);
+    benchmark(owner, target, session);
     server.overworld().getDataStorage().save();
     awakening.getMethod("resetForDebug", ItemStack.class).invoke(null, blade);
     check(
@@ -276,6 +277,35 @@ public final class AkatsukiDomainValidation {
         "logout clears held and dropped carrier proofs without retaining player objects");
     target.discard();
     LogUtils.getLogger().info("AKATSUKI_DOMAIN_PROVIDER_PASS");
+  }
+
+  private static void benchmark(
+      net.minecraft.server.level.ServerPlayer owner,
+      net.minecraft.world.entity.monster.Zombie target,
+      AkatsukiDomainSession session) {
+    var clock = (net.minecraft.world.level.storage.ServerLevelData) owner.level().getLevelData();
+    var event =
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner);
+    long[] elapsed = new long[2];
+    for (int mode = 0; mode < 2; mode++) {
+      session.lastContact = Long.MIN_VALUE / 2;
+      long started = System.nanoTime();
+      for (int tick = 0; tick < 500; tick++) {
+        clock.setGameTime(owner.level().getGameTime() + 1);
+        target.setHealth(20);
+        if (mode == 1 && tick % 8 == 0)
+          session.contact(owner.level().getGameTime(), target.getUUID());
+        AkatsukiDomainService.tick(event);
+      }
+      elapsed[mode] = System.nanoTime() - started;
+    }
+    LogUtils.getLogger()
+        .info(
+            "AKATSUKI_DOMAIN_TICK_BENCHMARK idle_us={} combat_us={} (500 calls each; 1"
+                + " player/target, not full-server TPS)",
+            elapsed[0] / 500000d,
+            elapsed[1] / 500000d);
   }
 
   static ItemStack prepareBlade(net.minecraft.server.level.ServerPlayer owner) throws Exception {
