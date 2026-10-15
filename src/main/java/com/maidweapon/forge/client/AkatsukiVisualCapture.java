@@ -15,6 +15,41 @@ import net.minecraftforge.fml.common.Mod;
 public final class AkatsukiVisualCapture {
   private static final Set<String> TAKEN = new HashSet<>();
   private static long start = -1;
+  private static int loadingTicks;
+
+  @SubscribeEvent
+  public static void loading(net.minecraftforge.event.TickEvent.ClientTickEvent e) {
+    if (!Boolean.getBoolean("contractblade.akatsukiVisual.validation")
+        || e.phase != net.minecraftforge.event.TickEvent.Phase.END) return;
+    var mc = Minecraft.getInstance();
+    if (mc.level != null || ++loadingTicks % 200 != 0) return;
+    // Only the named, generated fixture save; never accept arbitrary confirmation screens.
+    if (mc.screen instanceof net.minecraft.client.gui.screens.ConfirmScreen
+        && mc.screen.getTitle().getContents()
+            instanceof net.minecraft.network.chat.contents.TranslatableContents title
+        && title.getKey().equals("selectWorld.backupQuestion.experimental")
+        && new java.io.File(mc.gameDirectory, "saves/akatsuki-visual-validation").isDirectory()) {
+      for (var child : mc.screen.children()) {
+        if (child instanceof net.minecraft.client.gui.components.Button button
+            && button
+                .getMessage()
+                .getString()
+                .equals(
+                    net.minecraft.network.chat.Component.translatable("gui.proceed").getString())) {
+          button.onPress();
+          LogUtils.getLogger().info("AKATSUKI_VISUAL_DISPOSABLE_WORLD_PROCEED");
+          return;
+        }
+      }
+    }
+    LogUtils.getLogger()
+        .info(
+            "AKATSUKI_VISUAL_LOADING screen={} title={}",
+            mc.screen == null ? "none" : mc.screen.getClass().getName(),
+            mc.screen == null ? "" : mc.screen.getTitle().getString());
+    Screenshot.grab(
+        mc.gameDirectory, "akatsuki-loading.png", mc.getMainRenderTarget(), message -> {});
+  }
 
   @SubscribeEvent
   public static void frame(RenderGuiEvent.Post e) {
@@ -30,6 +65,7 @@ public final class AkatsukiVisualCapture {
     start =
         com.maidweapon.forge.system.akatsuki.AkatsukiVisualValidation.started(mc.player.getUUID());
     if (start < 0) return;
+    if (TAKEN.isEmpty()) mc.gui.getChat().clearMessages(true);
     long age = mc.level.getGameTime() - start;
     if (age >= 600) {
       LogUtils.getLogger().info("AKATSUKI_VISUAL_CLIENT_COMPLETE captures={}", TAKEN.size());

@@ -125,9 +125,9 @@ SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶�
 
 ## 视觉与可选桥接
 
-只读核实 SlashBlade Resharped **1.20.1-1.9.65** 发布 JAR 的 `SummonedSwordRenderer` 字节码与公开方法签名。`AkatsukiNativeVisualBridge` 调用 `BladeModelManager.getInstance().getModel(slashblade:model/util/ss.obj)`、`BladeRenderState.setCol` 和 `renderOverridedLuminous`，使用模型组 `ss` 与 `slashblade:model/util/ss.png`、原生 .0075 缩放和发光通道。颜色为赤红，alpha 随消散变化；单帧多剑共享 buffer 批次。没有服务端剑实体、没有复制模型/材质，没有三角形假剑降级。
+只读核实 SlashBlade Resharped **1.20.1-1.9.65** 发布 JAR 的 `SummonedSwordRenderer` 字节码与公开方法签名。`AkatsukiNativeVisualBridge` 调用 `BladeModelManager.getInstance().getModel(slashblade:model/util/ss.obj)`、`BladeRenderState.setCol` 和 `renderOverridedLuminous`，使用模型组 `ss` 与 `slashblade:model/util/ss.png`、原生发光通道（追剑/剑雨缩放 .0045/.0038，减小第一人称遮挡）。颜色为赤红，alpha 随消散变化；单帧多剑共享 buffer 批次。没有服务端剑实体、没有复制模型/材质，没有三角形假剑降级。
 
-空间斩是原创程序化裂隙网格：随机交错方向、分段尖端/不对称裂口、接近黑色内部、深红渐变边缘、粉白窄高光；约 1 tick 细线预兆，短促爆发，8 tick 内消散。巨型裁断最长 7 格，宽裂口短闪；没有缓慢飞行刀气。收束阶段现有裂隙向玩家移动缩小，再燃向外闪现交错裁断。音效复用原版锚耗尽及横扫音效的低音变调，不引入第三方素材。
+空间斩是原创程序化裂隙网格：随机交错方向、分段尖端/不对称裂口、接近黑色内部、深红渐变边缘、粉白窄高光；约 1 tick 细线预兆，短促爆发，6 tick 内消散。巨型裁断最长 7 格，宽裂口短闪；没有缓慢飞行刀气。收束阶段现有裂隙向玩家移动缩小，再燃向外闪现交错裁断。音效复用原版锚耗尽及横扫音效的低音变调，不引入第三方素材。
 
 `AkatsukiVisualDirector` 与伤害调度分离，客户端只在最近战斗和有效目标存在时产生效果。常态每 2–3 tick 一组 1–3 裂痕、8 tick 一组追剑；暴走每 1–2 tick 一组 2–5 裂痕、4–6 tick 一组更多追剑。连续真实接触增加组合强度，停止后 40 tick 内衰减归零。标准档每组最多 4 裂痕、高档 5、低档 1；质量绝不影响伤害。
 
@@ -180,3 +180,17 @@ CI 下载 TLM 1.5.3、SlashBlade 1.9.65 到本地 runtimeOnly 目录，运行一
 JUnit 另测十级 JSON/fallback 等价、各级独立能力、预算硬上限和多人共享、原生单次/DPS 分离、常驻与换手、救援幂等/再燃、视觉频率/空闲、冷却序列化、通道探测、阶段/异常生命反馈、来源重载和未来 schema。
 
 图形客户端、三种 Boss 实战、真人多客户端和重混淆产物启动尚需游戏内验收；不得用“编译通过”替代这些结果。最新实际运行结论见 PR 验证段落及其 Actions 日志。
+
+## 可复现图形验收
+
+```sh
+python tools/run_akatsuki_visual_test.py --gradle gradle
+```
+
+使用与专服夹具相同的本地可选依赖目录；在有 OpenGL 的真实桌面或 Xvfb/Mesa 中运行。脚本创建独立临时目录，先由专服生成 `Akatsuki Visual Validation`，再复制到独立客户端 `saves/akatsuki-visual-validation`。`akatsukiVisualTest` 默认关闭，夹具拒绝其他世界名；只自动确认这一生成存档的原版实验性世界提示，不操作用户存档。
+
+测试通过公开 debug 觉醒入口建立真实赤月契约、全局 Lv10，与加载的 Husk 进行真实归因伤害；领域、救援、网络和客户端渲染走正式实现。自动记录常态、暴走、剑雨、收束、再燃、高特效第三人称、低特效，以及通过实际普通伤害达到原生终月条件后的共存帧。HUD 绘制后截图，600 tick 后退出。日志中的 `AKATSUKI_NATIVE_EXECUTION_OBSERVED` 才是实际观察到原生终月的依据，不能仅凭截图文件名宣称验证成功。
+
+`--output PATH` 可指定一个新的测试输出目录；已有同名测试存档拒绝覆盖。`--skip-assets` 只供已预置资源的测试环境使用，未补齐音频资源时不能用于声音验收。软件 OpenGL 可检验真实渲染路径与崩溃，不能代表独显帧率。真人手动输入、多客户端、第三方 Shader 包与声音听感仍需对应环境验收。
+
+本轮已完成的构建、JUnit、专服、重启与图形结果以 PR 验证段落和链接日志为准。45 项 JUnit 覆盖原有成长/自适应及新增状态、预算窗口、冷却与视觉调度；专服夹具另通过可受伤的 FakePlayer 执行真实 ServerPlayer/Player 伤害与图腾路径，测试本身会解除 FakePlayer 的默认无敌与出生保护，不改变玩家生产行为。

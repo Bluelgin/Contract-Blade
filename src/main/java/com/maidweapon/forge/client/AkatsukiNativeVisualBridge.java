@@ -73,7 +73,7 @@ public final class AkatsukiNativeVisualBridge {
     if (luminous == null) return; // No geometric fake-sword fallback.
     try {
       Object mesh = model.invoke(manager.invoke(null), SWORD);
-      color.invoke(null, (Math.max(0, Math.min(255, (int) (alpha * 255))) << 24) | 0xE52A38, true);
+      color.invoke(null, (Math.max(0, Math.min(255, (int) (alpha * 190))) << 24) | 0xC91129, true);
       luminous.invoke(null, ItemStack.EMPTY, mesh, "ss", TEXTURE, pose, buffers, 15728864);
     } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
       luminous = null;

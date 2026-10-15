@@ -49,7 +49,8 @@ public final class AkatsukiDomainVisuals {
       double length,
       double width) {}
 
-  private record Sword(UUID owner, Vec3 start, Vec3 end, int targetId, long born, int flight) {}
+  private record Sword(
+      UUID owner, Vec3 start, Vec3 end, int targetId, long born, int flight, float size) {}
 
   private static final Map<UUID, Domain> DOMAINS = new LinkedHashMap<>();
   private static final Deque<Cut> CUTS = new ArrayDeque<>();
@@ -134,21 +135,37 @@ public final class AkatsukiDomainVisuals {
       CUTS.removeIf(c -> c.owner().equals(p.owner()));
       CUTS.addAll(converging);
       SWORDS.removeIf(c -> c.owner().equals(p.owner()));
-      for (int i = 0; i < 8; i++)
-        cut(p.owner(), p.center().add(0, 1, 0), now + i, 3.5 - i * .3, .18);
+      for (int i = 0; i < 8; i++) {
+        double angle = i * Math.PI / 4;
+        Vec3 from = p.center().add(Math.cos(angle) * 1.8, 1.4, Math.sin(angle) * 1.8);
+        appendCut(
+            new Cut(
+                p.owner(),
+                from,
+                p.center().add(0, 1.4, 0),
+                now + i % 3,
+                ++sequence * 73428767L,
+                .9,
+                .025));
+      }
       sound(p.center(), true);
     } else if (p.phase() == RESCUE_REIGNITE && oldPhase != RESCUE_REIGNITE) {
-      for (int i = 0; i < 10; i++) cut(p.owner(), p.center().add(0, 1, 0), now + i % 3, 5, .24);
+      for (int i = 0; i < 10; i++) cut(p.owner(), p.center().add(0, 1, 0), now + i % 3, 5, .09);
       sound(p.center(), false);
     } else if (p.kind() == EDGE) {
       d.director.attack(now);
-      cut(p.owner(), p.target(), now, 2.4, .16); // Immediate response, independent of pulse timers.
+      cut(
+          p.owner(),
+          p.target(),
+          now,
+          2.4,
+          .045); // Immediate response, independent of pulse timers.
     } else if (p.kind() == FINAL || p.kind() == EXECUTION) {
-      cut(p.owner(), p.target(), now, p.kind() == FINAL ? 7 : 5, .48);
+      cut(p.owner(), p.target(), now, p.kind() == FINAL ? 7 : 5, .16);
       sound(p.target(), false);
     } else if (p.kind() == RAIN || p.kind() == COUNTER || p.kind() == RING || p.kind() == CHAIN) {
       if (p.kind() == RAIN) formation(d, now, true);
-      else for (int i = 0; i < 3; i++) cut(p.owner(), p.target(), now + i, 3, .2);
+      else for (int i = 0; i < 3; i++) cut(p.owner(), p.target(), now + i, 3, .055);
     }
   }
 
@@ -174,7 +191,7 @@ public final class AkatsukiDomainVisuals {
     if (mc.level == null) return;
     long now = mc.level.getGameTime();
     DOMAINS.values().removeIf(d -> d.end <= now);
-    CUTS.removeIf(c -> now - c.start() > 9);
+    CUTS.removeIf(c -> now - c.start() > 6);
     SWORDS.removeIf(s -> now - s.born() > s.flight() + 5);
     int quality = AkatsukiDomainConfig.QUALITY.get();
     for (var d : DOMAINS.values()) {
@@ -202,15 +219,13 @@ public final class AkatsukiDomainVisuals {
             d.target,
             now + i % 2,
             2.5 + .3 * d.director.intensity(now),
-            rampage ? .23 : .17);
+            rampage ? .065 : .045);
       if ((p.features() & 2) != 0 && d.director.swords(now, rampage)) formation(d, now, false);
     }
   }
 
   private static void cut(UUID owner, Vec3 center, long now, double length, double width) {
-    int cap = AkatsukiDomainConfig.QUALITY.get() == 0 ? 48 : 192;
-    while (CUTS.size() >= cap) CUTS.removeFirst();
-    CUTS.addLast(
+    appendCut(
         new Cut(
             owner,
             center,
@@ -219,6 +234,12 @@ public final class AkatsukiDomainVisuals {
             ++sequence * 73428767L ^ owner.getLeastSignificantBits(),
             length,
             width));
+  }
+
+  private static void appendCut(Cut cut) {
+    int cap = AkatsukiDomainConfig.QUALITY.get() == 0 ? 48 : 192;
+    while (CUTS.size() >= cap) CUTS.removeFirst();
+    CUTS.addLast(cut);
   }
 
   private static void formation(Domain d, long now, boolean rain) {
@@ -252,8 +273,9 @@ public final class AkatsukiDomainVisuals {
               start,
               end,
               rain ? -1 : d.targetId,
-              now + i % (rain ? 8 : 3),
-              rampage ? 8 : 12));
+              now + i % (rain ? 14 : 3),
+              rampage ? 8 : 12,
+              rain ? .0038f : .0045f));
     }
   }
 
@@ -299,7 +321,7 @@ public final class AkatsukiDomainVisuals {
           float pitch = (float) Math.toDegrees(Math.asin(Mth.clamp(direction.y, -1, 1)));
           pose.mulPose(Axis.YP.rotationDegrees(-yaw));
           pose.mulPose(Axis.ZP.rotationDegrees(pitch));
-          pose.scale(.0075f, .0075f, .0075f);
+          pose.scale(s.size(), s.size(), s.size());
           pose.mulPose(Axis.YP.rotationDegrees(90));
           AkatsukiNativeVisualBridge.sword(
               pose, buffers, (float) Math.min(1, (s.flight() + 5 - age) / 4));
@@ -333,8 +355,8 @@ public final class AkatsukiDomainVisuals {
    */
   private static void fissure(BufferBuilder b, Matrix4f m, Cut c, double time, Vec3 camera) {
     double age = time - c.start();
-    if (age < 0 || age > 8) return;
-    double converge = c.collapseTo() == null ? 0 : Math.min(1, age / 8);
+    if (age < 0 || age > 5.5) return;
+    double converge = c.collapseTo() == null ? 0 : Math.min(1, age / 5.5);
     Vec3 location = c.collapseTo() == null ? c.center() : c.center().lerp(c.collapseTo(), converge);
     double length = c.length() * (1 - converge * .8);
     var random = new Random(c.seed());
@@ -346,27 +368,30 @@ public final class AkatsukiDomainVisuals {
     Vec3 up = right.cross(normal).normalize();
     Vec3 along = right.scale(Math.cos(angle)).add(up.scale(Math.sin(angle)));
     Vec3 side = normal.cross(along).normalize();
-    Vec3 center = location.add(side.scale((random.nextDouble() - .5) * 1.2));
-    float fade = (float) Math.max(0, 1 - Math.max(0, age - 2) / 6);
-    double width = age < 1 ? .008 : c.width() * Math.exp(-Math.max(0, age - 2) * .48);
+    Vec3 center =
+        location
+            .add(side.scale((random.nextDouble() - .5) * 1.8))
+            .add(along.scale((random.nextDouble() - .5) * 1.2));
+    float fade = (float) Math.max(0, 1 - Math.max(0, age - 1.5) / 4);
+    double width = age < .7 ? .004 : c.width() * Math.exp(-Math.max(0, age - 1.5) * .8);
     // Every segment tapers to a sharp tip, with jagged lips and a near-black interior.
     for (int i = 0; i < 8; i++) {
       double t0 = i / 8d, t1 = (i + 1) / 8d;
-      double w0 = Math.sin(t0 * Math.PI) * width * (.7 + random.nextDouble() * .5);
-      double w1 = Math.sin(t1 * Math.PI) * width * (.7 + random.nextDouble() * .5);
+      double w0 = Math.sin(t0 * Math.PI) * width * (.85 + random.nextDouble() * .25);
+      double w1 = Math.sin(t1 * Math.PI) * width * (.85 + random.nextDouble() * .25);
       Vec3 a = center.add(along.scale((t0 - .5) * length));
       Vec3 z = center.add(along.scale((t1 - .5) * length));
       feather(b, m, a, z, side, w0, w1, BLOOD, fade * .8f);
       strip(b, m, a.add(normal.scale(.002)), z.add(normal.scale(.002)), side, w0, w1, DARK, fade);
-      if (age < 3)
+      if (age < 2)
         strip(
             b,
             m,
             a.add(side.scale(w0)).add(normal.scale(.004)),
             z.add(side.scale(w1)).add(normal.scale(.004)),
             side,
-            .012,
-            .008,
+            Math.max(.001, w0 * .18),
+            Math.max(.001, w1 * .18),
             LIGHT,
             fade);
     }

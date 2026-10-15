@@ -53,6 +53,11 @@ public final class AkatsukiVisualValidation {
             p.serverLevel()
                 .setBlockAndUpdate(new BlockPos(x, 80, z), Blocks.SMOOTH_STONE.defaultBlockState());
         p.serverLevel().setDayTime(1000);
+        var receipt = AkatsukiRescueSavedData.get(p.getServer());
+        // Reusing this disposable save must wait out its real saved cooldown, never erase it.
+        if (receipt.readyAt(p.getUUID()) > p.level().getGameTime())
+          ((net.minecraft.world.level.storage.ServerLevelData) p.level().getLevelData())
+              .setGameTime(receipt.readyAt(p.getUUID()));
         AkatsukiDomainValidation.prepareBlade(p);
         ContractMasteryService.setLevel(p.getServer().createCommandSourceStack(), p, 10);
         var target = EntityType.HUSK.create(p.serverLevel());
