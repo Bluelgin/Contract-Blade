@@ -126,17 +126,17 @@ public final class AkatsukiVisualCapture {
     com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
     mc.options.setCameraType(age >= 650 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
     String name =
-        age >= 760
+        age >= 765
             ? "rain-06-low"
-            : age >= 680
+            : age >= 665
                 ? "rain-05-high-third-person"
-                : age >= 540
+                : age >= 515
                     ? "rain-04-rampage-moving"
-                    : age >= 390
+                    : age >= 370
                         ? "rain-03-rampage"
-                        : age >= 240
+                        : age >= 275
                             ? "rain-02-normal-moving"
-                            : age >= 120 ? "rain-01-normal" : null;
+                            : age >= 70 ? "rain-01-normal" : null;
     if (name == null || !TAKEN.add(name)) return;
     Screenshot.grab(
         mc.gameDirectory,

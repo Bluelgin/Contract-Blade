@@ -69,7 +69,7 @@ class RainDirectorTest {
   }
 
   @Test
-  void movementLeadIsMinorityBoundedAndLockedAtBirth() {
+  void movementLeadAffectsOnlyAMinorityAndIsBounded() {
     var still = new AkatsukiRainDirector(68);
     var moving = new AkatsukiRainDirector(68);
     still.begin(0, 48, true, 1, 1);
