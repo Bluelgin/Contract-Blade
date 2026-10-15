@@ -17,7 +17,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.*;
-import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -40,11 +39,21 @@ public final class AkatsukiDomainValidation {
 
   private static void run(net.minecraft.server.MinecraftServer server) throws Exception {
     var level = server.overworld();
+    // Forge's default FakePlayer is unconditionally invulnerable. Override only that fixture
+    // behavior so hurt() traverses the real ServerPlayer/Player damage and vanilla totem path.
     var owner =
-        FakePlayerFactory.get(
+        new net.minecraftforge.common.util.FakePlayer(
             level,
             new GameProfile(
-                UUID.fromString("277e986c-c78b-42a1-8e4a-a6ac5d4308b1"), "DomainFixture"));
+                UUID.fromString("277e986c-c78b-42a1-8e4a-a6ac5d4308b1"), "DomainFixture")) {
+          @Override
+          public boolean isInvulnerableTo(DamageSource source) {
+            return getAbilities().invulnerable
+                && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY);
+          }
+        };
+    net.minecraftforge.fml.util.ObfuscationReflectionHelper.setPrivateValue(
+        net.minecraft.server.level.ServerPlayer.class, owner, 0, "f_8921_");
     if (Boolean.getBoolean("contractblade.akatsukiDomain.resume")) {
       check(
           AkatsukiRescueSavedData.get(server).readyAt(owner.getUUID()) > level.getGameTime(),
@@ -197,6 +206,7 @@ public final class AkatsukiDomainValidation {
         session != null && session.active(), "held authorized blade opens domain without any hit");
     target.invulnerableTime = 0;
     target.hurt(owner.damageSources().playerAttack(owner), 1);
+    target.invulnerableTime = 0;
     float hp = target.getHealth();
     AkatsukiDomainDamage.pulse(owner, target, session, true);
     check(
@@ -258,6 +268,17 @@ public final class AkatsukiDomainValidation {
     check(
         owner.isAlive() && owner.getOffhandItem().isEmpty(),
         "cooldown allows vanilla totem fallback exactly once");
+    owner.setHealth(20);
+    clock.setGameTime(receipt.readyAt(owner.getUUID()));
+    owner.getAttribute(Attributes.MAX_HEALTH).setBaseValue(40);
+    owner.setHealth(4);
+    AkatsukiDomainService.tick(
+        new net.minecraftforge.event.TickEvent.PlayerTickEvent(
+            net.minecraftforge.event.TickEvent.Phase.END, owner));
+    check(
+        Math.abs(owner.getHealth() - 10) < .001 && !session.attacking(),
+        "10 percent threshold rescues using changed maximum health");
+    owner.getAttribute(Attributes.MAX_HEALTH).setBaseValue(20);
     owner.setHealth(20);
     benchmark(owner, target, session);
     server.overworld().getDataStorage().save();

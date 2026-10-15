@@ -20,6 +20,17 @@ public final class AkatsukiVisualValidation {
   private record Scene(long started, Zombie target) {}
 
   private static final Map<ServerPlayer, Scene> SCENES = new WeakHashMap<>();
+  private static final Map<UUID, Long> STARTS = new java.util.concurrent.ConcurrentHashMap<>();
+
+  public static long started(UUID owner) {
+    return STARTS.getOrDefault(owner, -1L);
+  }
+
+  @SubscribeEvent
+  public static void stopped(net.minecraftforge.event.server.ServerStoppedEvent e) {
+    SCENES.clear();
+    STARTS.clear();
+  }
 
   @SubscribeEvent
   public static void tick(TickEvent.PlayerTickEvent e) {
@@ -53,6 +64,7 @@ public final class AkatsukiVisualValidation {
         p.serverLevel().addFreshEntity(target);
         scene = new Scene(p.level().getGameTime(), target);
         SCENES.put(p, scene);
+        STARTS.put(p.getUUID(), scene.started());
         LogUtils.getLogger().info("AKATSUKI_VISUAL_SCENE_READY");
       }
       long age = p.level().getGameTime() - scene.started();

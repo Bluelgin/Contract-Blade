@@ -76,6 +76,7 @@ public final class AkatsukiDomainVisuals {
     if (level == null
         || !Double.isFinite(p.center().lengthSqr())
         || !Double.isFinite(p.target().lengthSqr())
+        || !Float.isFinite(p.radius())
         || p.radius() < 0
         || p.radius() > 16
         || p.ticks() < 0
@@ -90,7 +91,22 @@ public final class AkatsukiDomainVisuals {
       SWORDS.removeIf(c -> c.owner().equals(p.owner()));
       return;
     }
-    if (DOMAINS.size() >= 16 && !DOMAINS.containsKey(p.owner())) return;
+    if (DOMAINS.size() >= 16 && !DOMAINS.containsKey(p.owner())) {
+      var viewer = Minecraft.getInstance().player;
+      if (viewer == null) return;
+      var farthest =
+          DOMAINS.entrySet().stream()
+              .filter(entry -> !entry.getKey().equals(viewer.getUUID()))
+              .max(
+                  Comparator.comparingDouble(
+                      entry -> center(entry.getValue().cue, 1).distanceToSqr(viewer.position())))
+              .orElse(null);
+      if (farthest == null
+          || !p.owner().equals(viewer.getUUID())
+              && p.center().distanceToSqr(viewer.position())
+                  >= center(farthest.getValue().cue, 1).distanceToSqr(viewer.position())) return;
+      DOMAINS.remove(farthest.getKey());
+    }
     var d = DOMAINS.computeIfAbsent(p.owner(), id -> new Domain(p));
     var oldPhase = d.cue.phase();
     d.cue = p;
@@ -174,7 +190,9 @@ public final class AkatsukiDomainVisuals {
           || center(p, 1).distanceToSqr(mc.player.position()) > (quality == 0 ? 576 : 2304))
         continue;
       var target = mc.level.getEntity(d.targetId);
-      if (target == null || !target.isAlive()) continue;
+      if (target == null
+          || !target.isAlive()
+          || target.position().distanceToSqr(center(p, 1)) > p.radius() * p.radius()) continue;
       d.target = target.getBoundingBox().getCenter();
       int count = d.director.cuts(now, rampage);
       count = Math.min(count, quality == 0 ? 1 : quality == 1 ? 4 : 5);
@@ -247,6 +265,7 @@ public final class AkatsukiDomainVisuals {
     if (mc.level == null || CUTS.isEmpty() && SWORDS.isEmpty()) return;
     var camera = e.getCamera().getPosition();
     double time = mc.level.getGameTime() + e.getPartialTick();
+    double maxDistance = AkatsukiDomainConfig.QUALITY.get() == 0 ? 576 : 2304;
     var pose = e.getPoseStack();
     pose.pushPose();
     pose.translate(-camera.x, -camera.y, -camera.z);
@@ -259,13 +278,14 @@ public final class AkatsukiDomainVisuals {
       var b = Tesselator.getInstance().getBuilder();
       b.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
       for (var c : CUTS)
-        if (c.center().distanceToSqr(camera) < 2304)
+        if (c.center().distanceToSqr(camera) < maxDistance)
           fissure(b, pose.last().pose(), c, time, camera);
       BufferUploader.drawWithShader(b.end());
       var buffers = mc.renderBuffers().bufferSource();
       for (var s : SWORDS) {
         double age = time - s.born();
-        if (age < 0 || age > s.flight() + 5 || s.start().distanceToSqr(camera) > 2304) continue;
+        if (age < 0 || age > s.flight() + 5 || s.start().distanceToSqr(camera) > maxDistance)
+          continue;
         Vec3 end = s.end();
         var entity = mc.level.getEntity(s.targetId());
         if (entity != null && entity.isAlive()) end = entity.getBoundingBox().getCenter();

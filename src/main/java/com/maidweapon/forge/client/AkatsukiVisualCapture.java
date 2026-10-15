@@ -6,7 +6,7 @@ import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.event.RenderGuiEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -17,9 +17,8 @@ public final class AkatsukiVisualCapture {
   private static long start = -1;
 
   @SubscribeEvent
-  public static void frame(RenderLevelStageEvent e) {
-    if (!Boolean.getBoolean("contractblade.akatsukiVisual.validation")
-        || e.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
+  public static void frame(RenderGuiEvent.Post e) {
+    if (!Boolean.getBoolean("contractblade.akatsukiVisual.validation")) return;
     var mc = Minecraft.getInstance();
     if (mc.level == null
         || mc.player == null
@@ -28,8 +27,15 @@ public final class AkatsukiVisualCapture {
             .getWorldData()
             .getLevelName()
             .equals("Akatsuki Visual Validation")) return;
-    if (start < 0) start = mc.level.getGameTime();
+    start =
+        com.maidweapon.forge.system.akatsuki.AkatsukiVisualValidation.started(mc.player.getUUID());
+    if (start < 0) return;
     long age = mc.level.getGameTime() - start;
+    if (age >= 600) {
+      LogUtils.getLogger().info("AKATSUKI_VISUAL_CLIENT_COMPLETE captures={}", TAKEN.size());
+      mc.stop();
+      return;
+    }
     if (age >= 380 && age < 450) {
       com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(2);
       mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
@@ -59,7 +65,12 @@ public final class AkatsukiVisualCapture {
         "akatsuki-" + name + ".png",
         mc.getMainRenderTarget(),
         message ->
-            LogUtils.getLogger().info("AKATSUKI_VISUAL_CAPTURE {} {}", name, message.getString()));
+            LogUtils.getLogger()
+                .info(
+                    "AKATSUKI_VISUAL_CAPTURE {} fps={} {}",
+                    name,
+                    mc.getFps(),
+                    message.getString()));
   }
 
   private AkatsukiVisualCapture() {}
