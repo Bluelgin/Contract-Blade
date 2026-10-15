@@ -123,7 +123,8 @@ public final class AkatsukiVisualCapture {
       return;
     }
     int quality = age >= 730 ? 0 : age >= 650 ? 2 : 1;
-    com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
+    if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != quality)
+      com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
     mc.options.setCameraType(age >= 650 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
     String name =
         age >= 765
