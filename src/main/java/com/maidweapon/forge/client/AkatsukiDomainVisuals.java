@@ -304,31 +304,35 @@ public final class AkatsukiDomainVisuals {
           fissure(b, pose.last().pose(), c, time, camera);
       BufferUploader.drawWithShader(b.end());
       var buffers = mc.renderBuffers().bufferSource();
-      for (var s : SWORDS) {
-        double age = time - s.born();
-        if (age < 0 || age > s.flight() + 5 || s.start().distanceToSqr(camera) > maxDistance)
-          continue;
-        Vec3 end = s.end();
-        var entity = mc.level.getEntity(s.targetId());
-        if (entity != null && entity.isAlive()) end = entity.getBoundingBox().getCenter();
-        double progress = Mth.clamp((age - 2) / s.flight(), 0, 1);
-        Vec3 point = s.start().lerp(end, progress * progress);
-        Vec3 direction = end.subtract(s.start()).normalize();
-        pose.pushPose();
-        try {
-          pose.translate(point.x, point.y, point.z);
-          float yaw = (float) Math.toDegrees(Math.atan2(direction.z, direction.x));
-          float pitch = (float) Math.toDegrees(Math.asin(Mth.clamp(direction.y, -1, 1)));
-          pose.mulPose(Axis.YP.rotationDegrees(-yaw));
-          pose.mulPose(Axis.ZP.rotationDegrees(pitch));
-          pose.scale(s.size(), s.size(), s.size());
-          pose.mulPose(Axis.YP.rotationDegrees(90));
-          AkatsukiNativeVisualBridge.sword(
-              pose, buffers, (float) Math.min(1, (s.flight() + 5 - age) / 4));
-        } finally {
-          pose.popPose();
+      // Two native passes, each batched across the whole formation: red body then luminous edge.
+      for (int pass = 0; pass < 2; pass++)
+        for (var s : SWORDS) {
+          double age = time - s.born();
+          if (age < 0 || age > s.flight() + 5 || s.start().distanceToSqr(camera) > maxDistance)
+            continue;
+          Vec3 end = s.end();
+          var entity = mc.level.getEntity(s.targetId());
+          if (entity != null && entity.isAlive()) end = entity.getBoundingBox().getCenter();
+          double progress = Mth.clamp((age - 2) / s.flight(), 0, 1);
+          Vec3 point = s.start().lerp(end, progress * progress);
+          if (point.distanceToSqr(camera) < 2.25)
+            continue; // Avoid a sword crossing the first-person near plane.
+          Vec3 direction = end.subtract(s.start()).normalize();
+          pose.pushPose();
+          try {
+            pose.translate(point.x, point.y, point.z);
+            float yaw = (float) Math.toDegrees(Math.atan2(direction.z, direction.x));
+            float pitch = (float) Math.toDegrees(Math.asin(Mth.clamp(direction.y, -1, 1)));
+            pose.mulPose(Axis.YP.rotationDegrees(-yaw));
+            pose.mulPose(Axis.ZP.rotationDegrees(pitch));
+            pose.scale(s.size(), s.size(), s.size());
+            pose.mulPose(Axis.YP.rotationDegrees(90));
+            AkatsukiNativeVisualBridge.sword(
+                pose, buffers, (float) Math.min(1, (s.flight() + 5 - age) / 4), pass == 0);
+          } finally {
+            pose.popPose();
+          }
         }
-      }
       buffers.endBatch();
     } finally {
       pose.popPose();

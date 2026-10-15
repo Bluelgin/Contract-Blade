@@ -73,12 +73,15 @@ public final class AkatsukiVisualCapture {
       return;
     }
     if (age >= 380 && age < 450) {
-      com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(2);
+      if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != 2)
+        com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(2);
       mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
     } else if (age >= 450 && age < 510) {
-      com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(0);
+      if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != 0)
+        com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(0);
     } else if (age >= 510) {
-      com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(1);
+      if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != 1)
+        com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(1);
       mc.options.setCameraType(CameraType.FIRST_PERSON);
     }
     String name =

@@ -11,7 +11,7 @@ import net.minecraftforge.fml.ModList;
 /** Client-only optional APIs. No copied models, post chains, provider fields or damage entities. */
 public final class AkatsukiNativeVisualBridge {
   private static boolean tintChecked, swordChecked;
-  private static Method begin, manager, model, luminous, color, resetColor;
+  private static Method begin, manager, model, luminous, body, color, resetColor;
   private static final ResourceLocation SWORD =
       ResourceLocation.parse("slashblade:model/util/ss.obj");
   private static final ResourceLocation TEXTURE =
@@ -40,7 +40,7 @@ public final class AkatsukiNativeVisualBridge {
   }
 
   /** Same ss mesh, texture, scale and luminous pass as SummonedSwordRenderer in 1.9.65. */
-  public static void sword(PoseStack pose, MultiBufferSource buffers, float alpha) {
+  public static void sword(PoseStack pose, MultiBufferSource buffers, float alpha, boolean solid) {
     if (!swordChecked) {
       swordChecked = true;
       if (ModList.get().isLoaded("slashblade"))
@@ -55,6 +55,16 @@ public final class AkatsukiNativeVisualBridge {
           model = managerType.getMethod("getModel", ResourceLocation.class);
           color = state.getMethod("setCol", int.class, boolean.class);
           resetColor = state.getMethod("resetCol");
+          body =
+              state.getMethod(
+                  "renderOverrided",
+                  ItemStack.class,
+                  meshType,
+                  String.class,
+                  ResourceLocation.class,
+                  PoseStack.class,
+                  MultiBufferSource.class,
+                  int.class);
           luminous =
               state.getMethod(
                   "renderOverridedLuminous",
@@ -73,8 +83,10 @@ public final class AkatsukiNativeVisualBridge {
     if (luminous == null) return; // No geometric fake-sword fallback.
     try {
       Object mesh = model.invoke(manager.invoke(null), SWORD);
-      color.invoke(null, (Math.max(0, Math.min(255, (int) (alpha * 190))) << 24) | 0xC91129, true);
-      luminous.invoke(null, ItemStack.EMPTY, mesh, "ss", TEXTURE, pose, buffers, 15728864);
+      int opacity = Math.max(0, Math.min(255, (int) (alpha * (solid ? 210 : 90))));
+      color.invoke(null, (opacity << 24) | (solid ? 0x961023 : 0xD9112B), true);
+      (solid ? body : luminous)
+          .invoke(null, ItemStack.EMPTY, mesh, "ss", TEXTURE, pose, buffers, 15728864);
     } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
       luminous = null;
       CompatDiagnostics.warnOnce("akatsuki-native-sword-render", failure);

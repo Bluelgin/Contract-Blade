@@ -125,7 +125,7 @@ SPI `DomainTargetCompatibility.register(id, adapter)` 可追加只读上限/阶�
 
 ## 视觉与可选桥接
 
-只读核实 SlashBlade Resharped **1.20.1-1.9.65** 发布 JAR 的 `SummonedSwordRenderer` 字节码与公开方法签名。`AkatsukiNativeVisualBridge` 调用 `BladeModelManager.getInstance().getModel(slashblade:model/util/ss.obj)`、`BladeRenderState.setCol` 和 `renderOverridedLuminous`，使用模型组 `ss` 与 `slashblade:model/util/ss.png`、原生发光通道（追剑/剑雨缩放 .0045/.0038，减小第一人称遮挡）。颜色为赤红，alpha 随消散变化；单帧多剑共享 buffer 批次。没有服务端剑实体、没有复制模型/材质，没有三角形假剑降级。
+只读核实 SlashBlade Resharped **1.20.1-1.9.65** 发布 JAR 的 `SummonedSwordRenderer` 字节码与公开方法签名。`AkatsukiNativeVisualBridge` 调用 `BladeModelManager.getInstance().getModel(slashblade:model/util/ss.obj)`、`BladeRenderState.setCol`、`renderOverrided` 底色与 `renderOverridedLuminous` 发光，使用模型组 `ss` 与 `slashblade:model/util/ss.png`、原生发光通道（追剑/剑雨缩放 .0045/.0038，减小第一人称遮挡）。颜色为赤红，alpha 随消散变化；单帧多剑按底色/发光分别合批，日光下仍可辨识深红剑身。没有服务端剑实体、没有复制模型/材质，没有三角形假剑降级。
 
 空间斩是原创程序化裂隙网格：随机交错方向、分段尖端/不对称裂口、接近黑色内部、深红渐变边缘、粉白窄高光；约 1 tick 细线预兆，短促爆发，6 tick 内消散。巨型裁断最长 7 格，宽裂口短闪；没有缓慢飞行刀气。收束阶段现有裂隙向玩家移动缩小，再燃向外闪现交错裁断。音效复用原版锚耗尽及横扫音效的低音变调，不引入第三方素材。
 
