@@ -67,6 +67,10 @@ public final class AkatsukiVisualCapture {
     if (start < 0) return;
     if (TAKEN.isEmpty()) mc.gui.getChat().clearMessages(true);
     long age = mc.level.getGameTime() - start;
+    if (Boolean.getBoolean("contractblade.akatsukiRain.validation")) {
+      rainFrame(mc, age);
+      return;
+    }
     if (age >= 600) {
       LogUtils.getLogger().info("AKATSUKI_VISUAL_CLIENT_COMPLETE captures={}", TAKEN.size());
       mc.stop();
@@ -110,6 +114,38 @@ public final class AkatsukiVisualCapture {
                     name,
                     mc.getFps(),
                     message.getString()));
+  }
+
+  private static void rainFrame(Minecraft mc, long age) {
+    if (age >= 840) {
+      LogUtils.getLogger().info("AKATSUKI_RAIN_CLIENT_COMPLETE captures={}", TAKEN.size());
+      mc.stop();
+      return;
+    }
+    int quality = age >= 730 ? 0 : age >= 650 ? 2 : 1;
+    com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
+    mc.options.setCameraType(age >= 650 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
+    String name =
+        age >= 760
+            ? "rain-06-low"
+            : age >= 680
+                ? "rain-05-high-third-person"
+                : age >= 540
+                    ? "rain-04-rampage-moving"
+                    : age >= 390
+                        ? "rain-03-rampage"
+                        : age >= 240
+                            ? "rain-02-normal-moving"
+                            : age >= 120 ? "rain-01-normal" : null;
+    if (name == null || !TAKEN.add(name)) return;
+    Screenshot.grab(
+        mc.gameDirectory,
+        "akatsuki-" + name + ".png",
+        mc.getMainRenderTarget(),
+        message ->
+            LogUtils.getLogger()
+                .info(
+                    "AKATSUKI_RAIN_CAPTURE {} fps={} {}", name, mc.getFps(), message.getString()));
   }
 
   private AkatsukiVisualCapture() {}

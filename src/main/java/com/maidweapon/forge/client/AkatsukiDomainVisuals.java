@@ -14,6 +14,8 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -33,10 +35,12 @@ public final class AkatsukiDomainVisuals {
     int targetId = -1;
     Vec3 target;
     final AkatsukiVisualDirector director = new AkatsukiVisualDirector();
+    final AkatsukiRainDirector rain;
 
     Domain(Cue cue) {
       this.cue = cue;
       target = cue.target();
+      rain = new AkatsukiRainDirector(cue.owner().getLeastSignificantBits() ^ ++sequence);
     }
   }
 
@@ -50,7 +54,19 @@ public final class AkatsukiDomainVisuals {
       double width) {}
 
   private record Sword(
-      UUID owner, Vec3 start, Vec3 end, int targetId, long born, int flight, float size) {}
+      UUID owner,
+      Vec3 start,
+      Vec3 end,
+      int targetId,
+      double born,
+      double reveal,
+      double flight,
+      boolean rain,
+      float size) {
+    double lifetime() {
+      return reveal + flight + (rain ? 1.5 : 3);
+    }
+  }
 
   private static final Map<UUID, Domain> DOMAINS = new LinkedHashMap<>();
   private static final Deque<Cut> CUTS = new ArrayDeque<>();
@@ -112,6 +128,7 @@ public final class AkatsukiDomainVisuals {
     var oldPhase = d.cue.phase();
     d.cue = p;
     d.end = now + 15;
+    if (p.phase() != NORMAL && p.phase() != RAMPAGE) d.rain.cancel();
     if (p.targetId() >= 0) {
       d.targetId = p.targetId();
       d.target = p.target();
@@ -164,7 +181,13 @@ public final class AkatsukiDomainVisuals {
       cut(p.owner(), p.target(), now, p.kind() == FINAL ? 7 : 5, .16);
       sound(p.target(), false);
     } else if (p.kind() == RAIN || p.kind() == COUNTER || p.kind() == RING || p.kind() == CHAIN) {
-      if (p.kind() == RAIN) formation(d, now, true);
+      if (p.kind() == RAIN && (p.phase() == NORMAL || p.phase() == RAMPAGE))
+        d.rain.begin(
+            now,
+            p.blades(),
+            p.phase() == RAMPAGE,
+            AkatsukiDomainConfig.QUALITY.get(),
+            AkatsukiDomainConfig.DENSITY.get());
       else for (int i = 0; i < 3; i++) cut(p.owner(), p.target(), now + i, 3, .055);
     }
   }
@@ -192,7 +215,7 @@ public final class AkatsukiDomainVisuals {
     long now = mc.level.getGameTime();
     DOMAINS.values().removeIf(d -> d.end <= now);
     CUTS.removeIf(c -> now - c.start() > 6);
-    SWORDS.removeIf(s -> now - s.born() > s.flight() + 5);
+    SWORDS.removeIf(s -> now - s.born() > s.lifetime());
     int quality = AkatsukiDomainConfig.QUALITY.get();
     for (var d : DOMAINS.values()) {
       var p = d.cue;
@@ -204,12 +227,17 @@ public final class AkatsukiDomainVisuals {
           && now % 4 == 0) AkatsukiNativeVisualBridge.renewTint();
       if (p.phase() != NORMAL && p.phase() != RAMPAGE
           || mc.player == null
-          || center(p, 1).distanceToSqr(mc.player.position()) > (quality == 0 ? 576 : 2304))
+          || center(p, 1).distanceToSqr(mc.player.position()) > (quality == 0 ? 576 : 2304)) {
+        d.rain.cancel();
         continue;
+      }
       var target = mc.level.getEntity(d.targetId);
       if (target == null
           || !target.isAlive()
-          || target.position().distanceToSqr(center(p, 1)) > p.radius() * p.radius()) continue;
+          || target.position().distanceToSqr(center(p, 1)) > p.radius() * p.radius()) {
+        d.rain.cancel();
+        continue;
+      }
       d.target = target.getBoundingBox().getCenter();
       int count = d.director.cuts(now, rampage);
       count = Math.min(count, quality == 0 ? 1 : quality == 1 ? 4 : 5);
@@ -220,7 +248,35 @@ public final class AkatsukiDomainVisuals {
             now + i % 2,
             2.5 + .3 * d.director.intensity(now),
             rampage ? .065 : .045);
-      if ((p.features() & 2) != 0 && d.director.swords(now, rampage)) formation(d, now, false);
+      if ((p.features() & 2) != 0 && d.director.swords(now, rampage)) formation(d, now);
+      var motion = target.position().subtract(new Vec3(target.xo, target.yo, target.zo));
+      if (d.director.intensity(now) <= 0) d.rain.cancel();
+      for (var drop : d.rain.poll(now, motion.x, motion.z)) {
+        Vec3 point = target.position().add(drop.x(), 0, drop.z());
+        if (!mc.level.hasChunkAt(net.minecraft.core.BlockPos.containing(point))) continue;
+        var hit =
+            mc.level.clip(
+                new ClipContext(
+                    point.add(0, 2.5, 0),
+                    point.add(0, -6, 0),
+                    ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE,
+                    mc.player));
+        // Swords land at solid terrain, not a hovering target center or the bottom of the world.
+        if (hit.getType() != HitResult.Type.BLOCK) continue;
+        Vec3 end = hit.getLocation().add(0, .35, 0);
+        appendSword(
+            new Sword(
+                p.owner(),
+                end.add(drop.leanX(), drop.height(), drop.leanZ()),
+                end,
+                -1,
+                drop.born(),
+                drop.reveal(),
+                drop.flight(),
+                true,
+                .0038f));
+      }
     }
   }
 
@@ -242,10 +298,10 @@ public final class AkatsukiDomainVisuals {
     CUTS.addLast(cut);
   }
 
-  private static void formation(Domain d, long now, boolean rain) {
+  private static void formation(Domain d, long now) {
     int quality = AkatsukiDomainConfig.QUALITY.get();
     boolean rampage = d.cue.phase() == RAMPAGE;
-    int count = rain ? Mth.clamp(d.cue.blades(), 8, 96) * (rampage ? 2 : 1) : rampage ? 6 : 3;
+    int count = rampage ? 6 : 3;
     count =
         Math.max(
             1,
@@ -253,30 +309,29 @@ public final class AkatsukiDomainVisuals {
                 (count
                     * AkatsukiDomainConfig.DENSITY.get()
                     * (quality == 0 ? .25 : quality == 1 ? .7 : 1)));
-    var random = new Random(++sequence);
     var origin = center(d.cue, 1);
     for (int i = 0; i < count; i++) {
       double angle = (i + .5) * Math.PI * 2 / count;
-      Vec3 end =
-          rain
-              ? d.target.add((random.nextDouble() - .5) * 5, 0, (random.nextDouble() - .5) * 5)
-              : d.target;
-      Vec3 start =
-          rain
-              ? end.add(.6, 8 + random.nextDouble() * 3, .3)
-              : origin.add(Math.cos(angle) * 2.2, 2.5 + .3 * (i % 3), Math.sin(angle) * 2.2);
-      int cap = quality == 0 ? 48 : quality == 1 ? 160 : 256;
-      while (SWORDS.size() >= cap) SWORDS.removeFirst();
-      SWORDS.addLast(
+      Vec3 start = origin.add(Math.cos(angle) * 2.2, 2.5 + .3 * (i % 3), Math.sin(angle) * 2.2);
+      appendSword(
           new Sword(
               d.cue.owner(),
               start,
-              end,
-              rain ? -1 : d.targetId,
-              now + i % (rain ? 14 : 3),
+              d.target,
+              d.targetId,
+              now + i % 3,
+              2,
               rampage ? 8 : 12,
-              rain ? .0038f : .0045f));
+              false,
+              .0045f));
     }
+  }
+
+  private static void appendSword(Sword sword) {
+    int quality = AkatsukiDomainConfig.QUALITY.get();
+    int cap = quality == 0 ? 48 : quality == 1 ? 160 : 256;
+    while (SWORDS.size() >= cap) SWORDS.removeFirst();
+    SWORDS.addLast(sword);
   }
 
   @SubscribeEvent
@@ -302,19 +357,22 @@ public final class AkatsukiDomainVisuals {
       for (var c : CUTS)
         if (c.center().distanceToSqr(camera) < maxDistance)
           fissure(b, pose.last().pose(), c, time, camera);
+      for (var s : SWORDS)
+        if (s.rain() && s.end().distanceToSqr(camera) < maxDistance)
+          rainTrace(b, pose.last().pose(), s, time, camera);
       BufferUploader.drawWithShader(b.end());
       var buffers = mc.renderBuffers().bufferSource();
       // Two native passes, each batched across the whole formation: red body then luminous edge.
       for (int pass = 0; pass < 2; pass++)
         for (var s : SWORDS) {
           double age = time - s.born();
-          if (age < 0 || age > s.flight() + 5 || s.start().distanceToSqr(camera) > maxDistance)
+          if (age < 0 || age > s.lifetime() || s.start().distanceToSqr(camera) > maxDistance)
             continue;
           Vec3 end = s.end();
           var entity = mc.level.getEntity(s.targetId());
           if (entity != null && entity.isAlive()) end = entity.getBoundingBox().getCenter();
-          double progress = Mth.clamp((age - 2) / s.flight(), 0, 1);
-          Vec3 point = s.start().lerp(end, progress * progress);
+          double progress = AkatsukiRainDirector.progress(age, s.reveal(), s.flight());
+          Vec3 point = s.start().lerp(end, s.rain() ? progress : progress * progress);
           if (point.distanceToSqr(camera) < 2.25)
             continue; // Avoid a sword crossing the first-person near plane.
           Vec3 direction = end.subtract(s.start()).normalize();
@@ -328,7 +386,10 @@ public final class AkatsukiDomainVisuals {
             pose.scale(s.size(), s.size(), s.size());
             pose.mulPose(Axis.YP.rotationDegrees(90));
             AkatsukiNativeVisualBridge.sword(
-                pose, buffers, (float) Math.min(1, (s.flight() + 5 - age) / 4), pass == 0);
+                pose,
+                buffers,
+                (float) Math.min(1, (s.lifetime() - age) / (s.rain() ? 1.5 : 4)),
+                pass == 0);
           } finally {
             pose.popPose();
           }
@@ -340,6 +401,45 @@ public final class AkatsukiDomainVisuals {
       RenderSystem.enableCull();
       RenderSystem.disableBlend();
       RenderSystem.setShaderColor(1, 1, 1, 1);
+    }
+  }
+
+  private static void rainTrace(BufferBuilder b, Matrix4f m, Sword s, double time, Vec3 camera) {
+    double age = time - s.born();
+    if (age < s.reveal() || age > s.lifetime()) return;
+    double progress = AkatsukiRainDirector.progress(age, s.reveal(), s.flight());
+    if (progress < 1) {
+      Vec3 tip = s.start().lerp(s.end(), progress);
+      if (tip.distanceToSqr(camera) < 2.25) return;
+      Vec3 tail =
+          s.start().lerp(s.end(), AkatsukiRainDirector.progress(age - .65, s.reveal(), s.flight()));
+      Vec3 side = tip.subtract(tail).cross(camera.subtract(tip)).normalize();
+      feather(b, m, tail, tip, side, .002, .025, BLOOD, .65f);
+      strip(b, m, tail, tip, side, .001, .005, LIGHT, .65f);
+    } else {
+      float alpha = (float) Math.max(0, 1 - (age - s.reveal() - s.flight()) / 1.5);
+      Vec3 point = s.end().add(0, -.30, 0);
+      Vec3 diagonal = new Vec3(.23, 0, .17);
+      feather(
+          b,
+          m,
+          point.subtract(diagonal),
+          point.add(diagonal),
+          new Vec3(-.17, 0, .23).normalize(),
+          .025,
+          .002,
+          BLOOD,
+          alpha);
+      strip(
+          b,
+          m,
+          point.subtract(diagonal.scale(.6)),
+          point.add(diagonal.scale(.6)),
+          new Vec3(-.17, 0, .23).normalize(),
+          .008,
+          .001,
+          LIGHT,
+          alpha);
     }
   }
 
@@ -466,6 +566,7 @@ public final class AkatsukiDomainVisuals {
               manager -> {
                 CUTS.clear();
                 SWORDS.clear();
+                DOMAINS.values().forEach(d -> d.rain.cancel());
                 AkatsukiNativeVisualBridge.reload();
               });
     }

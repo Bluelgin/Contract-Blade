@@ -74,6 +74,22 @@ public final class AkatsukiVisualValidation {
       }
       long age = p.level().getGameTime() - scene.started();
       var target = scene.target();
+      if (Boolean.getBoolean("contractblade.akatsukiRain.validation")) {
+        // Same real authorization, contact and rain cue path, with isolated presentation scenarios.
+        if (age == 340) p.setHealth(p.getMaxHealth() * .4f);
+        boolean moving = age >= 180 && age < 330 || age >= 490 && age < 640;
+        double x = moving ? .5 + Math.sin((age - (age < 340 ? 180 : 490)) * .06) * 2.2 : .5;
+        target.moveTo(x, 81, 5.5, 180, 0);
+        if (age > 40 && age < 810 && age % 8 == 0) {
+          target.setHealth(1024);
+          target.invulnerableTime = 0;
+          target.hurt(p.damageSources().playerAttack(p), .1f);
+        }
+        if (age == 60 || age == 180 || age == 340 || age == 490 || age == 650 || age == 730)
+          LogUtils.getLogger()
+              .info("AKATSUKI_RAIN_SCENARIO age={} moving={} hp={}", age, moving, p.getHealth());
+        return;
+      }
       if (age == 160) p.setHealth(p.getMaxHealth() * .4f);
       if (age == 300) {
         p.invulnerableTime = 0;
