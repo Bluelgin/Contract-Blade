@@ -109,7 +109,13 @@ minecraft {
             property 'contractblade.mastery.resume', providers.gradleProperty('masteryResume').orElse('false').get()
             property 'contractblade.mastery.validation', providers.gradleProperty('masteryTest').orElse('false').get()
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
+            property 'contractblade.soulVisual.validation', providers.gradleProperty('soulVisualTest').orElse('false').get()
+            property 'contractblade.soul.validation', providers.gradleProperty('soulTest').orElse('false').get()
             property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
+            property 'contractblade.akatsukiVisual.validation', providers.gradleProperty('akatsukiVisualTest').orElse('false').get()
+            property 'contractblade.akatsukiRain.validation', providers.gradleProperty('akatsukiRainTest').orElse('false').get()
+            property 'contractblade.akatsukiDomain.resume', providers.gradleProperty('akatsukiDomainResume').orElse('false').get()
+            property 'contractblade.akatsukiDomain.validation', providers.gradleProperty('akatsukiDomainTest').orElse('false').get()
             property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
             property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
             property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
@@ -120,6 +126,7 @@ minecraft {
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             args '--mixin', 'maid_weapon.mixins.json'
             args '--mixin', 'maid_weapon.slashblade.mixins.json'
+            args '--mixin', 'maid_weapon.soul-boss.mixins.json'
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -128,6 +135,9 @@ minecraft {
         }
 
         client {
+            if (providers.gradleProperty('akatsukiVisualWorld').isPresent()) {
+                args '--quickPlaySingleplayer', providers.gradleProperty('akatsukiVisualWorld').get()
+            }
             property 'forge.enabledGameTestNamespaces', mod_id
             jvmArgs '-Xms384m', compatTestMode == 'epicfight' ? '-Xmx3072m' : '-Xmx1280m'
         }
@@ -264,6 +274,17 @@ dependencies {
         runtimeOnly fg.deobf("compat:mrqxs_Slashblade_Core:1.20.1-1.4.1")
         runtimeOnly fg.deobf(nativePowerDependency)
     }
+    // Explicit development-only boss fixture jars, never runtime dependencies of the release.
+    if (providers.gradleProperty('soulBossTest').orElse('false').get().toBoolean()) {
+        ['cataclysm-soul-test', 'legendary-soul-test', 'lionfish-soul-test', 'curios-soul-test'].each { name ->
+            runtimeOnly fg.deobf("compat:${name}:1")
+        }
+    }
+    if (providers.gradleProperty('soulGoetyTest').orElse('false').get().toBoolean()) {
+        ['goety-soul-test', 'revelation-soul-test', 'ending-soul-test', 'curios-soul-test'].each { name ->
+            runtimeOnly fg.deobf("compat:${name}:1")
+        }
+    }
     // ========================================
     // Touhou Little Maid（车万女仆）依赖
     // TLM 使用反射，不需要编译期依赖
@@ -309,7 +330,7 @@ jar {
                 'Implementation-Title'  : project.name,
                 'Implementation-Version': project.jar.archiveVersion,
                 'Implementation-Vendor' : mod_authors,
-                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json',
+                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json,maid_weapon.soul-boss.mixins.json',
         ])
     }
     finalizedBy 'reobfJar'

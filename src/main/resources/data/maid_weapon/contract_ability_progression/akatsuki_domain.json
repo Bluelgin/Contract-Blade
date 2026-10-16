@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "ability": "maid_weapon:akatsuki_domain",
+  "level_source": "player_mastery",
+  "milestones": [
+    {
+      "level": 1,
+      "features": [
+        "maid_weapon:akatsuki_garden"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 2,
+      "features": [
+        "maid_weapon:akatsuki_swords"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 3,
+      "features": [
+        "maid_weapon:akatsuki_ring"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 4,
+      "features": [
+        "maid_weapon:akatsuki_tracking"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 5,
+      "features": [
+        "maid_weapon:akatsuki_adaptation"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 6,
+      "features": [
+        "maid_weapon:akatsuki_counter"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 7,
+      "features": [
+        "maid_weapon:akatsuki_chain"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 8,
+      "features": [
+        "maid_weapon:akatsuki_cloak"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 9,
+      "features": [
+        "maid_weapon:akatsuki_rain"
+      ],
+      "parameters": {}
+    },
+    {
+      "level": 10,
+      "features": [
+        "maid_weapon:akatsuki_complete"
+      ],
+      "parameters": {}
+    }
+  ]
+}

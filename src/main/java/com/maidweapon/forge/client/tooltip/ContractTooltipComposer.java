@@ -35,6 +35,16 @@ public final class ContractTooltipComposer {
         tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
                 data.getResonance(), MaidWeaponData.maximumResonance()));
         tooltip.add(Component.translatable(statusKey(stored, superseded)));
+        if (com.maidweapon.forge.compat.BladeTetraStoryCompat.isAkatsuki(stack)
+                && com.maidweapon.forge.api.IntrinsicSpiritApi.hasIntrinsicSpirit(stack, "blade_tetra:akatsuki")) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain"));
+            if (expanded) {
+                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.early"));
+                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_soul_anchor"));
+                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.middle"));
+                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.late"));
+            }
+        }
 
         if (!ownerAccess) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.borrowed_contract_locked"));

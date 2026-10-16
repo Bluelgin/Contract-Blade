@@ -13,11 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
-parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture'])
+parser.add_argument('--output', type=Path, help='New disposable fixture directory')
+parser.add_argument('--compat', choices=['vanilla','slashblade'], default='slashblade')
+parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider'])
 args = parser.parse_args()
-root = Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
+root = args.output or Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
+root.mkdir(parents=True, exist_ok=True)
 print(f'Disposable fixtures: {root}', flush=True)
 fixtures = [
+    ('akatsuki-domain', ['-PakatsukiDomainTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_NO_PROVIDER_PASS']),
+    ('akatsuki-provider', ['-PakatsukiDomainTest=true','-PfoxBladeTetraTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_PROVIDER_PASS']),
     ('architecture', ['-ParchitectureTest=true'], ['CONTRACT_ARCHITECTURE_PASS']),
     ('recovery', ['-PstageThreeTest=true'], ['CONTRACT_STAGE_THREE_PASS']),
     ('rebirth', ['-PcontractRebirthTest=true'], ['CONTRACT_REBIRTH_PASS','CONTRACT_DESTRUCTION_PASS','MULTI_CARRIER_LOSS_VALIDATION_PASSED','COMPANION_VALIDATION_PASS']),
@@ -37,7 +42,7 @@ for name, flags, markers in fixtures:
     (directory / 'server.properties').write_text('online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\n'
         'level-type=minecraft:flat\ngenerate-structures=false\nview-distance=2\nsimulation-distance=2\nspawn-protection=0\n')
     cmd = [args.gradle,'--no-daemon','runServer','-x','downloadAssets','-Pci=true','-PtlmRuntimeTest=true',
-           '-PcompatTest=slashblade',f'-PcompatRunDir={directory}',*flags]
+           f'-PcompatTest={args.compat}',f'-PcompatRunDir={directory}',*flags]
     if args.offline:
         cmd.append('--offline')
     log = root / f'{name}.log'
@@ -52,13 +57,13 @@ for name, flags, markers in fixtures:
             failed.append(name); print(f'{name}: FAIL missing={missing}; {log}',flush=True)
         else:
             print(f'{name}: PASS ({", ".join(markers)})',flush=True)
-            if name in ['recovery','blessing']:
+            if name in ['recovery','blessing','akatsuki-provider']:
                 restart_log = root / f'{name}-restart.log'
                 with restart_log.open('w') as output:
-                    resumed = subprocess.run([*cmd, '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
+                    resumed = subprocess.run([*cmd, '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true' if name == 'blessing' else '-PakatsukiDomainResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
                 resumed_text = restart_log.read_text()
                 if runtime_log.exists(): resumed_text += '\n' + runtime_log.read_text()
-                if resumed.returncode or ('CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
+                if resumed.returncode or ('CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS' if name == 'blessing' else 'AKATSUKI_RESCUE_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
                     failed.append(f'{name}-restart');print(f'{name}-restart: FAIL; {restart_log}',flush=True)
                 else:
                     print(f'{name}-restart: PASS',flush=True)

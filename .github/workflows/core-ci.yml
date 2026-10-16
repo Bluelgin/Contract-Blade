@@ -14,6 +14,7 @@ on:
       - codex/white-fox-blessing-growth
       - codex/simplify-contract-lifecycle
       - codex/architecture-refinement
+      - codex/white-fox-growth-rework
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
@@ -77,3 +78,48 @@ jobs:
           python tools/validate_player_tooltips.py
           python tools/validate_fox_models.py
           python tools/test_fox_model_validator.py
+
+      - name: Prepare native regression runtimes
+        run: |
+          mkdir -p tmp/compat-test
+          curl -fL --retry 3 "https://edge.forgecdn.net/files/8061/847/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar" \
+            -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
+          curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
+            -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+
+      - name: Prepare optional BladeTetra provider runtime
+        run: |
+          curl -fL --retry 3 "https://github.com/Bluelgin/Blade-Tetra-Forged-Styles/releases/download/v1.5.9/blade_tetra-1.5.9.jar" \
+            -o tmp/compat-test/blade_tetra-1.5.9.jar
+          curl -fL --retry 3 "https://cdn.modrinth.com/data/YP9DjOvN/versions/lm4Qz4KQ/tetra-1.20.1-6.3.0.jar" \
+            -o tmp/compat-test/tetra-6.3.0.jar
+          curl -fL --retry 3 "https://cdn.modrinth.com/data/HWHl8Evb/versions/8CZJ2gLR/mutil-1.20.1-6.2.0.jar" \
+            -o tmp/compat-test/mutil-1.20.1-6.2.0.jar
+
+      - name: Native awakened Akatsuki provider fixture
+        run: python tools/run_stage_three_tests.py --fixture akatsuki-provider
+
+      - name: Real soul damage and anchor interaction fixture
+        run: python tools/run_soul_damage_tests.py --gradle gradle
+
+      - name: Native dedicated-server domain and regression fixtures
+        run: |
+          python tools/run_stage_three_tests.py --fixture akatsuki-domain --compat vanilla
+          python tools/run_stage_three_tests.py --fixture akatsuki-domain
+          python tools/run_stage_three_tests.py --fixture architecture
+          python tools/run_stage_three_tests.py --fixture blessing
+          python tools/run_stage_three_tests.py --fixture sword
+          python tools/run_stage_three_tests.py --fixture recovery
+          python tools/run_stage_three_tests.py --fixture white-se
+
+      - name: Upload test build and validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-blade-akatsuki-validation
+          path: |
+            build/libs/*.jar
+            build/test-results/test/*.xml
+            /tmp/contract-stage-three-*/*.log
+            /tmp/contract-soul-*/server.log
+          if-no-files-found: warn
