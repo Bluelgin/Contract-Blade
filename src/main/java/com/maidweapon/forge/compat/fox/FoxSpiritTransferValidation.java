@@ -45,7 +45,7 @@ public final class FoxSpiritTransferValidation {
         owner.serverLevel().setBlock(table, ModBlocks.MAID_INJECTOR.get().defaultBlockState(), 2);
         var menu = new MaidInjectorMenu(7, owner.getInventory(), table);
         owner.containerMenu = menu;
-        var soulItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:film"));
+        var soulItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:smart_slab_empty"));
         check(soulItem != Items.AIR, "native soul talisman exists");
         check(FoxSpiritTransferService.storyEligible(owner, white), "spirit in original blade permits story");
         check(!Ingredient.of(white.getItem()).test(white), "vanilla ingredient rejects occupied blade");

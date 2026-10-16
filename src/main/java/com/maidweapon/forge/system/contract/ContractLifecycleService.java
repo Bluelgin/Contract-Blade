@@ -45,12 +45,9 @@ public final class ContractLifecycleService {
                 && !ContractCarrierData.isOwner(contract, player)) {
             return false;
         }
-        return TouhouLittleMaidHelper.convertMaidToWeapon(
-                player,
-                maid,
-                contract,
-                notifyPlayer
-        );
+        ContractAnomalyRecoveryService.begin(contract);
+        try { return TouhouLittleMaidHelper.convertMaidToWeapon(player, maid, contract, notifyPlayer); }
+        finally { ContractAnomalyRecoveryService.end(contract); }
     }
 
     public static boolean manifest(
@@ -70,12 +67,12 @@ public final class ContractLifecycleService {
                 || !com.maidweapon.forge.api.ContractAuthorization.allows(player, contract)) {
             return false;
         }
-        return TouhouLittleMaidHelper.convertWeaponToMaid(
-                player,
-                contract,
-                notifyPlayer,
-                beforeSpawn
-        );
+        if (ContractAnomalyRecoveryService.state(player, contract) == ContractAnomalyRecoveryService.State.RECOVERY_PENDING) return false;
+        String id = ContractCarrierData.getBoundMaidUUID(contract);
+        if (id != null && ContractWeaponLocator.findManifestedMaid(player, id) != null) return false;
+        ContractAnomalyRecoveryService.begin(contract);
+        try { return TouhouLittleMaidHelper.convertWeaponToMaid(player, contract, notifyPlayer, beforeSpawn); }
+        finally { ContractAnomalyRecoveryService.end(contract); }
     }
 
     /**

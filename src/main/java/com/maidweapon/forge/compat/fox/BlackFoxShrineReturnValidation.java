@@ -127,7 +127,7 @@ final class BlackFoxShrineReturnValidation {
         com.maidweapon.forge.system.deployment.ContractCompanionService.toggle(player);
         check(com.maidweapon.forge.item.MaidInfusion.containsMaid(weapon), "Black Fox recalls into her original blade");
         ItemStack stale = weapon.copy();
-        ItemStack seal = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:film")));
+        ItemStack seal = new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:smart_slab_empty")));
         var extracted = FoxSpiritTransferService.transfer(player, weapon, seal);
         check(extracted != null && !FoxSpiritTransferService.authorizesContract(player, stale), "extraction revokes stale Black Fox contracts");
         var infused = FoxSpiritTransferService.transfer(player, new ItemStack(Items.IRON_SWORD), extracted.seal());

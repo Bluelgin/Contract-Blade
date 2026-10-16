@@ -12,7 +12,7 @@ import java.util.Set;
 /** Exact active-channel payload operations. Never copies unrelated weapon NBT or dormant archives. */
 public final class ContractChannelStorage {
     private static final Set<String> CONTRACT_KEYS = Set.of(
-            "MaidData",
+            "MaidData", "MaidWeaponSoulTransfer",
             MaidEntityDataCodec.LEGACY_DATA,
             MaidEntityDataCodec.COMPRESSED_DATA,
             MaidEntityDataCodec.FORMAT,

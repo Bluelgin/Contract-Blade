@@ -160,7 +160,8 @@ public final class ContractCompanionService {
         var seen = new HashSet<String>();
         for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
             ItemStack carrier = owner.getInventory().getItem(slot);
-            if (owned(owner, carrier) && !ContractCarrierData.isContractSuperseded(carrier)
+            if (owned(owner, carrier) && !com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.releasesSlot(owner, carrier)
+                    && !ContractCarrierData.isContractSuperseded(carrier)
                     && !MaidInfusion.containsMaid(carrier) && !isResident(owner, carrier)) {
                 // A resident requesting to return must not displace an already
                 // admitted follower merely because her carrier has an earlier slot.
@@ -172,6 +173,8 @@ public final class ContractCompanionService {
         // A transferred carrier must not open another slot while its maid is out.
         for (var active : ContractActiveDeployments.snapshot(owner.getUUID())) {
             if (active.bindingId().equals(requestedBinding)) continue;
+            ItemStack activeCarrier = ContractWeaponLocator.findBoundWeaponByBinding(owner, active.bindingId());
+            if (!activeCarrier.isEmpty() && com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.releasesSlot(owner, activeCarrier)) continue;
             Entity maid = ContractWeaponLocator.findManifestedMaid(owner, active.maidId());
             if (maid == null || !TlmResidenceAdapter.isResident(maid)
                     && ContractCompanionState.mode(maid) != ContractCompanionState.Mode.RESIDENT) seen.add(active.bindingId());
@@ -198,6 +201,7 @@ public final class ContractCompanionService {
     }
     private static boolean owned(Player owner, ItemStack carrier) {
         return !ContractTransferSafetyService.isProjectionPhantom(carrier)
+                && com.maidweapon.forge.api.ContractAuthorization.allows(owner, carrier)
                 && MaidInfusion.isInfused(carrier) && ContractCarrierData.isOwner(carrier, owner);
     }
     private static boolean atHome(Player owner) { return owner.level().dimension().equals(ContractInteriorService.INTERIOR_LEVEL); }

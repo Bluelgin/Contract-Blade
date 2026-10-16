@@ -18,5 +18,21 @@ public final class ContractMasteryCreativeGuard {
             if (!trusted) channel.getCompound("MaidData").putBoolean("ClientSuppliedGrowth", true);
         }
     }
+    public static final String UNTRUSTED_CONTRACT = "MaidWeaponClientSuppliedContract";
+    public static void protectCopies(ServerPlayer player, net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket packet) {
+        ItemStack incoming = packet.getItem();
+        if (!incoming.hasTag()) return;
+        var tag = incoming.getTag();
+        if (!tag.contains("MaidData") && !tag.contains("MaidInfo") && !tag.contains("MaidWeaponFoxSpirit")
+                && !tag.contains("MaidWeaponFoxSoulSeal") && !tag.contains("MaidWeaponEmergencyFilm")
+                && !tag.contains("MaidWeaponShrineWhiteFox") && !tag.contains("MaidWeaponFoxOrigin")
+                && !tag.contains("MaidWeaponBlackFoxSwordArt")) return;
+        int slot = packet.getSlotNum();
+        ItemStack existing = slot >= 0 && slot < player.inventoryMenu.slots.size()
+                ? player.inventoryMenu.getSlot(slot).getItem() : ItemStack.EMPTY;
+        if (existing.isEmpty() || incoming.getCount() != existing.getCount()
+                || !incoming.save(new CompoundTag()).equals(existing.save(new CompoundTag())))
+            incoming.getOrCreateTag().putBoolean(UNTRUSTED_CONTRACT, true);
+    }
     private ContractMasteryCreativeGuard() { }
 }

@@ -113,7 +113,7 @@ public final class FoxCompanionValidation {
             var menu = new MaidInjectorMenu(9, owner.getInventory(), table);
             owner.containerMenu = menu;
             owner.getInventory().setItem(0, ItemStack.EMPTY);
-            var soulItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:film"));
+            var soulItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:smart_slab_empty"));
             menu.getSlot(0).set(white);
             menu.getSlot(1).set(new ItemStack(soulItem));
             maid.moveTo(owner.getX() + 40, owner.getY(), owner.getZ(), 0, 0);

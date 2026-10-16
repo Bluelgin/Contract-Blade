@@ -25,6 +25,26 @@ public final class ContractWeaponLocator {
         return result;
     }
 
+    /** Reject two real copies of one binding; native anvil/crafting result previews are not physical carriers. */
+    public static boolean hasConflictingCarrier(Player player, ItemStack carrier) {
+        String binding = ContractCarrierData.getBindingId(carrier);
+        if (binding == null || binding.isEmpty()) return false;
+        var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<ItemStack, Boolean>());
+        seen.add(carrier);
+        for (int i=0; i<player.getInventory().getContainerSize(); i++) conflict(seen, binding, player.getInventory().getItem(i));
+        conflict(seen, binding, player.containerMenu.getCarried());
+        for (var slot : player.containerMenu.slots) {
+            if (slot.container instanceof net.minecraft.world.inventory.ResultContainer) continue;
+            conflict(seen, binding, slot.getItem());
+        }
+        return seen.size() > 1;
+    }
+    private static void conflict(java.util.Set<ItemStack> seen, String binding, ItemStack stack) {
+        if (!stack.isEmpty() && (!stack.hasTag() || !stack.getTag().getBoolean("MaidWeaponClientSuppliedContract"))
+                && !ContractTransferSafetyService.isProjectionPhantom(stack)
+                && !ContractCarrierData.isContractSuperseded(stack) && binding.equals(ContractCarrierData.getBindingId(stack))) seen.add(stack);
+    }
+
     private static void index(java.util.Map<String, ItemStack> result, ItemStack stack) {
         // Consumed stacks can retain NBT until their inventory slot is cleared.
         if (stack.isEmpty()) return;

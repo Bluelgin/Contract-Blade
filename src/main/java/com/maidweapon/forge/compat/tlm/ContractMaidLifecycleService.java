@@ -78,6 +78,12 @@ public final class ContractMaidLifecycleService {
                 || !MaidInfusion.isWeapon(weaponStack)) {
             return false;
         }
+        String embedded = entity.getPersistentData().getString("MaidWeaponEmbeddedSpirit");
+        if ((com.maidweapon.forge.system.fox.FoxSpiritState.WHITE.equals(embedded)
+                || com.maidweapon.forge.system.fox.FoxSpiritState.BLACK.equals(embedded)
+                || com.maidweapon.forge.system.fox.FoxSpiritState.valid(entity.getPersistentData().getCompound(
+                        com.maidweapon.forge.system.fox.FoxSpiritState.ROOT)))
+                && !com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(weaponStack)) return false;
         if (ContractCarrierData.isContractSuperseded(weaponStack)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.superseded_contract"), true);
@@ -124,7 +130,15 @@ public final class ContractMaidLifecycleService {
 
         CompoundTag emergencyProgress = entity.getPersistentData().getCompound(
                 ContractMaidKeys.EMERGENCY_FILM_PROGRESS).copy();
-        CompoundTag maidEntityTag = TlmEntityAdapter.save(entity);
+        CompoundTag maidEntityTag;
+        try { maidEntityTag = TlmEntityAdapter.save(entity); }
+        catch (RuntimeException failure) {
+            weaponStack.setTag(originalWeaponTag);
+            if (originalEntityBinding.isEmpty()) entity.getPersistentData().remove(ContractMaidKeys.ENTITY_BINDING_ID);
+            else entity.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, originalEntityBinding);
+            LOGGER.error("[Contract Blade] Serialization failed; live maid retained", failure);
+            return false;
+        }
         if (!emergencyProgress.isEmpty()) {
             CompoundTag storedForgeData = maidEntityTag.getCompound("ForgeData");
             storedForgeData.remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
@@ -164,8 +178,11 @@ public final class ContractMaidLifecycleService {
             return false;
         }
 
+        SoulTalismanService.captured(player, weaponStack);
+        com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.stored(player, weaponStack);
         com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weaponStack);
         entity.getPersistentData().remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
+        entity.getPersistentData().putBoolean("MaidWeaponCoreStorageTransfer", true);
         entity.discard();
         com.maidweapon.forge.system.deployment.ContractCompanionState.clear(weaponStack);
         MaidCareTaskSystem.clearOriginalTask(weaponStack);
@@ -204,6 +221,12 @@ public final class ContractMaidLifecycleService {
             return false;
         }
 
+        if (!maidEntityTag.hasUUID("Owner") || !player.getUUID().equals(maidEntityTag.getUUID("Owner"))
+                || !maidEntityTag.hasUUID("UUID") || !maidEntityTag.getUUID("UUID").toString()
+                    .equals(ContractCarrierData.getBoundMaidUUID(weaponStack))) return false;
+        String storedBinding = maidEntityTag.getCompound("ForgeData").getString(ContractMaidKeys.ENTITY_BINDING_ID);
+        if (!storedBinding.isEmpty() && !storedBinding.equals(ContractCarrierData.getBindingId(weaponStack))) return false;
+
         try {
             Class<?> maidClass = TlmEntityAdapter.maidClass();
             if (maidClass == null) return false;
@@ -211,6 +234,7 @@ public final class ContractMaidLifecycleService {
                     .newInstance(player.level());
 
             TlmEntityAdapter.load(maid, maidEntityTag);
+            maid.getPersistentData().remove("MaidWeaponNativeStorageTransfer");
             String bindingId = ContractCarrierData.ensureBindingId(weaponStack);
             maid.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, bindingId);
             TlmEntityAdapter.tame(maid, player);
@@ -235,6 +259,7 @@ public final class ContractMaidLifecycleService {
             }
 
             prepareManifestedMaid(player, weaponStack, maid);
+            SoulTalismanService.captured(player, weaponStack); // rotate carrier receipt on each manifest/capture generation
             ContractMaidStorage.remove(weaponStack);
 
             if (notifyPlayer) {

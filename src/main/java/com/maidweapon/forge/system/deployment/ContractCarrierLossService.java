@@ -30,6 +30,9 @@ public final class ContractCarrierLossService {
         Candidate candidate;
         long nextAttempt;
         boolean durabilityConfirmed;
+        boolean deliveryReserved;
+        boolean quarantined;
+        int attempts;
         Task(Candidate candidate, boolean durabilityConfirmed) {
             this.candidate = candidate; this.durabilityConfirmed = durabilityConfirmed;
         }
@@ -43,7 +46,13 @@ public final class ContractCarrierLossService {
 
     /** Called only after actual durability consumption, never from generic Forge destruction events. */
     public static void scheduleDestroyed(Player player, String maidId, String bindingId, ItemStack snapshot) {
-        if (maidId == null || maidId.isEmpty() || bindingId == null || bindingId.isEmpty()) return;
+        boolean unresolved = maidId == null || maidId.isEmpty() || bindingId == null || bindingId.isEmpty();
+        if (unresolved) {
+            if (snapshot.isEmpty() || !MaidInfusion.isInfused(snapshot)) return;
+            // A recovery task key is not a fabricated BindingId. Retain unknown legacy identity without running it.
+            bindingId = "unresolved:" + UUID.randomUUID();
+            maidId = maidId == null ? "" : maidId;
+        }
         var journal = ContractCarrierLossJournal.get(player.getServer());
         var pending = journal.pending.computeIfAbsent(player.getUUID(), ignored -> new LinkedHashMap<>());
         Task existing = pending.get(bindingId);
@@ -63,8 +72,18 @@ public final class ContractCarrierLossService {
             if (changed) journal.setDirty();
             return;
         }
-        pending.put(bindingId, new Task(new Candidate(maidId, bindingId, snapshot.copy(), clock(player)), true));
+        var task = new Task(new Candidate(maidId, bindingId, snapshot.copy(), clock(player)), true);
+        task.quarantined = unresolved;
+        pending.put(bindingId, task);
         journal.setDirty();
+    }
+
+    public static boolean confirmedSnapshot(Player player, ItemStack snapshot) {
+        if (player == null || player.getServer() == null || snapshot.isEmpty()) return false;
+        var queue = ContractCarrierLossJournal.get(player.getServer()).pending.get(player.getUUID());
+        var task = queue == null ? null : queue.get(com.maidweapon.forge.system.contract.ContractCarrierData.getBindingId(snapshot));
+        return task != null && task.durabilityConfirmed
+                && task.candidate.snapshot().save(new net.minecraft.nbt.CompoundTag()).equals(snapshot.save(new net.minecraft.nbt.CompoundTag()));
     }
 
     public static boolean hasPending(Player player) {
@@ -93,6 +112,7 @@ public final class ContractCarrierLossService {
             // Old journals did not prove that a destruction event came from durability.
             // Preserve their only snapshots, but never run an unproven rescue.
             if (!task.durabilityConfirmed) continue;
+            if (task.deliveryReserved || task.quarantined || task.attempts >= 12) continue;
             // Rotate every retained task: a failed first entry cannot starve later ones.
             if (now - candidate.detectedAt() >= CARRIER_LOSS_CONFIRM_TICKS
                     && now >= task.nextAttempt && restores < RESTORES_PER_PLAYER
@@ -100,6 +120,7 @@ public final class ContractCarrierLossService {
                 restores++;
                 budget.players.put(player.getUUID(), restores);
                 budget.used++;
+                task.attempts++;
                 task.nextAttempt = now + RETRY_TICKS;
                 changed = true;
                 try {
@@ -118,6 +139,28 @@ public final class ContractCarrierLossService {
 
     private static long clock(Player player) {
         return player.getServer().overworld().getGameTime();
+    }
+
+    private static boolean reserveDelivery(Player player, Candidate candidate, ItemStack film) {
+        var journal = ContractCarrierLossJournal.get(player.getServer());
+        var queue = journal.pending.get(player.getUUID());
+        var task = queue == null ? null : queue.get(candidate.bindingId());
+        if (task == null || task.deliveryReserved) return false;
+        var receipt = film.getTag().getCompound(com.maidweapon.forge.compat.tlm.SoulTalismanService.EMERGENCY).copy();
+        receipt.putString("Kind", "EMERGENCY");
+        try { com.maidweapon.forge.system.MaidEntityDataCodec.write(receipt, film.getTag().getCompound("MaidInfo")); }
+        catch (java.io.IOException unsafe) { return false; }
+        if (receipt.contains("Fox") && !com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer())
+                .owns(receipt.getCompound("Fox"), "WEAPON")) return false;
+        task.deliveryReserved = true; journal.setDirty();
+        com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer()).transfer(candidate.maidId(), receipt);
+        if (receipt.contains("Fox")) {
+            var fox = receipt.getCompound("Fox");
+            if (!com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(fox, "WEAPON")) return false;
+            com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(fox, "EMERGENCY");
+        }
+        player.getServer().overworld().getDataStorage().save();
+        return true;
     }
 
     private static boolean deliverEmergencyFilm(Player player, ItemStack film) {
@@ -149,7 +192,9 @@ public final class ContractCarrierLossService {
             if (maid == null) {
                 ItemStack film = TouhouLittleMaidHelper.createEmergencyResurrectionFilm(
                         player, snapshot, null);
-                if (!film.isEmpty() && deliverEmergencyFilm(player, film)) {
+                if (!film.isEmpty() && reserveDelivery(player, candidate, film) && deliverEmergencyFilm(player, film)) {
+                    if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+                        player.getServer().getPlayerList().saveAll();
                     completed.accept(player, candidate);
                     player.displayClientMessage(Component.translatable(
                             "maid_weapon.message.carrier_destroyed_film_created"), false);
@@ -174,9 +219,19 @@ public final class ContractCarrierLossService {
                     com.maidweapon.forge.compat.tlm.ContractMaidKeys.EMERGENCY_FILM_PROGRESS,
                     snapshot.getTag().getCompound("MaidData").copy());
         }
+        if (com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(snapshot)) {
+            var fox = com.maidweapon.forge.system.fox.FoxSpiritState.resident(snapshot);
+            if (!com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(fox, "WEAPON")) return false;
+            maid.getPersistentData().put(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT, fox.copy());
+            com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(fox, "FREE_MAID");
+        }
         ContractMaidRuntimeService.cleanupBeforeRecall(player, snapshot, maid);
         maid.getPersistentData().remove(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
         ContractCompanionState.clear(maid);
+        var transferJournal = com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer());
+        var free = transferJournal.transfer(candidate.maidId());
+        free.putUUID("Owner", player.getUUID()); free.putString("Kind", "FREE_MAID");
+        transferJournal.transfer(candidate.maidId(), free);
         completed.accept(player, candidate);
         player.displayClientMessage(Component.translatable(
                 "maid_weapon.message.carrier_destroyed_maid_released"), false);

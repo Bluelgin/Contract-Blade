@@ -63,22 +63,35 @@ public final class MaidBondCombatHandler {
         if (!TouhouLittleMaidHelper.isMaidEntity(event.getEntity())) return;
         Player owner = getOwner(event.getEntity());
         if (owner == null) return;
-        if (preventContractDeath(owner, event.getEntity())) event.setCanceled(true);
+        if (protectContractDeath(owner, event.getEntity()) != DeathProtection.NOT_CONTRACT) event.setCanceled(true);
     }
 
-    /** Called before TLM's custom death pipeline as well as vanilla death. */
+    public enum DeathProtection { NOT_CONTRACT, RECALLED, LIVE_PROTECTED_RECALL_FAILED }
+    /** True means data was committed and recall completed, not merely that death was intercepted. */
     public static boolean preventContractDeath(Player owner, LivingEntity maid) {
-        if (maid.level().isClientSide) return false;
-        String maidId = maid.getStringUUID();
+        return protectContractDeath(owner, maid) == DeathProtection.RECALLED;
+    }
+    public static DeathProtection protectContractDeath(Player owner, LivingEntity maid) {
+        if (maid.level().isClientSide) return DeathProtection.NOT_CONTRACT;
         var carrier = com.maidweapon.forge.system.deployment.ContractEmergencyCarrier.resolve(owner, maid);
         ItemStack weapon = carrier.stack();
-        if (!isActiveContract(owner, weapon)) return false;
-
-        maid.setHealth(1.0f);
-        spend(weapon, MaidWeaponConfig.RESONANCE_MAID_EMERGENCY_COST.get());
-        InfusedMaidDeploymentSystem.forceRecall(owner, maidId, weapon, 300);
-        carrier.publish(owner);
-        return true;
+        if (!isActiveContract(owner, weapon)
+                || !com.maidweapon.forge.api.ContractAuthorization.allows(owner, weapon)) return DeathProtection.NOT_CONTRACT;
+        maid.setHealth(Math.max(1.0f, maid.getHealth()));
+        var failure = com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.incident(owner, weapon);
+        if (failure.getString("Status").equals("PENDING") && failure.getString("Reason").equals("RECALL_FAILED")
+                && owner.getServer().overworld().getGameTime() - failure.getLong("Detected") < 40)
+            return DeathProtection.LIVE_PROTECTED_RECALL_FAILED;
+        boolean recalled;
+        try { recalled = InfusedMaidDeploymentSystem.forceRecall(owner, maid.getStringUUID(), weapon, 300); }
+        catch (RuntimeException recallError) { recalled = false; }
+        if (recalled) {
+            spend(weapon, MaidWeaponConfig.RESONANCE_MAID_EMERGENCY_COST.get());
+            carrier.publish(owner);
+            return DeathProtection.RECALLED;
+        }
+        com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.recallFailed(owner, weapon);
+        return DeathProtection.LIVE_PROTECTED_RECALL_FAILED;
     }
 
     @SubscribeEvent

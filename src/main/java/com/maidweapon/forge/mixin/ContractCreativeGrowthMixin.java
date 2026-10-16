@@ -15,7 +15,10 @@ public abstract class ContractCreativeGrowthMixin {
     @Inject(method = {"handle(Lnet/minecraft/network/protocol/game/ServerGamePacketListener;)V",
             "m_5797_(Lnet/minecraft/network/protocol/game/ServerGamePacketListener;)V"}, at = @At("HEAD"), require = 1)
     private void contractblade$sanitize(ServerGamePacketListener listener, CallbackInfo ci) {
-        if (listener instanceof ServerGamePacketListenerImpl connection && connection.player.getServer().isSameThread())
-            ContractMasteryCreativeGuard.sanitize(connection.player, ((ServerboundSetCreativeModeSlotPacket)(Object)this).getItem());
+        if (listener instanceof ServerGamePacketListenerImpl connection && connection.player.getServer().isSameThread()) {
+            var packet = (ServerboundSetCreativeModeSlotPacket)(Object)this;
+            ContractMasteryCreativeGuard.protectCopies(connection.player, packet);
+            ContractMasteryCreativeGuard.sanitize(connection.player, packet.getItem());
+        }
     }
 }

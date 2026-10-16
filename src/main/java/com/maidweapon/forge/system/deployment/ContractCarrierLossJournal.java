@@ -28,10 +28,26 @@ public final class ContractCarrierLossJournal extends SavedData {
                     entry.getString("Binding"), ItemStack.of(entry.getCompound("Carrier")), entry.getLong("Detected"));
             var task = new ContractCarrierLossService.Task(candidate, entry.getBoolean("DurabilityConfirmed"));
             task.nextAttempt = entry.getLong("Retry");
+            task.deliveryReserved = entry.getBoolean("DeliveryReserved");
+            task.quarantined = entry.getBoolean("Quarantined");
+            task.attempts = Math.max(0, entry.getInt("Attempts"));
             journal.pending.computeIfAbsent(entry.getUUID("Player"), ignored -> new LinkedHashMap<>())
                     .put(candidate.bindingId(), task);
         }
         return journal;
+    }
+
+    public String describe(UUID owner) {
+        var queue = pending.get(owner);
+        if (queue == null) return "none";
+        var summaries = new java.util.ArrayList<String>();
+        for (var task : queue.values()) {
+            if (summaries.size() >= 8) break;
+            summaries.add(task.candidate.bindingId() + "/" + task.candidate.maidId()
+                    + " attempts=" + task.attempts + " deliveryReserved=" + task.deliveryReserved
+                    + " quarantined=" + task.quarantined);
+        }
+        return "count=" + queue.size() + " " + summaries;
     }
 
     @Override public CompoundTag save(CompoundTag root) {
@@ -46,6 +62,9 @@ public final class ContractCarrierLossJournal extends SavedData {
             entry.putLong("Detected", candidate.detectedAt());
             entry.putLong("Retry", task.nextAttempt);
             entry.putBoolean("DurabilityConfirmed", task.durabilityConfirmed);
+            entry.putBoolean("DeliveryReserved", task.deliveryReserved);
+            entry.putBoolean("Quarantined", task.quarantined);
+            entry.putInt("Attempts", task.attempts);
             tasks.add(entry);
         }));
         root.put("Tasks", tasks);
