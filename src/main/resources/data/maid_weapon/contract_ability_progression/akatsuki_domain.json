@@ -15,8 +15,9 @@
         "maid_weapon:precision_tolerance": 0.04,
         "maid_weapon:aerial_hover_ticks": 0,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.05,
-        "maid_weapon:space_cut_level_cap": 1
+        "maid_weapon:space_cut_multiplier": 0.1,
+        "maid_weapon:space_cut_level_cap": 2,
+        "maid_weapon:resonance_hit_ratio": 0.12
       }
     },
     {
@@ -31,8 +32,9 @@
         "maid_weapon:precision_tolerance": 0.04,
         "maid_weapon:aerial_hover_ticks": 0,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.08,
-        "maid_weapon:space_cut_level_cap": 2
+        "maid_weapon:space_cut_multiplier": 0.13,
+        "maid_weapon:space_cut_level_cap": 3,
+        "maid_weapon:resonance_hit_ratio": 0.16
       }
     },
     {
@@ -47,8 +49,9 @@
         "maid_weapon:precision_tolerance": 0.04,
         "maid_weapon:aerial_hover_ticks": 0,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.12,
-        "maid_weapon:space_cut_level_cap": 4
+        "maid_weapon:space_cut_multiplier": 0.17,
+        "maid_weapon:space_cut_level_cap": 5,
+        "maid_weapon:resonance_hit_ratio": 0.2
       }
     },
     {
@@ -63,8 +66,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 0,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.16,
-        "maid_weapon:space_cut_level_cap": 6
+        "maid_weapon:space_cut_multiplier": 0.21,
+        "maid_weapon:space_cut_level_cap": 8,
+        "maid_weapon:resonance_hit_ratio": 0.24
       }
     },
     {
@@ -79,8 +83,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 0,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.2,
-        "maid_weapon:space_cut_level_cap": 10
+        "maid_weapon:space_cut_multiplier": 0.25,
+        "maid_weapon:space_cut_level_cap": 12,
+        "maid_weapon:resonance_hit_ratio": 0.28
       }
     },
     {
@@ -95,8 +100,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.25,
-        "maid_weapon:space_cut_level_cap": 16
+        "maid_weapon:space_cut_multiplier": 0.3,
+        "maid_weapon:space_cut_level_cap": 20,
+        "maid_weapon:resonance_hit_ratio": 0.32
       }
     },
     {
@@ -111,8 +117,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.3,
-        "maid_weapon:space_cut_level_cap": 24
+        "maid_weapon:space_cut_multiplier": 0.35,
+        "maid_weapon:space_cut_level_cap": 30,
+        "maid_weapon:resonance_hit_ratio": 0.36
       }
     },
     {
@@ -127,8 +134,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
         "maid_weapon:debt_lifetime": 120,
-        "maid_weapon:space_cut_multiplier": 0.36,
-        "maid_weapon:space_cut_level_cap": 40
+        "maid_weapon:space_cut_multiplier": 0.4,
+        "maid_weapon:space_cut_level_cap": 50,
+        "maid_weapon:resonance_hit_ratio": 0.4
       }
     },
     {
@@ -143,8 +151,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
         "maid_weapon:debt_lifetime": 200,
-        "maid_weapon:space_cut_multiplier": 0.42,
-        "maid_weapon:space_cut_level_cap": 64
+        "maid_weapon:space_cut_multiplier": 0.46,
+        "maid_weapon:space_cut_level_cap": 80,
+        "maid_weapon:resonance_hit_ratio": 0.44
       }
     },
     {
@@ -159,8 +168,9 @@
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
         "maid_weapon:debt_lifetime": 200,
-        "maid_weapon:space_cut_multiplier": 0.5,
-        "maid_weapon:space_cut_level_cap": 0
+        "maid_weapon:space_cut_multiplier": 0.55,
+        "maid_weapon:space_cut_level_cap": 0,
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     }
   ]

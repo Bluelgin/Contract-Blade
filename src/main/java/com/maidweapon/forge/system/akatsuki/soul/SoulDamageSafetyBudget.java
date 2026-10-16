@@ -28,7 +28,8 @@ public final class SoulDamageSafetyBudget {
 
   private static final class Window {
     final Deque<Charge> charges = new ArrayDeque<>();
-    long lastCut = Long.MIN_VALUE / 2, burstReady, burstUntil, touched;
+    long lastCut = Long.MIN_VALUE / 2, lastResonance = Long.MIN_VALUE / 2,
+        passiveHoldUntil, burstReady, burstUntil, touched;
 
     double used(long now, int ticks) {
       while (!charges.isEmpty() && now - charges.peekFirst().tick() >= 200) charges.removeFirst();
@@ -59,7 +60,8 @@ public final class SoulDamageSafetyBudget {
     var t = targets.computeIfAbsent(target, id -> new Window());
     var p = players.computeIfAbsent(owner, id -> new Window());
     boolean burst = mode == SoulDamagePolicy.Mode.SOUL_BURST;
-    if (burst ? now < t.burstReady : now < t.burstUntil || now - t.lastCut < limits.cutGap())
+    if (burst ? now < t.burstReady : now < t.burstUntil || now - t.lastCut < limits.cutGap()
+        || now < t.passiveHoldUntil)
       return 0;
     double amount =
         Math.max(
@@ -97,11 +99,40 @@ public final class SoulDamageSafetyBudget {
         || players.size() >= 1024 && !players.containsKey(owner)) return 0;
     var t = targets.computeIfAbsent(target, id -> new Window());
     var p = players.computeIfAbsent(owner, id -> new Window());
-    if (now < t.burstUntil || now - t.lastCut < limits.cutGap()) return 0;
+    if (now < t.burstUntil || now - t.lastCut < limits.cutGap()
+        || now < t.passiveHoldUntil) return 0;
     t.add(now, request);
     p.add(now, request);
     t.lastCut = now;
     return request;
+  }
+
+  /**
+   * One owner-authenticated echo per target every 10 ticks. Echoes use the SAME
+   * global target/player safety windows as automatic cuts and soul bursts, but not
+   * the ambient cut cooldown. The native hit gets priority over the ambient domain.
+   */
+  public double reserveResonance(
+      UUID owner, UUID target, long now, double request, Limits limits) {
+    if (!Double.isFinite(request) || request < .01 || now < 0
+        || targets.size() >= 4096 && !targets.containsKey(target)
+        || players.size() >= 1024 && !players.containsKey(owner)) return 0;
+    var t = targets.computeIfAbsent(target, id -> new Window());
+    var p = players.computeIfAbsent(owner, id -> new Window());
+    if (now < t.burstUntil || now - t.lastResonance < 10) return 0;
+    double amount = Math.max(0, Math.min(request,
+        Math.min(limits.hit(), Math.min(
+            limits.targetSecond() - t.used(now, 20),
+            Math.min(limits.playerSecond() - p.used(now, 20),
+                Math.min(limits.targetWindow() - t.used(now, 200),
+                    limits.playerWindow() - p.used(now, 200)))))));
+    if (amount < .01) return 0;
+    t.add(now, amount);
+    p.add(now, amount);
+    t.lastResonance = now;
+    // The very next ambient tick cannot crowd out a verified native sword hit.
+    t.passiveHoldUntil = Math.max(t.passiveHoldUntil, now + 6);
+    return amount;
   }
 
   public boolean burstReady(UUID target, long now) {

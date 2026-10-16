@@ -19,6 +19,20 @@ class SoulRecoveryTest {
   }
 
   @Test
+  void activeResonanceSharesDamageBudgetsWithoutStealingNativeCutCooldown() {
+    var ledger = new SoulDamageSafetyBudget();
+    var owner = java.util.UUID.randomUUID();
+    var victim = java.util.UUID.randomUUID();
+    var bounds = new SoulDamageSafetyBudget.Limits(128, 512, 384, 3072, 2048, 4, 60);
+    assertEquals(50, ledger.reserveResonance(owner, victim, 100, 50, bounds));
+    assertEquals(0, ledger.reserveResonance(owner, victim, 101, 50, bounds));
+    assertEquals(0, ledger.reserve(owner, victim, 102, SoulDamagePolicy.Mode.SPACE_CUT, 100, bounds));
+    assertEquals(100, ledger.reserve(owner, victim, 107, SoulDamagePolicy.Mode.SPACE_CUT, 100, bounds));
+    assertEquals(50, ledger.reserveResonance(owner, victim, 110, 50, bounds));
+    assertEquals(0, ledger.reserveResonance(owner, victim, 112, Double.NaN, bounds));
+  }
+
+  @Test
   void verifiedReceiptRecoversOnlyItsConfirmedRemainingAllowance() {
     var debt = new SoulDamageDebt(100, 5);
     double requested = debt.available(.45, false);
