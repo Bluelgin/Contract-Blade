@@ -99,8 +99,10 @@ public final class SoulDamageEngine {
                 AkatsukiDomainGrowth.parameter(p, "space_cut_multiplier"),
                 levelCap);
     // No configurable HP-per-hit or cumulative ceiling. float is the Minecraft API limit.
-    double amount = HITS.reserveCut(p.getUUID(), t.getUUID(), now(p),
-        Math.min(requested, Float.MAX_VALUE), SoulDamageConfig.CUT_GAP.get());
+    double amount = Double.isFinite(requested)
+        ? HITS.reserveCut(p.getUUID(), t.getUUID(), now(p),
+            Math.min(requested, Float.MAX_VALUE), SoulDamageConfig.CUT_GAP.get())
+        : 0;
     if (amount <= 0) return null;
     if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
     var reservation = SoulDamageDebtService.reserve(p, t, false, amount);
@@ -148,7 +150,8 @@ public final class SoulDamageEngine {
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
     if (!authorized(p, t, s)) return null;
     // Reserve as much of the proved debt as Minecraft's finite float API permits.
-    double request = Math.min(SoulDamageDebtService.available(p, t, true), Float.MAX_VALUE);
+    double available = SoulDamageDebtService.available(p, t, true);
+    double request = Double.isFinite(available) ? Math.min(available, Float.MAX_VALUE) : 0;
     double amount = HITS.reserveBurst(p.getUUID(), t.getUUID(), now(p),
         request, SoulDamageConfig.BURST_COOLDOWN.get());
     return amount <= 0 ? null : SoulDamageDebtService.reserve(p, t, true, amount);
