@@ -34,6 +34,9 @@ public final class ContractMaidLifecycleService {
                 || ContractCarrierData.hasMaidData(weaponStack)) {
             return false;
         }
+        var fox = com.maidweapon.forge.system.fox.FoxSpiritState.resident(weaponStack);
+        if (com.maidweapon.forge.system.fox.FoxSpiritState.valid(fox)
+                && !com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).maid(fox).isEmpty()) return false;
         CompoundTag originalWeaponTag = weaponStack.getTag() == null
                 ? null : weaponStack.getTag().copy();
         try {
@@ -71,9 +74,39 @@ public final class ContractMaidLifecycleService {
         }
     }
 
-    public static boolean capture(Player player, Entity entity, ItemStack weaponStack,
+    /** Rehouse a released, ledger-owned fox through the ordinary full-data capture transaction. */
+    public static boolean capture(Player player, Entity entity, ItemStack weaponStack, boolean notifyPlayer) {
+        if (player == null || player.level().isClientSide || entity == null || weaponStack.isEmpty()) return false;
+        var free = entity.getPersistentData().getCompound(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT);
+        boolean adopt = !com.maidweapon.forge.system.fox.FoxSpiritState.hasResident(weaponStack)
+                && com.maidweapon.forge.system.fox.FoxSpiritState.valid(free)
+                && free.getUUID("OwnerUUID").equals(player.getUUID())
+                && com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(free, "FREE_MAID")
+                && (com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).maid(free).isEmpty()
+                    || entity.getStringUUID().equals(com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).maid(free)))
+                && !ContractCarrierData.hasMaidData(weaponStack)
+                && !com.maidweapon.forge.api.IntrinsicSpiritApi.hasActiveProjection(weaponStack)
+                && !com.maidweapon.forge.system.fox.FoxSpiritState.isProtected(weaponStack);
+        var previous = weaponStack.getTag() == null ? null : weaponStack.getTag().copy();
+        if (adopt) {
+            weaponStack.getOrCreateTag().put(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT, free.copy());
+            weaponStack.getOrCreateTag().putString(com.maidweapon.forge.api.EmbeddedSpiritApi.TAG_SPIRIT_ID, free.getString("SpiritId"));
+        }
+        boolean captured = false;
+        try {
+            captured = captureBound(player, entity, weaponStack, notifyPlayer);
+            if (captured && adopt) com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(free, "WEAPON");
+            return captured;
+        } finally {
+            if (adopt && !captured) weaponStack.setTag(previous);
+        }
+    }
+
+    private static boolean captureBound(Player player, Entity entity, ItemStack weaponStack,
                                   boolean notifyPlayer) {
-        if (!TlmEntityAdapter.isMaidEntity(entity)
+        if (player == null || player.level().isClientSide || entity == null || entity.isRemoved() || !entity.isAlive()
+                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, weaponStack)
+                || !TlmEntityAdapter.isMaidEntity(entity)
                 || weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)) {
             return false;
@@ -179,8 +212,8 @@ public final class ContractMaidLifecycleService {
         }
 
         SoulTalismanService.captured(player, weaponStack);
-        com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.stored(player, weaponStack);
         com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weaponStack);
+        com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService.stored(player, weaponStack);
         entity.getPersistentData().remove(ContractMaidKeys.EMERGENCY_FILM_PROGRESS);
         entity.getPersistentData().putBoolean("MaidWeaponCoreStorageTransfer", true);
         entity.discard();
@@ -202,7 +235,10 @@ public final class ContractMaidLifecycleService {
 
     public static boolean manifest(Player player, ItemStack weaponStack, boolean notifyPlayer,
                                    java.util.function.Consumer<Entity> beforeSpawn) {
-        if (weaponStack.isEmpty()
+        if (player == null || player.level().isClientSide
+                || !com.maidweapon.forge.api.ContractAuthorization.allows(player, weaponStack)
+                || !com.maidweapon.forge.system.deployment.ContractWeaponLocator.mayManifest(player, ContractCarrierData.getBoundMaidUUID(weaponStack))
+                || weaponStack.isEmpty()
                 || !MaidInfusion.isWeapon(weaponStack)
                 || !ContractCarrierData.hasMaidData(weaponStack)
                 || ContractCarrierData.isContractSuperseded(weaponStack)) {
@@ -253,13 +289,14 @@ public final class ContractMaidLifecycleService {
             beforeSpawn.accept(maid);
 
             if (!player.level().isClientSide && !player.level().addFreshEntity(maid)) {
+                com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer()).worldPresent(maid.getStringUUID(), false);
                 LOGGER.warn("[MaidWeapon] Maid entity {} could not be added; keeping weapon data for retry",
                         maid.getUUID());
                 return false;
             }
 
             prepareManifestedMaid(player, weaponStack, maid);
-            SoulTalismanService.captured(player, weaponStack); // rotate carrier receipt on each manifest/capture generation
+            SoulTalismanService.manifested(player, weaponStack);
             ContractMaidStorage.remove(weaponStack);
             net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new com.maidweapon.forge.api.event.ContractMaidManifestedEvent(player,maid,weaponStack));
 

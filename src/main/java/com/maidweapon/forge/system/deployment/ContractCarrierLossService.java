@@ -141,28 +141,6 @@ public final class ContractCarrierLossService {
         return player.getServer().overworld().getGameTime();
     }
 
-    private static boolean reserveDelivery(Player player, Candidate candidate, ItemStack film) {
-        var journal = ContractCarrierLossJournal.get(player.getServer());
-        var queue = journal.pending.get(player.getUUID());
-        var task = queue == null ? null : queue.get(candidate.bindingId());
-        if (task == null || task.deliveryReserved) return false;
-        var receipt = film.getTag().getCompound(com.maidweapon.forge.compat.tlm.SoulTalismanService.EMERGENCY).copy();
-        receipt.putString("Kind", "EMERGENCY");
-        try { com.maidweapon.forge.system.MaidEntityDataCodec.write(receipt, film.getTag().getCompound("MaidInfo")); }
-        catch (java.io.IOException unsafe) { return false; }
-        if (receipt.contains("Fox") && !com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer())
-                .owns(receipt.getCompound("Fox"), "WEAPON")) return false;
-        task.deliveryReserved = true; journal.setDirty();
-        com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer()).transfer(candidate.maidId(), receipt);
-        if (receipt.contains("Fox")) {
-            var fox = receipt.getCompound("Fox");
-            if (!com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(fox, "WEAPON")) return false;
-            com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(fox, "EMERGENCY");
-        }
-        player.getServer().overworld().getDataStorage().save();
-        return true;
-    }
-
     private static boolean deliverEmergencyFilm(Player player, ItemStack film) {
         if (film.isEmpty()) return false;
         ItemStack remainder = film.copy();
@@ -183,6 +161,16 @@ public final class ContractCarrierLossService {
             Player player, Candidate candidate, java.util.function.BiConsumer<Player, Candidate> completed) {
         ItemStack snapshot = candidate.snapshot();
         Entity maid = ContractWeaponLocator.findManifestedMaid(player, candidate.maidId());
+        Entity other = ContractWeaponLocator.findEntity(player, candidate.maidId());
+        if (other != null && other != maid || maid != null && !candidate.bindingId().equals(
+                maid.getPersistentData().getString(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID))) return false;
+        var presence = com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer()).transfer(candidate.maidId());
+        if (maid == null && presence.getBoolean("WorldPresent")) {
+            freeDestination(player, candidate, true); // unload is not permission to emit a backup film or respawn
+            completed.accept(player, candidate);
+            player.displayClientMessage(Component.translatable("maid_weapon.recovery.still_away"), false);
+            return true;
+        }
 
         if (maid == null && MaidInfusion.containsMaid(snapshot)) {
             ItemStack transientCarrier = snapshot.copy();
@@ -192,7 +180,11 @@ public final class ContractCarrierLossService {
             if (maid == null) {
                 ItemStack film = TouhouLittleMaidHelper.createEmergencyResurrectionFilm(
                         player, snapshot, null);
-                if (!film.isEmpty() && reserveDelivery(player, candidate, film) && deliverEmergencyFilm(player, film)) {
+                if (!film.isEmpty() && deliverEmergencyFilm(player, film)) {
+                    var fox = com.maidweapon.forge.system.fox.FoxSpiritState.resident(snapshot);
+                    if (com.maidweapon.forge.system.fox.FoxSpiritState.valid(fox))
+                        com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(fox, "EMERGENCY");
+                    freeDestination(player, candidate, false);
                     if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
                         player.getServer().getPlayerList().saveAll();
                     completed.accept(player, candidate);
@@ -203,14 +195,22 @@ public final class ContractCarrierLossService {
                             snapshot.getItem(), candidate.maidId());
                     return true;
                 }
+                if (com.maidweapon.forge.compat.tlm.ContractMaidStorage.read(player, snapshot) == null) {
+                    freeDestination(player, candidate, false);
+                    completed.accept(player, candidate);
+                    player.displayClientMessage(Component.translatable("maid_weapon.recovery.native_backup"), false);
+                    return true;
+                }
                 return false;
             }
         }
 
         if (maid == null) {
-            // Never invent a replacement or delete state when the live maid may simply
-            // be in an unloaded chunk. Keep the candidate retryable.
-            return false;
+            // The maid may be unloaded. Detach on her next join; never create a replacement.
+            freeDestination(player, candidate, !presence.contains("WorldPresent") || presence.getBoolean("WorldPresent"));
+            completed.accept(player, candidate);
+            player.displayClientMessage(Component.translatable("maid_weapon.recovery.native_backup"), false);
+            return true;
         }
 
         if (!snapshot.isEmpty() && snapshot.getTag() != null
@@ -228,10 +228,7 @@ public final class ContractCarrierLossService {
         ContractMaidRuntimeService.cleanupBeforeRecall(player, snapshot, maid);
         maid.getPersistentData().remove(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
         ContractCompanionState.clear(maid);
-        var transferJournal = com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer());
-        var free = transferJournal.transfer(candidate.maidId());
-        free.putUUID("Owner", player.getUUID()); free.putString("Kind", "FREE_MAID");
-        transferJournal.transfer(candidate.maidId(), free);
+        freeDestination(player, candidate, true);
         completed.accept(player, candidate);
         player.displayClientMessage(Component.translatable(
                 "maid_weapon.message.carrier_destroyed_maid_released"), false);
@@ -241,6 +238,22 @@ public final class ContractCarrierLossService {
         return true;
     }
 
+
+    private static void freeDestination(Player owner, Candidate candidate, boolean worldPresent) {
+        var journal = com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(owner.getServer());
+        if (!journal.knownSchema()) return;
+        var free = new net.minecraft.nbt.CompoundTag(); free.putUUID("Owner", owner.getUUID());
+        free.putString("Kind", "FREE_MAID"); free.putString("Binding", candidate.bindingId());
+        free.putBoolean("WorldPresent", worldPresent);
+        var fox = com.maidweapon.forge.system.fox.FoxSpiritState.resident(candidate.snapshot());
+        if (com.maidweapon.forge.system.fox.FoxSpiritState.valid(fox)) {
+            free.put("Fox", fox.copy());
+            if (worldPresent && com.maidweapon.forge.system.fox.FoxSpiritLedger.get(owner.getServer()).owns(fox, "WEAPON"))
+                com.maidweapon.forge.system.fox.FoxSpiritLedger.get(owner.getServer()).record(fox, "FREE_MAID");
+        }
+        journal.transfer(candidate.maidId(), free);
+        journal.clearIncident(candidate.bindingId());
+    }
 
     public static void clearSession() { BUDGETS.clear(); }
     private ContractCarrierLossService() {}

@@ -1,3 +1,5 @@
+> 本文记录 PR #13/#14 的历史机制与当时验证。当前精简分支请阅读 [契约生命周期精简](CONTRACT_LIFECYCLE_SIMPLIFICATION.md) 和 [当前验证记录](SIMPLIFICATION_VALIDATION.md)；旧备份回执/待审查流程已不再作为操作权限。
+
 # 阶段三验证与交付记录
 
 ## 基线与环境

@@ -20,15 +20,15 @@ public final class ContractAnomalyEvents {
         if (event.getLevel().isClientSide || !TlmEntityAdapter.isMaidEntity(maid) || !(maid instanceof TamableAnimal tamed)
                 || tamed.getOwnerUUID() == null || maid.getServer() == null
                 || maid.getPersistentData().getBoolean("MaidWeaponCoreStorageTransfer")) return;
+        var reason = maid.getRemovalReason();
+        if (reason == Entity.RemovalReason.KILLED || reason == Entity.RemovalReason.DISCARDED)
+            ContractRecoveryJournal.get(maid.getServer()).worldPresent(maid.getStringUUID(), false);
         var owner = maid.getServer().getPlayerList().getPlayer(tamed.getOwnerUUID());
-        if (owner == null) {
-            ContractAnomalyRecoveryService.observeOffline(maid, tamed.getOwnerUUID()); return;
-        }
+        if (owner == null) return;
         var carrier = ContractEmergencyCarrier.resolve(owner, maid).stack();
         if (carrier.isEmpty() || ContractCarrierData.hasMaidEntityData(carrier)
                 || maid.getPersistentData().getBoolean("MaidWeaponNativeStorageTransfer")
                 || ContractAnomalyRecoveryService.state(owner, carrier) == ContractAnomalyRecoveryService.State.TRANSITIONING) return;
-        var reason = maid.getRemovalReason();
         if (reason == Entity.RemovalReason.KILLED || reason == Entity.RemovalReason.DISCARDED) {
             if (maid instanceof net.minecraft.world.entity.LivingEntity living
                     && ContractAnomalyRecoveryService.preserveRemoved(owner, carrier, living)) {
@@ -37,13 +37,26 @@ public final class ContractAnomalyEvents {
         }
         // UNLOADED_TO_CHUNK, UNLOADED_WITH_PLAYER and CHANGED_DIMENSION are not death evidence.
     }
-    @SubscribeEvent public static void joined(EntityJoinLevelEvent event) {
-        if (!event.getLevel().isClientSide && event.getEntity().getPersistentData().getBoolean("MaidWeaponRecoveryRejected")) event.setCanceled(true);
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+    public static void joined(EntityJoinLevelEvent event) {
+        var entity = event.getEntity();
+        if (event.getLevel().isClientSide || !TlmEntityAdapter.isMaidEntity(entity)) return;
+        if (com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.rejected(entity)) { event.setCanceled(true); return; }
+        entity.getPersistentData().remove("MaidWeaponRecoveryRejected"); // legacy diagnostic is not permanent authority
+        var journal = ContractRecoveryJournal.get(entity.getServer());
+        String binding = entity.getPersistentData().getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID);
+        var destination = journal.transfer(entity.getStringUUID());
+        if (destination.getString("Kind").equals("FREE_MAID") && binding.equals(destination.getString("Binding"))) {
+            entity.getPersistentData().remove(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID);
+            if (destination.contains("Fox")) entity.getPersistentData().put(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT, destination.getCompound("Fox").copy());
+        }
+        if (event.loadedFromDisk()) journal.worldPresent(entity.getStringUUID(), true);
+        // Fresh spawns are recorded after successful addEntity, not during a cancellable join event.
     }
     @SubscribeEvent public static void tick(TickEvent.PlayerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.player instanceof ServerPlayer player && player.tickCount % 100 == 0)
             ContractAnomalyRecoveryService.reconcile(player);
     }
-    @SubscribeEvent public static void stopped(ServerStoppedEvent event) { ContractAnomalyRecoveryService.clearSession(); }
+    @SubscribeEvent public static void stopped(ServerStoppedEvent event) { ContractAnomalyRecoveryService.clearSession(); com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.clearSession(); }
     private ContractAnomalyEvents() { }
 }

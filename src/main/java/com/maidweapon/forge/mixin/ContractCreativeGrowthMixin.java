@@ -17,7 +17,6 @@ public abstract class ContractCreativeGrowthMixin {
     private void contractblade$sanitize(ServerGamePacketListener listener, CallbackInfo ci) {
         if (listener instanceof ServerGamePacketListenerImpl connection && connection.player.getServer().isSameThread()) {
             var packet = (ServerboundSetCreativeModeSlotPacket)(Object)this;
-            ContractMasteryCreativeGuard.protectCopies(connection.player, packet);
             ContractMasteryCreativeGuard.sanitize(connection.player, packet.getItem());
         }
     }

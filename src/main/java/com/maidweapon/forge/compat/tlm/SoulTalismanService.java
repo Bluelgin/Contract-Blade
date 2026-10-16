@@ -8,11 +8,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import java.util.UUID;
 
-/** Normal transfer uses soul slabs. Films, emergency payloads and fox seals never enter the ordinary path. */
+/** Normal transfer uses soul slabs. Only the current destination is recorded; no rotating receipts. */
 public final class SoulTalismanService {
-    public static final String RECEIPT = "MaidWeaponSoulTransfer";
+    public static final String RECEIPT = "MaidWeaponSoulTransfer"; // legacy binding/interior compatibility
     public static final String EMERGENCY = "MaidWeaponEmergencyFilm";
     private static String id(ItemStack item) { return BuiltInRegistries.ITEM.getKey(item.getItem()).toString(); }
     public static boolean empty(ItemStack item) {
@@ -25,58 +24,58 @@ public final class SoulTalismanService {
                 && !item.getTag().getCompound("MaidInfo").getCompound("ForgeData").contains("MaidWeaponEmbeddedSpirit");
     }
     public static boolean importAllowed(Player owner, ItemStack item) {
-        if (owner == null || owner.level().isClientSide || item.hasTag() && item.getTag().getBoolean("MaidWeaponClientSuppliedContract") || !filled(item) || item.getCount() != 1) return false;
+        if (owner == null || owner.level().isClientSide || !filled(item) || item.getCount() != 1) return false;
         if (com.maidweapon.forge.system.ContractNbtGuard.serializedSize(item.getTag())
                     > com.maidweapon.common.MaidWeaponConfig.CONTRACT_NBT_MAX_DECOMPRESSED_BYTES.get()
                 || com.maidweapon.forge.system.ContractNbtGuard.depth(item.getTag())
                     > com.maidweapon.common.MaidWeaponConfig.CONTRACT_NBT_MAX_DEPTH.get()) return false;
         var entity = item.getTag().getCompound("MaidInfo");
-        if (!entity.hasUUID("Owner") || !entity.hasUUID("UUID") || !owner.getUUID().equals(entity.getUUID("Owner"))) return false;
-        var maid = entity.getUUID("UUID").toString();
-        if (ContractWeaponLocator.findManifestedMaid(owner, maid) != null) return false;
-        var record = ContractRecoveryJournal.get(owner.getServer()).transfer(maid);
-        if (record.isEmpty()) return entity.getCompound("ForgeData").getString(ContractMaidKeys.ENTITY_BINDING_ID).isEmpty()
-                && ContractWeaponLocator.findBoundWeapon(owner, maid).isEmpty(); // native legacy slab, not a lost weapon copy
-        var receipt = item.getTag().getCompound(RECEIPT);
-        return record.hasUUID("Owner") && record.getUUID("Owner").equals(owner.getUUID())
-                && record.getString("Kind").equals("SEAL") && receipt.hasUUID("Token")
-                && record.hasUUID("Token") && record.getUUID("Token").equals(receipt.getUUID("Token"))
-                && record.getString("Binding").equals(receipt.getString("Binding"));
+        return entity.hasUUID("Owner") && entity.hasUUID("UUID") && owner.getUUID().equals(entity.getUUID("Owner"))
+                && ContractWeaponLocator.mayManifest(owner, entity.getUUID("UUID").toString());
     }
     public static boolean authorizes(Player owner, ItemStack carrier) {
-        String maid = ContractCarrierData.getBoundMaidUUID(carrier);
-        if (carrier.hasTag() && carrier.getTag().getBoolean("MaidWeaponClientSuppliedContract")) return false;
+        if (owner == null || !ContractCarrierData.isOwner(carrier, owner)
+                || ContractCarrierData.isContractSuperseded(carrier)) return false;
         if (owner.getServer() == null) return true;
-        var journal = ContractRecoveryJournal.get(owner.getServer());
-        if (!journal.knownSchema()) return false;
+        String maid = ContractCarrierData.getBoundMaidUUID(carrier);
         if (maid == null) return true;
-        if (ContractWeaponLocator.hasConflictingCarrier(owner, carrier)) return false;
-        var record = journal.transfer(maid);
-        if (record.isEmpty()) return true;
-        var receipt = carrier.hasTag() ? carrier.getTag().getCompound(RECEIPT) : new CompoundTag();
-        return record.getString("Kind").equals("WEAPON") && record.hasUUID("Owner") && record.getUUID("Owner").equals(owner.getUUID())
-                && record.getString("Binding").equals(ContractCarrierData.getBindingId(carrier))
-                && record.hasUUID("Token") && receipt.hasUUID("Token") && record.getUUID("Token").equals(receipt.getUUID("Token"));
+        var record = ContractRecoveryJournal.get(owner.getServer()).transfer(maid);
+        // Current storage is revalidated by the lifecycle (full owner/UUID/load checks), not a historical receipt.
+        if (ContractCarrierData.hasMaidEntityData(carrier)) return true;
+        var live = ContractWeaponLocator.findManifestedMaid(owner, maid);
+        if (live != null && java.util.Objects.equals(ContractCarrierData.getBindingId(carrier),
+                live.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID))) return true;
+        // No receipt or unknown legacy metadata is not proof of an invalid contract.
+        if (!record.contains("Kind")) return true;
+        return (!record.hasUUID("Owner") || record.getUUID("Owner").equals(owner.getUUID()))
+                && record.getString("Kind").equals("WEAPON")
+                && record.getString("Binding").equals(ContractCarrierData.getBindingId(carrier));
+    }
+    private static void destination(Player owner, ItemStack carrier, String kind, boolean present) {
+        if (owner.getServer() == null) return;
+        var journal = ContractRecoveryJournal.get(owner.getServer());
+        if (!journal.knownSchema()) return; // preserve future files; never make normal storage throw after spawn
+        var record = new CompoundTag(); record.putUUID("Owner", owner.getUUID());
+        record.putString("Kind", kind); record.putString("Binding", ContractCarrierData.getBindingId(carrier));
+        record.putBoolean("WorldPresent", present);
+        journal.transfer(ContractCarrierData.getBoundMaidUUID(carrier), record);
     }
     public static void imported(Player owner, ItemStack item, ItemStack carrier) {
-        CompoundTag record = new CompoundTag(); record.putUUID("Owner", owner.getUUID());
-        record.putString("Kind", "WEAPON"); record.putString("Binding", ContractCarrierData.getBindingId(carrier));
-        record.putUUID("Token", UUID.randomUUID()); carrier.getOrCreateTag().put(RECEIPT, record.copy());
-        ContractRecoveryJournal.get(owner.getServer()).transfer(ContractCarrierData.getBoundMaidUUID(carrier), record);
+        destination(owner, carrier, "WEAPON", false);
+        carrier.getOrCreateTag().remove(RECEIPT);
     }
     public static void captured(Player owner, ItemStack carrier) {
-        var record = ContractRecoveryJournal.get(owner.getServer()).transfer(ContractCarrierData.getBoundMaidUUID(carrier));
-        if (record.isEmpty() || record.getString("Kind").equals("WEAPON") && authorizes(owner, carrier)
-                || record.getString("Kind").equals("FREE_MAID") && record.hasUUID("Owner") && record.getUUID("Owner").equals(owner.getUUID()))
-            imported(owner, ItemStack.EMPTY, carrier);
+        imported(owner, ItemStack.EMPTY, carrier);
+    }
+    public static void manifested(Player owner, ItemStack carrier) {
+        destination(owner, carrier, "WEAPON", true);
     }
     public static void exported(Player owner, ItemStack carrier, ItemStack item) {
-        var record = new CompoundTag(); record.putUUID("Owner", owner.getUUID()); record.putUUID("Token", UUID.randomUUID());
-        record.putString("Kind", "SEAL"); record.putString("Binding", ContractCarrierData.getBindingId(carrier));
-        item.getOrCreateTag().put(RECEIPT, record.copy());
-        ContractRecoveryJournal.get(owner.getServer()).transfer(ContractCarrierData.getBoundMaidUUID(carrier), record);
+        var metadata = new CompoundTag(); metadata.putString("Binding", ContractCarrierData.getBindingId(carrier));
+        item.getOrCreateTag().put(RECEIPT, metadata); // keep the interior's stable binding
+        destination(owner, carrier, "SEAL", false);
     }
-    /** Explicit operator migration. No input mutation until the player can receive the validated slab. */
+    /** Explicit migration of an old ordinary film; emergency films never become transfer slabs. */
     public static ItemStack migrateLegacy(Player owner, ItemStack film) {
         if (film.isEmpty() || film.getCount() != 1 || !id(film).equals("touhou_little_maid:film")
                 || !film.hasTag() || film.getTag().contains(EMERGENCY) || FoxSpiritState.isSeal(film)) return ItemStack.EMPTY;

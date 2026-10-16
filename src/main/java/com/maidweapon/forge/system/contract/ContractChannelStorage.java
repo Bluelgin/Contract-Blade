@@ -35,6 +35,20 @@ public final class ContractChannelStorage {
             EmbeddedSpiritApi.TAG_SPIRIT_NAME,
             EmbeddedSpiritApi.TAG_DORMANT);
 
+    /** Active and dormant channels, without interpreting the stored entity or copying the full carrier. */
+    public static java.util.List<CompoundTag> channels(ItemStack carrier) {
+        var result = new java.util.ArrayList<CompoundTag>();
+        if (!carrier.hasTag()) return result;
+        var root = carrier.getTag(); result.add(root);
+        if (root.contains("MaidWeaponExternalContract", Tag.TAG_COMPOUND)) result.add(root.getCompound("MaidWeaponExternalContract"));
+        var spirits = root.getCompound("MaidWeaponIntrinsicSpirits");
+        if (spirits.getAllKeys().size() <= 64) for (String id : spirits.getAllKeys()) {
+            var entry = spirits.getCompound(id);
+            if (entry.contains("Contract", Tag.TAG_COMPOUND)) result.add(entry.getCompound("Contract"));
+        }
+        return result;
+    }
+
     public static CompoundTag captureContract(ItemStack weapon) {
         CompoundTag result = new CompoundTag();
         CompoundTag root = weapon.getTag();

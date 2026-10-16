@@ -25,24 +25,24 @@ public final class ContractWeaponLocator {
         return result;
     }
 
-    /** Reject two real copies of one binding; native anvil/crafting result previews are not physical carriers. */
-    public static boolean hasConflictingCarrier(Player player, ItemStack carrier) {
-        String binding = ContractCarrierData.getBindingId(carrier);
-        if (binding == null || binding.isEmpty()) return false;
-        var seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<ItemStack, Boolean>());
-        seen.add(carrier);
-        for (int i=0; i<player.getInventory().getContainerSize(); i++) conflict(seen, binding, player.getInventory().getItem(i));
-        conflict(seen, binding, player.containerMenu.getCarried());
-        for (var slot : player.containerMenu.slots) {
-            if (slot.container instanceof net.minecraft.world.inventory.ResultContainer) continue;
-            conflict(seen, binding, slot.getItem());
-        }
-        return seen.size() > 1;
+    /** Cross-dimension UUID check, including non-maid entities and other owners. */
+    public static Entity findEntity(Player player, String maidId) {
+        if (player == null || player.getServer() == null || maidId == null) return null;
+        try {
+            UUID uuid = UUID.fromString(maidId);
+            for (ServerLevel level : player.getServer().getAllLevels()) {
+                Entity entity = level.getEntity(uuid);
+                if (entity != null && !entity.isRemoved()) return entity;
+            }
+        } catch (IllegalArgumentException ignored) { }
+        return null;
     }
-    private static void conflict(java.util.Set<ItemStack> seen, String binding, ItemStack stack) {
-        if (!stack.isEmpty() && (!stack.hasTag() || !stack.getTag().getBoolean("MaidWeaponClientSuppliedContract"))
-                && !ContractTransferSafetyService.isProjectionPhantom(stack)
-                && !ContractCarrierData.isContractSuperseded(stack) && binding.equals(ContractCarrierData.getBindingId(stack))) seen.add(stack);
+    /** A successful spawn remains world-present across unload/restart until capture or actual removal. */
+    public static boolean mayManifest(Player player, String maidId) {
+        if (player == null || player.getServer() == null || maidId == null || findEntity(player, maidId) != null) return false;
+        try { UUID.fromString(maidId); } catch (IllegalArgumentException invalid) { return false; }
+        return !com.maidweapon.forge.system.contract.ContractRecoveryJournal.get(player.getServer())
+                .transfer(maidId).getBoolean("WorldPresent");
     }
 
     private static void index(java.util.Map<String, ItemStack> result, ItemStack stack) {
@@ -57,69 +57,68 @@ public final class ContractWeaponLocator {
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (!stack.isEmpty() && bindingId.equals(ContractCarrierData.getBindingId(stack))) return stack;
+            if (eligible(player, stack) && bindingId.equals(ContractCarrierData.getBindingId(stack))) return stack;
         }
 
         ItemStack offhand = player.getOffhandItem();
-        if (!offhand.isEmpty() && bindingId.equals(ContractCarrierData.getBindingId(offhand))) return offhand;
+        if (eligible(player, offhand) && bindingId.equals(ContractCarrierData.getBindingId(offhand))) return offhand;
 
         ItemStack carried = player.containerMenu.getCarried();
-        if (!carried.isEmpty() && bindingId.equals(ContractCarrierData.getBindingId(carried))) return carried;
+        if (eligible(player, carried) && bindingId.equals(ContractCarrierData.getBindingId(carried))) return carried;
 
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
             ItemStack stack = slot.getItem();
-            if (!stack.isEmpty() && bindingId.equals(ContractCarrierData.getBindingId(stack))) return stack;
+            if (eligible(player, stack) && bindingId.equals(ContractCarrierData.getBindingId(stack))) return stack;
         }
         return ItemStack.EMPTY;
     }
 
     public static ItemStack findBoundWeapon(Player player, String maidId) {
+        if (maidId == null || player == null) return ItemStack.EMPTY;
         Entity deployed = findManifestedMaid(player, maidId);
         String deployedBinding = deployed == null ? ""
                 : deployed.getPersistentData().getString(
                         TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID);
         ItemStack uuidCandidate = ItemStack.EMPTY;
-        int uuidMatches = 0;
 
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
+            if (!eligible(player, stack)) continue;
             if (!deployedBinding.isEmpty()
                     && deployedBinding.equals(ContractCarrierData.getBindingId(stack))) return stack;
             if (maidId.equals(ContractCarrierData.getBoundMaidUUID(stack))) {
                 uuidCandidate = stack;
-                uuidMatches++;
             }
         }
 
         ItemStack offhand = player.getOffhandItem();
-        if (!deployedBinding.isEmpty()
+        if (eligible(player, offhand) && !deployedBinding.isEmpty()
                 && deployedBinding.equals(ContractCarrierData.getBindingId(offhand))) return offhand;
-        if (maidId.equals(ContractCarrierData.getBoundMaidUUID(offhand)) && offhand != uuidCandidate) {
+        if (eligible(player, offhand) && maidId.equals(ContractCarrierData.getBoundMaidUUID(offhand)) && offhand != uuidCandidate) {
             uuidCandidate = offhand;
-            uuidMatches++;
         }
 
         ItemStack carried = player.containerMenu.getCarried();
-        if (!deployedBinding.isEmpty()
+        if (eligible(player, carried) && !deployedBinding.isEmpty()
                 && deployedBinding.equals(ContractCarrierData.getBindingId(carried))) return carried;
-        if (maidId.equals(ContractCarrierData.getBoundMaidUUID(carried)) && carried != uuidCandidate) {
+        if (eligible(player, carried) && maidId.equals(ContractCarrierData.getBoundMaidUUID(carried)) && carried != uuidCandidate) {
             uuidCandidate = carried;
-            uuidMatches++;
         }
 
         for (net.minecraft.world.inventory.Slot slot : player.containerMenu.slots) {
             ItemStack stack = slot.getItem();
+            if (slot.container instanceof net.minecraft.world.inventory.ResultContainer || !eligible(player, stack)) continue;
             if (!deployedBinding.isEmpty()
                     && deployedBinding.equals(ContractCarrierData.getBindingId(stack))) return stack;
             if (maidId.equals(ContractCarrierData.getBoundMaidUUID(stack)) && stack != uuidCandidate) {
                 uuidCandidate = stack;
-                uuidMatches++;
             }
         }
-        return uuidMatches == 1 ? uuidCandidate : ItemStack.EMPTY;
+        return uuidCandidate;
     }
 
     public static Entity findManifestedMaid(Player player, String maidId) {
+        if (player == null || maidId == null) return null;
         try {
             UUID uuid = UUID.fromString(maidId);
             if (player.getServer() == null) return null;
@@ -140,5 +139,10 @@ public final class ContractWeaponLocator {
                 && findManifestedMaid(player, maidId) != null;
     }
 
+    private static boolean eligible(Player owner, ItemStack carrier) {
+        return !carrier.isEmpty() && ContractCarrierData.isOwner(carrier, owner)
+                && !ContractCarrierData.isContractSuperseded(carrier)
+                && !ContractTransferSafetyService.isProjectionPhantom(carrier);
+    }
     private ContractWeaponLocator() {}
 }

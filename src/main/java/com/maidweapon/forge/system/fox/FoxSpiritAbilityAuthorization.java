@@ -34,28 +34,10 @@ public final class FoxSpiritAbilityAuthorization {
         || !owner.getUUID().equals(identity.getUUID("OwnerUUID"))
         || !FoxSpiritLedger.get(owner.getServer()).owns(identity, "WEAPON"))
       return new Result(false, "identity");
-    // Copies with the same story identity must not mint two independent maid UUIDs or powers.
-    int copies = 0;
-    var seen = Collections.newSetFromMap(new IdentityHashMap<ItemStack, Boolean>());
-    for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
-      var item = owner.getInventory().getItem(i);
-      if (!item.isEmpty()
-          && seen.add(item)
-          && FoxSpiritState.hasResident(item)
-          && FoxSpiritState.resident(item)
-              .getUUID("SpiritUUID")
-              .equals(identity.getUUID("SpiritUUID"))
-          && FoxSpiritLedger.get(owner.getServer()).owns(FoxSpiritState.resident(item), "WEAPON"))
-        copies++;
-    }
-    if (copies > 1) return new Result(false, "copies");
     if (ContractAnomalyRecoveryService.transitioning(carrier)
         || !IntrinsicSpiritApi.stored(carrier, spirit)) return new Result(false, "not_stored");
     long now = owner.getServer().overworld().getGameTime();
     var key = IntrinsicSpiritApi.proofKey(carrier, spirit);
-    String activeBinding = key.size() > 1 ? (String) key.get(1) : "";
-    if (ContractRecoveryJournal.get(owner.getServer()).blocksAbility(activeBinding))
-      return new Result(false, "recovery");
     var cached = PROOFS.get(carrier);
     if (cached != null
         && cached.tag() == carrier.getTag()
@@ -67,12 +49,8 @@ public final class FoxSpiritAbilityAuthorization {
     try {
       var contract = IntrinsicSpiritApi.readOnlyContract(carrier, spirit);
       String binding = contract.getString("MaidBindingId"), maid = contract.getString("MaidUUID");
-      var incident = ContractRecoveryJournal.get(owner.getServer()).incident(binding);
-      String status = incident.getString("Status");
-      if (status.equals("COMMITTING")
-          || status.equals("REVIEW_REQUIRED")
-          || status.equals("PENDING") && incident.getBoolean("Confirmed"))
-        return new Result(false, "recovery");
+      String originalMaid = FoxSpiritLedger.get(owner.getServer()).maid(identity);
+      if (!originalMaid.isEmpty() && !originalMaid.equals(maid)) return new Result(false, "identity");
       var data = MaidEntityDataCodec.read(contract);
       valid =
           contract.hasUUID("OwnerUUID")
@@ -81,9 +59,7 @@ public final class FoxSpiritAbilityAuthorization {
               && owner.getUUID().equals(data.getUUID("Owner"))
               && data.hasUUID("UUID")
               && maid.equals(data.getUUID("UUID").toString())
-              && com.maidweapon.forge.system.deployment.ContractWeaponLocator.findManifestedMaid(
-                      owner, maid)
-                  == null
+              && com.maidweapon.forge.system.deployment.ContractWeaponLocator.mayManifest(owner, maid)
               && !binding.isEmpty()
               && (data.getCompound("ForgeData")
                       .getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID)

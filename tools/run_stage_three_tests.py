@@ -44,6 +44,8 @@ for name, flags, markers in fixtures:
         with log.open('w') as output:
             result = subprocess.run(cmd,cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
         content = log.read_text()
+        runtime_log = directory / 'logs' / 'latest.log'
+        if runtime_log.exists(): content += '\n' + runtime_log.read_text()
         missing = [marker for marker in markers if marker not in content]
         if result.returncode or missing or '_FAIL' in content:
             failed.append(name); print(f'{name}: FAIL missing={missing}; {log}',flush=True)
@@ -54,6 +56,7 @@ for name, flags, markers in fixtures:
                 with restart_log.open('w') as output:
                     resumed = subprocess.run([*cmd, '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
                 resumed_text = restart_log.read_text()
+                if runtime_log.exists(): resumed_text += '\n' + runtime_log.read_text()
                 if resumed.returncode or ('CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
                     failed.append(f'{name}-restart');print(f'{name}-restart: FAIL; {restart_log}',flush=True)
                 else:

@@ -32,8 +32,20 @@ public final class FoxSpiritLedger extends SavedData {
                 && record.getUUID("OwnerUUID").equals(identity.getUUID("OwnerUUID"));
     }
 
+    public String maid(CompoundTag identity) {
+        return FoxSpiritState.valid(identity) ? entries.getCompound(identity.getUUID("SpiritUUID").toString()).getString("MaidUUID") : "";
+    }
+    public void rememberMaid(CompoundTag identity, String maid) {
+        if (!FoxSpiritState.valid(identity) || maid == null || maid.isBlank()) return;
+        var record = entries.getCompound(identity.getUUID("SpiritUUID").toString());
+        if (!record.getString("MaidUUID").isEmpty()) return;
+        record.putString("MaidUUID", maid); setDirty();
+    }
+
     public void record(CompoundTag identity, String kind) {
+        CompoundTag previous = entries.getCompound(identity.getUUID("SpiritUUID").toString());
         CompoundTag record = new CompoundTag();
+        if (previous.contains("MaidUUID")) record.putString("MaidUUID", previous.getString("MaidUUID"));
         record.putUUID("Token", identity.getUUID("Token"));
         record.putUUID("OwnerUUID", identity.getUUID("OwnerUUID"));
         record.putUUID("OriginUUID", identity.getUUID("OriginUUID"));
