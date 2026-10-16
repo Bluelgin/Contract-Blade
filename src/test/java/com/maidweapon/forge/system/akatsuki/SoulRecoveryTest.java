@@ -8,6 +8,49 @@ import org.junit.jupiter.api.Test;
 
 class SoulRecoveryTest {
   @Test
+  void normalCutWithNoSpecialLimitDebtUsesLevelScaledDamage() {
+    var decision = SoulCutDecision.decide(false, false, 0);
+    assertEquals(SoulCutDecision.State.NORMAL, decision.state());
+    assertEquals(0, decision.recoveryAmount());
+    assertEquals(50, SoulNormalCutPolicy.requested(100, .5, 0));
+    // A cap-capable boss below its native threshold still has no verified deficit.
+    assertEquals(SoulCutDecision.State.NORMAL,
+        SoulCutDecision.decide(false, true, 999).state());
+  }
+
+  @Test
+  void verifiedReceiptRecoversOnlyItsConfirmedRemainingAllowance() {
+    var debt = new SoulDamageDebt(100, 5);
+    double requested = debt.available(.45, false);
+    var decision = SoulCutDecision.decide(true, false, requested);
+    assertEquals(SoulCutDecision.State.RECOVERABLE, decision.state());
+    assertEquals(42.75, decision.recoveryAmount(), .000001);
+    double claim = debt.reserve(.45, 100, false);
+    debt.settle(claim, claim, true);
+    assertEquals(SoulCutDecision.State.RECOVERY_LOCKED,
+        SoulCutDecision.decide(true, false, debt.available(.45, false)).state());
+    assertEquals(0, SoulCutDecision.decide(true, false, 0).recoveryAmount());
+  }
+
+  @Test
+  void coolingDownExhaustedOrTinyDebtCannotFallbackAndExpirationRestoresNormal() {
+    assertEquals(SoulCutDecision.State.RECOVERY_LOCKED,
+        SoulCutDecision.decide(true, true, 200).state());
+    assertEquals(SoulCutDecision.State.RECOVERY_LOCKED,
+        SoulCutDecision.decide(true, false, 0).state());
+    assertEquals(SoulCutDecision.State.RECOVERY_LOCKED,
+        SoulCutDecision.decide(true, false, .009).state());
+    assertEquals(SoulCutDecision.State.RECOVERY_LOCKED,
+        SoulCutDecision.decide(true, false, Double.NaN).state());
+    assertEquals(SoulCutDecision.State.RECOVERABLE,
+        SoulCutDecision.decide(true, false, .01).state());
+    // After the valid receipt expires, is invalidated, or the binding changes, the
+    // authoritative ledger reports no valid debt; the normal branch becomes available.
+    assertEquals(SoulCutDecision.State.NORMAL,
+        SoulCutDecision.decide(false, false, 0).state());
+  }
+
+  @Test
   void tenLevelsShareOneDeficit() {
     for (int level = 1; level <= 10; level++) {
       var d = new SoulDamageDebt(100, 5);

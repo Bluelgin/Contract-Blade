@@ -97,11 +97,14 @@ public final class SoulDamageEngine {
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession session) {
     if (!authorized(p, t, session)
         || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
-    boolean recovery = SoulDamageDebtService.hasDebt(p, t);
+    SoulCutDecision decision = SoulDamageDebtService.cutDecision(p, t);
+    // An exhausted/cooling receipt cannot be used to obtain uncapped normal damage.
+    if (decision.state() == SoulCutDecision.State.RECOVERY_LOCKED) return null;
+    boolean recovery = decision.state() == SoulCutDecision.State.RECOVERABLE;
     double levelCap = AkatsukiDomainGrowth.parameter(p, "space_cut_level_cap");
     double requested =
         recovery
-            ? SoulDamageDebtService.available(p, t, false)
+            ? decision.recoveryAmount()
             : SoulNormalCutPolicy.requested(
                 p.getAttributeValue(Attributes.ATTACK_DAMAGE),
                 AkatsukiDomainGrowth.parameter(p, "space_cut_multiplier"),
