@@ -49,17 +49,11 @@ public final class ContractCarrierData {
     }
 
     public static void setMaidData(ItemStack stack, MaidWeaponData data) {
-        CompoundTag maidTag = new CompoundTag();
+        CompoundTag maidTag = stack.hasTag() ? stack.getTag().getCompound(NBT_MAID_DATA).copy() : new CompoundTag();
+        maidTag.putInt("ContractSchema", 2);
         maidTag.putString(MaidWeaponDataSerializer.KEY_MAID_NAME, data.getMaidName());
-        maidTag.putInt(MaidWeaponDataSerializer.KEY_LEVEL, data.getLevel());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_FAVORABILITY, data.getFavorability());
         maidTag.putInt(MaidWeaponDataSerializer.KEY_RESONANCE, data.getResonance());
-        maidTag.putInt(MaidWeaponDataSerializer.KEY_TOTAL_KILLS, data.getTotalKills());
-        maidTag.putInt(MaidWeaponDataSerializer.KEY_UNLOCKED_TIER, data.getUnlockedTier());
-        maidTag.putInt(MaidWeaponDataSerializer.KEY_ENDER_DRAGON_KILLS, data.getEnderDragonKills());
-        maidTag.putInt(MaidWeaponDataSerializer.KEY_WITHER_KILLS, data.getWitherKills());
-        int[] progress = data.getUpgradeProgress();
-        if (progress.length > 0) maidTag.putIntArray(MaidWeaponDataSerializer.KEY_CONFIGURED_PROGRESS, progress);
 
         maidTag.putString(MaidWeaponDataSerializer.KEY_EMBEDDED_SINS,
                 SinSlotManager.sinsToString(data.getEmbeddedSins()));
@@ -172,7 +166,7 @@ public final class ContractCarrierData {
     @Nullable
     public static String getOwnerUUID(ItemStack stack) {
         CompoundTag tag = stack.getTag();
-        if (tag == null || !tag.contains(NBT_OWNER_UUID)) return null;
+        if (tag == null || !tag.hasUUID(NBT_OWNER_UUID)) return null;
         return tag.getUUID(NBT_OWNER_UUID).toString();
     }
 
@@ -192,7 +186,7 @@ public final class ContractCarrierData {
     public static boolean isOwner(ItemStack stack, Player player) {
         CompoundTag tag = stack.getTag();
         if (tag == null || !tag.contains(NBT_OWNER_UUID)) return true; // 无主武器，谁都能用
-        return tag.getUUID(NBT_OWNER_UUID).equals(player.getUUID());
+        return tag.hasUUID(NBT_OWNER_UUID) && tag.getUUID(NBT_OWNER_UUID).equals(player.getUUID());
     }
 
 

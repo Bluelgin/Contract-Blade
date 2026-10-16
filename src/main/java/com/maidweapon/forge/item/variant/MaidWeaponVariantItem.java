@@ -45,7 +45,7 @@ public class MaidWeaponVariantItem extends MaidWeaponItem {
     public Component getName(ItemStack stack) {
         if (hasMaidData(stack)) {
             MaidWeaponData data = getMaidData(stack);
-            return Component.literal("§d" + data.getMaidName() + " §f· " + variant.prefix + " Lv." + data.getLevel());
+            return Component.literal("§d" + data.getMaidName() + " §f· " + variant.prefix);
         }
         return Component.translatable("item.maid_weapon." + variant.name().toLowerCase());
     }

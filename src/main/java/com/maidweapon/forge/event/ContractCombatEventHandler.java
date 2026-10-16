@@ -28,92 +28,42 @@ import java.util.UUID;
 /** Contract growth and resonance rules. */
 @Mod.EventBusSubscriber
 public final class ContractCombatEventHandler {
-    @SubscribeEvent
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
     public static void onLivingDamage(LivingDamageEvent event) {
-        if (!(event.getSource().getEntity() instanceof Player player)) return;
-        ItemStack weapon = player.getMainHandItem();
-        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
+        if (event.getEntity().level().isClientSide || event.getAmount() <= 0) return;
+        com.maidweapon.forge.system.mastery.ContractCombatCredits.record(event.getEntity(), event.getSource());
+    }
 
+    @SubscribeEvent(priority = net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+    public static void onLivingDeath(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide || event.isCanceled()) return;
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer dead) {
+            com.maidweapon.forge.system.mastery.ContractCombatCredits.invalidate(dead.getUUID());
+            ItemStack weapon = dead.getMainHandItem();
+            if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, dead)) {
+                var relation = MaidInfusion.data(weapon);
+                relation.reduceResonance(MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
+                ContractCarrierData.setMaidData(weapon, relation);
+            }
+            ModCompatManager.notifyChallengeFailed("maid_sword", "unknown");
+            ChallengeTracker.clear(dead.getUUID());
+            return;
+        }
+        var credit = com.maidweapon.forge.system.mastery.ContractCombatCredits.settle(event.getEntity(), event.getSource());
+        if (credit == null) return;
+        var player = credit.player(); ItemStack weapon = credit.carrier();
+        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weapon);
         String targetId = entityId(event.getEntity());
         int tier = MonsterTierRegistry.getTier(targetId);
-        if (tier <= 0) tier = MonsterTierRegistry.estimateTierFromHealth(
-                event.getEntity().getMaxHealth());
-        UUID playerId = player.getUUID();
-        Integer previous = ChallengeTracker.getTier(playerId);
-        if (previous == null || tier > previous) ChallengeTracker.setTier(playerId, tier);
-
+        if (tier <= 0) tier = MonsterTierRegistry.estimateTierFromHealth(event.getEntity().getMaxHealth());
+        com.maidweapon.forge.system.mastery.ContractMasteryService.tryAdvance(player, tier, targetId);
+        MaidWeaponData relation = MaidInfusion.data(weapon);
+        relation.addResonance(com.maidweapon.common.ContractRulesConfig.KILL_REWARD.get());
+        ContractCarrierData.setMaidData(weapon, relation);
         boolean boss = MonsterTierRegistry.isBoss(targetId)
                 || ModCompatManager.getExternalBosses().getOrDefault(targetId, false)
                 || MonsterTierRegistry.isBossFromHealth(event.getEntity().getMaxHealth());
-        if (boss) ChallengeTracker.setHasBoss(playerId, true);
-        if ("minecraft:ender_dragon".equals(targetId)) ChallengeTracker.setHasDragon(playerId, true);
-        if ("minecraft:wither".equals(targetId)) ChallengeTracker.setHasWither(playerId, true);
-    }
-
-    @SubscribeEvent
-    public static void onLivingDeath(LivingDeathEvent event) {
-        if (!(event.getSource().getEntity() instanceof Player player)) return;
-        ItemStack weapon = player.getMainHandItem();
-        if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
-
-        UUID playerId = player.getUUID();
-        Integer tier = ChallengeTracker.getTier(playerId);
-        if (tier == null) return;
-        if (Boolean.TRUE.equals(ChallengeTracker.isFailed(playerId))) {
-            ChallengeTracker.clear(playerId);
-            return;
-        }
-
-        MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
-        data.addKill();
-        data.addResonance(com.maidweapon.common.ContractRulesConfig.KILL_REWARD.get());
-        int oldLevel = data.getLevel();
-        String defeatedId = entityId(event.getEntity());
-        int defeatedTier = MonsterTierRegistry.getTier(defeatedId);
-        if (defeatedTier <= 0) defeatedTier = MonsterTierRegistry.estimateTierFromHealth(event.getEntity().getMaxHealth());
-        // Custom rules use the entity that actually died, not a previously attacked boss.
-        boolean custom = data.getLevel() < MaidWeaponData.MAX_LEVEL
-                && com.maidweapon.common.ContractRulesConfig.LEVELS[data.getLevel() + 1].custom();
-        boolean upgraded = data.tryUpgrade(custom ? defeatedTier : tier,
-                custom ? "minecraft:ender_dragon".equals(defeatedId) : ChallengeTracker.hasDragon(playerId),
-                custom ? "minecraft:wither".equals(defeatedId) : ChallengeTracker.hasWither(playerId), defeatedId);
-        if (upgraded) {
-            player.playSound(net.minecraft.sounds.SoundEvents.PLAYER_LEVELUP, 1.0f, 1.0f);
-            if (player.level() instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANTED_HIT,
-                        player.getX(), player.getY() + 1.0, player.getZ(),
-                        50, 1.5, 1.0, 1.5, 0.5);
-            }
-            player.displayClientMessage(Component.translatable(
-                    "maid_weapon.message.weapon_upgraded", data.getLevel()), true);
-            ModCompatManager.notifyUpgrade("maid_sword", oldLevel, data.getLevel());
-        }
-
-        String targetId = entityId(event.getEntity());
-        ModCompatManager.notifyMonsterKilled("maid_sword", targetId, tier,
-                ChallengeTracker.hasBoss(playerId));
-        ContractCarrierData.setMaidData(weapon, data);
-        ChallengeTracker.clear(playerId);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        UUID playerId = player.getUUID();
-        if (ChallengeTracker.getTier(playerId) == null) return;
-        ItemStack weapon = player.getMainHandItem();
-        if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, player)) {
-            MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
-            data.reduceResonance(MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
-            ContractCarrierData.setMaidData(weapon, data);
-        }
-        ModCompatManager.notifyChallengeFailed("maid_sword", "unknown");
-        ChallengeTracker.clear(playerId);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        ChallengeTracker.clear(event.getEntity().getUUID());
+        ModCompatManager.notifyMonsterKilled("maid_sword", targetId, tier, boss);
     }
 
     @SubscribeEvent
@@ -126,6 +76,7 @@ public final class ContractCombatEventHandler {
             if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
         }
 
+        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weapon);
         UUID playerId = player.getUUID();
         MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
         int food = player.getFoodData().getFoodLevel();

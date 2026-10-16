@@ -48,6 +48,9 @@ public final class MaidWeaponMod {
         ModCreativeTab.TABS.register(modBus);
         com.maidweapon.forge.worldgen.ShrineWorldgen.register(modBus);
         com.maidweapon.forge.network.ContractCompanionNetwork.register();
+        com.maidweapon.forge.network.ContractMasteryNetwork.register();
+        com.maidweapon.forge.api.ContractCombatCreditResolver.register("maid_weapon:sword_actor",
+                actor -> actor instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity sword ? sword.masteryCredit() : null);
         TaczCompat.bootstrap(modBus);
         com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.bootstrap(modBus);
         com.maidweapon.forge.compat.BlackFoxSwordArtCompat.bootstrap(modBus);
@@ -64,6 +67,8 @@ public final class MaidWeaponMod {
             if (net.minecraftforge.fml.ModList.get().isLoaded("touhou_little_maid"))
                 com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.register();
             com.maidweapon.forge.system.fox.challenge.BlackFoxEncounters.setup();
+            com.maidweapon.forge.compat.BlackFoxAbilityAdapter.register();
+            com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
             com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
             LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
             LOGGER.info("[MaidWeapon] SlashBlade compatibility: {}", SlashBladeCompat.diagnostics());

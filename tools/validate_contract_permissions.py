@@ -9,10 +9,10 @@ def read(path: str) -> str:
 
 
 checks = {
-    "combat owner gates": (
-        "src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java",
+    "combat credit owner gate": (
+        "src/main/java/com/maidweapon/forge/api/ContractCombatCreditResolver.java",
         "ContractCarrierData.isOwner",
-        5,
+        1,
     ),
     "contract tooltip owner gate": (
         "src/main/java/com/maidweapon/forge/client/tooltip/ContractTooltipComposer.java",
@@ -108,8 +108,8 @@ if "ContractLifecycleService.capture(player, maid, weapon, false)" not in deploy
 
 if "instanceof MaidWeaponItem" in commands:
     raise SystemExit("Debug contract commands regressed to dedicated MaidWeaponItem-only handling")
-if commands.count("editableContract(source)") < 3:
-    raise SystemExit("Level/favorability/resonance commands do not share the generic contract gate")
+if commands.count("editableContract(source)") < 2:
+    raise SystemExit("Favorability/resonance commands do not share the generic contract gate")
 if "MaidInfusion.isInfused(stack)" not in commands or "ContractCarrierData.isOwner(stack, player)" not in commands:
     raise SystemExit("Debug contract command gate is missing generic contract/owner validation")
 
@@ -222,3 +222,5 @@ if "SlashBladeCompat.isMatchingPhantom(source, current)" not in projection:
     raise SystemExit("SlashBlade phantoms are still replaced instead of preserving combat progress")
 
 print("Validated contract ownership, TLM GUI pass-through, magic/SlashBlade tasks, progress sync, and optional bridges")
+
+assert "ContractMasteryService.setLevel" in commands, "Level command must use player authority"

@@ -30,6 +30,18 @@ public final class BlackFoxSwordActorEntity extends PathfinderMob {
                 player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE));
         setPos(core.position());
     }
+    public com.maidweapon.forge.api.ContractCombatCreditResolver.Credit masteryCredit() {
+        if (core == null || core.isRemoved() || owner == null || !owner.isAlive() || owner.level() != level()) return null;
+        var origin = getMainHandItem().getTag();
+        if (origin == null || !origin.hasUUID(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN)) return null;
+        for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
+            var real = owner.getInventory().getItem(slot);
+            if (BlackFoxSwordArtCompat.entitled(real, owner) && real.getTag().getUUID(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN)
+                    .equals(origin.getUUID(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN)))
+                return new com.maidweapon.forge.api.ContractCombatCreditResolver.Credit(owner, real);
+        }
+        return null;
+    }
     public boolean permits(Entity entity) {
         return core != null && !core.isRemoved() && owner != null && entity instanceof LivingEntity living
                 && (victim == null || living == victim) && core.eligible(owner, living);

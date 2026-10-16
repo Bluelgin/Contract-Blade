@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - master
+      - codex/fox-native-sword-art
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
@@ -48,8 +49,12 @@ jobs:
             "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
             -o libs/tacz-1.20.1-1.1.8-release.jar
 
+      - name: Build and player mastery behavioral tests
+        run: gradle --no-daemon clean build -Pci=true
+
       - name: Architecture and data validators
         run: |
+          python tools/validate_contract_mastery.py
           python tools/validate_architecture.py
           python tools/validate_legacy_core_boundary.py
           python tools/validate_contract_nbt_safety.py
@@ -65,6 +70,3 @@ jobs:
           python tools/validate_companion.py
           python tools/validate_shrine.py
           python tools/validate_fox_models.py
-
-      - name: Build
-        run: gradle --no-daemon clean build -Pci=true

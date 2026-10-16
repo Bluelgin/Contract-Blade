@@ -111,7 +111,7 @@ public final class ContractInteriorService {
         }
 
         MaidWeaponData data = MaidInfusion.data(contract);
-        ContractInteriorProfile profile = ContractInteriorProfile.from(data);
+        ContractInteriorProfile profile = ContractInteriorProfile.from(com.maidweapon.forge.system.mastery.ContractMasteryService.getLevel(player, contract), data);
         ContractInteriorSavedData saved = ContractInteriorSavedData.get(server);
         ContractInteriorSavedData.Plot plot = saved.getOrCreate(bindingId);
 

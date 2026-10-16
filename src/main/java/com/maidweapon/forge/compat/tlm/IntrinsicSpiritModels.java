@@ -67,5 +67,41 @@ public final class IntrinsicSpiritModels {
     }
 
 
+    /** One-time default/migration; provider synchronization never forces the player's skin back. */
+    public static void applyPresetModel(net.minecraft.world.entity.player.Player owner, net.minecraft.world.item.ItemStack weapon, String spiritId) {
+        String model = PresetSpiritModels.modelFor(spiritId);
+        CompoundTag entry = weapon.hasTag() ? weapon.getTag().getCompound("MaidWeaponIntrinsicSpirits").getCompound(spiritId) : new CompoundTag();
+        if (model.isEmpty() || model.equals(entry.getString("DefaultModelApplied"))
+                || !PresetSpiritModels.isAvailable(model)) return;
+        CompoundTag candidate = weapon.getTag().copy();
+        CompoundTag spirits = candidate.getCompound("MaidWeaponIntrinsicSpirits");
+        entry = spirits.getCompound(spiritId);
+        Entity manifested = null;
+        boolean applied;
+        if (spiritId.equals(weapon.getTag().getString("MaidWeaponIntrinsicProjection"))) {
+            if (MaidEntityDataCodec.hasData(candidate)) {
+                applied = PresetSpiritModels.applyDefault(candidate, model);
+            } else {
+                String maidId = com.maidweapon.forge.system.contract.ContractCarrierData.getBoundMaidUUID(weapon);
+                manifested = maidId == null || maidId.isBlank() ? null
+                        : com.maidweapon.forge.system.InfusedMaidDeploymentSystem.findManifestedMaid(owner, maidId);
+                applied = manifested != null;
+            }
+        } else {
+            applied = PresetSpiritModels.applyDefault(entry.getCompound("Contract"), model);
+        }
+        if (!applied) return;
+        entry.putString("DefaultModelApplied", model);
+        spirits.put(spiritId, entry);
+        candidate.put("MaidWeaponIntrinsicSpirits", spirits);
+        try {
+            MaidEntityDataCodec.validateContainer(candidate);
+        } catch (java.io.IOException rejected) {
+            return; // Keep the complete original contract, including a live maid, untouched.
+        }
+        if (manifested != null && !PresetSpiritModels.applyDefault(manifested, model)) return;
+        weapon.setTag(candidate);
+    }
+
     private IntrinsicSpiritModels() {}
 }

@@ -58,9 +58,94 @@ public final class BlackFoxSwordCoreValidation {
             core.follow(null); check(core.following(), "Switch to native B");
             core.follow(null); check(!core.following(), "Switch back to native barrage");
             core.follow(null); check(core.following(), "Switch again");
+            spawned.forEach(Entity::discard); // The subsequent area-credit fixture must have exactly one living target.
+            validateRelease(event.getServer(), player, blade);
             LogUtils.getLogger().info("SWORD_CORE_NATIVE_PASS: B1-B7={}, enemy damage={}, bidirectional switches, friendly protection", stages, initial - enemy.getHealth());
         } catch (Throwable failure) { LogUtils.getLogger().error("SWORD_CORE_NATIVE_FAIL", failure); }
         finally { spawned.forEach(Entity::discard); event.getServer().halt(false); }
+    }
+    private static void validateRelease(net.minecraft.server.MinecraftServer server, net.minecraft.server.level.ServerPlayer player,
+                                        net.minecraft.world.item.ItemStack blade) throws ReflectiveOperationException {
+        // Use the real native releaseUsing path, including its Proud Soul charge and registered combo click action.
+        BlackFoxSwordArtCompat.unlock(blade, player);
+        blade.enchant(net.minecraft.world.item.enchantment.Enchantments.SHARPNESS, 1);
+        var state = nativeState(blade);
+        state.getClass().getMethod("setProudSoulCount", int.class).invoke(state, 150);
+        check(com.maidweapon.forge.system.mastery.ContractMasteryService.getLevel(player) == 1, "SA fixture starts at player mastery 1");
+        release(player, blade, state);
+        var deployed = BlackFoxSwordArtCompat.active(player);
+        check(deployed != null, "real native release summons core at Lv1 without a growth gate");
+        check(((Number)state.getClass().getMethod("getProudSoulCount").invoke(state)).intValue() == 130, "native deploy costs twenty souls");
+        deployed.tickCount = 12;
+        for (boolean following : new boolean[]{true, false, true}) {
+            release(player, blade, state);
+            check(deployed.following() == following, "native release repeatedly toggles modes");
+        }
+        check(((Number)state.getClass().getMethod("getProudSoulCount").invoke(state)).intValue() == 40, "native switches each cost thirty souls");
+        var indexField = server.getPlayerList().getClass().getSuperclass().getDeclaredField("playersByUUID");
+        indexField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        var index = (Map<UUID, net.minecraft.server.level.ServerPlayer>) indexField.get(server.getPlayerList());
+        var previous = index.put(player.getUUID(), player);
+        try {
+            deployed.tickCount = 399; deployed.tick();
+            check(!deployed.isRemoved(), "core remains alive before four hundred ticks");
+            deployed.tickCount = 400; deployed.tick();
+            check(deployed.isRemoved(), "core expires at four hundred ticks, twenty seconds");
+        } finally {
+            BlackFoxSwordArtCompat.clear(player);
+            if (previous == null) index.remove(player.getUUID()); else index.put(player.getUUID(), previous);
+        }
+        validateCredit(player, blade);
+        LogUtils.getLogger().info("SWORD_CORE_RELEASE_PASS: actual native SA, Lv1 full release, 20/30 soul costs, repeated switches, 400-tick lifetime");
+    }
+    private static void validateCredit(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack blade) throws ReflectiveOperationException {
+        var relation = new com.maidweapon.common.data.MaidWeaponData("Native credit fixture");
+        com.maidweapon.forge.system.contract.ContractCarrierData.setMaidData(blade, relation);
+        com.maidweapon.forge.system.contract.ContractCarrierData.setOwner(blade, player);
+        com.maidweapon.forge.system.contract.ContractCarrierData.setBoundMaidUUID(blade, UUID.randomUUID().toString());
+        com.maidweapon.forge.system.contract.ContractCarrierData.ensureBindingId(blade);
+        var level = player.serverLevel();
+        var shot = BlackFoxPhantomCompat.spawn(player, player.position(), new net.minecraft.world.phys.Vec3(0, 0, 1));
+        BlackFoxPhantomCompat.damage(shot, 100);
+        player.getInventory().setItem(1, blade); player.setItemSlot(EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD));
+        var enemy = EntityType.ZOMBIE.create(level); enemy.setPos(player.position()); level.addFreshEntity(enemy);
+        BlackFoxPhantomCompat.impact(shot, enemy);
+        check(!enemy.isAlive() && com.maidweapon.forge.system.mastery.ContractMasteryService.getProgress(player).getTotalKills() == 1,
+                "actual native projectile uses its launch contract after a hand switch");
+        check(com.maidweapon.forge.system.mastery.ContractMasteryService.getLevel(player) == 2, "native phantom kill advances shared mastery");
+        player.setItemSlot(EquipmentSlot.MAINHAND, blade); player.getInventory().setItem(1, net.minecraft.world.item.ItemStack.EMPTY);
+        var rebound = (net.minecraft.world.entity.projectile.Projectile)BlackFoxPhantomCompat.spawn(player, player.position(), new net.minecraft.world.phys.Vec3(0,0,1));
+        var other = net.minecraftforge.common.util.FakePlayerFactory.get(level, new com.mojang.authlib.GameProfile(UUID.randomUUID(), "ReboundFixture"));
+        rebound.setOwner(other);
+        var target = EntityType.ZOMBIE.create(level);
+        com.maidweapon.forge.system.mastery.ContractCombatCredits.record(target, level.damageSources().indirectMagic(rebound, other));
+        check(com.maidweapon.forge.system.mastery.ContractCombatCredits.settle(target, level.damageSources().indirectMagic(rebound, other)) == null,
+                "changed native shooter cannot credit the original player");
+        var area = (net.minecraft.world.entity.projectile.Projectile)Class.forName("mods.flammpfeil.slashblade.util.AttackManager")
+                .getMethod("doSlash", LivingEntity.class, float.class, boolean.class, boolean.class, double.class)
+                .invoke(null, player, 0f, true, false, 100.0);
+        player.getInventory().setItem(1, blade); player.setItemSlot(EquipmentSlot.MAINHAND, BlackFoxSlashCompat.blade(level));
+        var areaEnemy = EntityType.ZOMBIE.create(level); areaEnemy.setPos(player.position().add(0, 0, 1));
+        areaEnemy.setHealth(1); level.addFreshEntity(areaEnemy); area.tickCount = 2; area.tick();
+        check(!areaEnemy.isAlive() && com.maidweapon.forge.system.mastery.ContractMasteryService.getProgress(player).getTotalKills() == 2,
+                "native slash area tick retains launch credit when DamageSource becomes the player; health=" + areaEnemy.getHealth()
+                        + ", kills=" + com.maidweapon.forge.system.mastery.ContractMasteryService.getProgress(player).getTotalKills());
+        check(com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.projectile() == null, "native scoped provenance is cleared after tick");
+        area.discard(); areaEnemy.discard();
+        shot.discard(); rebound.discard(); enemy.discard();
+        LogUtils.getLogger().info("SWORD_CORE_MASTERY_CREDIT_PASS: native source, birth carrier, hand switch, changed-owner rejection");
+    }
+    static Object nativeState(net.minecraft.world.item.ItemStack blade) throws ReflectiveOperationException {
+        var cap = (net.minecraftforge.common.capabilities.Capability<?>) Class.forName("mods.flammpfeil.slashblade.item.ItemSlashBlade")
+                .getField("BLADESTATE").get(null);
+        return blade.getCapability(cap).resolve().orElseThrow();
+    }
+    private static void release(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack blade, Object state)
+            throws ReflectiveOperationException {
+        state.getClass().getMethod("setComboSeq", ResourceLocation.class).invoke(state, ResourceLocation.parse("slashblade:none"));
+        state.getClass().getMethod("setLastActionTime", long.class).invoke(state, player.level().getGameTime());
+        blade.getItem().releaseUsing(blade, player.level(), player, blade.getUseDuration() - 100);
     }
     private static void check(boolean value, String message) { if (!value) throw new IllegalStateException(message); }
 }

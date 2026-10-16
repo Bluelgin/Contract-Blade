@@ -94,42 +94,6 @@ public final class IntrinsicSpiritApi {
         return true;
     }
 
-    /** One-time default/migration; provider synchronization never forces the player's skin back. */
-    private static void applyPresetModel(Player owner, ItemStack weapon, String spiritId) {
-        String model = PresetSpiritModels.modelFor(spiritId);
-        CompoundTag entry = intrinsicEntry(weapon, spiritId);
-        if (model.isEmpty() || model.equals(entry.getString(DEFAULT_MODEL))
-                || !PresetSpiritModels.isAvailable(model)) return;
-        CompoundTag candidate = weapon.getTag().copy();
-        CompoundTag spirits = candidate.getCompound(ROOT);
-        entry = spirits.getCompound(spiritId);
-        Entity manifested = null;
-        boolean applied;
-        if (spiritId.equals(projection(weapon))) {
-            if (MaidEntityDataCodec.hasData(candidate)) {
-                applied = PresetSpiritModels.applyDefault(candidate, model);
-            } else {
-                String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
-                manifested = maidId == null || maidId.isBlank() ? null
-                        : InfusedMaidDeploymentSystem.findManifestedMaid(owner, maidId);
-                applied = manifested != null;
-            }
-        } else {
-            applied = PresetSpiritModels.applyDefault(entry.getCompound(CONTRACT), model);
-        }
-        if (!applied) return;
-        entry.putString(DEFAULT_MODEL, model);
-        spirits.put(spiritId, entry);
-        candidate.put(ROOT, spirits);
-        try {
-            MaidEntityDataCodec.validateContainer(candidate);
-        } catch (java.io.IOException rejected) {
-            return; // Keep the complete original contract, including a live maid, untouched.
-        }
-        if (manifested != null && !PresetSpiritModels.applyDefault(manifested, model)) return;
-        weapon.setTag(candidate);
-    }
-
     /**
      * Selects the intrinsic or external contract channel. Exactly one channel
      * is projected into the deployment system at a time.
@@ -140,6 +104,7 @@ public final class IntrinsicSpiritApi {
             String spiritId,
             boolean active) {
         if (!valid(owner, weapon, spiritId)) return false;
+        com.maidweapon.forge.system.mastery.ContractMasteryService.observe(owner, weapon);
         migrateProjectedAuthority(weapon);
         if (!hasIntrinsicSpirit(weapon, spiritId)) {
             return false;
@@ -528,13 +493,4 @@ public final class IntrinsicSpiritApi {
     private IntrinsicSpiritApi() {
     }
 
-    private static boolean finishStorageChange(ItemStack weapon, CompoundTag previous) {
-        try {
-            MaidEntityDataCodec.validateContainer(weapon.getOrCreateTag());
-            return true;
-        } catch (java.io.IOException rejected) {
-            weapon.setTag(previous);
-            return false;
-        }
-    }
 }

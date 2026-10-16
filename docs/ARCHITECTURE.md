@@ -77,7 +77,7 @@ concrete contract is assigned one stable plot inside the single
 `maid_weapon:contract_interior` dimension by binding ID.
 
 The real player-owned interior is **land, not a generated house**. First entry
-chooses one immutable terrain theme and seed. Contract level expands the usable
+chooses one immutable terrain theme and seed. Player mastery expands the usable
 area in five monotonic rings; only the newly unlocked ring may be generated.
 The player's older land, buildings and decoration are authoritative and must
 never be globally rebuilt. Spatial stage footprints must be strictly nested;
@@ -89,7 +89,7 @@ The interior stack is split into focused responsibilities:
 - `ContractInteriorService`: enter/exit authority, return position and maid lifecycle;
 - `ContractInteriorCarrierLocator`: locate the real inventory/cursor/menu carrier without copying it;
 - `ContractInteriorSavedData`: binding-to-plot allocation, terrain theme/seed and generated stage;
-- `ContractInteriorProfile`: maps contract level to the five usable-area stages;
+- `ContractInteriorProfile`: maps player mastery to the five usable-area stages;
 - `ContractInteriorSelectionService`: one-time player terrain choice;
 - `ContractInteriorTerrainBuilder`: deterministic incremental land generation and invisible boundary;
 - `ContractInteriorBuilder`: developer/example Japanese home only; never the real player-home generator;
@@ -193,5 +193,14 @@ mods remain normal; failed capability invocations are not silently hidden.
 
 `tools/validate_architecture.py` protects dependency boundaries and god-class
 size. Other validators cover NBT safety, permissions, resonance, emergency film
-recovery, Patchouli resources and the legacy/Core boundary. CI runs validators
-before the Gradle build.
+recovery, Patchouli resources and the legacy/Core boundary. CI runs the full Gradle build and behavioral tests, then the source validators.
+
+## Player mastery and generic abilities
+
+Growth now has one world-scoped `ContractMasterySavedData` authority per player UUID.
+`ContractMasteryService` handles mutation, migration and owner-only read synchronization.
+Item `MaidData` retains maid/channel relationships and a read-only legacy growth archive.
+`forge.api.ability` provides multiple independently entitled ability IDs per carrier,
+validated Java/datapack routes and immutable feature queries without optional combat APIs.
+`BlackFoxAbilityAdapter` is an optional bridge with no phase-one growth route or release gate.
+See [CONTRACT_MASTERY.md](CONTRACT_MASTERY.md) for storage, trust boundaries, API and JSON format.

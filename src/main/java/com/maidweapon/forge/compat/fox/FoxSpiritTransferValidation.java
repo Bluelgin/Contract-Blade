@@ -122,6 +122,8 @@ public final class FoxSpiritTransferValidation {
         growth.setResonance(141);
         growth.setTotalKills(42);
         ContractCarrierData.setMaidData(seed, growth);
+        seed.getOrCreateTag().getCompound("MaidData").putInt("Level", 3);
+        seed.getOrCreateTag().getCompound("MaidData").putInt("TotalKills", 42);
         ContractCarrierData.setOwner(seed, owner);
         ContractCarrierData.setBoundMaidUUID(seed, maidId.toString());
         String binding = ContractCarrierData.ensureBindingId(seed);
