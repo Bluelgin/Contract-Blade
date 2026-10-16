@@ -98,8 +98,9 @@ public final class SoulDamageEngine {
     if (!authorized(p, t, session)
         || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
     SoulCutDecision decision = SoulDamageDebtService.cutDecision(p, t);
-    // An exhausted/cooling receipt cannot be used to obtain uncapped normal damage.
-    if (decision.state() == SoulCutDecision.State.RECOVERY_LOCKED) return null;
+    // The verified debt itself is never replayed as ordinary damage. If recovery is
+    // cooling or exhausted, ordinary AMBIENT damage is still permitted, but ONLY
+    // through bounded safety budgets (including at Lv10). It never mints debt.
     boolean recovery = decision.state() == SoulCutDecision.State.RECOVERABLE;
     double levelCap = AkatsukiDomainGrowth.parameter(p, "space_cut_level_cap");
     double requested =
@@ -111,7 +112,7 @@ public final class SoulDamageEngine {
                 levelCap);
     // Only Lv10 normal cuts bypass numerical budgets; verified recovery stays capped.
     double amount =
-        !recovery && levelCap == 0
+        !recovery && levelCap == 0 && decision.state() == SoulCutDecision.State.NORMAL
             ? SAFETY.reserveUncappedCut(p.getUUID(), t.getUUID(), now(p), requested, limits())
             : SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested, limits());
     if (amount <= 0) return null;
@@ -130,6 +131,31 @@ public final class SoulDamageEngine {
             result == null ? -1 : result.sequence());
       }
     }
+  }
+
+  /**
+   * Bonus for a single issued, successful NATIVE weapon hit, bounded by its
+   * actual health loss and by the common rolling safety ledger. This is an
+   * independent non-recovery attack: it never consumes or creates debt.
+   *
+   * Echo-only cooldown and brief ambient suppression protect the manual attack
+   * from being crowded out by frequent automatic domain pulses.
+   */
+  public static SoulDamageFeedback resonance(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession session, double actualNativeLoss) {
+    if (!authorized(p, t, session)
+        || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
+    double requested = SoulResonancePolicy.requested(
+        actualNativeLoss, AkatsukiDomainGrowth.parameter(p, "resonance_hit_ratio"));
+    double amount = SAFETY.reserveResonance(p.getUUID(), t.getUUID(), now(p), requested, limits());
+    if (amount <= 0) return null;
+    var feedback = execute(p, t, session, SPACE_CUT, amount, null, false);
+    if (SoulDamageConfig.DIAGNOSTICS.get() || Boolean.getBoolean("contractblade.soul.validation"))
+      LogUtils.getLogger().info(
+          "SOUL_NATIVE_RESONANCE owner={} victim={} observedHP={} requested={} actualHP={}",
+          p.getUUID(), t.getUUID(), actualNativeLoss, amount,
+          feedback == null ? 0 : feedback.loss());
+    return feedback;
   }
 
   public static SoulDamageDebtService.Reservation reserveBurst(
