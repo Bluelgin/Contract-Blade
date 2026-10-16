@@ -31,6 +31,13 @@ public final class SoulResonanceService {
           || o.classification() == DamageObservation.Classification.VERIFIED_SPECIAL_CAP
           || o.classification() == DamageObservation.Classification.ABSORPTION)
         || !o.phaseBefore().equals(o.phaseAfter())) return;
+    // Forge regression fixtures deliberately invoke hurt() with a synthetic
+    // "VALIDATION_CONTROLLED_REQUEST" source. It is NOT an actual player attack.
+    // Keep those debt-only tests independent of the native-hit echo, but always
+    // test real SlashBlade AttackManager calls (even in validation mode).
+    if ((Boolean.getBoolean("contractblade.soul.validation")
+            || Boolean.getBoolean("contractblade.soulVisual.validation"))
+        && "VALIDATION_CONTROLLED_REQUEST".equals(o.proof().origin())) return;
     long now = o.server().overworld().getGameTime();
     var sequences = SEEN.computeIfAbsent(o.server(), ignored -> new HashMap<>());
     if (sequences.size() >= 1024)
