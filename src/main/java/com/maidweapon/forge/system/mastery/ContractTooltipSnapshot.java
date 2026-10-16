@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.resources.ResourceLocation;
 import java.util.Map;
-import java.util.Set;
+import java.util.HashMap;
 
 /**
  * Read-only client tooltip projection. Server resolves datapack definitions, so UI never
@@ -42,10 +42,11 @@ public final class ContractTooltipSnapshot {
   }
 
   public static CompoundTag server(ServerPlayer player, int mastery) {
-    var result = project(mastery, Map.of(
-        "black", fallback(BlackFoxSwordCoreGrowth.ABILITY),
-        "white", fallback(WhiteFoxBlessingGrowth.ID),
-        "red", fallback(AkatsukiDomainGrowth.ID)));
+    var definitions = new HashMap<String, ContractAbilityDefinition>();
+    definitions.put("black", ContractAbilityRegistry.definition(BlackFoxSwordCoreGrowth.ABILITY));
+    definitions.put("white", ContractAbilityRegistry.definition(WhiteFoxBlessingGrowth.ID));
+    definitions.put("red", ContractAbilityRegistry.definition(AkatsukiDomainGrowth.ID));
+    var result = project(mastery, definitions);
     // These booleans describe real current equipped authorization, not simply a high level.
     result.putBoolean("black_equipped",
         ContractAbilityProgressionService.query(player, player.getMainHandItem(),
@@ -56,12 +57,6 @@ public final class ContractTooltipSnapshot {
         ContractAbilityProgressionService.query(player, player.getMainHandItem(),
             AkatsukiDomainGrowth.ID).status() == ContractAbilityProgressionService.Status.READY);
     return result;
-  }
-
-  private static ContractAbilityDefinition fallback(ResourceLocation ability) {
-    var current = ContractAbilityRegistry.definition(ability);
-    // Definitions may not yet be loaded during initial login. No guessed values.
-    return current == null ? new ContractAbilityDefinition(ability, java.util.List.of()) : current;
   }
 
   /** Client receives only this owner-scoped projection; it grants no game abilities. */
