@@ -13,7 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkHooks;
 
 /** An attackable, stationary soul fragment. No mob AI, loot, target health, or persistence. */
-public final class SoulAnchorEntity extends LivingEntity {
+public final class SoulAnchorEntity extends Entity {
   private static final EntityDataAccessor<Integer> TARGET =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.INT);
   private static final EntityDataAccessor<Integer> SHAKE =
@@ -32,17 +32,17 @@ public final class SoulAnchorEntity extends LivingEntity {
   }
 
   public String binding = "";
-  public long expires;
+  public long expires, burstUntil;
 
   public SoulAnchorEntity(EntityType<? extends SoulAnchorEntity> type, Level level) {
     super(type, level);
     noPhysics = true;
     setNoGravity(true);
-    setHealth(1);
+
   }
 
   protected void defineSynchedData() {
-    super.defineSynchedData();
+
     entityData.define(OWNER, Optional.empty());
     entityData.define(TARGET, -1);
     entityData.define(SHAKE, -100);
@@ -72,12 +72,12 @@ public final class SoulAnchorEntity extends LivingEntity {
     xo = getX();
     yo = getY();
     zo = getZ();
-    if (!level().isClientSide && !SoulAnchorService.valid(this)) discard();
+    if (!level().isClientSide) SoulAnchorService.follow(this);
   }
 
   @Override
   public boolean hurt(DamageSource source, float amount) {
-    return !level().isClientSide && amount > 0 && SoulAnchorService.strike(this, source);
+    return false;
   }
 
   @Override
@@ -98,29 +98,6 @@ public final class SoulAnchorEntity extends LivingEntity {
 
   @Override
   public void push(Entity other) {}
-
-  @Override
-  public void die(DamageSource source) {
-    discard();
-  }
-
-  @Override
-  public Iterable<ItemStack> getArmorSlots() {
-    return List.of();
-  }
-
-  @Override
-  public ItemStack getItemBySlot(EquipmentSlot slot) {
-    return ItemStack.EMPTY;
-  }
-
-  @Override
-  public void setItemSlot(EquipmentSlot slot, ItemStack stack) {}
-
-  @Override
-  public HumanoidArm getMainArm() {
-    return HumanoidArm.RIGHT;
-  }
 
   @Override
   public boolean shouldBeSaved() {

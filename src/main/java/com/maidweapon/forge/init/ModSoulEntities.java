@@ -23,10 +23,5 @@ public final class ModSoulEntities {
                   .noSummon()
                   .build("maid_weapon:soul_anchor"));
 
-  @SubscribeEvent
-  public static void attributes(EntityAttributeCreationEvent e) {
-    e.put(ANCHOR.get(), LivingEntity.createLivingAttributes().build());
-  }
-
   private ModSoulEntities() {}
 }

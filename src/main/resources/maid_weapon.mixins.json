@@ -10,7 +10,10 @@
     "ContractEntityPresenceMixin",
     "SoulEventCancellationMixin",
     "SoulHurtAmountMixin",
-    "SoulDamageAmountMixin"
+    "SoulDamageAmountMixin",
+    "DamageObservationMixin",
+    "DamageObservationForgeMixin",
+    "SoulCarrierChangeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -24,7 +24,7 @@ class AkatsukiGrowthTest {
               .collect(java.util.stream.Collectors.toSet());
       ContractAbilityRegistry.validate(
           AkatsukiDomainGrowth.ID,
-          new ContractAbilityRegistry.Registration((p, c) -> false, vocabulary, Map.of(), fallback),
+          new ContractAbilityRegistry.Registration((p, c) -> false, vocabulary, AkatsukiDomainGrowth.parameterBounds(), fallback),
           route);
       for (int level = 1; level <= 10; level++) {
         assertEquals(fallback.resolve(level), route.resolve(level));

@@ -12,7 +12,7 @@ public final class SoulStrikeContext implements AutoCloseable {
   public final long sequence;
   public final SoulDamagePolicy.Mode mode;
   public final float requested;
-  public final boolean events, strong, experimental;
+  public final boolean recovery, events, strong, experimental;
   private final LivingEntity victim;
   private final DamageSource source;
   private boolean closed;
@@ -32,6 +32,7 @@ public final class SoulStrikeContext implements AutoCloseable {
       SoulDamagePolicy.Mode mode,
       DamageSource source,
       float requested,
+      boolean recovery,
       boolean events,
       boolean strong,
       boolean experimental) {
@@ -49,6 +50,7 @@ public final class SoulStrikeContext implements AutoCloseable {
     this.mode = mode;
     this.source = source;
     this.requested = requested;
+    this.recovery = recovery;
     this.events = events;
     this.strong = strong;
     this.experimental = experimental;

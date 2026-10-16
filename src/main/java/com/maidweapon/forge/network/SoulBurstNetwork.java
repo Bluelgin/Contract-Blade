@@ -13,7 +13,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public final class SoulBurstNetwork {
   private static final SimpleChannel CHANNEL =
       NetworkRegistry.newSimpleChannel(
-          ResourceLocation.parse("maid_weapon:soul_burst"), () -> "1", "1"::equals, "1"::equals);
+          ResourceLocation.parse("maid_weapon:soul_burst"), () -> "2", "2"::equals, "2"::equals);
 
   public record Cue(Vec3 core, Vec3 target, int stage, int stages, boolean success, long seed) {}
 
