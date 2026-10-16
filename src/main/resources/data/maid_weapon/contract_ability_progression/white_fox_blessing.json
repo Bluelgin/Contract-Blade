@@ -6,78 +6,91 @@
     {
       "level": 1,
       "features": [
-        "maid_weapon:blessing_move"
+        "maid_weapon:blessing_guard"
       ],
       "parameters": {
-        "maid_weapon:move_speed": 0.03
+        "maid_weapon:guard_reduction": 0.15,
+        "maid_weapon:guard_cap": 3,
+        "maid_weapon:guard_cooldown": 60
       }
     },
     {
       "level": 2,
       "features": [
-        "maid_weapon:blessing_fall"
+        "maid_weapon:blessing_cleanse"
       ],
       "parameters": {
-        "maid_weapon:fall_reduction": 0.1
+        "maid_weapon:cleanse_cooldown": 200
       }
     },
     {
       "level": 3,
       "features": [
-        "maid_weapon:blessing_attack"
+        "maid_weapon:blessing_heal"
       ],
       "parameters": {
-        "maid_weapon:attack_speed": 0.03
+        "maid_weapon:heal_hits": 6,
+        "maid_weapon:heal_interval": 100,
+        "maid_weapon:heal_amount": 1
       }
     },
     {
       "level": 4,
       "features": [
-        "maid_weapon:blessing_guard"
+        "maid_weapon:blessing_mobility"
       ],
       "parameters": {
-        "maid_weapon:damage_reduction": 0.03
+        "maid_weapon:move_speed": 0.1,
+        "maid_weapon:move_ticks": 40
       }
     },
     {
       "level": 5,
       "features": [
-        "maid_weapon:blessing_heal"
+        "maid_weapon:blessing_lantern"
       ],
       "parameters": {
-        "maid_weapon:heal_delay": 200,
-        "maid_weapon:heal_interval": 80,
-        "maid_weapon:heal_amount": 1
+        "maid_weapon:guard_shield_ticks": 60
       }
     },
     {
       "level": 6,
-      "features": [],
+      "features": [
+        "maid_weapon:blessing_edge"
+      ],
       "parameters": {
-        "maid_weapon:move_speed": 0.05
+        "maid_weapon:edge_damage": 1.5,
+        "maid_weapon:edge_cooldown": 40
       }
     },
     {
       "level": 7,
       "features": [
-        "maid_weapon:blessing_knockback"
+        "maid_weapon:blessing_resonance"
       ],
       "parameters": {
-        "maid_weapon:knockback": 0.1
+        "maid_weapon:resonance_damage": 0.75
       }
     },
     {
       "level": 8,
-      "features": [],
+      "features": [
+        "maid_weapon:blessing_domain"
+      ],
       "parameters": {
-        "maid_weapon:attack_speed": 0.06
+        "maid_weapon:ally_radius": 5,
+        "maid_weapon:ally_heal": 0.5
       }
     },
     {
       "level": 9,
-      "features": [],
+      "features": [
+        "maid_weapon:blessing_crisis"
+      ],
       "parameters": {
-        "maid_weapon:damage_reduction": 0.06
+        "maid_weapon:crisis_threshold": 0.25,
+        "maid_weapon:crisis_cooldown": 1200,
+        "maid_weapon:crisis_shield_ticks": 60
       }
     },
     {
@@ -87,7 +100,9 @@
       ],
       "parameters": {
         "maid_weapon:oath_cooldown": 12000,
-        "maid_weapon:oath_shield_ticks": 100
+        "maid_weapon:oath_shield_ticks": 100,
+        "maid_weapon:protection_ticks": 40,
+        "maid_weapon:protection_reduction": 0.2
       }
     }
   ]

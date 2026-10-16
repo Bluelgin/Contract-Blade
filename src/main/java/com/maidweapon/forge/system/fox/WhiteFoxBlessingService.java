@@ -1,9 +1,18 @@
 package com.maidweapon.forge.system.fox;
 
+import static com.maidweapon.forge.system.fox.WhiteFoxGuardRuntime.Action.*;
+
 import com.maidweapon.forge.api.ability.*;
 import com.maidweapon.forge.api.event.*;
+import com.maidweapon.forge.compat.SlashBladeCompat;
+import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+import com.maidweapon.forge.system.mastery.ContractCombatCredits;
 import java.util.*;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.*;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
@@ -14,36 +23,35 @@ import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.*;
 import net.minecraftforge.fml.common.Mod;
 
-/** Effects only: qualification/growth/identity/storage live in their existing services. */
+/** Server effects only; existing services own mastery, residency and combat attribution. */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class WhiteFoxBlessingService {
   private static final UUID MOVE = UUID.fromString("6305a495-dd87-46a8-9380-7006c343ae11"),
-      ATTACK = UUID.fromString("6305a495-dd87-46a8-9380-7006c343ae12"),
-      KNOCK = UUID.fromString("6305a495-dd87-46a8-9380-7006c343ae13");
+      LEGACY_ATTACK = UUID.fromString("6305a495-dd87-46a8-9380-7006c343ae12"),
+      LEGACY_KNOCK = UUID.fromString("6305a495-dd87-46a8-9380-7006c343ae13");
+  private static final Map<ServerPlayer, WhiteFoxGuardRuntime> RUNTIME = new WeakHashMap<>();
 
-  private record Shield(net.minecraft.world.effect.MobEffectInstance effect, int duration) {}
+  private record Shield(MobEffectInstance effect, int duration) {}
 
   private static final Map<ServerPlayer, Shield> SHIELDS = new WeakHashMap<>();
-
-  private static void clearShield(ServerPlayer player) {
-    var shield = SHIELDS.remove(player);
-    if (shield != null
-        && player.getEffect(net.minecraft.world.effect.MobEffects.ABSORPTION) == shield.effect()
-        && shield.effect().getAmplifier() == 0
-        && shield.effect().getDuration() <= shield.duration())
-      player.removeEffect(net.minecraft.world.effect.MobEffects.ABSORPTION);
-  }
-
-  private static final Map<ServerPlayer, Long> COMBAT = new WeakHashMap<>(),
-      HEAL = new WeakHashMap<>();
+  // Explicit vanilla dispel policy. Never infer dispellability from isBeneficial() or mod tags.
+  private static final List<MobEffect> DISPEL =
+      List.of(
+          MobEffects.POISON,
+          MobEffects.WITHER,
+          MobEffects.MOVEMENT_SLOWDOWN,
+          MobEffects.WEAKNESS,
+          MobEffects.BLINDNESS,
+          MobEffects.CONFUSION,
+          MobEffects.DIG_SLOWDOWN,
+          MobEffects.HUNGER);
 
   public static void register() {
     ContractAbilityRegistry.register(
         WhiteFoxBlessingGrowth.ID,
         (player, carrier) ->
             acquired(player)
-                && com.maidweapon.forge.compat.SlashBladeCompat.isNamedBlade(
-                    carrier, "item.slashblade.fox_white")
+                && SlashBladeCompat.isNamedBlade(carrier, "item.slashblade.fox_white")
                 && FoxSpiritState.isOriginalHome(carrier)
                 && FoxSpiritAbilityAuthorization.allows(player, carrier, FoxSpiritState.WHITE),
         WhiteFoxBlessingGrowth.FEATURES,
@@ -58,76 +66,97 @@ public final class WhiteFoxBlessingService {
         .getBoolean("MaidWeaponBlackFoxDefeated");
   }
 
+  private static WhiteFoxBlessingGrowth.Profile handProfile(ServerPlayer player, ItemStack hand) {
+    var result = ContractAbilityProgressionService.query(player, hand, WhiteFoxBlessingGrowth.ID);
+    return result.status() == ContractAbilityProgressionService.Status.READY
+        ? new WhiteFoxBlessingGrowth.Profile(result.capabilities())
+        : null;
+  }
+
   public static WhiteFoxBlessingGrowth.Profile profile(ServerPlayer player) {
-    for (ItemStack hand : List.of(player.getMainHandItem(), player.getOffhandItem())) {
-      if (!FoxSpiritState.hasResident(hand)
-          || !FoxSpiritState.WHITE.equals(FoxSpiritState.resident(hand).getString("SpiritId")))
-        continue;
-      var result = ContractAbilityProgressionService.query(player, hand, WhiteFoxBlessingGrowth.ID);
-      if (result.status() == ContractAbilityProgressionService.Status.READY)
-        return new WhiteFoxBlessingGrowth.Profile(result.capabilities());
-    }
-    return null;
+    var main = handProfile(player, player.getMainHandItem());
+    return main != null ? main : handProfile(player, player.getOffhandItem());
   }
 
   private static long now(ServerPlayer player) {
     return player.getServer().overworld().getGameTime();
   }
 
-  private static void modifier(
-      ServerPlayer player,
-      Attribute attribute,
-      UUID id,
-      double value,
-      AttributeModifier.Operation operation) {
-    var instance = player.getAttribute(attribute);
-    if (instance == null) return;
-    var old = instance.getModifier(id);
-    if (old != null && old.getAmount() == value && old.getOperation() == operation) return;
-    if (old != null) instance.removeModifier(id);
-    if (value != 0)
-      instance.addTransientModifier(
-          new AttributeModifier(id, "maid_weapon:white_fox_blessing", value, operation));
+  private static WhiteFoxGuardRuntime runtime(ServerPlayer player) {
+    return RUNTIME.computeIfAbsent(player, ignored -> new WhiteFoxGuardRuntime());
+  }
+
+  private static void movement(ServerPlayer player, double value) {
+    var attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
+    if (attribute == null) return;
+    var old = attribute.getModifier(MOVE);
+    if (old != null && old.getAmount() == value) return;
+    if (old != null) attribute.removeModifier(MOVE);
+    if (value > 0)
+      attribute.addTransientModifier(
+          new AttributeModifier(
+              MOVE,
+              "maid_weapon:white_fox_guard",
+              value,
+              AttributeModifier.Operation.MULTIPLY_TOTAL));
+  }
+
+  private static void clearShield(ServerPlayer player) {
+    var shield = SHIELDS.remove(player);
+    if (shield != null
+        && player.getEffect(MobEffects.ABSORPTION) == shield.effect()
+        && shield.effect().getAmplifier() == 0
+        && shield.effect().getDuration() <= shield.duration())
+      player.removeEffect(MobEffects.ABSORPTION);
+  }
+
+  private static void shield(ServerPlayer player, long ticks) {
+    if (player.hasEffect(MobEffects.ABSORPTION))
+      return; // Never replace another mod/potion's shield.
+    int duration = (int) ticks;
+    if (player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, duration, 0)))
+      SHIELDS.put(player, new Shield(player.getEffect(MobEffects.ABSORPTION), duration));
+  }
+
+  private static boolean cleanse(LivingEntity target) {
+    for (var effect : DISPEL) if (target.hasEffect(effect)) return target.removeEffect(effect);
+    return false;
+  }
+
+  private static boolean needsCleanse(LivingEntity target) {
+    return DISPEL.stream().anyMatch(target::hasEffect);
   }
 
   public static void remove(ServerPlayer player) {
     clearShield(player);
-    modifier(
-        player, Attributes.MOVEMENT_SPEED, MOVE, 0, AttributeModifier.Operation.MULTIPLY_TOTAL);
-    modifier(
-        player, Attributes.ATTACK_SPEED, ATTACK, 0, AttributeModifier.Operation.MULTIPLY_TOTAL);
-    modifier(
-        player, Attributes.KNOCKBACK_RESISTANCE, KNOCK, 0, AttributeModifier.Operation.ADDITION);
-  }
-
-  private static double value(WhiteFoxBlessingGrowth.Profile p, String feature, String parameter) {
-    return p != null && p.has(feature) ? p.number(parameter) : 0;
+    movement(player, 0);
+    // Remove the old route's transient attribute ids on upgrade as well.
+    var attack = player.getAttribute(Attributes.ATTACK_SPEED);
+    if (attack != null) attack.removeModifier(LEGACY_ATTACK);
+    var knock = player.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+    if (knock != null) knock.removeModifier(LEGACY_KNOCK);
+    var state = RUNTIME.get(player);
+    if (state != null) state.suspend();
   }
 
   public static void refresh(ServerPlayer player) {
-    apply(player, profile(player));
+    refresh(player, profile(player));
   }
 
-  private static void apply(ServerPlayer player, WhiteFoxBlessingGrowth.Profile p) {
-    if (p == null) clearShield(player);
-    modifier(
+  private static void refresh(ServerPlayer player, WhiteFoxBlessingGrowth.Profile p) {
+    if (p == null) {
+      remove(player);
+      return;
+    }
+    movement(
         player,
-        Attributes.MOVEMENT_SPEED,
-        MOVE,
-        value(p, "blessing_move", "move_speed"),
-        AttributeModifier.Operation.MULTIPLY_TOTAL);
-    modifier(
-        player,
-        Attributes.ATTACK_SPEED,
-        ATTACK,
-        value(p, "blessing_attack", "attack_speed"),
-        AttributeModifier.Operation.MULTIPLY_TOTAL);
-    modifier(
-        player,
-        Attributes.KNOCKBACK_RESISTANCE,
-        KNOCK,
-        value(p, "blessing_knockback", "knockback"),
-        AttributeModifier.Operation.ADDITION);
+        p.has("blessing_mobility") && runtime(player).moving(now(player))
+            ? p.number("move_speed")
+            : 0);
+    var attack = player.getAttribute(Attributes.ATTACK_SPEED);
+    if (attack != null) attack.removeModifier(LEGACY_ATTACK);
+    var knock = player.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+    if (knock != null) knock.removeModifier(LEGACY_KNOCK);
   }
 
   @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -135,59 +164,151 @@ public final class WhiteFoxBlessingService {
     if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player))
       return;
     var p = profile(player);
-    apply(player, p);
-    if (p == null || !p.has("blessing_heal")) return;
+    refresh(player, p);
+    if (p == null || !player.isAlive()) return;
+    var state = runtime(player);
     long time = now(player);
-    COMBAT.putIfAbsent(player, time);
-    if (time - COMBAT.get(player) < p.number("heal_delay")
-        || time < HEAL.getOrDefault(player, 0L)
-        || !player.isAlive()
-        || player.getHealth() >= player.getMaxHealth()) return;
-    player.heal((float) p.number("heal_amount"));
-    HEAL.put(player, time + (long) p.number("heal_interval"));
+    if (p.has("blessing_cleanse")
+        && needsCleanse(player)
+        && state.consume(CLEANSE, time, p.ticks("cleanse_cooldown"))
+        && cleanse(player)) WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.CLEANSE);
+    crisis(player, p, player.getHealth(), time);
+  }
+
+  private static void crisis(
+      ServerPlayer player, WhiteFoxBlessingGrowth.Profile p, float health, long time) {
+    if (!p.has("blessing_crisis")
+        || health <= 0
+        || health > player.getMaxHealth() * p.number("crisis_threshold")) return;
+    if (!WhiteFoxBlessingCooldownData.get(player.getServer())
+        .consumeCrisis(player.getUUID(), time, p.ticks("crisis_cooldown"))) return;
+    shield(player, p.ticks("crisis_shield_ticks"));
+    cleanse(player);
+    WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.CRISIS);
   }
 
   @SubscribeEvent(priority = EventPriority.LOWEST)
   public static void damage(LivingDamageEvent event) {
     if (event.getEntity().level().isClientSide
+        || event.isCanceled()
         || event.getAmount() <= 0
         || !Float.isFinite(event.getAmount())) return;
-    if (event.getSource().getEntity() instanceof ServerPlayer attacker)
-      COMBAT.put(attacker, now(attacker));
-    else {
-      var credit =
-          com.maidweapon.forge.api.ContractCombatCreditResolver.actor(
-              event.getSource().getEntity());
-      if (credit != null) COMBAT.put(credit.player(), now(credit.player()));
-    }
-    if (!(event.getEntity() instanceof ServerPlayer player)) return;
-    COMBAT.put(player, now(player));
+    onHit(event);
+    if (!(event.getEntity() instanceof ServerPlayer player) || !player.isAlive()) return;
     var p = profile(player);
-    if (p == null) return;
-    var source = event.getSource();
-    if (source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
-    float amount =
-        p.damage(event.getAmount(), source.is(net.minecraft.world.damagesource.DamageTypes.FALL));
-    event.setAmount(amount);
-    if (!p.has("blessing_oath")
-        || amount < player.getHealth()
-        || player.getMainHandItem().is(Items.TOTEM_OF_UNDYING)
-        || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) return;
-    if (!WhiteFoxBlessingCooldownData.get(player.getServer())
-        .consume(player.getUUID(), now(player), (long) p.number("oath_cooldown"))) return;
-    event.setAmount(Math.max(0, player.getHealth() - 1));
-    if (!player.hasEffect(net.minecraft.world.effect.MobEffects.ABSORPTION)) {
-      int duration = (int) p.number("oath_shield_ticks");
-      player.addEffect(
-          new net.minecraft.world.effect.MobEffectInstance(
-              net.minecraft.world.effect.MobEffects.ABSORPTION, duration, 0));
-      SHIELDS.put(
-          player,
-          new Shield(player.getEffect(net.minecraft.world.effect.MobEffects.ABSORPTION), duration));
+    if (p == null
+        || event.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+    long time = now(player);
+    var state = runtime(player);
+    float amount = event.getAmount();
+    if (p.has("blessing_guard") && state.consume(GUARD, time, p.ticks("guard_cooldown"))) {
+      amount = p.guardedDamage(amount);
+      WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.GUARD);
+      if (p.has("blessing_mobility")) state.move(time, p.ticks("move_ticks"));
+      if (p.has("blessing_lantern")) shield(player, p.ticks("guard_shield_ticks"));
+      refresh(player);
     }
-    player.getServer().overworld().getDataStorage().save();
-    player.displayClientMessage(
-        net.minecraft.network.chat.Component.translatable("maid_weapon.white_blessing.oath"), true);
+    if (p.has("blessing_oath") && state.protectedNow(time))
+      amount *= (float) (1 - p.number("protection_reduction"));
+    event.setAmount(amount);
+    if (amount >= player.getHealth()) {
+      if (!p.has("blessing_oath")
+          || player.getMainHandItem().is(Items.TOTEM_OF_UNDYING)
+          || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) return;
+      if (!WhiteFoxBlessingCooldownData.get(player.getServer())
+          .consume(player.getUUID(), time, p.ticks("oath_cooldown"))) return;
+      event.setAmount(Math.max(0, player.getHealth() - 1));
+      cleanse(player);
+      // Upgrade our own Lv5 shield to the oath duration, without touching foreign absorption.
+      clearShield(player);
+      shield(player, p.ticks("oath_shield_ticks"));
+      state.protect(time, p.ticks("protection_ticks"));
+      WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.OATH);
+      player.getServer().overworld().getDataStorage().save();
+      player.displayClientMessage(
+          net.minecraft.network.chat.Component.translatable("maid_weapon.white_blessing.oath"),
+          true);
+    } else crisis(player, p, player.getHealth() - amount, time);
+  }
+
+  private static boolean sameCarrier(ItemStack a, ItemStack b) {
+    String binding = ContractCarrierData.getBindingId(a);
+    return !binding.isEmpty() && binding.equals(ContractCarrierData.getBindingId(b));
+  }
+
+  private static void onHit(LivingDamageEvent event) {
+    var credit = ContractCombatCredits.resolveHit(event.getSource());
+    if (credit == null) return;
+    var player = credit.player();
+    var target = event.getEntity();
+    if (target == player
+        || !target.isAlive()
+        || player.level() != target.level()
+        || player.isAlliedTo(target)
+        || target.isAlliedTo(player)
+        || target instanceof TamableAnimal tame && player.getUUID().equals(tame.getOwnerUUID()))
+      return;
+    var main = handProfile(player, player.getMainHandItem());
+    var off = handProfile(player, player.getOffhandItem());
+    var p = main != null ? main : off;
+    if (p == null) return;
+    boolean whiteHit =
+        sameCarrier(credit.carrier(), player.getMainHandItem())
+            && SlashBladeCompat.isNamedBlade(credit.carrier(), "item.slashblade.fox_white")
+            && FoxSpiritAbilityAuthorization.allows(player, credit.carrier(), FoxSpiritState.WHITE)
+            && FoxSpiritState.isOriginalHome(credit.carrier());
+    boolean blackHit =
+        sameCarrier(credit.carrier(), player.getMainHandItem())
+            && SlashBladeCompat.isNamedBlade(credit.carrier(), "item.slashblade.fox_black")
+            && FoxSpiritState.isOriginalHome(credit.carrier())
+            && FoxSpiritAbilityAuthorization.allows(player, credit.carrier(), FoxSpiritState.BLACK);
+    var mode =
+        WhiteFoxGuardRuntime.hitMode(
+            main != null, off != null, whiteHit, blackHit, p.has("blessing_resonance"));
+    if (mode == WhiteFoxGuardRuntime.HitMode.NONE) return;
+    long time = now(player);
+    var state = runtime(player);
+    if (p.has("blessing_heal")
+        && state.hit(
+            time,
+            (int) p.number("heal_hits"),
+            p.ticks("heal_interval"),
+            player.getHealth() < player.getMaxHealth())) {
+      player.heal((float) p.number("heal_amount"));
+      WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.HEAL);
+      if (p.has("blessing_domain")) healMaid(player, p);
+    }
+    if (p.has("blessing_edge") && state.consume(EDGE, time, p.ticks("edge_cooldown"))) {
+      // Add only to this already successful hit. No recursive hurt or invulnerability reset.
+      double bonus =
+          mode == WhiteFoxGuardRuntime.HitMode.WHITE
+              ? p.number("edge_damage")
+              : p.number("resonance_damage");
+      event.setAmount((float) Math.min(Float.MAX_VALUE, event.getAmount() + bonus));
+      WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.EDGE);
+    }
+  }
+
+  private static void healMaid(ServerPlayer player, WhiteFoxBlessingGrowth.Profile p) {
+    player
+        .level()
+        .getEntitiesOfClass(
+            TamableAnimal.class,
+            player.getBoundingBox().inflate(p.number("ally_radius")),
+            maid ->
+                TouhouLittleMaidHelper.isMaidEntity(maid)
+                    && maid.isAlive()
+                    && player.getUUID().equals(maid.getOwnerUUID())
+                    && maid.distanceToSqr(player)
+                        <= p.number("ally_radius") * p.number("ally_radius")
+                    && maid.getHealth() < maid.getMaxHealth())
+        .stream()
+        .min(Comparator.comparingDouble(maid -> maid.distanceToSqr(player)))
+        .ifPresent(
+            maid -> {
+              maid.heal((float) p.number("ally_heal"));
+              WhiteFoxVisualBridge.show(maid, WhiteFoxVisualBridge.Cue.HEAL);
+            });
   }
 
   @SubscribeEvent
@@ -212,28 +333,35 @@ public final class WhiteFoxBlessingService {
   public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
     if (event.getEntity() instanceof ServerPlayer player) {
       remove(player);
-      COMBAT.remove(player);
-      HEAL.remove(player);
+      RUNTIME.remove(player);
     }
   }
 
   @SubscribeEvent
   public static void death(LivingDeathEvent event) {
-    if (event.getEntity() instanceof ServerPlayer player) remove(player);
+    if (event.getEntity() instanceof ServerPlayer player) {
+      remove(player);
+      RUNTIME.remove(player);
+    }
   }
 
   @SubscribeEvent
   public static void dimension(PlayerEvent.PlayerChangedDimensionEvent event) {
     if (event.getEntity() instanceof ServerPlayer player) {
       remove(player);
+      RUNTIME.remove(player);
       refresh(player);
     }
   }
 
   @SubscribeEvent
+  public static void stopping(net.minecraftforge.event.server.ServerStoppingEvent event) {
+    for (var player : new ArrayList<>(RUNTIME.keySet())) remove(player);
+  }
+
+  @SubscribeEvent
   public static void stopped(ServerStoppedEvent event) {
-    COMBAT.clear();
-    HEAL.clear();
+    RUNTIME.clear();
     SHIELDS.clear();
     FoxSpiritAbilityAuthorization.clear();
   }

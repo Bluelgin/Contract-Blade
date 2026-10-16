@@ -400,11 +400,14 @@
   "maid_weapon.transfer.soul": "§7Soul talisman: move your maid to another weapon at the Contract Table.",
   "maid_weapon.transfer.legacy_film": "§7Film: revive your maid at a maid altar.",
   "maid_weapon.white_blessing.oath": "The fox oath protected you. It recharges in ten minutes.",
-  "maid_weapon.white_blessing.tooltip": "§7White Fox’s blessing: after freeing Black Fox, hold her weapon while she rests inside. Grows with contract mastery.",
+  "maid_weapon.white_blessing.tooltip": "§7White Fox: guards and cleanses while held with her spirit inside. Mastery unlocks healing and assist slashes. Stops when manifested.",
   "maid_weapon.tooltip.status.away": "§dYour maid is outside the weapon",
   "maid_weapon.tooltip.upgrade.targets": "the chosen enemies",
   "maid_weapon.transfer.failed": "Unable to move her yet. Check whether she is still outside her weapon.",
   "maid_weapon.recovery.native_backup": "Your maid cannot be found yet. Retry, or ask an operator to use /tlm backup get <player> in the Overworld for a backup photo.",
   "maid_weapon.recovery.historical_snapshot": "This maid came from a historical backup. Recent equipment and progress may be missing.",
-  "maid_weapon.recovery.still_away": "Your maid may still be outside. Recall her first, or retry near her last location."
+  "maid_weapon.recovery.still_away": "Your maid may still be outside. Recall her first, or retry near her last location.",
+  "maid_weapon.white_blessing.early": "§7Lv.1–5: guard on hurt, periodic cleanse, healing on hits; brief speed and absorption after guarding.",
+  "maid_weapon.white_blessing.middle": "§7Lv.6–8: assist slash; main-hand Black Fox can resonate, healing also helps one nearby owned maid.",
+  "maid_weapon.white_blessing.late": "§7Lv.9–10: emergency guard; lethal damage invokes the oath, sparing your life and cleansing."
 }

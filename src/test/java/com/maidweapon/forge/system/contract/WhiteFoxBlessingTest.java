@@ -31,17 +31,39 @@ class WhiteFoxBlessingTest {
   }
 
   @Test
-  void upgradesReplaceRatherThanAddAndDamageIsMultiplicative() {
+  void eachLevelAddsAPhysicalAbilityAndGuardHasAbsoluteCap() {
+    String[] route = {
+      "guard",
+      "cleanse",
+      "heal",
+      "mobility",
+      "lantern",
+      "edge",
+      "resonance",
+      "domain",
+      "crisis",
+      "oath"
+    };
     for (int lv = 1; lv <= 10; lv++) {
       var p = new WhiteFoxBlessingGrowth.Profile(WhiteFoxBlessingGrowth.fallback().resolve(lv));
-      assertEquals(lv < 6 ? .03 : .05, p.number("move_speed"));
-      assertEquals(lv < 3 ? 0 : lv < 8 ? .03 : .06, p.number("attack_speed"));
-      assertEquals(lv < 4 ? 0 : lv < 9 ? .03 : .06, p.number("damage_reduction"));
-      assertEquals(
-          100 * (lv < 2 ? 1 : .9) * (lv < 4 ? 1 : lv < 9 ? .97 : .94), p.damage(100, true), .0001);
-      assertEquals(lv >= 5, p.has("blessing_heal"));
-      assertEquals(lv == 10, p.has("blessing_oath"));
+      for (int i = 0; i < 10; i++) assertEquals(i < lv, p.has("blessing_" + route[i]));
+      assertEquals(8.5f, p.guardedDamage(10), .0001);
+      assertEquals(997f, p.guardedDamage(1000), .0001);
+      assertEquals(0, p.guardedDamage(0));
+      assertTrue(Float.isNaN(p.guardedDamage(Float.NaN)));
     }
+  }
+
+  @Test
+  void crisisReceiptIsIndependentAndDurable() {
+    var data = WhiteFoxBlessingCooldownData.load(new CompoundTag());
+    var owner = UUID.randomUUID();
+    assertTrue(data.consumeCrisis(owner, 100, 1200));
+    assertTrue(data.consume(owner, 100, 12000));
+    data = WhiteFoxBlessingCooldownData.load(data.save(new CompoundTag()));
+    assertFalse(data.consumeCrisis(owner, 1299, 1200));
+    assertTrue(data.consumeCrisis(owner, 1300, 1200));
+    assertFalse(data.ready(owner, 1300));
   }
 
   @Test
@@ -64,6 +86,7 @@ class WhiteFoxBlessingTest {
     tag.putString("Future", "retained");
     var data = WhiteFoxBlessingCooldownData.load(tag);
     assertFalse(data.consume(UUID.randomUUID(), 100, 12000));
+    assertFalse(data.consumeCrisis(UUID.randomUUID(), 100, 1200));
     assertEquals(tag, data.save(new CompoundTag()));
   }
 }

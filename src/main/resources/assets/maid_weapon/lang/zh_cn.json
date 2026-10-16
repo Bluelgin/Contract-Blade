@@ -402,11 +402,14 @@
   "maid_weapon.transfer.soul": "§7魂符：在契约缔结台为女仆更换武器。",
   "maid_weapon.transfer.legacy_film": "§7胶片：在女仆祭坛复活女仆。",
   "maid_weapon.white_blessing.oath": "狐之誓约已守护你；十分钟后可再次触发。",
-  "maid_weapon.white_blessing.tooltip": "§7白狐加护：解放黑狐后，剑灵驻留时持有生效，随契约熟练度成长。",
+  "maid_weapon.white_blessing.tooltip": "§7白狐守护：驻留持有时自动护主、净化；战斗中随熟练度解锁灵愈与协同。显现后停止。",
   "maid_weapon.tooltip.status.away": "§d女仆不在武器中",
   "maid_weapon.tooltip.upgrade.targets": "指定怪物",
   "maid_weapon.transfer.failed": "暂时无法迁居，请检查女仆是否还在外活动。",
   "maid_weapon.recovery.native_backup": "暂时无法找回女仆。可以重试，或请管理员在主世界使用 /tlm backup get <玩家> 获取备份照片。",
   "maid_weapon.recovery.historical_snapshot": "这位女仆来自历史备份，最近的装备和进度可能未被保存。",
-  "maid_weapon.recovery.still_away": "女仆可能仍在外活动。请先召回她，或靠近上次停留的地方重试。"
+  "maid_weapon.recovery.still_away": "女仆可能仍在外活动。请先召回她，或靠近上次停留的地方重试。",
+  "maid_weapon.white_blessing.early": "§7Lv.1–5：受击护主、定时净化、命中灵愈；护主后短时加速与吸收。",
+  "maid_weapon.white_blessing.middle": "§7Lv.6–8：轻量追加斩击；黑狐主手可共鸣，灵愈兼顾附近己方女仆。",
+  "maid_weapon.white_blessing.late": "§7Lv.9–10：危急自动守护；致命伤发动狐之誓约，保命并净化。"
 }
