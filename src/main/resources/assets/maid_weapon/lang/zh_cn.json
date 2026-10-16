@@ -455,7 +455,7 @@
   "maid_weapon.tooltip.red.no_level_cap": "§7无熟练度等级单次 HP 上限；仍遵守 Boss 阶段保护和服务器伤害安全限制。",
   "maid_weapon.tooltip.red.debt_explain": "§7仅可追偿经验证的特殊限伤差额；正常减伤不会凭空产生欠伤。",
   "maid_weapon.tooltip.red.anchor_spawn": "§b高位魂核：确认特殊限伤差额后，在 Boss 头顶较高处显现。",
-  "maid_weapon.tooltip.red.anchor_hit": "§7可用拔刀剑原生幻影剑射击魂核，飞行路径有宽松命中判定；也可腾空直接攻击。普通范围斩与他人投射物不会触发。",
+  "maid_weapon.tooltip.red.anchor_hit": "§7瞄准高位魂核发射原生幻影剑；对准魂核时可优先于 Boss 锁定目标，飞行路径有宽松判定。腾空直接攻击也有效。",
   "maid_weapon.tooltip.red.anchor_locked": "§7空中魂核于契约熟练度 Lv.2 解锁。",
   "maid_weapon.tooltip.red.rescue": "§7Lv.8 起可在濒危时尝试救援；受使用条件与冷却约束。",
   "maid_weapon.tooltip.red.skill_group": "§8Lv.%s–%s 已解锁：%s",

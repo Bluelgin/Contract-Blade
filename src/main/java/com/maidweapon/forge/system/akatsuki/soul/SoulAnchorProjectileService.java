@@ -21,6 +21,7 @@ import net.minecraftforge.fml.common.Mod;
  *
  * START-phase swept check catches fast swords before SlashBlade consumes its
  * own collision internally. The issuer's existing launch credit is mandatory.
+ * A deliberate player look ray can override native boss lock-on at launch.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulAnchorProjectileService {
@@ -46,9 +47,6 @@ public final class SoulAnchorProjectileService {
       if (!BASIC_SUMMONED_SWORD.equals(
           BuiltInRegistries.ENTITY_TYPE.getKey(sword.getType()).toString())
           || sword.isRemoved() || sword.getOwner() != owner) continue;
-      var hit = SoulAnchorProjectileGeometry.firstHit(
-          core.getBoundingBox(), sword.position(), sword.getDeltaMovement());
-      if (hit == null || !clear(level, sword.position(), hit, owner)) continue;
       // Native ContractCombatCredits snapshots launcher, exact carrier identity,
       // revocation generation and owner at projectile join. A held Red Moon
       // cannot steal another sword launched before the weapon was equipped.
@@ -58,6 +56,24 @@ public final class SoulAnchorProjectileService {
           || proof.carrier() != owner.getMainHandItem()
           || !core.binding.equals(ContractCarrierData.getBindingId(proof.carrier())))
         continue;
+      // SlashBlade prioritizes an existing boss lock over the player's look ray.
+      // Only a FRESH, verified basic sword is gently redirected if its owner is
+      // actually looking at this core. No persistent homing or auto-aim scanning.
+      var delta = sword.getDeltaMovement();
+      if (sword.tickCount <= 1
+          && SoulAnchorProjectileGeometry.aimedAt(
+              core.getBoundingBox(), owner.getEyePosition(), owner.getLookAngle())
+          && clear(level, owner.getEyePosition(),
+              core.getBoundingBox().getCenter(), owner)) {
+        var toCore = core.getBoundingBox().getCenter().subtract(sword.position());
+        double speed = delta.length();
+        if (speed >= .2 && speed <= SoulAnchorProjectileGeometry.MAX_SWEEP
+            && toCore.lengthSqr() > .0001)
+          sword.setDeltaMovement(delta = toCore.normalize().scale(speed));
+      }
+      var hit = SoulAnchorProjectileGeometry.firstHit(
+          core.getBoundingBox(), sword.position(), delta);
+      if (hit == null || !clear(level, sword.position(), hit, owner)) continue;
       if (SoulAnchorService.projectileHit(owner, core)) {
         // Do not leave a penetrating sword free to hit another soul core.
         sword.discard();

@@ -453,7 +453,7 @@
   "maid_weapon.tooltip.red.no_level_cap": "§7No mastery-level HP cap; boss phases and server damage safeguards still apply.",
   "maid_weapon.tooltip.red.debt_explain": "§7Recovery uses only verified damage denied by special limits; normal mitigation creates no debt.",
   "maid_weapon.tooltip.red.anchor_spawn": "§bHigh soul core: appears far above the boss after a verifiable special damage cap.",
-  "maid_weapon.tooltip.red.anchor_hit": "§7Shoot it with SlashBlade's summoned swords; a generous flight-path hit is accepted. Aerial direct melee also works. Ordinary area sweeps and foreign projectiles do not.",
+  "maid_weapon.tooltip.red.anchor_hit": "§7Aim at the high core and fire a native SlashBlade summoned sword (overrides boss lock-on while aimed). Its flight path has generous hit tolerance. Aerial direct attacks also work.",
   "maid_weapon.tooltip.red.anchor_locked": "§7Aerial soul cores become available at contract mastery Lv.2.",
   "maid_weapon.tooltip.red.rescue": "§7Critical-health rescue available (Lv.8+), subject to conditions and cooldown.",
   "maid_weapon.tooltip.red.skill_group": "§8Lv.%s–%s unlocked: %s",

@@ -20,6 +20,15 @@ public final class SoulAnchorProjectileGeometry {
     return region.clip(start, start.add(velocity)).orElse(null);
   }
 
+  /** The owner's deliberate crosshair aim can override native boss lock-on. */
+  public static boolean aimedAt(AABB core, Vec3 eye, Vec3 look) {
+    if (core == null || !finite(eye) || !finite(look)
+        || look.lengthSqr() < .9 || look.lengthSqr() > 1.1) return false;
+    AABB guide = core.inflate(.8, .8, .8);
+    return guide.contains(eye)
+        || guide.clip(eye, eye.add(look.scale(40))).isPresent();
+  }
+
   private static boolean finite(Vec3 v) {
     return v != null && Double.isFinite(v.x) && Double.isFinite(v.y)
         && Double.isFinite(v.z);
