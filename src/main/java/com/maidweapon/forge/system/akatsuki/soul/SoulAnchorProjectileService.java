@@ -84,7 +84,8 @@ public final class SoulAnchorProjectileService {
       if (SoulAnchorService.projectileHit(owner, core)) {
         // Do not leave a penetrating sword free to hit another soul core.
         sword.discard();
-        if (Boolean.getBoolean("contractblade.soul.validation"))
+        if (com.maidweapon.common.SoulDamageConfig.DIAGNOSTICS.get()
+            || Boolean.getBoolean("contractblade.soul.validation"))
           com.mojang.logging.LogUtils.getLogger().info(
               "SOUL_NATIVE_SUMMONED_SWORD_ACCEPTED owner={} core={} sword={}",
               owner.getUUID(), core.getId(), sword.getUUID());

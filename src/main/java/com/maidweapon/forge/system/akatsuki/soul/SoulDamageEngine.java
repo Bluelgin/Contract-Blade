@@ -49,6 +49,8 @@ public final class SoulDamageEngine {
         && session.attacking()
         && now(p) >= session.executionPulseUntil
         && AkatsukiDomainAuthorization.allows(p, p.getMainHandItem())
+        && session.binding != null
+        && !session.binding.isBlank()
         && session.binding.equals(ContractCarrierData.getBindingId(p.getMainHandItem()))
         && AkatsukiDomainService.combatTarget(p, t, session)
         && !t.isRemoved()
@@ -157,6 +159,28 @@ public final class SoulDamageEngine {
     return amount <= 0 ? null : SoulDamageDebtService.reserve(p, t, true, amount);
   }
 
+  public record BurstPlan(double base, SoulDamageDebtService.Reservation recovery) {}
+
+  /** One shared cooldown for the independent skill and its optional verified recovery. */
+  public static BurstPlan reserveActiveBurst(ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
+    if (!authorized(p, t, s)) return null;
+    double base = SoulBurstBasePolicy.requested(p.getAttributeValue(Attributes.ATTACK_DAMAGE),
+        t.getMaxHealth(), ContractMasteryService.getLevel(p),
+        SoulDamageConfig.BURST_MULTIPLIER.get(), SoulDamageConfig.BURST_HEALTH_FRACTION.get());
+    if (HITS.reserveBurst(p.getUUID(), t.getUUID(), now(p), base,
+        SoulDamageConfig.BURST_COOLDOWN.get()) <= 0) return null;
+    double available = SoulDamageDebtService.available(p, t, true);
+    var recovery = Double.isFinite(available) && available > .01
+        ? SoulDamageDebtService.reserve(p, t, true, Math.min(available, Float.MAX_VALUE)) : null;
+    return new BurstPlan(base, recovery);
+  }
+
+  static SoulDamageFeedback baseBurstStage(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession s, double amount, Channel channel) {
+    return authorized(p, t, s) && Double.isFinite(amount) && amount > 0 && amount <= Float.MAX_VALUE
+        ? execute(p, t, s, SOUL_BURST, amount, channel, false) : null;
+  }
+
   static SoulDamageFeedback burstStage(
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession s, double amount, Channel channel) {
     return authorized(p, t, s) && Double.isFinite(amount) && amount > 0
@@ -187,10 +211,11 @@ public final class SoulDamageEngine {
                     AkatsukiDomainConfig.CHANNELS.get().contains(c.name().toLowerCase(Locale.ROOT)))
             .toList();
     if (enabled.isEmpty()) return null;
+    boolean aggressive = SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
     Channel channel =
         preferred != null && enabled.contains(preferred)
             ? preferred
-            : AkatsukiDomainGrowth.has(AkatsukiDomainGrowth.capabilities(p), "adaptation")
+            : aggressive || AkatsukiDomainGrowth.has(AkatsukiDomainGrowth.capabilities(p), "adaptation")
                 ? memory.choose(now(p), beforeState.phase(), enabled)
                 : enabled.get(0);
     if (channel == null) return null;
@@ -207,8 +232,7 @@ public final class SoulDamageEngine {
             ? DomainTargetCompatibility.hitWindow(t, false)
             : null;
     if (vanilla == null || SoulDamageConfig.KNOWN_ADAPTERS.get() && boss == null) return null;
-    boolean aggressive =
-        recovery && SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
+    // Scope remains exact source + target + synchronous call, including unknown bosses.
     float before = t.getHealth();
     boolean returned = false;
     boolean[] attempted = {false};

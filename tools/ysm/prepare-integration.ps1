@@ -12,6 +12,11 @@ $taskMods = @(
     'tmp/compat-test/blade_tetra-1.5.9.jar',
     'tmp/compat-test/tetra-6.3.0.jar',
     'tmp/compat-test/mutil-1.20.1-6.2.0.jar',
+    'tmp/compat-test/L_Enders_Cataclysm-3.31.jar',
+    'tmp/compat-test/lionfishapi-3.0.jar',
+    'tmp/compat-test/curios-forge-5.14.1+1.20.1.jar',
+    'tmp/compat-test/dummmmmmy-1.20-2.0.12-forge.jar',
+    'tmp/compat-test/moonlight-1.20-2.16.37-forge.jar',
     'libs/configured-1.20.1-2.2.3.jar'
 )
 foreach ($taskRelative in $taskMods) {
