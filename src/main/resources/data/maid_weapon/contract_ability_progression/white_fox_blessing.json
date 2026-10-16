@@ -9,9 +9,10 @@
         "maid_weapon:blessing_guard"
       ],
       "parameters": {
-        "maid_weapon:guard_reduction": 0.15,
-        "maid_weapon:guard_cap": 3,
-        "maid_weapon:guard_cooldown": 60
+        "maid_weapon:guard_reduction": 0.06,
+        "maid_weapon:guard_cooldown": 60,
+        "maid_weapon:health_bonus": 0.05,
+        "maid_weapon:attack_speed_bonus": 0.03
       }
     },
     {
@@ -20,7 +21,10 @@
         "maid_weapon:blessing_cleanse"
       ],
       "parameters": {
-        "maid_weapon:cleanse_cooldown": 200
+        "maid_weapon:cleanse_cooldown": 200,
+        "maid_weapon:guard_reduction": 0.07,
+        "maid_weapon:health_bonus": 0.1,
+        "maid_weapon:attack_speed_bonus": 0.06
       }
     },
     {
@@ -31,7 +35,10 @@
       "parameters": {
         "maid_weapon:heal_hits": 6,
         "maid_weapon:heal_interval": 100,
-        "maid_weapon:heal_amount": 1
+        "maid_weapon:heal_amount": 1,
+        "maid_weapon:guard_reduction": 0.08,
+        "maid_weapon:health_bonus": 0.15,
+        "maid_weapon:attack_speed_bonus": 0.09
       }
     },
     {
@@ -41,7 +48,10 @@
       ],
       "parameters": {
         "maid_weapon:move_speed": 0.1,
-        "maid_weapon:move_ticks": 40
+        "maid_weapon:move_ticks": 40,
+        "maid_weapon:guard_reduction": 0.09,
+        "maid_weapon:health_bonus": 0.2,
+        "maid_weapon:attack_speed_bonus": 0.12
       }
     },
     {
@@ -50,7 +60,10 @@
         "maid_weapon:blessing_lantern"
       ],
       "parameters": {
-        "maid_weapon:guard_shield_ticks": 60
+        "maid_weapon:guard_shield_ticks": 60,
+        "maid_weapon:guard_reduction": 0.1,
+        "maid_weapon:health_bonus": 0.25,
+        "maid_weapon:attack_speed_bonus": 0.15
       }
     },
     {
@@ -60,7 +73,10 @@
       ],
       "parameters": {
         "maid_weapon:edge_damage": 1.5,
-        "maid_weapon:edge_cooldown": 40
+        "maid_weapon:edge_cooldown": 40,
+        "maid_weapon:guard_reduction": 0.12,
+        "maid_weapon:health_bonus": 0.3,
+        "maid_weapon:attack_speed_bonus": 0.18
       }
     },
     {
@@ -69,7 +85,10 @@
         "maid_weapon:blessing_resonance"
       ],
       "parameters": {
-        "maid_weapon:resonance_damage": 0.75
+        "maid_weapon:resonance_damage": 0.75,
+        "maid_weapon:guard_reduction": 0.14,
+        "maid_weapon:health_bonus": 0.35,
+        "maid_weapon:attack_speed_bonus": 0.21
       }
     },
     {
@@ -79,7 +98,10 @@
       ],
       "parameters": {
         "maid_weapon:ally_radius": 5,
-        "maid_weapon:ally_heal": 0.5
+        "maid_weapon:ally_heal": 0.5,
+        "maid_weapon:guard_reduction": 0.16,
+        "maid_weapon:health_bonus": 0.4,
+        "maid_weapon:attack_speed_bonus": 0.24
       }
     },
     {
@@ -90,7 +112,10 @@
       "parameters": {
         "maid_weapon:crisis_threshold": 0.25,
         "maid_weapon:crisis_cooldown": 1200,
-        "maid_weapon:crisis_shield_ticks": 60
+        "maid_weapon:crisis_shield_ticks": 60,
+        "maid_weapon:guard_reduction": 0.18,
+        "maid_weapon:health_bonus": 0.45,
+        "maid_weapon:attack_speed_bonus": 0.27
       }
     },
     {
@@ -102,7 +127,10 @@
         "maid_weapon:oath_cooldown": 12000,
         "maid_weapon:oath_shield_ticks": 100,
         "maid_weapon:protection_ticks": 40,
-        "maid_weapon:protection_reduction": 0.2
+        "maid_weapon:protection_reduction": 0.2,
+        "maid_weapon:guard_reduction": 0.2,
+        "maid_weapon:health_bonus": 0.5,
+        "maid_weapon:attack_speed_bonus": 0.3
       }
     }
   ]

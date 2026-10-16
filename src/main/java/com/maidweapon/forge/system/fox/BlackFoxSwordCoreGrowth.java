@@ -17,9 +17,16 @@ public final class BlackFoxSwordCoreGrowth {
             bound("barrage_radius", 12, 24), bound("combo_radius", 4, 10), bound("max_targets", 1, 8),
             bound("max_hunters", 1, 3), bound("projectile_count", 1, 4), bound("barrage_interval", 12, 40),
             bound("chain_count", 1, 3), bound("chain_cooldown", 20, 100), bound("mark_duration", 20, 200),
-            bound("retaliate_window", 20, 100), bound("retaliate_cooldown", 12, 100), bound("sync_duration", 12, 40));
+            bound("retaliate_window", 20, 100), bound("retaliate_cooldown", 12, 100), bound("sync_duration", 12, 40),
+            bound("weapon_attack_bonus", 0, 2), bound("core_damage_multiplier", 1, 3));
+    /** Shared Lv1–10 growth profile for the held blade and independent sword-core shots. */
+    private static final double[] ATTACK_BONUS = {0.20, 0.35, 0.50, 0.70, 0.90, 1.10, 1.30, 1.50, 1.75, 2.00};
+    public static double attackBonus(int level) {
+        return ATTACK_BONUS[Math.max(1, Math.min(10, level)) - 1];
+    }
+
     public static ContractAbilityDefinition fallback() {
-        return new ContractAbilityDefinition(ABILITY, List.of(
+        var defaults = List.of(
                 milestone(1, Set.of(SUMMON), Map.of("barrage_radius",16d,"combo_radius",8d,"max_targets",8d,
                         "max_hunters",1d,"projectile_count",4d,"barrage_interval",12d)),
                 milestone(2, Set.of(MARK), Map.of("mark_duration",80d)),
@@ -30,7 +37,17 @@ public final class BlackFoxSwordCoreGrowth {
                 milestone(7, Set.of(MULTI, VERTICAL), Map.of("max_hunters",3d)),
                 milestone(8, Set.of(FOCUS, WAVE), Map.of()),
                 milestone(9, Set.of(RETALIATE), Map.of("retaliate_window",60d,"retaliate_cooldown",24d)),
-                milestone(10, Set.of(SYNC), Map.of("sync_duration",24d))));
+                milestone(10, Set.of(SYNC), Map.of("sync_duration",24d)));
+        var steps = new ArrayList<ContractAbilityMilestone>();
+        for (int index = 0; index < defaults.size(); index++) {
+            var prior = defaults.get(index);
+            var numbers = new HashMap<>(prior.parameters());
+            double bonus = ATTACK_BONUS[index];
+            numbers.put(id("weapon_attack_bonus"), bonus);
+            numbers.put(id("core_damage_multiplier"), 1 + bonus);
+            steps.add(new ContractAbilityMilestone(prior.level(), prior.features(), numbers));
+        }
+        return new ContractAbilityDefinition(ABILITY, steps);
     }
     private static ContractAbilityMilestone milestone(int level, Set<ResourceLocation> features, Map<String, Double> params) {
         var mapped = new HashMap<ResourceLocation, Double>(); params.forEach((key,value) -> mapped.put(id(key),value));
