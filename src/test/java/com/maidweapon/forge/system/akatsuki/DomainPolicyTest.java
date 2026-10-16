@@ -166,6 +166,53 @@ class DomainPolicyTest {
   }
 
   @Test
+  void unboundSwapClosesActiveDomainOnceAndNeverStoresNull() {
+    var session = new AkatsukiDomainSession();
+    var ends = new java.util.concurrent.atomic.AtomicInteger();
+    Runnable close = () -> {
+      if (session.active()) ends.incrementAndGet();
+      session.suspend();
+    };
+    assertTrue(session.rebind("contract-red-moon", close));
+    session.lifecycle.update(true, true, 1, 100, .5, .55);
+    assertTrue(session.active());
+    var target = UUID.randomUUID();
+    assertTrue(session.contact(101, target));
+    assertTrue(session.rebind(null, close));
+    assertEquals(1, ends.get());
+    assertEquals("", session.binding);
+    assertFalse(session.active());
+    assertNull(session.target);
+    assertFalse(session.rebind(null, close));
+    assertFalse(session.rebind("", close));
+    assertEquals(1, ends.get());
+
+    // Re-equipping must start a fresh lifecycle, without stale contact or extra END.
+    assertTrue(session.rebind("contract-red-moon", close));
+    assertEquals(1, ends.get());
+    assertTrue(session.lifecycle.update(true, true, 1, 103, .5, .55));
+    assertTrue(session.active());
+    assertTrue(session.contact(103, target));
+    assertTrue(session.rebind("another-contract", close));
+    assertEquals(2, ends.get());
+    assertEquals("another-contract", session.binding);
+  }
+
+  @Test
+  void staleNullSessionBindingIsSanitizedWithoutCrashing() {
+    var session = new AkatsukiDomainSession();
+    session.binding = null; // Simulates legacy invalid state.
+    var calls = new java.util.concurrent.atomic.AtomicInteger();
+    assertTrue(session.rebind(null, () -> {
+      calls.incrementAndGet();
+      session.suspend();
+    }));
+    assertEquals("", session.binding);
+    assertEquals(1, calls.get());
+    assertFalse(session.rebind(null, () -> fail("same binding must be idempotent")));
+  }
+
+  @Test
   void handChangesKeepAttackTimersAndAllBudgetsLiveOutsideSessions() {
     var s = new AkatsukiDomainSession();
     assertTrue(s.due("edge", 10, 20));

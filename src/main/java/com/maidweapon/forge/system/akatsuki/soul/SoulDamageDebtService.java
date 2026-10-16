@@ -58,7 +58,6 @@ public final class SoulDamageDebtService {
         || !o.recoverable()
         || o.loss() <= .01
         || !o.proof().currentCarrier()
-        || !DamageObservationService.issued(o, event.target)
         || o.expires() <= o.server().overworld().getGameTime()) return;
     var s = state(o.server());
     if (o.server().overworld().getGameTime() - s.pruned >= 20) prune(o.server());
@@ -103,6 +102,17 @@ public final class SoulDamageDebtService {
         .stream()
         .filter(e -> valid(e, p, t, false))
         .toList();
+  }
+
+  /** One snapshot of the same verified ledger and ordinary recovery cooldown. */
+  public static SoulCutDecision cutDecision(ServerPlayer p, LivingEntity t) {
+    var receipts = entries(p, t);
+    if (receipts.isEmpty()) return SoulCutDecision.decide(false, false, 0);
+    boolean cooling = now(p) < state(p.getServer()).ready.getOrDefault(t.getUUID(), 0L);
+    if (cooling) return SoulCutDecision.decide(true, true, 0);
+    double rate = AkatsukiDomainGrowth.parameter(p, "soul_recovery_rate");
+    double amount = receipts.stream().mapToDouble(e -> e.debt.available(rate, false)).sum();
+    return SoulCutDecision.decide(true, false, amount);
   }
 
   public static boolean hasDebt(ServerPlayer p, LivingEntity t) {

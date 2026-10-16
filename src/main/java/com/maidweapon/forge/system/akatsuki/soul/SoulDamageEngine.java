@@ -42,7 +42,7 @@ public final class SoulDamageEngine {
         && p.isAlive()
         && !p.isRemoved()
         && !p.isSpectator()
-        && !p.isCreative()
+        && (!p.isCreative() || SoulDamageConfig.CREATIVE_DAMAGE.get())
         && !applying()
         && p.getServer().isSameThread()
         && session != null
@@ -50,7 +50,7 @@ public final class SoulDamageEngine {
         && now(p) >= session.executionPulseUntil
         && AkatsukiDomainAuthorization.allows(p, p.getMainHandItem())
         && session.binding.equals(ContractCarrierData.getBindingId(p.getMainHandItem()))
-        && AkatsukiDomainService.hostile(p, t)
+        && AkatsukiDomainService.combatTarget(p, t, session)
         && !t.isRemoved()
         && Float.isFinite(t.getHealth())
         && t.getHealth() > 0;
@@ -97,16 +97,23 @@ public final class SoulDamageEngine {
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession session) {
     if (!authorized(p, t, session)
         || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
-    boolean recovery = SoulDamageDebtService.hasDebt(p, t);
+    SoulCutDecision decision = SoulDamageDebtService.cutDecision(p, t);
+    // An exhausted/cooling receipt cannot be used to obtain uncapped normal damage.
+    if (decision.state() == SoulCutDecision.State.RECOVERY_LOCKED) return null;
+    boolean recovery = decision.state() == SoulCutDecision.State.RECOVERABLE;
+    double levelCap = AkatsukiDomainGrowth.parameter(p, "space_cut_level_cap");
     double requested =
         recovery
-            ? SoulDamageDebtService.available(p, t, false)
-            : Math.min(
-                SoulDamageConfig.BASE_CUT_MAXIMUM.get(),
-                Math.max(0, p.getAttributeValue(Attributes.ATTACK_DAMAGE))
-                    * SoulDamageConfig.BASE_CUT_FRACTION.get());
+            ? decision.recoveryAmount()
+            : SoulNormalCutPolicy.requested(
+                p.getAttributeValue(Attributes.ATTACK_DAMAGE),
+                AkatsukiDomainGrowth.parameter(p, "space_cut_multiplier"),
+                levelCap);
+    // Only Lv10 normal cuts bypass numerical budgets; verified recovery stays capped.
     double amount =
-        SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested, limits());
+        !recovery && levelCap == 0
+            ? SAFETY.reserveUncappedCut(p.getUUID(), t.getUUID(), now(p), requested, limits())
+            : SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested, limits());
     if (amount <= 0) return null;
     if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
     var reservation = SoulDamageDebtService.reserve(p, t, false, amount);

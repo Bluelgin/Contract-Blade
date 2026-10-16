@@ -15,7 +15,7 @@ public final class SoulAnchorBinding {
   }
 
   public static boolean unlocked(ServerPlayer p) {
-    return !p.isCreative()
+    return (!p.isCreative() || SoulDamageConfig.CREATIVE_DAMAGE.get())
         && !p.isSpectator()
         && AkatsukiDomainGrowth.has(AkatsukiDomainGrowth.capabilities(p), "swords")
         && AkatsukiDomainAuthorization.allows(p, p.getMainHandItem());

@@ -27,9 +27,20 @@ class AkatsukiGrowthTest {
           new ContractAbilityRegistry.Registration(
               (p, c) -> false, vocabulary, AkatsukiDomainGrowth.parameterBounds(), fallback),
           route);
+      double lastMultiplier = 0, lastCap = 0;
       for (int level = 1; level <= 10; level++) {
         assertEquals(fallback.resolve(level), route.resolve(level));
         assertEquals(level, route.resolve(level).features().size());
+        double multiplier = route.resolve(level)
+            .parameter(AkatsukiDomainGrowth.id("space_cut_multiplier"), -1);
+        double cap = route.resolve(level)
+            .parameter(AkatsukiDomainGrowth.id("space_cut_level_cap"), -1);
+        assertTrue(multiplier > lastMultiplier);
+        if (level < 10) {
+          assertTrue(cap > lastCap);
+          lastCap = cap;
+        } else assertEquals(0, cap);
+        lastMultiplier = multiplier;
         for (int n = 0; n < 10; n++)
           assertEquals(
               n < level,

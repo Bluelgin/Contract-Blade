@@ -24,7 +24,11 @@ public final class AkatsukiDomainGrowth {
     return ResourceLocation.parse("maid_weapon:" + name);
   }
 
+  private static final double[] CUT_MULTIPLIERS = {.05, .08, .12, .16, .20, .25, .30, .36, .42, .50};
+  private static final double[] CUT_LEVEL_CAPS = {1, 2, 4, 6, 10, 16, 24, 40, 64, 0};
+
   public static Map<ResourceLocation, Double> parameters(int level) {
+    int index = Math.max(1, Math.min(10, level)) - 1;
     return Map.of(
         id("soul_recovery_rate"),
         com.maidweapon.forge.system.akatsuki.soul.SoulRecoveryPolicy.cut(level),
@@ -37,7 +41,11 @@ public final class AkatsukiDomainGrowth {
         id("aerial_hover_ticks"),
         level >= 6 ? 4d : 0d,
         id("debt_lifetime"),
-        level >= 9 ? 200d : 120d);
+        level >= 9 ? 200d : 120d,
+        id("space_cut_multiplier"),
+        CUT_MULTIPLIERS[index],
+        id("space_cut_level_cap"),
+        CUT_LEVEL_CAPS[index]);
   }
 
   public static Map<ResourceLocation, ContractAbilityRegistry.Parameter> parameterBounds() {
@@ -48,6 +56,9 @@ public final class AkatsukiDomainGrowth {
     m.put(id("precision_tolerance"), new ContractAbilityRegistry.Parameter(0, .25));
     m.put(id("aerial_hover_ticks"), new ContractAbilityRegistry.Parameter(0, 8));
     m.put(id("debt_lifetime"), new ContractAbilityRegistry.Parameter(20, 400));
+    m.put(id("space_cut_multiplier"), new ContractAbilityRegistry.Parameter(0, 10));
+    // 0 represents no level-based HP cap.
+    m.put(id("space_cut_level_cap"), new ContractAbilityRegistry.Parameter(0, 4096));
     return Map.copyOf(m);
   }
 

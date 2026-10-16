@@ -20,6 +20,21 @@ public final class AkatsukiDomainSession {
     return lifecycle.attacking();
   }
 
+  /**
+   * A carrier without contract NBT has no binding; never store null in the session.
+   * Stop the previous domain before replacing its identity so the client receives END.
+   */
+  public boolean rebind(String nextBinding, Runnable stopPrevious) {
+    String normalized = nextBinding == null ? "" : nextBinding;
+    if (Objects.equals(binding, normalized)) {
+      binding = normalized; // Also sanitize a stale null from older sessions.
+      return false;
+    }
+    Objects.requireNonNull(stopPrevious).run();
+    binding = normalized;
+    return true;
+  }
+
   public boolean contact(long now, UUID victim) {
     lastContact = now;
     target = victim;
@@ -39,6 +54,8 @@ public final class AkatsukiDomainSession {
     lifecycle.suspend();
     target = null;
     lastContact = Long.MIN_VALUE / 2;
+    visualContact = Long.MIN_VALUE;
+    visualVictim = null;
     // Do not reset attack timers or the finite protection window on a hand/state change.
   }
 }

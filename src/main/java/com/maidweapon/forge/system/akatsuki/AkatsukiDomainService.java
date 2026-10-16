@@ -46,13 +46,36 @@ public final class AkatsukiDomainService {
         && player.level() == target.level();
   }
 
+  /** Only player-directed strikes can establish a temporary non-hostile training target. */
+  private static boolean trainingTarget(ServerPlayer player, LivingEntity target) {
+    if (!com.maidweapon.common.SoulDamageConfig.TRAINING_TARGETS.get()
+        || target == player
+        || target instanceof Player
+        || target instanceof TamableAnimal
+        || player.isAlliedTo(target)
+        || target.isAlliedTo(player)) return false;
+    var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(target.getType());
+    return AkatsukiTrainingTargetRules.matches(
+        type.toString(),
+        com.maidweapon.common.SoulDamageConfig.EXTRA_TRAINING_TYPES.get());
+  }
+
+  public static boolean combatTarget(
+      ServerPlayer player, LivingEntity target, AkatsukiDomainSession session) {
+    return hostile(player, target)
+        || session != null
+            && target.getUUID().equals(session.target)
+            && now(player) - session.lastContact <= AkatsukiDomainConfig.CONTACT_GAP.get()
+            && trainingTarget(player, target);
+  }
+
   private static long now(ServerPlayer player) {
     return player.getServer().overworld().getGameTime();
   }
 
   private static void contact(ServerPlayer player, LivingEntity target) {
     if (AkatsukiDomainDamage.applying()
-        || !hostile(player, target)
+        || !(hostile(player, target) || trainingTarget(player, target))
         || player.distanceToSqr(target)
             > AkatsukiDomainConfig.RADIUS.get() * AkatsukiDomainConfig.RADIUS.get()
         || !player.hasLineOfSight(target)) return;
@@ -65,12 +88,13 @@ public final class AkatsukiDomainService {
 
   private static AkatsukiDomainSession refresh(ServerPlayer player, ContractAbilityFeatureSet f) {
     var state = SESSIONS.computeIfAbsent(player, p -> new AkatsukiDomainSession());
-    String binding = ContractCarrierData.getBindingId(player.getMainHandItem());
-    if (!state.binding.equals(binding)) state.suspend();
-    state.binding = binding;
+    // Switching to an unbound item/empty hand returns null. Rebind closes the old
+    // domain (sending END) before the old session can be resumed with new authority.
+    state.rebind(ContractCarrierData.getBindingId(player.getMainHandItem()),
+        () -> stop(player, state));
     boolean changed =
         state.lifecycle.update(
-            has(f, "garden") && !player.isSpectator(),
+            has(f, "garden") && !state.binding.isBlank() && !player.isSpectator(),
             player.isAlive(),
             player.getHealth() / Math.max(1f, player.getMaxHealth()),
             now(player),
@@ -227,7 +251,7 @@ public final class AkatsukiDomainService {
 
   private static boolean validTarget(ServerPlayer player, LivingEntity target) {
     double radius = AkatsukiDomainConfig.RADIUS.get();
-    return hostile(player, target)
+    return combatTarget(player, target, SESSIONS.get(player))
         && player.distanceToSqr(target) <= radius * radius
         && player.hasLineOfSight(target);
   }
@@ -238,7 +262,9 @@ public final class AkatsukiDomainService {
         .getEntitiesOfClass(
             LivingEntity.class,
             player.getBoundingBox().inflate(radius),
-            t -> validTarget(player, t) && player.distanceToSqr(t) <= radius * radius)
+            t -> hostile(player, t)
+                && validTarget(player, t)
+                && player.distanceToSqr(t) <= radius * radius)
         .stream()
         .sorted(Comparator.comparingDouble(player::distanceToSqr))
         .limit(AkatsukiDomainConfig.MAX_TARGETS.get())

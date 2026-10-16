@@ -12,7 +12,8 @@ public final class SoulDamageConfig {
 
   public static final ForgeConfigSpec SPEC;
   public static final ForgeConfigSpec.EnumValue<Strategy> STRATEGY;
-  public static final ForgeConfigSpec.BooleanValue EVENT_OVERRIDE, KNOWN_ADAPTERS, DIAGNOSTICS;
+  public static final ForgeConfigSpec.BooleanValue EVENT_OVERRIDE, KNOWN_ADAPTERS, DIAGNOSTICS,
+      CREATIVE_DAMAGE, TRAINING_TARGETS;
   public static final ForgeConfigSpec.DoubleValue CUT_MULTIPLIER,
       CAP_FACTOR,
       HIT_CEILING,
@@ -29,6 +30,7 @@ public final class SoulDamageConfig {
       ANCHOR_HEAD_OFFSET,
       ANCHOR_MIN_HEIGHT,
       ANCHOR_MAX_HEIGHT;
+  public static final ForgeConfigSpec.ConfigValue<java.util.List<? extends String>> EXTRA_TRAINING_TYPES;
   public static final ForgeConfigSpec.IntValue ANCHOR_LIFETIME,
       ANCHOR_INTERVAL,
       OWNER_ANCHORS,
@@ -44,6 +46,20 @@ public final class SoulDamageConfig {
     EVENT_OVERRIDE = b.define("aggressiveEventOverride", true);
     KNOWN_ADAPTERS = b.define("knownBossAdapters", true);
     DIAGNOSTICS = b.define("damageDiagnostics", false);
+    CREATIVE_DAMAGE =
+        b.comment("Allow valid awakened Akatsuki owners to deal domain damage in Creative.")
+            .define("allowCreativeDomainDamage", true);
+    TRAINING_TARGETS =
+        b.comment("Allow explicitly struck dummy entities; no friendly area scans.")
+            .define("allowTrainingDummyTargets", true);
+    EXTRA_TRAINING_TYPES =
+        b.comment("Additional exact namespace:path entity IDs treated as training targets.")
+            .defineListAllowEmpty(
+                "additionalTrainingEntityTypes",
+                java.util.List.of(),
+                v -> v instanceof String s
+                    && s.contains(":")
+                    && net.minecraft.resources.ResourceLocation.tryParse(s) != null);
     // DEPRECATED independent request keys retained for config compatibility; not recovery
     // entitlements.
     CUT_MULTIPLIER = b.defineInRange("spaceCutAttackMultiplier", 1.25, .1, 16);

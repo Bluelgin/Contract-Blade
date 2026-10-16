@@ -84,6 +84,26 @@ public final class SoulDamageSafetyBudget {
     return amount;
   }
 
+  /**
+   * Uncapped NORMAL space cuts keep target cooldown and burst locking. Every attempt
+   * charges the existing rolling ledger; verified recovery cannot launder that budget.
+   */
+  public double reserveUncappedCut(
+      UUID owner, UUID target, long now, double request, Limits limits) {
+    if (!Double.isFinite(request)
+        || request < .01
+        || now < 0
+        || targets.size() >= 4096 && !targets.containsKey(target)
+        || players.size() >= 1024 && !players.containsKey(owner)) return 0;
+    var t = targets.computeIfAbsent(target, id -> new Window());
+    var p = players.computeIfAbsent(owner, id -> new Window());
+    if (now < t.burstUntil || now - t.lastCut < limits.cutGap()) return 0;
+    t.add(now, request);
+    p.add(now, request);
+    t.lastCut = now;
+    return request;
+  }
+
   public boolean burstReady(UUID target, long now) {
     var w = targets.get(target);
     return w == null || now >= w.burstReady;
