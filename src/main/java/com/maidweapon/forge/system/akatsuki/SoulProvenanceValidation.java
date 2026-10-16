@@ -85,6 +85,7 @@ public final class SoulProvenanceValidation {
     var l = server.overworld();
     var p = player(l, "ProvenanceOwner");
     foreign = player(l, "ProvenanceForeign");
+    activeSkillWithoutDebt(server, p);
     nativeSlashProof(p);
     for (int level = 1; level <= 10; level++) {
       setLevel(p, level);
@@ -100,10 +101,10 @@ public final class SoulProvenanceValidation {
       check(
           cut != null && near(cut.loss(), 95 * SoulRecoveryPolicy.cut(level)),
           "ordinary level " + level + " feedback=" + cut);
-      double ordinary = cut.loss(), air = 0;
+      double ordinary = cut.loss(), air = 0, basic = level >= 2 ? baseBurst(p, t) : 0;
       if (level >= 2) {
         var core = SoulAnchorService.create(p, t);
-        check(core != null && core.getY() >= t.getBoundingBox().maxY + 1.5, "aerial top placement");
+        check(core != null && core.getY() >= t.getBoundingBox().maxY + 4, "high aerial placement");
         check(!core.hurt(p.damageSources().playerAttack(p), 100), "damage cannot activate core");
         float hp = t.getHealth();
         aim(p, core);
@@ -113,13 +114,14 @@ public final class SoulProvenanceValidation {
           SoulBurstService.tick(
               new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
         }
-        air = hp - t.getHealth();
+        air = hp - t.getHealth() - basic;
         check(
             near(ordinary + air, 95 * SoulRecoveryPolicy.aerial(level)),
             "cumulative aerial level " + level);
         check(core.isRemoved(), "core final fracture");
       }
-      check(before - t.getHealth() <= 100.025, "never native plus 100 percent again");
+      check(before - t.getHealth() <= 100.025 + basic,
+          "verified recovery never exceeds debt; independent base is separate");
       LogUtils.getLogger()
           .info(
               "SOUL_RECOVERY_LEVEL level={} E={} A={} L={} ordinary={} aerialAdditional={}"
@@ -138,6 +140,7 @@ public final class SoulProvenanceValidation {
     negatives(server, p);
     isolation(server, p);
     interaction(server, p);
+    summonedSwordInteraction(server, p);
     lateAndInvalidated(server, p);
     highBudgets(server, p);
     bosses(server, p);
@@ -150,6 +153,78 @@ public final class SoulProvenanceValidation {
         "all permission scopes closed");
     p.getInventory().setItem(0, ItemStack.EMPTY);
     check(!AkatsukiDomainService.session(p).active(), "switch suspends");
+  }
+
+  /** Exact installed Mowzie 1.8.2 entity, not a simulated weakness gate. */
+  public static void runMowzie(MinecraftServer server) throws Exception {
+    install();
+    var l = server.overworld();
+    var p = player(l, "WroughtnautSoulOwner");
+    var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(
+        net.minecraft.resources.ResourceLocation.parse("mowziesmobs:ferrous_wroughtnaut"));
+    check(type != null && type != EntityType.PIG, "real wroughtnaut installed");
+    var t = (LivingEntity) type.create(l);
+    check(t != null, "real wroughtnaut entity");
+    t.moveTo(3, 150, .5, 0, 0);
+    ((Mob) t).setNoAi(true);
+    l.addFreshEntity(t);
+    var weakness = t.getClass().getField("vulnerable");
+    check(!weakness.getBoolean(t), "initial closed weakness");
+    var originalStrategy = SoulDamageConfig.STRATEGY.get();
+    try {
+      float hp = t.getHealth();
+      nativeHit(t, p, 10);
+      check(near(hp, t.getHealth()), "ordinary front attack remains blocked");
+      var s = AkatsukiDomainService.session(p);
+      s.contact(l.getGameTime(), t.getUUID());
+      SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.STANDARD);
+      var standard = SoulDamageEngine.cut(p, t, s);
+      check(standard != null && near(standard.loss(), 0), "standard respects native weakness");
+      advance(l, 20);
+      s.contact(l.getGameTime(), t.getUUID());
+      SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.AGGRESSIVE);
+      var cut = SoulDamageEngine.cut(p, t, s);
+      check(cut != null && cut.loss() > 0 && !cut.compensated(), "aggressive native cut really hurts");
+      check(!weakness.getBoolean(t), "weakness flag untouched");
+      check(t.getKillCredit() == p, "native player kill attribution retained");
+      check(((Mob) t).getTarget() == p, "native aggro retained");
+      hp = t.getHealth();
+      nativeHit(t, p, 10);
+      check(near(hp, t.getHealth()), "ordinary hit still blocked after scope");
+      check(SoulStrikeContext.current() == null, "no bypass scope leaked");
+      var core = SoulAnchorService.create(p, t);
+      check(core != null, "real wroughtnaut core created");
+      double expected = baseBurst(p, t);
+      aim(p, core);
+      p.attack(core);
+      check(core.burstUntil > 0, "real core click accepted");
+      for (int i = 0; i < 14; i++) {
+        advance(l, 1);
+        SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+      }
+      check(near(hp - t.getHealth(), expected), "real four-stage native damage");
+      check(!weakness.getBoolean(t), "burst leaves weakness untouched");
+      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_PASS cutHP={} burstHP={} expectedBurstHP={} credit={}",
+          cut.loss(), hp - t.getHealth(), expected, t.getKillCredit().getUUID());
+      // Native hurt() must initiate its normal death animation rather than remove the boss.
+      setLevel(p, 10);
+      p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(10000);
+      advance(l, 240);
+      s = AkatsukiDomainService.session(p);
+      s.contact(l.getGameTime(), t.getUUID());
+      var finisher = SoulDamageEngine.cut(p, t, s);
+      check(finisher != null && finisher.loss() > 0 && t.getHealth() <= 0, "native lethal damage");
+      check(t.getClass().getMethod("getAnimation").invoke(t)
+          == t.getClass().getField("DIE_ANIMATION").get(null), "native death animation entered");
+      check(!t.isRemoved(), "not forcibly discarded on lethal strike");
+      for (int i = 0; i < 160 && !t.isRemoved(); i++) { advance(l, 1); t.tick(); }
+      check(t.isRemoved(), "native death sequence finishes removal");
+      check(SoulStrikeContext.current() == null, "lethal scope closed");
+      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NATIVE_DEATH_PASS");
+    } finally {
+      SoulDamageConfig.STRATEGY.set(originalStrategy);
+      if (!t.isRemoved()) t.discard();
+    }
   }
 
   public static boolean nativeHit(LivingEntity t, ServerPlayer p, float amount) {
@@ -186,6 +261,14 @@ public final class SoulProvenanceValidation {
               && observation.raw() > 5
               && observation.recoverable(),
           "native SlashBlade actual hurt provenance observation="+observation);
+      // Actual SlashBlade AttackManager provenance (unlike synthetic direct
+      // damage validation) must earn a native-hit resonance based on HP dealt,
+      // without feeding the blocked theoretical deficit into that resonance.
+      double actualEcho = observation.after() - t.getHealth();
+      double allowedEcho = SoulResonancePolicy.requested(
+          observation.actual(), AkatsukiDomainGrowth.parameter(p, "resonance_hit_ratio"));
+      check(actualEcho > .01 && actualEcho <= allowedEcho + .025,
+          "real SlashBlade native-hit resonance = " + actualEcho + " max=" + allowedEcho);
       LogUtils.getLogger()
           .info(
               "SOUL_NATIVE_SLASHBLADE_INVOCATION_PASS raw={} E={} A={} origin={}",
@@ -296,7 +379,7 @@ public final class SoulProvenanceValidation {
       float hp = t.getHealth();
       nativeHit(t, p, 100);
       check(
-          !SoulDamageDebtService.hasDebt(p, t) && SoulAnchorService.create(p, t) == null,
+          !SoulDamageDebtService.hasDebt(p, t),
           "no invented debt " + mode);
       LogUtils.getLogger()
           .info(
@@ -424,9 +507,8 @@ public final class SoulProvenanceValidation {
     nativeHit(t, p, 100);
     var c = SoulAnchorService.create(p, t);
     check(c != null, "receipt core");
-    check(
-        !SoulAnchorService.strike(c, p.damageSources().playerAttack(p)),
-        "source alone insufficient");
+    check(!c.hurt(p.damageSources().playerAttack(p), 100),
+        "raw damage source cannot activate core");
     float hp = t.getHealth();
     p.moveTo(c.getX(), t.getY(), c.getZ() - 1, 0, -90);
     p.setOnGround(true);
@@ -451,7 +533,8 @@ public final class SoulProvenanceValidation {
       advance(l, 1);
       SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
     }
-    check(near(hp - t.getHealth(), 28.5), "single click complete cumulative no repeat");
+    check(near(hp - t.getHealth(), 28.5 + baseBurst(p, t)),
+        "single click complete independent base plus recovery, no repeat");
     t.discard();
     advance(l, 240);
     t = cap(l);
@@ -470,6 +553,95 @@ public final class SoulProvenanceValidation {
     net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new DamageObservedEvent(receipt, t));
     check(!SoulDamageDebtService.hasDebt(p, t), "receipt replay cannot reset invalidated debt");
     t.discard();
+  }
+
+  /**
+   * Actual SlashBlade registry projectile + native ContractCombatCredits launch
+   * stamping. Simulates its next swept movement without relying on renderer frames.
+   */
+  private static void summonedSwordInteraction(MinecraftServer server, ServerPlayer p) {
+    var l = p.serverLevel();
+    setLevel(p, 2);
+    advance(l, 240);
+    var t = cap(l);
+    p.moveTo(t.getX() - 3, t.getY(), t.getZ(), 0, 0);
+    p.setOnGround(true); // Projectiles intentionally do NOT require the owner to jump.
+    nativeHit(t, p, 100);
+    var core = SoulAnchorService.create(p, t);
+    check(core != null && core.getY() >= t.getBoundingBox().maxY + 4,
+        "summoned sword high core");
+    var summonType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(
+        net.minecraft.resources.ResourceLocation.parse("slashblade:abstract_summoned_sword"));
+    check(summonType != null && summonType != EntityType.PIG,
+        "SlashBlade native summoned sword entity ID available");
+    var foreignShot = summonType.create(l);
+    check(foreignShot instanceof net.minecraft.world.entity.projectile.Projectile,
+        "native summoned sword must be projectile");
+    var foreignProjectile = (net.minecraft.world.entity.projectile.Projectile) foreignShot;
+    foreignProjectile.setOwner(foreign);
+    foreignProjectile.moveTo(core.getX() - 4, core.getY() + .9, core.getZ(), 0, 0);
+    foreignProjectile.setDeltaMovement(6, 0, 0);
+    l.addFreshEntity(foreignProjectile);
+    check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
+        "foreign native sword cannot trigger owner's core");
+    foreignProjectile.discard();
+
+    // Non-SlashBlade projectiles must not become an implicit authorization token.
+    var arrow = new net.minecraft.world.entity.projectile.Arrow(l, p);
+    arrow.setPos(core.getX() - 4, core.getY() + .9, core.getZ());
+    arrow.setDeltaMovement(6, 0, 0);
+    l.addFreshEntity(arrow);
+    check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
+        "ordinary projectile cannot trigger core");
+    arrow.discard();
+
+    // A locked-on boss would otherwise redirect the native sword away from a
+    // high core. Explicit player aim must retarget a fresh sword at launch.
+    var targetDirection = core.getBoundingBox().getCenter().subtract(p.getEyePosition());
+    p.setYRot((float) Math.toDegrees(Math.atan2(-targetDirection.x, targetDirection.z)));
+    p.setXRot((float) -Math.toDegrees(Math.atan2(targetDirection.y,
+        Math.sqrt(targetDirection.x * targetDirection.x
+            + targetDirection.z * targetDirection.z))));
+    var lockedShot = summonType.create(l);
+    check(lockedShot instanceof net.minecraft.world.entity.projectile.Projectile,
+        "locked native summoned sword must be projectile");
+    var lockedSword = (net.minecraft.world.entity.projectile.Projectile) lockedShot;
+    lockedSword.setOwner(p);
+    lockedSword.setPos(p.getX(), p.getEyeY(), p.getZ());
+    lockedSword.setDeltaMovement(3, 0, 0); // boss-lock direction, NOT the high core
+    l.addFreshEntity(lockedSword);
+    check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
+        "distant native shot cannot trigger without physically reaching the core");
+    var expectedFlight = core.getBoundingBox().getCenter().subtract(lockedSword.position()).normalize();
+    check(lockedSword.getDeltaMovement().normalize().dot(expectedFlight) > .99,
+        "player crosshair overrides native locked-boss sword trajectory");
+    lockedSword.discard();
+
+    var ownedShot = summonType.create(l);
+    check(ownedShot instanceof net.minecraft.world.entity.projectile.Projectile,
+        "owned native summoned sword must be projectile");
+    var sword = (net.minecraft.world.entity.projectile.Projectile) ownedShot;
+    sword.setOwner(p);
+    sword.moveTo(core.getX() - 4, core.getY() + .9, core.getZ(), 0, 0);
+    sword.setDeltaMovement(6, 0, 0);
+    l.addFreshEntity(sword);
+    var evidence = com.maidweapon.forge.system.mastery.ContractCombatCredits.resolveHit(
+        p.damageSources().indirectMagic(sword, p));
+    check(evidence != null && evidence.player() == p,
+        "native projectile launch must retain exact carrier proof");
+    float hp = t.getHealth();
+    check(SoulAnchorProjectileService.sweep(l, core) && core.burstUntil > 0,
+        "owner's launched summoned sword triggers soul core from the ground");
+    check(sword.isRemoved() && !SoulAnchorProjectileService.sweep(l, core),
+        "one sword cannot trigger a second burst");
+    for (int i = 0; i < 14; i++) {
+      advance(l, 1);
+      SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+    }
+    check(near(hp - t.getHealth(), 28.5 + baseBurst(p, t)),
+        "summoned sword uses identical bounded verified debt as direct melee");
+    t.discard();
+    LogUtils.getLogger().info("SOUL_NATIVE_SUMMONED_SWORD_PASS");
   }
 
   private static void lateAndInvalidated(MinecraftServer server, ServerPlayer p) {
@@ -511,7 +683,8 @@ public final class SoulProvenanceValidation {
         SoulBurstService.tick(
             new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
-      check(near(hp - t.getHealth(), 28.5), "reserved burst survives ordinary receipt expiry");
+      check(near(hp - t.getHealth(), 28.5 + baseBurst(p, t)),
+          "reserved recovery plus base survives ordinary receipt expiry");
       t.discard();
     } finally {
       SoulDamageConfig.ANCHOR_LIFETIME.set(lifetime);
@@ -536,36 +709,38 @@ public final class SoulProvenanceValidation {
     LogUtils.getLogger().info("SOUL_NATIVE_PACKET_AND_LATE_BURST_PASS");
   }
 
+  /** Native Forge fixture: proved soul debt is NEVER clipped at legacy HP limits. */
   private static void highBudgets(MinecraftServer server, ServerPlayer p) {
     var l = p.serverLevel();
     setLevel(p, 10);
-    double player = SoulDamageConfig.PLAYER_SECOND.get();
-    try {
-      SoulDamageConfig.PLAYER_SECOND.set(8192d);
-      for (double total : new double[] {128, 384, 512, 1024}) {
-        advance(l, 240);
-        var t = cap(l);
-        nativeHit(t, p, (float) (total + 5));
-        var c = SoulAnchorService.create(p, t);
-        check(c != null, "high core");
-        aim(p, c);
-        float hp = t.getHealth();
-        p.attack(c);
-        for (int i = 0; i < 14; i++) {
-          advance(l, 1);
-          SoulBurstService.tick(
-              new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
-        }
-        double expected = Math.min(Math.min(total, 995), 512);
-        check(
-            near(hp - t.getHealth(), expected),
-            "high stage total " + total + " actual=" + (hp - t.getHealth()));
-        LogUtils.getLogger()
-            .info("SOUL_HIGH_BUDGET requested={} actualHP={}", total, hp - t.getHealth());
-        t.discard();
+    for (double total : new double[] {128, 384, 512, 1024, 10000}) {
+      advance(l, 240);
+      var t = cap(l);
+      // Vanilla MAX_HEALTH is final/bounded by its own 1024 HP attribute.
+      // Verify ALL recoverable health, including >512 HP, without rewriting
+      // production entity health internals just to exceed this fixture cap.
+      float startingHealth = (float) Math.min(1024, Math.max(1000, total + 10));
+      t.getAttribute(Attributes.MAX_HEALTH).setBaseValue(startingHealth);
+      t.setHealth(startingHealth);
+      double verifiedDebt = Math.min(total, startingHealth - 5);
+      nativeHit(t, p, (float) (total + 5));
+      var o = DamageObservationService.latest(server);
+      check(o != null && o.recoverable() && near(o.loss(), verifiedDebt),
+          "uncapped verified debt raw=" + total + " observed=" + o);
+      var c = SoulAnchorService.create(p, t);
+      check(c != null, "uncapped core " + total);
+      aim(p, c);
+      float hp = t.getHealth();
+      p.attack(c);
+      for (int i = 0; i < 14; i++) {
+        advance(l, 1);
+        SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
-    } finally {
-      SoulDamageConfig.PLAYER_SECOND.set(player);
+      check(near(hp - t.getHealth(), Math.min(hp, verifiedDebt + baseBurst(p, t))),
+          "uncapped burst debt=" + verifiedDebt + " actual=" + (hp - t.getHealth()));
+      LogUtils.getLogger().info("SOUL_UNCAPPED_RECOVERY raw={} debt={} actualHP={}",
+          total, verifiedDebt, hp - t.getHealth());
+      t.discard();
     }
   }
 
@@ -767,6 +942,61 @@ public final class SoulProvenanceValidation {
 
   private static boolean near(double a, double b) {
     return Math.abs(a - b) < .025;
+  }
+
+  private static double baseBurst(ServerPlayer p, LivingEntity t) {
+    return SoulBurstBasePolicy.requested(p.getAttributeValue(Attributes.ATTACK_DAMAGE),
+        t.getMaxHealth(), ContractMasteryService.getLevel(p),
+        SoulDamageConfig.BURST_MULTIPLIER.get(), SoulDamageConfig.BURST_HEALTH_FRACTION.get());
+  }
+
+  /** Actual native observations, world entities, owner click and four server stages. */
+  private static void activeSkillWithoutDebt(MinecraftServer server, ServerPlayer p) {
+    var l = p.serverLevel();
+    setLevel(p, 2);
+    for (boolean unknown : new boolean[] {false, true}) {
+      advance(l, 240);
+      p.moveTo(1, 150, .5, 0, 0);
+      Zombie t = unknown ? new UnknownPreCap(l) : EntityType.ZOMBIE.create(l);
+      prepare(t);
+      t.getAttribute(Attributes.ARMOR).setBaseValue(0);
+      l.addFreshEntity(t);
+      AkatsukiDomainService.session(p).contact(l.getGameTime(), t.getUUID());
+      nativeHit(t, p, 20);
+      check(!SoulDamageDebtService.hasDebt(p, t), "no invented unknown/ordinary recovery");
+      var cores = l.getEntitiesOfClass(SoulAnchorEntity.class, t.getBoundingBox().inflate(32),
+          c -> t.getUUID().equals(c.original) && p.getUUID().equals(c.owner));
+      check(cores.size() == 1, "native hit automatically creates one debt-free core");
+      var core = cores.get(0);
+      check(SoulAnchorService.create(p, t) == core, "repeated hits reuse core");
+      float hp = t.getHealth();
+      double expected = baseBurst(p, t);
+      aim(foreign, core);
+      foreign.attack(core);
+      check(core.burstUntil == 0, "foreign owner denied without debt too");
+      aim(p, core);
+      p.attack(core);
+      check(core.burstUntil > 0, "debt-free core activated");
+      p.attack(core);
+      // Unknown adapter fixture additionally cancels native attacks: only the
+      // exact soul-source scope may override that cancellation, not other hits.
+      if (unknown) canceled = t;
+      try {
+        for (int i = 0; i < 14; i++) {
+          advance(l, 1);
+          SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+        }
+      } finally { canceled = null; }
+      check(near(hp - t.getHealth(), expected), "four independent stages actualHP=" + (hp - t.getHealth()));
+      check(core.isRemoved(), "independent core finishes");
+      check(!SoulDamageDebtService.hasDebt(p, t), "independent damage never creates debt");
+      check(!SoulDamageEngine.burstReady(t.getUUID(), l.getGameTime()), "cooldown survives finish");
+      check(SoulAnchorService.create(p, t) == null, "creation cooldown remains");
+      check(SoulStrikeContext.current() == null, "aggressive capability cleared");
+      LogUtils.getLogger().info("SOUL_ACTIVE_SKILL_PASS unknown={} expectedHP={} actualHP={}",
+          unknown, expected, hp - t.getHealth());
+      t.discard();
+    }
   }
 
   private static void check(boolean ok, String detail) {

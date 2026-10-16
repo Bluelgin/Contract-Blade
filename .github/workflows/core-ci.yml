@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - codex/unified-contract-interior-land
+      - codex/fox-level-stats-passive-blessing
   pull_request:
     branches:
       - master
@@ -17,6 +18,7 @@ on:
       - codex/white-fox-growth-rework
       - codex/akatsuki-domain
       - codex/akatsuki-provenance-airborne
+      - codex/akatsuki-uncapped-space-cut
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}

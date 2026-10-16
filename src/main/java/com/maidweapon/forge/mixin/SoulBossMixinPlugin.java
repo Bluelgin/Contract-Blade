@@ -19,6 +19,38 @@ public final class SoulBossMixinPlugin implements IMixinConfigPlugin {
 
   public boolean shouldApplyMixin(String target, String mixin) {
     try {
+      if (mixin.endsWith("SoulWroughtnautMixin")) {
+        var file = LoadingModList.get().getModFileById("mowziesmobs");
+        if (file == null || file.getMods().stream().noneMatch(m ->
+            m.getModId().equals("mowziesmobs") && m.getVersion().toString().equals("1.8.2")))
+          return false;
+        var node = MixinService.getService().getBytecodeProvider().getClassNode(target);
+        for (var method : node.methods) {
+          if (!(method.name.equals("hurt") || method.name.equals("m_6469_"))
+              || !method.desc.equals("(Lnet/minecraft/world/damagesource/DamageSource;F)Z")) continue;
+          int attackerReads = 0, parentCalls = 0;
+          boolean weakness = false, bypassTag = false;
+          for (var instruction : method.instructions) {
+            if (instruction instanceof org.objectweb.asm.tree.FieldInsnNode field
+                && field.getOpcode() == 180 && field.name.equals("vulnerable") && field.desc.equals("Z"))
+              weakness = true;
+            if (instruction instanceof org.objectweb.asm.tree.MethodInsnNode call) {
+              if (call.owner.equals("net/minecraft/world/damagesource/DamageSource")) {
+                if ((call.name.equals("getEntity") || call.name.equals("m_7639_"))
+                    && call.desc.equals("()Lnet/minecraft/world/entity/Entity;")) attackerReads++;
+                if ((call.name.equals("is") || call.name.equals("m_269533_"))
+                    && call.desc.equals("(Lnet/minecraft/tags/TagKey;)Z")) bypassTag = true;
+              }
+              if (call.getOpcode() == 183
+                  && call.owner.equals("com/bobmowzie/mowziesmobs/server/entity/MowzieLLibraryEntity")
+                  && (call.name.equals("hurt") || call.name.equals("m_6469_"))
+                  && call.desc.equals("(Lnet/minecraft/world/damagesource/DamageSource;F)Z")) parentCalls++;
+            }
+          }
+          return attackerReads == 1 && parentCalls == 2 && weakness && bypassTag;
+        }
+        return false;
+      }
       if (mixin.substring(mixin.lastIndexOf('.') + 1).startsWith("Observation")) {
         String modId =
             target.startsWith("com.Polarice3")

@@ -14,32 +14,32 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * One shared target reservation, 3–5 stages, at most one stage per tick; extra swings add no
- * budget.
+ * One independent skill plus optional verified debt per target, 3–5 stages.
+ * Extra swings cannot restart or duplicate a running burst or its recovery.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulBurstService {
   private static final class Burst {
     final ServerPlayer player;
     final SoulAnchorEntity core;
-    final double total;
-    final SoulDamageDebtService.Reservation reservation;
+    SoulDamageDebtService.Reservation reservation;
     final double[] allocations;
+    final double[] baseAllocations;
     final int stages, duration;
     final long start;
     long next, last = Long.MIN_VALUE;
     int stage;
 
-    Burst(ServerPlayer p, SoulAnchorEntity c, SoulDamageDebtService.Reservation plan, long now) {
+    Burst(ServerPlayer p, SoulAnchorEntity c, SoulDamageEngine.BurstPlan plan, long now) {
       player = p;
       core = c;
-      reservation = plan;
-      total = plan.total();
+      reservation = plan.recovery();
       start = now;
       next = now;
       stages = SoulDamageConfig.BURST_STAGES.get();
       duration = SoulDamageConfig.BURST_DURATION.get();
-      allocations = SoulStageAllocation.split(total, stages, SoulDamageConfig.HIT_CEILING.get());
+      allocations = SoulStageAllocation.split(reservation == null ? 0 : reservation.total(), stages);
+      baseAllocations = SoulStageAllocation.split(plan.base(), stages);
     }
   }
 
@@ -53,11 +53,16 @@ public final class SoulBurstService {
     if (ACTIVE.size() >= 128 || !SoulDamageEngine.burstReady(core.original, now)) return false;
     var entity = p.serverLevel().getEntity(core.original);
     if (!(entity instanceof LivingEntity t)) return false;
-    var total = SoulDamageEngine.reserveBurst(p, t, AkatsukiDomainService.session(p));
+    var total = SoulDamageEngine.reserveActiveBurst(p, t, AkatsukiDomainService.session(p));
     if (total == null) return false;
     core.burstUntil = now + 32;
     core.expires = Math.max(core.expires, now + 32);
     ACTIVE.put(core.original, new Burst(p, core, total, now));
+    if (SoulDamageConfig.DIAGNOSTICS.get())
+      com.mojang.logging.LogUtils.getLogger().info(
+          "SOUL_BURST_STARTED owner={} target={} core={} baseHP={} verifiedRecoveryHP={}",
+          p.getUUID(), t.getUUID(), core.getId(), total.base(),
+          total.recovery() == null ? 0 : total.recovery().total());
     return true;
   }
 
@@ -72,10 +77,14 @@ public final class SoulBurstService {
       var entity = p.serverLevel().getEntity(entry.getKey());
       if (now > b.start + 32
           || !SoulAnchorBinding.valid(b.core)
-          || !(entity instanceof LivingEntity t)
-          || !b.reservation.valid(p, (LivingEntity) entity)) {
+          || !(entity instanceof LivingEntity t)) {
         done.add(entry.getKey());
         continue;
+      }
+      if (b.reservation != null && !b.reservation.valid(p, t)) {
+        b.reservation.close();
+        b.reservation = null;
+        Arrays.fill(b.allocations, b.stage, b.allocations.length, 0);
       }
       if (now < b.next || b.last == now) continue;
       // Only mandatory initialization delays a stage. Damage-reduction phases are still attacked.
@@ -90,17 +99,20 @@ public final class SoulBurstService {
       double amount = b.allocations[stage];
       SoulDamageFeedback result = null;
       try {
+        var base = SoulDamageEngine.baseBurstStage(
+            p, t, AkatsukiDomainService.session(p), b.baseAllocations[stage], channel);
         try {
-          result =
+          if (amount > 0 && t.isAlive() && !t.isRemoved()) result =
               SoulDamageEngine.burstStage(p, t, AkatsukiDomainService.session(p), amount, channel);
         } finally {
-          b.reservation.settle(
+          if (b.reservation != null) b.reservation.settle(
               amount,
               result == null ? 0 : result.loss(),
               result != null && result.attempted(),
               result == null ? -1 : result.sequence());
         }
-        SoulBurstNetwork.send(p, b.core, t, stage, b.stages, result != null && result.success());
+        SoulBurstNetwork.send(p, b.core, t, stage, b.stages,
+            base != null && base.success() || result != null && result.success());
       } catch (RuntimeException failure) {
         com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("soul-burst-stage", failure);
         done.add(entry.getKey());
@@ -111,7 +123,7 @@ public final class SoulBurstService {
     for (var id : done) {
       var b = ACTIVE.remove(id);
       if (b != null) {
-        b.reservation.close();
+        if (b.reservation != null) b.reservation.close();
         b.core.discard();
       }
       SoulDamageEngine.finishBurst(id, now);
@@ -119,7 +131,7 @@ public final class SoulBurstService {
   }
 
   public static void clear() {
-    ACTIVE.values().forEach(b -> b.reservation.close());
+    ACTIVE.values().forEach(b -> { if (b.reservation != null) b.reservation.close(); });
     ACTIVE.clear();
   }
 

@@ -19,6 +19,19 @@ class SoulRecoveryTest {
   }
 
   @Test
+  void activeResonanceUsesFrequencyOnlyAndDoesNotStealMainAttack() {
+    var hits = new SoulHitScheduler();
+    var owner = java.util.UUID.randomUUID();
+    var victim = java.util.UUID.randomUUID();
+    assertEquals(50_000, hits.reserveResonance(owner, victim, 100, 50_000));
+    assertEquals(0, hits.reserveResonance(owner, victim, 101, 50_000));
+    assertEquals(0, hits.reserveCut(owner, victim, 102, 80_000, 4));
+    assertEquals(80_000, hits.reserveCut(owner, victim, 107, 80_000, 4));
+    assertEquals(50_000, hits.reserveResonance(owner, victim, 110, 50_000));
+    assertEquals(0, hits.reserveResonance(owner, victim, 112, Double.NaN));
+  }
+
+  @Test
   void verifiedReceiptRecoversOnlyItsConfirmedRemainingAllowance() {
     var debt = new SoulDamageDebt(100, 5);
     double requested = debt.available(.45, false);
@@ -103,13 +116,23 @@ class SoulRecoveryTest {
   }
 
   @Test
-  void allReservedStagesFitSingleAttemptCapacity() {
-    for (int count = 3; count <= 5; count++)
-      for (double total : new double[] {128, 384, 512, 1024}) {
-        var a = SoulStageAllocation.split(total, count, 128);
-        assertEquals(Math.min(total, count * 128), Arrays.stream(a).sum(), 1e-7);
-        for (double x : a) assertTrue(x >= 0 && x <= 128 + .000001);
+  void aerialBurstConservesWholeVerifiedDebtAboveFormer512HpCeiling() {
+    for (int stages = 3; stages <= 5; stages++)
+      for (double total : new double[] {128, 384, 512, 1_024, 10_000, 1_000_000}) {
+        var split = SoulStageAllocation.split(total, stages);
+        assertEquals(total, Arrays.stream(split).sum(), Math.max(1e-7, total * 1e-10));
+        for (int i = 0; i < stages; i++) {
+          assertTrue(split[i] >= 0 && split[i] <= total);
+          if (i > 0) assertTrue(split[i] >= split[i - 1]);
+        }
       }
+    var debt = new SoulDamageDebt(10_005, 5);
+    var amount = debt.reserve(1, Double.MAX_VALUE, true);
+    assertEquals(10_000, amount);
+    var stages = SoulStageAllocation.split(amount, 4);
+    for (double n : stages) debt.settle(n, n, true);
+    assertEquals(10_000, debt.recovered(), 1e-7);
+    assertEquals(0, debt.available(1, true));
   }
 
   @Test

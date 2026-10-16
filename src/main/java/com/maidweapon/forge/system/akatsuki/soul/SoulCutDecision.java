@@ -1,9 +1,9 @@
 package com.maidweapon.forge.system.akatsuki.soul;
 
 /**
- * Immutable ordinary space-cut choice. Only positively verified, currently usable debt can
- * authorize recovery. A valid but exhausted/cooling debt locks the normal fallback until
- * that receipt expires or becomes invalid, so attempts cannot re-mint ordinary cut damage.
+ * Verified debt is never converted into new entitlement. When the recovery channel is
+ * locked, a separately scheduled ambient cut may still occur without consuming or
+ * resetting the receipt. Neither channel manufactures additional debt.
  */
 public record SoulCutDecision(State state, double recoveryAmount) {
   public enum State {

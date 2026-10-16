@@ -18,7 +18,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /** One authorized entry for all cuts and pre-reserved soul-burst stages. */
 public final class SoulDamageEngine {
-  private static final SoulDamageSafetyBudget SAFETY = new SoulDamageSafetyBudget();
+  private static final SoulHitScheduler HITS = new SoulHitScheduler();
 
   private static final class FeedbackSlot {
     final DomainDamageAdaptation adaptation = new DomainDamageAdaptation();
@@ -49,6 +49,8 @@ public final class SoulDamageEngine {
         && session.attacking()
         && now(p) >= session.executionPulseUntil
         && AkatsukiDomainAuthorization.allows(p, p.getMainHandItem())
+        && session.binding != null
+        && !session.binding.isBlank()
         && session.binding.equals(ContractCarrierData.getBindingId(p.getMainHandItem()))
         && AkatsukiDomainService.combatTarget(p, t, session)
         && !t.isRemoved()
@@ -82,24 +84,13 @@ public final class SoulDamageEngine {
             scale));
   }
 
-  private static SoulDamageSafetyBudget.Limits limits() {
-    return new SoulDamageSafetyBudget.Limits(
-        SoulDamageConfig.HIT_CEILING.get(),
-        SoulDamageConfig.TARGET_SECOND.get(),
-        SoulDamageConfig.PLAYER_SECOND.get(),
-        SoulDamageConfig.TARGET_WINDOW.get(),
-        SoulDamageConfig.PLAYER_WINDOW.get(),
-        SoulDamageConfig.CUT_GAP.get(),
-        SoulDamageConfig.BURST_COOLDOWN.get());
-  }
-
   public static SoulDamageFeedback cut(
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession session) {
     if (!authorized(p, t, session)
         || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
     SoulCutDecision decision = SoulDamageDebtService.cutDecision(p, t);
-    // An exhausted/cooling receipt cannot be used to obtain uncapped normal damage.
-    if (decision.state() == SoulCutDecision.State.RECOVERY_LOCKED) return null;
+    // Recovery only replays issued debt; ordinary cuts may run while that receipt
+    // cools, but can never mint or reset damage entitlement.
     boolean recovery = decision.state() == SoulCutDecision.State.RECOVERABLE;
     double levelCap = AkatsukiDomainGrowth.parameter(p, "space_cut_level_cap");
     double requested =
@@ -109,11 +100,11 @@ public final class SoulDamageEngine {
                 p.getAttributeValue(Attributes.ATTACK_DAMAGE),
                 AkatsukiDomainGrowth.parameter(p, "space_cut_multiplier"),
                 levelCap);
-    // Only Lv10 normal cuts bypass numerical budgets; verified recovery stays capped.
-    double amount =
-        !recovery && levelCap == 0
-            ? SAFETY.reserveUncappedCut(p.getUUID(), t.getUUID(), now(p), requested, limits())
-            : SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested, limits());
+    // No configurable HP-per-hit or cumulative ceiling. float is the Minecraft API limit.
+    double amount = Double.isFinite(requested)
+        ? HITS.reserveCut(p.getUUID(), t.getUUID(), now(p),
+            Math.min(requested, Float.MAX_VALUE), SoulDamageConfig.CUT_GAP.get())
+        : 0;
     if (amount <= 0) return null;
     if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
     var reservation = SoulDamageDebtService.reserve(p, t, false, amount);
@@ -132,22 +123,68 @@ public final class SoulDamageEngine {
     }
   }
 
+  /**
+   * Bonus for a single issued, successful NATIVE weapon hit, bounded by its
+   * actual health loss and the frequency scheduler. This is an independent
+   * non-recovery attack: it never consumes or creates debt.
+   *
+   * Echo-only cooldown and brief ambient suppression protect the manual attack
+   * from being crowded out by frequent automatic domain pulses.
+   */
+  public static SoulDamageFeedback resonance(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession session, double actualNativeLoss) {
+    if (!authorized(p, t, session)
+        || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
+    double requested = SoulResonancePolicy.requested(
+        actualNativeLoss, AkatsukiDomainGrowth.parameter(p, "resonance_hit_ratio"));
+    double amount = HITS.reserveResonance(p.getUUID(), t.getUUID(), now(p), requested);
+    if (amount <= 0) return null;
+    var feedback = execute(p, t, session, SPACE_CUT, amount, null, false);
+    if (SoulDamageConfig.DIAGNOSTICS.get() || Boolean.getBoolean("contractblade.soul.validation"))
+      LogUtils.getLogger().info(
+          "SOUL_NATIVE_RESONANCE owner={} victim={} observedHP={} requested={} actualHP={}",
+          p.getUUID(), t.getUUID(), actualNativeLoss, amount,
+          feedback == null ? 0 : feedback.loss());
+    return feedback;
+  }
+
   public static SoulDamageDebtService.Reservation reserveBurst(
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
     if (!authorized(p, t, s)) return null;
-    double request =
-        Math.min(
-            SoulDamageDebtService.available(p, t, true),
-            Math.min(
-                SoulDamageConfig.BURST_CEILING.get(),
-                SoulDamageConfig.HIT_CEILING.get() * SoulDamageConfig.BURST_STAGES.get()));
-    double amount = SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SOUL_BURST, request, limits());
+    // Reserve as much of the proved debt as Minecraft's finite float API permits.
+    double available = SoulDamageDebtService.available(p, t, true);
+    double request = Double.isFinite(available) ? Math.min(available, Float.MAX_VALUE) : 0;
+    double amount = HITS.reserveBurst(p.getUUID(), t.getUUID(), now(p),
+        request, SoulDamageConfig.BURST_COOLDOWN.get());
     return amount <= 0 ? null : SoulDamageDebtService.reserve(p, t, true, amount);
+  }
+
+  public record BurstPlan(double base, SoulDamageDebtService.Reservation recovery) {}
+
+  /** One shared cooldown for the independent skill and its optional verified recovery. */
+  public static BurstPlan reserveActiveBurst(ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
+    if (!authorized(p, t, s)) return null;
+    double base = SoulBurstBasePolicy.requested(p.getAttributeValue(Attributes.ATTACK_DAMAGE),
+        t.getMaxHealth(), ContractMasteryService.getLevel(p),
+        SoulDamageConfig.BURST_MULTIPLIER.get(), SoulDamageConfig.BURST_HEALTH_FRACTION.get());
+    if (HITS.reserveBurst(p.getUUID(), t.getUUID(), now(p), base,
+        SoulDamageConfig.BURST_COOLDOWN.get()) <= 0) return null;
+    double available = SoulDamageDebtService.available(p, t, true);
+    var recovery = Double.isFinite(available) && available > .01
+        ? SoulDamageDebtService.reserve(p, t, true, Math.min(available, Float.MAX_VALUE)) : null;
+    return new BurstPlan(base, recovery);
+  }
+
+  static SoulDamageFeedback baseBurstStage(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession s, double amount, Channel channel) {
+    return authorized(p, t, s) && Double.isFinite(amount) && amount > 0 && amount <= Float.MAX_VALUE
+        ? execute(p, t, s, SOUL_BURST, amount, channel, false) : null;
   }
 
   static SoulDamageFeedback burstStage(
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession s, double amount, Channel channel) {
-    return authorized(p, t, s) && amount <= SoulDamageConfig.HIT_CEILING.get() + .0001
+    return authorized(p, t, s) && Double.isFinite(amount) && amount > 0
+            && amount <= Float.MAX_VALUE
         ? execute(p, t, s, SOUL_BURST, amount, channel, true)
         : null;
   }
@@ -160,7 +197,7 @@ public final class SoulDamageEngine {
       double amount,
       Channel preferred,
       boolean recovery) {
-    if (!Double.isFinite(amount) || amount <= 0) return null;
+    if (!Double.isFinite(amount) || amount <= 0 || amount > Float.MAX_VALUE) return null;
     var beforeState = DomainTargetCompatibility.inspect(t);
     if (beforeState.protectedPhase() || DomainTargetCompatibility.initializing(t)) return null;
     var slot = ADAPTATION.computeIfAbsent(t, ignored -> new FeedbackSlot());
@@ -174,10 +211,11 @@ public final class SoulDamageEngine {
                     AkatsukiDomainConfig.CHANNELS.get().contains(c.name().toLowerCase(Locale.ROOT)))
             .toList();
     if (enabled.isEmpty()) return null;
+    boolean aggressive = SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
     Channel channel =
         preferred != null && enabled.contains(preferred)
             ? preferred
-            : AkatsukiDomainGrowth.has(AkatsukiDomainGrowth.capabilities(p), "adaptation")
+            : aggressive || AkatsukiDomainGrowth.has(AkatsukiDomainGrowth.capabilities(p), "adaptation")
                 ? memory.choose(now(p), beforeState.phase(), enabled)
                 : enabled.get(0);
     if (channel == null) return null;
@@ -194,8 +232,7 @@ public final class SoulDamageEngine {
             ? DomainTargetCompatibility.hitWindow(t, false)
             : null;
     if (vanilla == null || SoulDamageConfig.KNOWN_ADAPTERS.get() && boss == null) return null;
-    boolean aggressive =
-        recovery && SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
+    // Scope remains exact source + target + synchronous call, including unknown bosses.
     float before = t.getHealth();
     boolean returned = false;
     boolean[] attempted = {false};
@@ -315,11 +352,11 @@ public final class SoulDamageEngine {
   }
 
   public static boolean burstReady(UUID target, long now) {
-    return SAFETY.burstReady(target, now);
+    return HITS.burstReady(target, now);
   }
 
   public static void finishBurst(UUID target, long now) {
-    SAFETY.finishBurst(target, now);
+    HITS.finishBurst(target, now);
   }
 
   public static void forget(LivingEntity target) {
@@ -327,7 +364,7 @@ public final class SoulDamageEngine {
   }
 
   public static void prune(long now) {
-    SAFETY.prune(now);
+    HITS.prune(now);
     ADAPTATION
         .entrySet()
         .removeIf(
@@ -338,7 +375,7 @@ public final class SoulDamageEngine {
   }
 
   public static void clear() {
-    SAFETY.clear();
+    HITS.clear();
     ADAPTATION.clear();
     SoulStrikeContext.clearThread();
   }

@@ -41,9 +41,9 @@ public final class SoulAnchorBinding {
     return c.binding.equals(s.binding)
         && target instanceof LivingEntity t
         && t.getId() == c.targetId()
+        && !com.maidweapon.forge.compat.DomainTargetCompatibility.inspect(t).protectedPhase()
+        && c.targetPhase.equals(com.maidweapon.forge.compat.DomainTargetCompatibility.inspect(t).phase())
         && SoulDamageEngine.authorized(p, t, s)
-        && (SoulDamageDebtService.available(p, t, true) > .01
-            || SoulDamageEngine.now(p) < c.burstUntil)
         && c.distanceToSqr(t)
             <= SoulDamageConfig.LINK_RANGE.get() * SoulDamageConfig.LINK_RANGE.get();
   }

@@ -26,7 +26,10 @@ public final class WhiteFoxBlessingGrowth {
   public static final Map<ResourceLocation, ContractAbilityRegistry.Parameter> PARAMETERS =
       Map.ofEntries(
           bound("guard_reduction", 0, 0.2),
+          // Deprecated datapack key: recognized for existing packs, never limits damage.
           bound("guard_cap", 0, 4),
+          bound("health_bonus", 0, 0.5),
+          bound("attack_speed_bonus", 0, 0.3),
           bound("guard_cooldown", 40, 400),
           bound("cleanse_cooldown", 100, 1200),
           bound("heal_hits", 4, 20),
@@ -60,14 +63,24 @@ public final class WhiteFoxBlessingGrowth {
     return new ContractAbilityMilestone(level, Set.of(id(feature)), params);
   }
 
+  private static final double[] HEALTH_BONUS = {0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50};
+  private static final double[] ATTACK_SPEED_BONUS = {0.03, 0.06, 0.09, 0.12, 0.15, 0.18, 0.21, 0.24, 0.27, 0.30};
+  private static final double[] GUARD_REDUCTION = {0.06, 0.07, 0.08, 0.09, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20};
+
+  public static double healthBonus(int level) {
+    return HEALTH_BONUS[Math.max(1, Math.min(10, level)) - 1];
+  }
+
+  public static double attackSpeedBonus(int level) {
+    return ATTACK_SPEED_BONUS[Math.max(1, Math.min(10, level)) - 1];
+  }
+
   public static ContractAbilityDefinition fallback() {
-    return new ContractAbilityDefinition(
-        ID,
-        List.of(
+    var defaults = List.of(
             step(
                 1,
                 "blessing_guard",
-                Map.of("guard_reduction", 0.15d, "guard_cap", 3d, "guard_cooldown", 60d)),
+                Map.of("guard_cooldown", 60d)),
             step(2, "blessing_cleanse", Map.of("cleanse_cooldown", 200d)),
             step(
                 3,
@@ -99,7 +112,17 @@ public final class WhiteFoxBlessingGrowth {
                     "protection_ticks",
                     40d,
                     "protection_reduction",
-                    0.2d))));
+                    0.2d)));
+    var steps = new ArrayList<ContractAbilityMilestone>();
+    for (int index = 0; index < defaults.size(); index++) {
+      var prior = defaults.get(index);
+      var numbers = new HashMap<>(prior.parameters());
+      numbers.put(id("guard_reduction"), GUARD_REDUCTION[index]);
+      numbers.put(id("health_bonus"), HEALTH_BONUS[index]);
+      numbers.put(id("attack_speed_bonus"), ATTACK_SPEED_BONUS[index]);
+      steps.add(new ContractAbilityMilestone(prior.level(), prior.features(), numbers));
+    }
+    return new ContractAbilityDefinition(ID, steps);
   }
 
   public record Profile(ContractAbilityFeatureSet features) {
@@ -118,7 +141,7 @@ public final class WhiteFoxBlessingGrowth {
     public float guardedDamage(float amount) {
       if (!Float.isFinite(amount) || amount <= 0 || !has("blessing_guard")) return amount;
       return (float)
-          Math.max(0, amount - Math.min(number("guard_cap"), amount * number("guard_reduction")));
+          Math.max(0, amount * (1 - Math.min(0.2, Math.max(0, number("guard_reduction")))));
     }
   }
 

@@ -77,7 +77,56 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
             shake > 0 ? shake * .6f : (12 - e.tickCount) / 20f);
       }
     }
+    if (owned(e)) {
+      // The attack must land on the entity's real hitbox; this reticle is centered
+      // on that hitbox, unlike the short decorative burst at its spawn position.
+      var marker = buffers.getBuffer(SoulRenderTypes.OWNER_MARKER);
+      pose.pushPose();
+      pose.mulPose(entityRenderDispatcher.cameraOrientation());
+      float glow = (float) (.84 + .12 * Math.sin(time * .18));
+      ring(marker, pose.last().pose(), .72, .89, 0xFFE2CF, glow);
+      ring(marker, pose.last().pose(), 1.00, 1.06, 0xFF3559, glow * .78f);
+      cross(marker, pose.last().pose(), 0xFF6471, glow);
+      pose.popPose();
+
+      // A persistent, lightweight guide survives the first 12 ticks and is shown
+      // even with minimum visual quality. It is owner-only, never another player's UI.
+      var target = e.level().getEntity(e.targetId());
+      if (target != null && target.distanceToSqr(e) < 1024) {
+        var delta = target.getBoundingBox().getCenter().subtract(e.position().add(0, .85, 0));
+        ribbon(marker, pose.last().pose(), Vec3.ZERO,
+            delta.multiply(1 / .72, 1 / .85, 1 / .72),
+            .035f, 0xFF4860, .50f);
+      }
+    }
     pose.popPose();
+  }
+
+  /** Billboard annulus, not an enlarged collision hitbox. */
+  private static void ring(
+      VertexConsumer b, Matrix4f m, double inner, double outer, int rgb, float alpha) {
+    final int steps = 32;
+    for (int i = 0; i < steps; i++) {
+      double a = i * Math.PI * 2 / steps;
+      double z = (i + 1) * Math.PI * 2 / steps;
+      vertex(b, m, new Vec3(Math.cos(a) * outer, Math.sin(a) * outer, 0), rgb, alpha);
+      vertex(b, m, new Vec3(Math.cos(z) * outer, Math.sin(z) * outer, 0), rgb, alpha);
+      vertex(b, m, new Vec3(Math.cos(z) * inner, Math.sin(z) * inner, 0), rgb, alpha);
+      vertex(b, m, new Vec3(Math.cos(a) * inner, Math.sin(a) * inner, 0), rgb, alpha);
+    }
+  }
+
+  private static void cross(VertexConsumer b, Matrix4f m, int rgb, float alpha) {
+    // Four short brackets direct the eye toward the actual core center.
+    for (int i = 0; i < 4; i++) {
+      double a = i * Math.PI / 2;
+      double x = Math.cos(a), y = Math.sin(a);
+      double sx = -y * .07, sy = x * .07;
+      vertex(b, m, new Vec3(x * .31 + sx, y * .31 + sy, 0), rgb, alpha);
+      vertex(b, m, new Vec3(x * .61 + sx, y * .61 + sy, 0), rgb, alpha);
+      vertex(b, m, new Vec3(x * .61 - sx, y * .61 - sy, 0), rgb, alpha);
+      vertex(b, m, new Vec3(x * .31 - sx, y * .31 - sy, 0), rgb, alpha);
+    }
   }
 
   private static void shard(

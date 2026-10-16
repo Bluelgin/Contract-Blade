@@ -24,8 +24,9 @@ public final class AkatsukiDomainGrowth {
     return ResourceLocation.parse("maid_weapon:" + name);
   }
 
-  private static final double[] CUT_MULTIPLIERS = {.05, .08, .12, .16, .20, .25, .30, .36, .42, .50};
-  private static final double[] CUT_LEVEL_CAPS = {1, 2, 4, 6, 10, 16, 24, 40, 64, 0};
+  private static final double[] CUT_MULTIPLIERS = {0.10, 0.13, 0.17, 0.21, 0.25, 0.30, 0.35, 0.40, 0.46, 0.55};
+  private static final double[] RESONANCE_RATIOS = {0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.36, 0.40, 0.44, 0.50};
+  private static final double[] CUT_LEVEL_CAPS = {2, 3, 5, 8, 12, 20, 30, 50, 80, 0};
 
   public static Map<ResourceLocation, Double> parameters(int level) {
     int index = Math.max(1, Math.min(10, level)) - 1;
@@ -44,6 +45,8 @@ public final class AkatsukiDomainGrowth {
         level >= 9 ? 200d : 120d,
         id("space_cut_multiplier"),
         CUT_MULTIPLIERS[index],
+        id("resonance_hit_ratio"),
+        RESONANCE_RATIOS[index],
         id("space_cut_level_cap"),
         CUT_LEVEL_CAPS[index]);
   }
@@ -57,6 +60,7 @@ public final class AkatsukiDomainGrowth {
     m.put(id("aerial_hover_ticks"), new ContractAbilityRegistry.Parameter(0, 8));
     m.put(id("debt_lifetime"), new ContractAbilityRegistry.Parameter(20, 400));
     m.put(id("space_cut_multiplier"), new ContractAbilityRegistry.Parameter(0, 10));
+    m.put(id("resonance_hit_ratio"), new ContractAbilityRegistry.Parameter(0, .8));
     // 0 represents no level-based HP cap.
     m.put(id("space_cut_level_cap"), new ContractAbilityRegistry.Parameter(0, 4096));
     return Map.copyOf(m);

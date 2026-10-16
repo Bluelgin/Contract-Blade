@@ -31,6 +31,7 @@ public final class SoulAnchorEntity extends Entity {
   }
 
   public String binding = "";
+  public String targetPhase = "";
   public long expires, burstUntil;
 
   public SoulAnchorEntity(EntityType<? extends SoulAnchorEntity> type, Level level) {

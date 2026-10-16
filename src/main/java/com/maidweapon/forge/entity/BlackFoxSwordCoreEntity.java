@@ -236,8 +236,10 @@ public final class BlackFoxSwordCoreEntity extends Entity {
         }
         if (kind == 0) {
             var shot = com.maidweapon.forge.compat.BlackFoxPhantomCompat.spawn(actor,from,living.getEyePosition().subtract(from).normalize(),false,1.25f);
-            com.maidweapon.forge.compat.BlackFoxPhantomCompat.damage(shot,power * (full ? .35 : .2));
-        } else com.maidweapon.forge.compat.BlackFoxCoreNativeBarrage.fire(actor,from,living.getEyePosition(),kind,power*.6);
+            com.maidweapon.forge.compat.BlackFoxPhantomCompat.damage(shot,
+                power * growth.number("core_damage_multiplier",1) * (full ? .35 : .2));
+        } else com.maidweapon.forge.compat.BlackFoxCoreNativeBarrage.fire(actor,from,living.getEyePosition(),kind,
+                power * growth.number("core_damage_multiplier",1) * .6);
     }
     private void feedback(Vec3 at,int count) {
         ((net.minecraft.server.level.ServerLevel)level()).sendParticles(new net.minecraft.core.particles.DustParticleOptions(

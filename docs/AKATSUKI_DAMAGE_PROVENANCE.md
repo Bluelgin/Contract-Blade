@@ -1,5 +1,7 @@
 # 赤月伤害溯源、十级追偿与空中拘魂
 
+魂核生成和默认强攻策略现已与已验证追偿拆开，见 [主动魂核规则](AKATSUKI_ACTIVE_SOUL_CORE.md)。下文的原生来源证明、单笔追偿与分账仍保留，但旧的“魂核必须有债务”约束不再适用。
+
 开发基线：PR #18 `02ffd9c61b676f61b531ecfe40a23c0b86a794cc`。本变更在独立分支提交，PR 目标为 `codex/akatsuki-domain`，不重写旧 PR 历史。第三方仓库与发行 JAR 均未修改。
 
 ## 玩家行为
@@ -82,6 +84,6 @@ Cataclysm 读取已核实 damageBucket 与距离减伤边界；合法距离减�
 
 旧 `akatsuki_swords` ID、熟练度存档、领域与剑雨协议保留；魂核从 LivingEntity 改为 Entity，`soul_burst` 握手版本为2，客户端/服务器必须同时更新。魂核原本不保存，旧存档无需迁移实体。旧伤害公式配置键与默认值保留并标明弃用；不再解释为追偿额度。已有配置中的60 tick魂核寿命保持作者设置；建议手动调整至90。开关 `bossAdapters && knownBossAdapters` 保持总开关/子开关关系。
 
-MixinExtras0.4.1作为MIT许可运行库以Forge Jar-in-Jar打包；不把BladeTetra/Goety或Boss变成强制依赖。构建产物应使用无slim后缀的完整JAR。完整审计见 [审计报告](audit/AKATSUKI_PROVENANCE_AUDIT.md)。
+MixinExtras0.5.3作为MIT许可运行库以Forge Jar-in-Jar打包，兼容当前灾变与训练假人的依赖范围；不把BladeTetra/Goety或Boss变成强制依赖。构建产物应使用无slim后缀的完整JAR。完整审计见 [审计报告](audit/AKATSUKI_PROVENANCE_AUDIT.md)。
 
 实际通过、失败和用户停止后的未执行项见 [验收记录](AKATSUKI_PROVENANCE_VALIDATION.md)。

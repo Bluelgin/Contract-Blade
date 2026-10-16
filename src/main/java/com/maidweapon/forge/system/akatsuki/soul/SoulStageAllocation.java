@@ -1,30 +1,19 @@
 package com.maidweapon.forge.system.akatsuki.soul;
 
-/** Waterfill weighted stages before reserving safety; no clipped, permanently unusable tail. */
+/** Conserves all validated finite debt across 3–5 weighted stages; no HP ceiling. */
 public final class SoulStageAllocation {
-  public static double[] split(double total, int stages, double cap) {
-    if (!Double.isFinite(total)
-        || !Double.isFinite(cap)
-        || total < 0
-        || cap <= 0
-        || stages < 3
-        || stages > 5) throw new IllegalArgumentException();
-    var a = new double[stages];
-    double left = Math.min(total, stages * cap);
-    for (int round = 0; round <= stages && left > .000001; round++) {
-      double weights = 0;
-      for (int i = 0; i < stages; i++) if (a[i] < cap - .000001) weights += i + 1;
-      double spent = 0;
-      for (int i = 0; i < stages; i++)
-        if (a[i] < cap - .000001) {
-          double n = Math.min(cap - a[i], left * (i + 1) / weights);
-          a[i] += n;
-          spent += n;
-        }
-      left -= spent;
+  public static double[] split(double total, int stages) {
+    if (!Double.isFinite(total) || total < 0 || total > Float.MAX_VALUE
+        || stages < 3 || stages > 5) throw new IllegalArgumentException();
+    var result = new double[stages];
+    double weights = stages * (stages + 1) / 2d;
+    double used = 0;
+    for (int i = 0; i < stages - 1; i++) {
+      result[i] = total * (i + 1) / weights;
+      used += result[i];
     }
-    return a;
+    result[stages - 1] = Math.max(0, total - used);
+    return result;
   }
-
   private SoulStageAllocation() {}
 }

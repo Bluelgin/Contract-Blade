@@ -116,6 +116,14 @@ public final class AkatsukiDomainService {
     return state;
   }
 
+  /** Visual-only response to a confirmed native-hit resonance, no extra damage call. */
+  public static void resonanceCue(ServerPlayer player, LivingEntity target) {
+    var session = SESSIONS.get(player);
+    if (session != null && session.attacking()
+        && session.binding.equals(ContractCarrierData.getBindingId(player.getMainHandItem())))
+      cue(player, session, AkatsukiDomainGrowth.capabilities(player), EDGE, target);
+  }
+
   /** Refreshes the same authoritative lifecycle used by automatic cuts and rescue. */
   public static AkatsukiDomainSession session(ServerPlayer player) {
     return refresh(player, AkatsukiDomainGrowth.capabilities(player));

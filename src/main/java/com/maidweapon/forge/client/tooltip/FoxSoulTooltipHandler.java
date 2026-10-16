@@ -12,6 +12,8 @@ public final class FoxSoulTooltipHandler {
   @SubscribeEvent
   public static void tooltip(ItemTooltipEvent event) {
     var stack = event.getItemStack();
+    // Infused carriers are composed centrally; never append a second fox summary.
+    if (com.maidweapon.forge.item.MaidInfusion.isInfused(stack)) return;
     boolean black =
         FoxSpiritState.BLACK.equals(
             (FoxSpiritState.isSeal(stack)

@@ -95,6 +95,7 @@ public final class WhiteFoxBlessingValidation {
         WhiteFoxBlessingService.profile(player).has("blessing_domain"),
         "story unlock directly reads existing Lv8");
     var clock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
+    double[] expectedGuardDamage = {9.4, 9.3, 9.2, 9.1, 9.0, 8.8, 8.6, 8.4, 8.2, 8.0};
     for (int lv = 1; lv <= 10; lv++) {
       com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(
           server.createCommandSourceStack(), player, lv);
@@ -104,20 +105,30 @@ public final class WhiteFoxBlessingValidation {
           p != null && p.features().equals(WhiteFoxBlessingGrowth.fallback().resolve(lv)),
           "route at Lv" + lv);
       check(
-          Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - .1) < .00001,
-          "no permanent movement before guard at Lv" + lv);
+          Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - (lv >= 3 ? .12 : .1)) < .00001,
+          "passive speed before guard at Lv" + lv);
+      check(player.hasEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED) == (lv >= 3),
+          "passive Speed I unlock at Lv" + lv);
+      check(player.hasEffect(net.minecraft.world.effect.MobEffects.REGENERATION) == (lv >= 5),
+          "passive Regeneration I unlock at Lv" + lv);
+      check(player.hasEffect(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE) == (lv >= 9),
+          "passive Resistance I unlock at Lv" + lv);
       var ordinary =
           new net.minecraftforge.event.entity.living.LivingDamageEvent(
               player, player.damageSources().generic(), 10);
       WhiteFoxBlessingService.damage(ordinary);
-      check(Math.abs(ordinary.getAmount() - 8.5) < .00001, "bounded guard at Lv" + lv);
+      check(Math.abs(ordinary.getAmount() - expectedGuardDamage[lv - 1]) < .00001,
+          "level-scaled percentage guard at Lv" + lv);
+      check(Math.abs(p.guardedDamage(1000) - expectedGuardDamage[lv - 1] * 100) < .0001,
+          "percentage guard has no fixed HP cap at Lv" + lv);
       var repeat =
           new net.minecraftforge.event.entity.living.LivingDamageEvent(
               player, player.damageSources().generic(), 10);
       WhiteFoxBlessingService.damage(repeat);
       check(repeat.getAmount() == 10, "guard cooldown at Lv" + lv);
       check(
-          Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - (lv >= 4 ? .11 : .1))
+          Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED)
+              - (lv >= 4 ? .132 : lv >= 3 ? .12 : .1))
               < .00001,
           "temporary guard movement at Lv" + lv);
       check(
@@ -353,6 +364,9 @@ public final class WhiteFoxBlessingValidation {
     check(
         WhiteFoxBlessingService.profile(player) == null
             && !player.hasEffect(net.minecraft.world.effect.MobEffects.ABSORPTION)
+            && !player.hasEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED)
+            && !player.hasEffect(net.minecraft.world.effect.MobEffects.REGENERATION)
+            && !player.hasEffect(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE)
             && Math.abs(player.getAttributeValue(Attributes.MOVEMENT_SPEED) - .1) < .00001,
         "manifestation immediately removes blessing");
     var id = UUID.fromString(ContractCarrierData.getBoundMaidUUID(white));
