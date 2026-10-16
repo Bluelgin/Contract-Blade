@@ -49,6 +49,7 @@ public final class WhiteFoxPurifyingEdge {
         var context = BlackFoxEncounterApi.resolve(source, target);
         if (context == null || context.owner() == null || context.originalBlade() == null
                 || !context.owner().isAlive() || context.owner().level() != target.level()
+                || !FoxSpiritAbilityAuthorization.allows(context.owner(),context.originalBlade(),FoxSpiritState.WHITE)
                 || !WhiteFoxSpecialEffectCompat.hasEffect(context.originalBlade())
                 || WhiteFoxSpecialEffectCompat.strength(context.originalBlade()) <= 0) return null;
         return context;

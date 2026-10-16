@@ -28,6 +28,7 @@ class ContractRecoveryJournalTest {
     @Test void unknownFutureSchemaIsKeptAndWritesAreRejected() {
         var raw = new CompoundTag(); raw.putInt("Schema", 42); raw.putString("Future", "last trusted data");
         var journal = ContractRecoveryJournal.load(raw);
+        assertTrue(journal.blocksAbility("binding"));
         assertEquals(raw, journal.save(new CompoundTag()));
         assertThrows(IllegalStateException.class, () -> journal.incident("binding", new CompoundTag()));
         assertThrows(IllegalStateException.class, () -> journal.transfer("maid", new CompoundTag()));

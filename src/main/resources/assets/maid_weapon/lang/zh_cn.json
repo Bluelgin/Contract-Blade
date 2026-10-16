@@ -400,5 +400,7 @@
   "maid_weapon.fox.sa.combo_locked": "连击 B 将在契约熟练度 Lv.5 解锁。",
   "maid_weapon.transfer.emergency": "紧急胶片：实际武器损毁的保全数据，不能用于日常缔约。",
   "maid_weapon.transfer.soul": "魂符：在契约缔结台进行正常缔约、解除和迁居。",
-  "maid_weapon.transfer.legacy_film": "胶片：原生复活道具；旧契约数据需管理员预检查后迁移。"
+  "maid_weapon.transfer.legacy_film": "胶片：原生复活道具；旧契约数据需管理员预检查后迁移。",
+  "maid_weapon.white_blessing.oath": "狐之誓约已守护你；十分钟后可再次触发。",
+  "maid_weapon.white_blessing.tooltip": "白狐加护：解放黑狐后，主/副手持有且剑灵驻留时生效；读取全局熟练度。"
 }

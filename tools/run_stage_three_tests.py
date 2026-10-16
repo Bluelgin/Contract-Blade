@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
-parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword'])
+parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se'])
 args = parser.parse_args()
 root = Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
 print(f'Disposable fixtures: {root}', flush=True)
@@ -22,6 +22,8 @@ fixtures = [
     ('rebirth', ['-PcontractRebirthTest=true'], ['CONTRACT_REBIRTH_PASS','CONTRACT_DESTRUCTION_PASS','MULTI_CARRIER_LOSS_VALIDATION_PASSED','COMPANION_VALIDATION_PASS']),
     ('fox', ['-PmasteryFoxTest=true'], ['BLACK_FOX_SHRINE_RETURN_PASS','CONTRACT_MASTERY_FOX_PASS']),
     ('shrine', ['-PfoxTest=true'], ['SHRINE_NATIVE_PASS','FOX_TRANSFER_NATIVE_PASS','FOX_COMPANION_NATIVE_PASS']),
+    ('white-se', ['-PwhiteFoxSeTest=true'], ['WHITE_FOX_SE_PASS']),
+    ('blessing', ['-PwhiteBlessingTest=true'], ['WHITE_BLESSING_PASS']),
     ('sword', ['-PswordCoreTest=true'], ['SWORD_CORE_NATIVE_PASS','SWORD_CORE_RELEASE_PASS','SWORD_CORE_MASTERY_CREDIT_PASS','SWORD_CORE_GROWTH_PASS','SWORD_CORE_MULTI_CREDIT_PASS']),
 ]
 failed = []
@@ -47,15 +49,15 @@ for name, flags, markers in fixtures:
             failed.append(name); print(f'{name}: FAIL missing={missing}; {log}',flush=True)
         else:
             print(f'{name}: PASS ({", ".join(markers)})',flush=True)
-            if name == 'recovery':
-                restart_log = root / 'recovery-restart.log'
+            if name in ['recovery','blessing']:
+                restart_log = root / f'{name}-restart.log'
                 with restart_log.open('w') as output:
-                    resumed = subprocess.run([*cmd,'-PstageThreeResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
+                    resumed = subprocess.run([*cmd, '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
                 resumed_text = restart_log.read_text()
-                if resumed.returncode or 'CONTRACT_STAGE_THREE_RESTART_PASS' not in resumed_text or '_FAIL' in resumed_text:
-                    failed.append('recovery-restart');print(f'recovery-restart: FAIL; {restart_log}',flush=True)
+                if resumed.returncode or ('CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
+                    failed.append(f'{name}-restart');print(f'{name}-restart: FAIL; {restart_log}',flush=True)
                 else:
-                    print('recovery-restart: PASS (CONTRACT_STAGE_THREE_RESTART_PASS)',flush=True)
+                    print(f'{name}-restart: PASS',flush=True)
     except subprocess.TimeoutExpired:
         failed.append(name); print(f'{name}: TIMEOUT; {log}',flush=True)
 if failed:

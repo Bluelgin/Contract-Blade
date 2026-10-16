@@ -1,10 +1,7 @@
 package com.maidweapon.forge.api;
-
 import static com.maidweapon.forge.system.contract.ContractChannelStorage.*;
 import static com.maidweapon.forge.compat.tlm.IntrinsicSpiritModels.*;
-
 import com.maidweapon.forge.system.contract.ContractCarrierData;
-
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.maidweapon.forge.system.MaidEntityDataCodec;
@@ -15,8 +12,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-
-
 /**
  * Stores addon-defined blade spirits independently from the player's ordinary
  * weapon contract while projecting only the selected channel into the legacy
@@ -57,7 +52,6 @@ public final class IntrinsicSpiritApi {
                 >= MaidWeaponConfig.CONTRACT_NBT_MAX_INTRINSIC_SPIRITS.get()) {
             return false;
         }
-
         // Legacy addon spirits occupied the generic contract channel. Migrate
         // their exact serialized contract instead of constructing a new maid.
         if (EmbeddedSpiritApi.isSpirit(weapon, spiritId)) {
@@ -70,13 +64,11 @@ public final class IntrinsicSpiritApi {
             applyPresetModel(owner, weapon, spiritId);
             return true;
         }
-
         if (!ensureGenericContractStored(owner, weapon)) return false;
         CompoundTag beforeCreation = weapon.getTag() == null ? null : weapon.getTag().copy();
         CompoundTag external = captureContract(weapon);
         MaidEntityDataCodec.migrate(external);
         clearContract(weapon);
-
         boolean created = EmbeddedSpiritApi.bindPresetSpirit(
                 owner, weapon, spiritId, displayName);
         CompoundTag intrinsic = created ? captureContract(weapon) : new CompoundTag();
@@ -85,7 +77,6 @@ public final class IntrinsicSpiritApi {
             restoreContract(weapon, external);
             return false;
         }
-
         storeIntrinsic(weapon, spiritId, displayName, intrinsic);
         restoreContract(weapon, external);
         weapon.getOrCreateTag().putInt(SCHEMA, SCHEMA_VERSION);
@@ -93,7 +84,6 @@ public final class IntrinsicSpiritApi {
         applyPresetModel(owner, weapon, spiritId);
         return true;
     }
-
     /**
      * Selects the intrinsic or external contract channel. Exactly one channel
      * is projected into the deployment system at a time.
@@ -109,7 +99,6 @@ public final class IntrinsicSpiritApi {
         if (!hasIntrinsicSpirit(weapon, spiritId)) {
             return false;
         }
-
         String projected = projection(weapon);
         if (active) {
             if (spiritId.equals(projected)) {
@@ -124,7 +113,6 @@ public final class IntrinsicSpiritApi {
                 return false;
             }
             if (!ensureGenericContractStored(owner, weapon)) return false;
-
             CompoundTag external = captureContract(weapon);
             MaidEntityDataCodec.migrate(external);
             if (!external.isEmpty()) {
@@ -133,7 +121,6 @@ public final class IntrinsicSpiritApi {
                 weapon.getOrCreateTag().remove(EXTERNAL);
             }
             clearContract(weapon);
-
             CompoundTag intrinsic = intrinsicContract(weapon, spiritId);
             if (!usableContract(intrinsic)) {
                 restoreExternalArchive(weapon);
@@ -145,11 +132,9 @@ public final class IntrinsicSpiritApi {
             EmbeddedSpiritApi.setDormant(weapon, false);
             return true;
         }
-
         if (!spiritId.equals(projected)) return true;
         return switchProjectionToExternal(owner, weapon, spiritId);
     }
-
     public static boolean hasIntrinsicSpirit(ItemStack weapon, String spiritId) {
         if (weapon.isEmpty() || spiritId == null || spiritId.isBlank()) return false;
         if (spiritId.equals(projection(weapon))) {
@@ -157,7 +142,6 @@ public final class IntrinsicSpiritApi {
         }
         return validContract(intrinsicContract(weapon, spiritId));
     }
-
     public static boolean isIntrinsicSpiritActive(ItemStack weapon, String spiritId) {
         migrateProjectedAuthority(weapon);
         return spiritId != null
@@ -335,6 +319,21 @@ public final class IntrinsicSpiritApi {
         detached.remove(spiritId);
         if (detached.isEmpty()) root.remove(DETACHED); else root.put(DETACHED, detached);
         return true;
+    }
+
+    public static CompoundTag readOnlyContract(ItemStack weapon, String spiritId) {
+        return transferContract(weapon, spiritId).copy();
+    }
+    public static java.util.List<Object> proofKey(ItemStack weapon,String spiritId) {
+        CompoundTag view=spiritId.equals(projection(weapon))||EmbeddedSpiritApi.isSpirit(weapon,spiritId)?weapon.getTag():intrinsicContract(weapon,spiritId);
+        if(view==null)return java.util.List.of();
+        return java.util.List.of(view.getString("MaidUUID"),view.getString("MaidBindingId"),view.hasUUID("OwnerUUID")?view.getUUID("OwnerUUID").toString():"",
+                view.getLong(MaidEntityDataCodec.CHECKSUM),view.getInt(MaidEntityDataCodec.UNCOMPRESSED_SIZE));
+    }
+    public static boolean stored(ItemStack weapon, String spiritId) {
+        CompoundTag view = spiritId.equals(projection(weapon)) || EmbeddedSpiritApi.isSpirit(weapon, spiritId)
+                ? weapon.getTag() : intrinsicContract(weapon, spiritId);
+        return view != null && MaidEntityDataCodec.hasData(view);
     }
 
     private static CompoundTag transferContract(ItemStack weapon, String spiritId) {

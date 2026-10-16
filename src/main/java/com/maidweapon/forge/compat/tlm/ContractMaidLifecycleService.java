@@ -261,6 +261,7 @@ public final class ContractMaidLifecycleService {
             prepareManifestedMaid(player, weaponStack, maid);
             SoulTalismanService.captured(player, weaponStack); // rotate carrier receipt on each manifest/capture generation
             ContractMaidStorage.remove(weaponStack);
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new com.maidweapon.forge.api.event.ContractMaidManifestedEvent(player,maid,weaponStack));
 
             if (notifyPlayer) {
                 player.displayClientMessage(Component.translatable(

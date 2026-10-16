@@ -24,6 +24,11 @@ public final class ContractRecoveryJournal extends SavedData {
         if (root.contains("Schema") && root.getInt("Schema") != 1) journal.future = root.copy();
         return journal;
     }
+    public boolean blocksAbility(String binding) {
+        if (future != null) return true;
+        var data=incidents.getCompound(binding);String status=data.getString("Status");
+        return status.equals("COMMITTING")||status.equals("REVIEW_REQUIRED")||status.equals("PENDING")&&data.getBoolean("Confirmed");
+    }
     public CompoundTag incident(String binding) { return incidents.getCompound(binding).copy(); }
     public void incident(String binding, CompoundTag value) { writable(); incidents.put(binding, value.copy()); setDirty(); }
     public CompoundTag transfer(String maid) { return transfers.getCompound(maid).copy(); }

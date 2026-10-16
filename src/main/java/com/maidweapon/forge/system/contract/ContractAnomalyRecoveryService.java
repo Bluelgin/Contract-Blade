@@ -19,6 +19,7 @@ public final class ContractAnomalyRecoveryService {
     private static final Map<UUID, Integer> CURSORS = new HashMap<>();
     private static final Set<ItemStack> TRANSITIONS = Collections.newSetFromMap(new IdentityHashMap<>());
     private static final Map<UUID, Map<String, CompletableFuture<TlmBackupBridge.Result>>> READS = new HashMap<>();
+    public static boolean transitioning(ItemStack item) { return TRANSITIONS.contains(item); }
     public static void begin(ItemStack item) { TRANSITIONS.add(item); }
     public static void end(ItemStack item) { TRANSITIONS.remove(item); }
     public static State state(Player owner, ItemStack carrier) {

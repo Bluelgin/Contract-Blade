@@ -157,6 +157,11 @@ public final class BlackFoxSwordCoreValidation {
         com.maidweapon.forge.system.contract.ContractCarrierData.setOwner(blade,player);
         com.maidweapon.forge.system.contract.ContractCarrierData.setBoundMaidUUID(blade,maid.toString());
         com.maidweapon.forge.system.contract.ContractCarrierData.ensureBindingId(blade);
+        blade.getOrCreateTag().putString(com.maidweapon.forge.api.EmbeddedSpiritApi.TAG_SPIRIT_ID,FoxSpiritState.BLACK);
+        var snapshot=new net.minecraft.nbt.CompoundTag();snapshot.putUUID("Owner",player.getUUID());snapshot.putUUID("UUID",maid);snapshot.putFloat("Health",20);
+        var forge=new net.minecraft.nbt.CompoundTag();forge.putString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID,
+                com.maidweapon.forge.system.contract.ContractCarrierData.getBindingId(blade));snapshot.put("ForgeData",forge);
+        try{com.maidweapon.forge.system.MaidEntityDataCodec.write(blade.getOrCreateTag(),snapshot);}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
         var persisted = player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG);
         persisted.putBoolean("MaidWeaponBlackFoxDefeated",true); player.getPersistentData().put(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG,persisted);
         BlackFoxSwordArtCompat.unlock(blade,player);
