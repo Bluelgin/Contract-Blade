@@ -13,7 +13,7 @@ public final class DamageProvenanceResolver {
     public boolean currentCarrier() {
       return player.isAlive()
           && !player.isRemoved()
-          && !player.isCreative()
+          && (!player.isCreative() || com.maidweapon.common.SoulDamageConfig.CREATIVE_DAMAGE.get())
           && !player.isSpectator()
           && player.getMainHandItem() == carrier
           && binding.equals(ContractCarrierData.getBindingId(carrier))

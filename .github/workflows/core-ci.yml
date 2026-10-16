@@ -16,6 +16,7 @@ on:
       - codex/architecture-refinement
       - codex/white-fox-growth-rework
       - codex/akatsuki-domain
+      - codex/akatsuki-provenance-airborne
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}

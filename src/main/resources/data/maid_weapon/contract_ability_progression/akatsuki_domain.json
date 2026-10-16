@@ -14,7 +14,9 @@
         "maid_weapon:anchor_lifetime_bonus": 0,
         "maid_weapon:precision_tolerance": 0.04,
         "maid_weapon:aerial_hover_ticks": 0,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.05,
+        "maid_weapon:space_cut_level_cap": 1
       }
     },
     {
@@ -28,7 +30,9 @@
         "maid_weapon:anchor_lifetime_bonus": 0,
         "maid_weapon:precision_tolerance": 0.04,
         "maid_weapon:aerial_hover_ticks": 0,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.08,
+        "maid_weapon:space_cut_level_cap": 2
       }
     },
     {
@@ -42,7 +46,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.04,
         "maid_weapon:aerial_hover_ticks": 0,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.12,
+        "maid_weapon:space_cut_level_cap": 4
       }
     },
     {
@@ -56,7 +62,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 0,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.16,
+        "maid_weapon:space_cut_level_cap": 6
       }
     },
     {
@@ -70,7 +78,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 0,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.2,
+        "maid_weapon:space_cut_level_cap": 10
       }
     },
     {
@@ -84,7 +94,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.25,
+        "maid_weapon:space_cut_level_cap": 16
       }
     },
     {
@@ -98,7 +110,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.3,
+        "maid_weapon:space_cut_level_cap": 24
       }
     },
     {
@@ -112,7 +126,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
-        "maid_weapon:debt_lifetime": 120
+        "maid_weapon:debt_lifetime": 120,
+        "maid_weapon:space_cut_multiplier": 0.36,
+        "maid_weapon:space_cut_level_cap": 40
       }
     },
     {
@@ -126,7 +142,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
-        "maid_weapon:debt_lifetime": 200
+        "maid_weapon:debt_lifetime": 200,
+        "maid_weapon:space_cut_multiplier": 0.42,
+        "maid_weapon:space_cut_level_cap": 64
       }
     },
     {
@@ -140,7 +158,9 @@
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
         "maid_weapon:aerial_hover_ticks": 4,
-        "maid_weapon:debt_lifetime": 200
+        "maid_weapon:debt_lifetime": 200,
+        "maid_weapon:space_cut_multiplier": 0.5,
+        "maid_weapon:space_cut_level_cap": 0
       }
     }
   ]
