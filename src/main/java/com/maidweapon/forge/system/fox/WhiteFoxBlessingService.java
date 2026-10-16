@@ -34,6 +34,10 @@ public final class WhiteFoxBlessingService {
   private record Shield(MobEffectInstance effect, int duration) {}
 
   private static final Map<ServerPlayer, Shield> SHIELDS = new WeakHashMap<>();
+  /** Track the exact effect instances we own, never erase stronger foreign potion buffs. */
+  private static final Map<ServerPlayer, Map<MobEffect, MobEffectInstance>> PASSIVE =
+      new WeakHashMap<>();
+  private static final int PASSIVE_TICKS = 120;
   // Explicit vanilla dispel policy. Never infer dispellability from isBeneficial() or mod tags.
   private static final List<MobEffect> DISPEL =
       List.of(
@@ -127,7 +131,37 @@ public final class WhiteFoxBlessingService {
     return DISPEL.stream().anyMatch(target::hasEffect);
   }
 
+  private static void passive(ServerPlayer player, MobEffect effect, boolean enabled) {
+    var own = PASSIVE.computeIfAbsent(player, ignored -> new IdentityHashMap<>());
+    var applied = own.get(effect);
+    var active = player.getEffect(effect);
+    boolean ours = active != null && active == applied && active.getAmplifier() == 0
+        && active.getDuration() <= PASSIVE_TICKS;
+    if (!enabled) {
+      if (ours) player.removeEffect(effect);
+      own.remove(effect);
+      if (own.isEmpty()) PASSIVE.remove(player);
+      return;
+    }
+    // If another mod or potion supplies this status, do not replace or shorten it.
+    if (active != null && !ours) {
+      own.remove(effect);
+      return;
+    }
+    if (active != null && active.getDuration() > PASSIVE_TICKS / 2) return;
+    player.addEffect(new MobEffectInstance(effect, PASSIVE_TICKS, 0, true, false, true));
+    var granted = player.getEffect(effect);
+    if (granted != null && granted.getAmplifier() == 0) own.put(effect, granted);
+  }
+
+  private static void passive(ServerPlayer player, WhiteFoxBlessingGrowth.Profile profile) {
+    passive(player, MobEffects.MOVEMENT_SPEED, profile != null && profile.has("blessing_heal"));
+    passive(player, MobEffects.REGENERATION, profile != null && profile.has("blessing_lantern"));
+    passive(player, MobEffects.DAMAGE_RESISTANCE, profile != null && profile.has("blessing_crisis"));
+  }
+
   public static void remove(ServerPlayer player) {
+    passive(player, (WhiteFoxBlessingGrowth.Profile) null);
     clearShield(player);
     movement(player, 0);
     // Remove the old route's transient attribute ids on upgrade as well.
@@ -148,6 +182,7 @@ public final class WhiteFoxBlessingService {
       remove(player);
       return;
     }
+    passive(player, p);
     movement(
         player,
         p.has("blessing_mobility") && runtime(player).moving(now(player))
@@ -366,6 +401,7 @@ public final class WhiteFoxBlessingService {
   public static void stopped(ServerStoppedEvent event) {
     RUNTIME.clear();
     SHIELDS.clear();
+    PASSIVE.clear();
     FoxSpiritAbilityAuthorization.clear();
   }
 
