@@ -34,7 +34,7 @@ class InventoryVoiceGesturePolicyTest {
         p.observe(null, 1_300, .7, defaults);
         assertEquals(Response.NONE, p.observe("a", 1_400, .7, defaults));
         p.observe(null, 1_500, .7, defaults);
-        assertEquals(Response.NONE, p.observe("a", 1_600, .1, defaults)); // playful cooldown/streak
+        assertEquals(Response.PLAYFUL, p.observe("a", 1_600, .1, defaults)); // rare reaction despite earlier silence
     }
 
     @Test
@@ -44,7 +44,7 @@ class InventoryVoiceGesturePolicyTest {
         assertEquals(Response.NONE, p.observe("b", 101, 0, ALL));
         assertEquals(Response.NONE, p.observe("b", 101, 0, ALL));
         p.observe(null, 102, 0, ALL);
-        assertEquals(Response.CURIOUS, p.observe("b", 103, 0, ALL));
+        assertEquals(Response.NONE, p.observe("b", 103, 0, ALL)); // swap reset, normal greeting cooldown
         p.resetGesture();
         assertEquals(Response.NONE, p.observe("a", 104, 0, ALL));
     }

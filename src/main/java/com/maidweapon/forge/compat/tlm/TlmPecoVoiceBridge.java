@@ -30,25 +30,59 @@ public final class TlmPecoVoiceBridge {
 
     public static void play(InventoryVoiceGesturePolicy.Response response) {
         if (response == InventoryVoiceGesturePolicy.Response.NONE) return;
+        playSelected(response, -1, false);
+    }
+
+    /** Live in-game audition of every original PECO clip, no export/copy of OGG. */
+    public static boolean preview(String name, int index) {
+        var response = switch (name) {
+            case "greeting" -> InventoryVoiceGesturePolicy.Response.GREETING;
+            case "curious" -> InventoryVoiceGesturePolicy.Response.CURIOUS;
+            case "playful" -> InventoryVoiceGesturePolicy.Response.PLAYFUL;
+            default -> InventoryVoiceGesturePolicy.Response.NONE;
+        };
+        return response != InventoryVoiceGesturePolicy.Response.NONE
+                && playSelected(response, index, true);
+    }
+
+    /** Only returns the count of already loaded source clips, never bytes. */
+    public static int sampleCount(String name) {
+        var event = switch (name) {
+            case "greeting" -> InitSounds.MAID_IDLE.get();
+            case "curious" -> InitSounds.MAID_TAMED.get();
+            case "playful" -> InitSounds.MAID_FIND_TARGET.get();
+            default -> null;
+        };
+        if (event == null) return 0;
+        SoundCache cache = CustomSoundLoader.getSoundCache(PACK);
+        var entries = cache == null ? null : cache.buffers().get(event.getLocation());
+        return entries == null ? 0 : entries.size();
+    }
+
+    private static boolean playSelected(
+            InventoryVoiceGesturePolicy.Response response, int requestedIndex, boolean audition) {
         var mc = Minecraft.getInstance();
-        if (mc.player == null || mc.level == null) return;
+        if (mc.player == null || mc.level == null) return false;
         long now = Util.getMillis();
-        // Respect the previous voice's turn. Never cut her off or queue future spam.
-        if (now < nextVoiceAt || active != null && mc.getSoundManager().isActive(active))
-            return;
+        // Gameplay respects the previous voice's turn; explicit preview replaces it.
+        if (!audition && (now < nextVoiceAt
+                || active != null && mc.getSoundManager().isActive(active)))
+            return false;
 
         SoundEvent event = eventFor(response);
-        int preferred = preferredVariant(response);
+        int preferred = audition ? requestedIndex : preferredVariant(response);
         SoundCache cache = CustomSoundLoader.getSoundCache(PACK);
         List<SoundData> options = cache == null ? null : cache.buffers().get(event.getLocation());
-        if (options == null || options.isEmpty()) return;
-        if (preferred >= options.size()) return; // No wrong-category fallback.
+        if (options == null || options.isEmpty()) return false;
+        if (preferred < -1 || preferred >= options.size()) return false;
         int selected = preferred >= 0
                 ? preferred : ThreadLocalRandom.current().nextInt(options.size());
+        if (audition && active != null) mc.getSoundManager().stop(active);
         active = new InventoryVoiceSound(event,
                 (float) (double) ContractVoiceClientConfig.VOLUME.get(), options.get(selected));
         mc.getSoundManager().play(active);
         nextVoiceAt = now + MIN_VOICE_SPACING_MS;
+        return true;
     }
 
     private static SoundEvent eventFor(InventoryVoiceGesturePolicy.Response emotion) {

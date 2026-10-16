@@ -15,7 +15,11 @@
 
 车万 PECO 缓存中存在多条 `idle`、`tamed`、`find_target` 录音；**分类只表示事件，不保证文本语义或情绪正确**。当前默认取类别中随机已有音频，避免通过类别 `item_get`、`hurt` 强制配音。提供 `greetingVariant`、`curiousVariant`、`playfulVariant`（-1 = 随机，0 及以上 = 指定录音索引），在人工试听后可直接锁定精选样本；越界索引静默跳过。此处无法对声音的日语语义进行有依据的人工确认，因此 **不把默认类别映射标为已试听精选**。
 
-客户端可临时将三种触发概率设为 1、使用鼠标背包操作试听 PECO 的声音，再修改样本索引。建议录音试听后保存最终的候选列表、对每个情绪调整概率，不依赖语音资源文件的复制。
+**游戏内客户端试听命令**（不发往服务器）：
+- `/contractvoice list`：列出 3 个情绪族当前可用的 PECO 样本数。
+- `/contractvoice preview greeting 0`、`/contractvoice preview curious 0`、`/contractvoice preview playful 0`：立即试听该类别的第 0 条。逐个试听所有索引。
+- 在 `maid_weapon-voice-client.toml` 中，将 `greetingVariant` / `curiousVariant` / `playfulVariant` 改成试听选中的索引并重载客户端配置；留 `-1` 则按当前音包类别随机取样。输入索引越界时静默跳过，不会使用错误音效。
+这份工作不能自动根据日语台词语义挑选完美的一句，因此最终情绪映射需要听过 PECO 内容后确认。
 
 ## 架构
 

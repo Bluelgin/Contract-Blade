@@ -21,7 +21,11 @@ public final class ClientRegistration {
             // The sound adapter has optional TLM client classes. Do not register
             // or resolve its event handler on profiles without Touhou Little Maid.
             if (ModList.get().isLoaded("touhou_little_maid"))
-                MinecraftForge.EVENT_BUS.register(TlmPecoVoiceBridge.class);
+                {
+                    MinecraftForge.EVENT_BUS.register(TlmPecoVoiceBridge.class);
+                    MinecraftForge.EVENT_BUS.register(
+                            com.maidweapon.forge.compat.tlm.TlmPecoVoicePreviewCommands.class);
+                }
         });
     }
 
