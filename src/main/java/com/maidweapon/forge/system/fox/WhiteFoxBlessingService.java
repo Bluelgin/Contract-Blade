@@ -233,7 +233,10 @@ public final class WhiteFoxBlessingService {
 
   private static boolean sameCarrier(ItemStack a, ItemStack b) {
     String binding = ContractCarrierData.getBindingId(a);
-    return !binding.isEmpty() && binding.equals(ContractCarrierData.getBindingId(b));
+    // A normal weapon or an incompletely bound contract can have no binding NBT.
+    return binding != null
+        && !binding.isBlank()
+        && binding.equals(ContractCarrierData.getBindingId(b));
   }
 
   private static void onHit(LivingDamageEvent event) {
