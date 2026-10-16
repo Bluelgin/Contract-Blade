@@ -3,6 +3,7 @@ package com.maidweapon.forge.client.voice;
 import com.maidweapon.common.ContractVoiceClientConfig;
 import com.maidweapon.common.MaidWeaponConstants;
 import com.maidweapon.forge.item.MaidInfusion;
+import com.maidweapon.forge.compat.tlm.TlmPecoVoiceBridge;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;

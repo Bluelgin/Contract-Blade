@@ -1,4 +1,6 @@
-package com.maidweapon.forge.client.voice;
+package com.maidweapon.forge.compat.tlm;
+
+import com.maidweapon.forge.client.voice.InventoryVoiceGesturePolicy;
 
 import com.github.tartaricacid.touhoulittlemaid.client.sound.CustomSoundLoader;
 import com.github.tartaricacid.touhoulittlemaid.client.sound.data.SoundCache;
