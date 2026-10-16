@@ -33,6 +33,11 @@ public final class MaidWeaponMod {
             net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
             com.maidweapon.common.BlackFoxClientConfig.SPEC,
             "maid_weapon-client.toml");
+    net.minecraftforge.fml.ModLoadingContext.get()
+        .registerConfig(
+            net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+            com.maidweapon.common.ContractVoiceClientConfig.SPEC,
+            "maid_weapon-voice-client.toml");
     com.maidweapon.forge.api.ContractAuthorization.register(
         "maid_weapon:fox_spirit",
         com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
