@@ -449,7 +449,7 @@
   "maid_weapon.tooltip.red.domain": "§4Red Moon Domain: opens when held and resident · rampages at low health",
   "maid_weapon.tooltip.red.soul_ready": "§7Verified limit recovery: normal %s · aerial core %s",
   "maid_weapon.tooltip.red.soul_locked": "§7Verified limit recovery: normal %s · aerial core unlocks at Lv.2",
-  "maid_weapon.tooltip.red.cut_explain": "§7Ordinary space cut scales with attack. The shown HP cap belongs to mastery, not to the boss.",
+  "maid_weapon.tooltip.red.cut_explain": "§7Ambient cuts use the player's attack attribute and level cap; sword resonance instead follows a proven native hit. Both preserve the existing boss hit-window safeguards.",
   "maid_weapon.tooltip.red.no_level_cap": "§7No mastery-level HP cap; boss phases and server damage safeguards still apply.",
   "maid_weapon.tooltip.red.debt_explain": "§7Recovery uses only verified damage denied by special limits; normal mitigation creates no debt.",
   "maid_weapon.tooltip.red.anchor_spawn": "§bAerial soul core: appears over the target only when verifiable blocked damage remains.",
@@ -469,5 +469,8 @@
   "maid_weapon.tooltip.red.skill.chain": "Chain cuts",
   "maid_weapon.tooltip.red.skill.cloak": "Critical rescue",
   "maid_weapon.tooltip.red.skill.rain": "Blade rain",
-  "maid_weapon.tooltip.red.skill.complete": "Full domain"
+  "maid_weapon.tooltip.red.skill.complete": "Full domain",
+  "maid_weapon.tooltip.red.resonance": "§6Sword resonance: %s of verified real hit damage as a bonus cut",
+  "maid_weapon.tooltip.red.resonance_explain": "§7Resonance triggers after a real native hit (up to once per 0.5s/target). It uses actual HP lost, not denied theoretical damage; the bonus can still be mitigated.",
+  "maid_weapon.tooltip.red.channel_explain": "§7Ambient cuts keep pressure; soul debt recovery uses separate verified receipts. On recovery cooldown, ordinary cuts remain safety-capped and never refund or duplicate lost damage."
 }

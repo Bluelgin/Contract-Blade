@@ -15,7 +15,8 @@ class ContractTooltipSnapshotTest {
     assertTrue(ContractTooltipSnapshot.unlocked(first, "akatsuki_garden"));
     assertFalse(ContractTooltipSnapshot.unlocked(first, "akatsuki_swords"));
     assertEquals(0, ContractTooltipSnapshot.value(first, "soul_aerial_rate"), 1e-9);
-    assertEquals(1, ContractTooltipSnapshot.value(first, "space_cut_level_cap"), 1e-9);
+    assertEquals(2, ContractTooltipSnapshot.value(first, "space_cut_level_cap"), 1e-9);
+    assertEquals(.12, ContractTooltipSnapshot.value(first, "resonance_hit_ratio"), 1e-9);
     var second = ContractTooltipSnapshot.project(2, routes).getCompound("red");
     assertTrue(ContractTooltipSnapshot.unlocked(second, "akatsuki_swords"));
     assertTrue(ContractTooltipSnapshot.value(second, "soul_aerial_rate") > 0);
@@ -26,6 +27,7 @@ class ContractTooltipSnapshotTest {
     var max = ContractTooltipSnapshot.project(10, routes).getCompound("red");
     assertEquals(0, ContractTooltipSnapshot.value(max, "space_cut_level_cap"), 1e-9);
     assertEquals(1, ContractTooltipSnapshot.value(max, "soul_aerial_rate"), 1e-9);
+    assertEquals(.50, ContractTooltipSnapshot.value(max, "resonance_hit_ratio"), 1e-9);
     assertTrue(ContractTooltipSnapshot.unlocked(max, "akatsuki_complete"));
   }
 

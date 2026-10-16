@@ -451,7 +451,7 @@
   "maid_weapon.tooltip.red.domain": "§4无归之庭：剑灵驻留持刀展开 · 低血量进入暴走",
   "maid_weapon.tooltip.red.soul_ready": "§7限伤追偿：普通 %s · 空中魂核 %s",
   "maid_weapon.tooltip.red.soul_locked": "§7限伤追偿：普通 %s · 空中魂核于 Lv.2 解锁",
-  "maid_weapon.tooltip.red.cut_explain": "§7普通空间斩随攻击力成长；显示的 HP 上限是熟练度限制，不是 Boss 的限伤数值。",
+  "maid_weapon.tooltip.red.cut_explain": "§7自动空间斩按玩家攻击属性和等级上限计算；刀势共鸣则跟随经验证的原生攻击。二者维持独立的原版受击窗口保护。",
   "maid_weapon.tooltip.red.no_level_cap": "§7无熟练度等级单次 HP 上限；仍遵守 Boss 阶段保护和服务器伤害安全限制。",
   "maid_weapon.tooltip.red.debt_explain": "§7仅可追偿经验证的特殊限伤差额；正常减伤不会凭空产生欠伤。",
   "maid_weapon.tooltip.red.anchor_spawn": "§b空中魂核：确认有未追偿限伤差额后，在目标头顶出现。",
@@ -471,5 +471,8 @@
   "maid_weapon.tooltip.red.skill.chain": "连锁斩",
   "maid_weapon.tooltip.red.skill.cloak": "濒危救援",
   "maid_weapon.tooltip.red.skill.rain": "万刃天倾",
-  "maid_weapon.tooltip.red.skill.complete": "完整领域"
+  "maid_weapon.tooltip.red.skill.complete": "完整领域",
+  "maid_weapon.tooltip.red.resonance": "§6刀势共鸣：按真实命中扣血的 %s 追加斩击请求",
+  "maid_weapon.tooltip.red.resonance_explain": "§7原生攻击真正扣血后才触发共鸣（同一目标约 0.5 秒一次）；以实际扣血为基准，不借用被限伤拦截的数值，追加斩击仍受防御影响。",
+  "maid_weapon.tooltip.red.channel_explain": "§7领域自动斩负责持续压制；限伤追偿只使用经验证的差额凭据。追偿冷却时普通斩仍可按安全预算发动，不会重复索取差额。"
 }

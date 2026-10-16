@@ -199,6 +199,9 @@ public final class ContractTooltipComposer {
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.red.cut",
                 percent(ContractTooltipSnapshot.value(profile, "space_cut_multiplier")),
                 cap).withStyle(ChatFormatting.RED));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.resonance",
+                percent(ContractTooltipSnapshot.value(profile, "resonance_hit_ratio")))
+                .withStyle(ChatFormatting.GOLD));
 
         String ordinary = percent(ContractTooltipSnapshot.value(profile, "soul_recovery_rate"));
         boolean aerial = ContractTooltipSnapshot.unlocked(profile, "akatsuki_swords");
@@ -213,6 +216,10 @@ public final class ContractTooltipComposer {
         if (!expanded) return;
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
         tooltip.add(Component.translatable("maid_weapon.tooltip.red.cut_explain")
+                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.resonance_explain")
+                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.channel_explain")
                 .withStyle(ChatFormatting.GRAY));
         if (capValue <= 0)
             tooltip.add(Component.translatable("maid_weapon.tooltip.red.no_level_cap")
