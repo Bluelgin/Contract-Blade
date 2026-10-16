@@ -438,7 +438,7 @@
   "maid_weapon.tooltip.compact.buff.regen": "生命恢复 I",
   "maid_weapon.tooltip.compact.buff.resist": "抗性提升 I",
   "maid_weapon.tooltip.compact.buff.none": "暂未解锁",
-  "maid_weapon.tooltip.compact.white.guard": "§b守护：每 %2$s 秒减伤 %1$s（无固定上限）",
+  "maid_weapon.tooltip.compact.white.guard": "§b守护：减伤 %s（每 %s 秒，无固定上限）",
   "maid_weapon.tooltip.compact.white.cleanse": "§7自动净化指定负面效果",
   "maid_weapon.tooltip.compact.white.heal": "§7持续战斗时治疗 %s HP",
   "maid_weapon.tooltip.compact.white.shield": "§7守护时追加临时吸收护盾",
