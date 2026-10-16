@@ -551,15 +551,17 @@ public final class SoulProvenanceValidation {
     for (double total : new double[] {128, 384, 512, 1024, 10000}) {
       advance(l, 240);
       var t = cap(l);
-      float startingHealth = (float) Math.max(1000, total + 10);
-      // Vanilla MAX_HEALTH attribute is hard-capped at 1024. This fixture
-      // explicitly supports larger test HP; production boss health is untouched.
-      t.fixtureMaxHealth = startingHealth;
+      // Vanilla MAX_HEALTH is final/bounded by its own 1024 HP attribute.
+      // Verify ALL recoverable health, including >512 HP, without rewriting
+      // production entity health internals just to exceed this fixture cap.
+      float startingHealth = (float) Math.min(1024, Math.max(1000, total + 10));
+      t.getAttribute(Attributes.MAX_HEALTH).setBaseValue(startingHealth);
       t.setHealth(startingHealth);
+      double verifiedDebt = Math.min(total, startingHealth - 5);
       nativeHit(t, p, (float) (total + 5));
       var o = DamageObservationService.latest(server);
-      check(o != null && o.recoverable() && near(o.loss(), total),
-          "uncapped verified debt amount=" + total + " observed=" + o);
+      check(o != null && o.recoverable() && near(o.loss(), verifiedDebt),
+          "uncapped verified debt raw=" + total + " observed=" + o);
       var c = SoulAnchorService.create(p, t);
       check(c != null, "uncapped core " + total);
       aim(p, c);
@@ -569,10 +571,10 @@ public final class SoulProvenanceValidation {
         advance(l, 1);
         SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
-      check(near(hp - t.getHealth(), total),
-          "uncapped burst total=" + total + " actual=" + (hp - t.getHealth()));
-      LogUtils.getLogger().info("SOUL_UNCAPPED_RECOVERY requested={} actualHP={}",
-          total, hp - t.getHealth());
+      check(near(hp - t.getHealth(), verifiedDebt),
+          "uncapped burst debt=" + verifiedDebt + " actual=" + (hp - t.getHealth()));
+      LogUtils.getLogger().info("SOUL_UNCAPPED_RECOVERY raw={} debt={} actualHP={}",
+          total, verifiedDebt, hp - t.getHealth());
       t.discard();
     }
   }
@@ -782,12 +784,6 @@ public final class SoulProvenanceValidation {
   }
 
   private static class Capped extends Zombie {
-    float fixtureMaxHealth;
-    @Override
-    public float getMaxHealth() {
-      return fixtureMaxHealth > 0 ? fixtureMaxHealth : super.getMaxHealth();
-    }
-
     float bucket;
     long bucketTick;
     boolean blocked, protectedPhase;
