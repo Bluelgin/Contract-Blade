@@ -49,7 +49,7 @@ class ContractTooltipSnapshotTest {
     assertTrue(ContractTooltipSnapshot.unlocked(white,"blessing_lantern"));
     assertFalse(ContractTooltipSnapshot.unlocked(white,"blessing_crisis"));
     var red = level5.getCompound("red");
-    assertEquals(.20, ContractTooltipSnapshot.value(red,"space_cut_multiplier"),1e-8);
+    assertEquals(.25, ContractTooltipSnapshot.value(red,"space_cut_multiplier"),1e-8);
   }
 
   @Test
@@ -72,7 +72,7 @@ class ContractTooltipSnapshotTest {
             Map.of())));
     routes.put("red", minimalRed);
     var withRuntimeFallback = ContractTooltipSnapshot.project(4, routes);
-    assertEquals(.16, ContractTooltipSnapshot.value(withRuntimeFallback.getCompound("red"),
+    assertEquals(.21, ContractTooltipSnapshot.value(withRuntimeFallback.getCompound("red"),
         "space_cut_multiplier"), 1e-8);
   }
 }
