@@ -47,7 +47,12 @@ public final class ContractInventoryVoiceEvents {
             currentScreen = screen;
         }
         String binding = authorizedBinding(inventory.getMenu().getCarried(), mc);
-        var result = POLICY.observe(binding, Util.getMillis());
+        var result = POLICY.observe(binding, Util.getMillis(),
+                java.util.concurrent.ThreadLocalRandom.current().nextDouble(),
+                new InventoryVoiceGesturePolicy.Chances(
+                    ContractVoiceClientConfig.GREETING_CHANCE.get(),
+                    ContractVoiceClientConfig.CURIOUS_CHANCE.get(),
+                    ContractVoiceClientConfig.PLAYFUL_CHANCE.get()));
         if (result != InventoryVoiceGesturePolicy.Response.NONE
                 && ContractVoiceClientConfig.ENABLED.get()
                 && ContractVoiceClientConfig.VOLUME.get() > 0)

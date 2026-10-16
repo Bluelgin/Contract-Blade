@@ -1,17 +1,28 @@
-# 契约武器背包语音 · LittleMaid PECO 复用
+# 契约武器 · PECO 女仆情绪互动
 
-## 资源与依赖
+本 PR 是客户端纯表现功能。音频来自 Touhou Little Maid 内置 LittleMaid PECO v1.0.0 的已有自定义音效缓存，没有包含、复制、重新压制任何 .ogg 文件。本 PR **不是**酒狐专属新配音，也不承诺 PECO 中某句固定话术恰好为「又拿我」。
 
-使用车万女仆本体随包内置的 `littlemaid_peco`（LittleMaid PECO 音效包 v1.0.0，秋野かえで CV / Tamemaru）自定义音效缓存。**不在本模组中发布、复制或转码任何语音 OGG**。车万的 `CustomSoundLoader.getSoundCache("littlemaid_peco")` 和 `InitSounds` 提供声音映射；本项目的客户端声源从现有 `SoundCache` 取缓冲。若对应包或声音类别缺失，无声降级而不是播放空白默认音效。
+## 行为与角色感
 
-`MAID_ITEM_GET` 为正常拿起，`MAID_HURT` 为短时间放回又拿起的特殊反应。PECO 为日语通用女仆音源，**不是酒狐专门录制的语义台词**；如需精确“你又拿我？”语义，仍需额外授权的语音文件。
+- 首次用鼠标真正拿起本人有效契约武器：默认 **40%** 机会自然回应（`maid.mode.idle` 中已有的音频）。不再播放「获得物品」音。
+- 1.8 秒内放回再拿起 **同一 binding**：默认 **80%** 机会疑惑回应（`maid.ai.tamed`）。不会误用受伤音频。
+- 3 次或以上连续快速拿起：默认 **35%** 机会触发稀有活泼反应（`maid.ai.find_target`，具体语义待试听验证；如果想保持温柔可禁用这种情绪）。
+- 普通 5 秒、疑惑 8 秒、稀有 30 秒独立冷却；无响应不会丢失连击进度。不会强行中断正在说话的前一段，也不会排队刷屏。
+- Shift 整理、换刀、未真正放回、进入创造物品操作、关闭背包/重登、他人武器/失效绑定均不构成合法新动作。
+- 触发概率及每类样本索引均为独立客户端配置。无额外网络、女仆实体、NBT 改动。
 
-## 客户端流程
+## 语音实现与试听限制
 
-`ScreenEvent.MouseButtonPressed.Post` / `MouseButtonReleased.Post`（仅玩家生存背包 `InventoryScreen`）读取 vanilla menu 的当前鼠标携带物。由独立纯 Java `InventoryVoiceGesturePolicy` 检测 **空手→持刀→空手→同一把刀**，1.8 秒内的再次拿起触发特殊音；正常 6 秒冷却、特殊 25 秒冷却。直接 Shift 点击、重复点击未放下、交换不同武器、创造物品复制不计入。采用客户端单调毫秒时钟，而不是服务端 tick；退出界面、断线会重置临时状态。按真正在鼠标上携带的武器绑定 ID 区分同一把刀，只读 `MaidInfusion.isInfused`、`ContractCarrierData.getBindingId`、`isOwner`、`isContractSuperseded`，缺少绑定 ID 拒绝发声。**不写 NBT、不生成实体、不访问服务端契约生命周期、不发包。**
+车万 PECO 缓存中存在多条 `idle`、`tamed`、`find_target` 录音；**分类只表示事件，不保证文本语义或情绪正确**。当前默认取类别中随机已有音频，避免通过类别 `item_get`、`hurt` 强制配音。提供 `greetingVariant`、`curiousVariant`、`playfulVariant`（-1 = 随机，0 及以上 = 指定录音索引），在人工试听后可直接锁定精选样本；越界索引静默跳过。此处无法对声音的日语语义进行有依据的人工确认，因此 **不把默认类别映射标为已试听精选**。
 
-`TlmPecoVoiceBridge` 仅 CLIENT 引用车万可选运行接口，扩展轻量 `AbstractTickableSoundInstance` 而非 `MaidSoundInstance`（后者强制绑定真实 EntityMaid）。在 `PlaySoundSourceEvent` 按车万相同方式附加缓存 `SoundBuffer`；玩家私有、只在本地播放，不广播到服务端或旁边玩家。新声替换旧声，登出清理。配置 `maid_weapon-voice-client.toml` 下 `inventoryVoice.enabled`、`inventoryVoice.volume`，另外仍尊重 Minecraft 的「友善生物 / Neutral」音量滑杆。
+客户端可临时将三种触发概率设为 1、使用鼠标背包操作试听 PECO 的声音，再修改样本索引。建议录音试听后保存最终的候选列表、对每个情绪调整概率，不依赖语音资源文件的复制。
 
-## 测试与人工验收
+## 架构
 
-JUnit：初次拿起、快速拿起、不同武器、单次触发、节流、关 GUI / 登出状态复位。客户端实机：TLM 1.5.3 内置 PECO 语音 + 新旧背包、鼠标放回、Shift 移动、服务器无任何广播声、GUI 打开时暂停/音量设置、缺资源静默跳过、快速连续操作不叠音。需对 TLM 1.5.3 实际打包 JAR 校验接口一致性；源码参考 1.20 分支。
+`ContractInventoryVoiceEvents` 检查真实 cursor stack、owner 与 binding；`InventoryVoiceGesturePolicy` 是纯 Java 的互动状态机；`compat/tlm/TlmPecoVoiceBridge` 是车万自定义 PCM 声音缓存适配器，只在 TLM 加载时注册。音量尊重原版 Neutral 滑杆、默认客户端 0.6；语音播放中不抢声、不排队。缺声音包 / 不对应版本时静默。
+
+## 需要实机确认的项目
+
+- Minecraft 1.20.1 + Forge + Touhou Little Maid 1.5.3：确认语音实际能播放（车万使用自定义 `SoundBuffer` 非 vanilla 占位音）。
+- 为 PECO 各索引实际试听后再判定问候、疑惑与稀有吐槽的中文理解是否匹配。尤其 `find_target` 可能偏战斗提示，不能未经试听宣称它一定是撒娇。
+- 背包拿起/放回、连续 3 次、长音频不叠音、声音设置、TLM 缺失、服务器静默与多玩家不互相听到。
