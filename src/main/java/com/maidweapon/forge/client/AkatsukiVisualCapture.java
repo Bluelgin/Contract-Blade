@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT)
 public final class AkatsukiVisualCapture {
   private static final Set<String> TAKEN = new HashSet<>();
+  private static final Set<Long> INPUTS = new HashSet<>();
   private static long start = -1;
   private static int loadingTicks;
 
@@ -69,7 +70,43 @@ public final class AkatsukiVisualCapture {
     long age = mc.level.getGameTime() - start;
     if (Boolean.getBoolean("contractblade.soulVisual.validation")) {
       mc.gui.getChat().clearMessages(true);
+      long local = age % 80;
+      boolean jumping =
+          age > 40
+              && age < 550
+              && (local >= 52 && local <= 54
+                  || local >= 60 && local <= 62
+                  || local >= 68 && local <= 70
+                  || local >= 76 && local <= 78);
+      mc.options.keyJump.setDown(jumping);
+      var cores =
+          mc.level.getEntitiesOfClass(
+              com.maidweapon.forge.entity.SoulAnchorEntity.class,
+              mc.player.getBoundingBox().inflate(12),
+              c -> c.ownerId().map(id -> id.equals(mc.player.getUUID())).orElse(false));
+      if (!cores.isEmpty()) {
+        var core = cores.get(0);
+        var d = core.getBoundingBox().getCenter().subtract(mc.player.getEyePosition());
+        mc.player.setYRot((float) Math.toDegrees(Math.atan2(-d.x, d.z)));
+        mc.player.setXRot(
+            (float) -Math.toDegrees(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z))));
+        if (local >= 63
+            && local <= 78
+            && mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+            && hit.getEntity() == core
+            && INPUTS.add(age)) {
+          mc.gameMode.attack(mc.player, core);
+          mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+          LogUtils.getLogger()
+              .info(
+                  "SOUL_NATIVE_CLICK_PACKET age={} crosshair={} feetY={}",
+                  age,
+                  core.getId(),
+                  mc.player.getY());
+        }
+      }
       if (age >= 580) {
+        mc.options.keyJump.setDown(false);
         LogUtils.getLogger().info("SOUL_VISUAL_CLIENT_COMPLETE captures={}", TAKEN.size());
         mc.stop();
         return;

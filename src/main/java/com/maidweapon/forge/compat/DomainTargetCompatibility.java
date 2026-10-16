@@ -159,7 +159,10 @@ public final class DomainTargetCompatibility {
             Object value = config.getField("ApostleDamageCap").get(null);
             double cap = ((Number) value.getClass().getMethod("get").invoke(value)).doubleValue();
             return new State(
-                cap, 0, yes(t, "isSettingUpSecond"), "goety:" + read(t, "isSecondPhase"));
+                cap,
+                0,
+                yes(t, "isSettingUpSecond") || !ordinaryApostle(t),
+                "goety:" + read(t, "isSecondPhase") + ":" + ordinaryApostle(t));
           }
 
           public boolean initializing(LivingEntity t) throws ReflectiveOperationException {
@@ -183,9 +186,46 @@ public final class DomainTargetCompatibility {
               Object animation = read(t, "getAnimation");
               for (String name : List.of("PHASE_2", "PHASE_3", "STRIKE", "ULTIMATE_ATTACK"))
                 protectedPhase |= animation == t.getClass().getField(name).get(null);
-              phase += ":" + read(t, "getBossPhase");
+              phase +=
+                  ":"
+                      + read(t, "getBossPhase")
+                      + ":"
+                      + read(t, "getIsBlocking")
+                      + ":"
+                      + read(t, "getIsShield")
+                      + ":"
+                      + read(t, "getIsShieldBreak");
             }
             return new State(number(t, "DamageCap"), number(t, "DpsCap"), protectedPhase, phase);
+          }
+
+          public double expectedNativeLimit(
+              LivingEntity t,
+              net.minecraft.world.damagesource.DamageSource source,
+              float raw,
+              double cap)
+              throws ReflectiveOperationException {
+            var attacker = source.getEntity();
+            double range = ((Number) read(t, "RangeLimit")).doubleValue();
+            if (attacker != null && t.distanceToSqr(attacker) > range * range) return Double.NaN;
+            double value = Math.min(raw, cap);
+            if (!source.is(
+                net.minecraft.tags.TagKey.create(
+                    net.minecraft.core.registries.Registries.DAMAGE_TYPE,
+                    net.minecraft.resources.ResourceLocation.parse(
+                        "cataclysm:bypasses_hurt_time")))) {
+              for (Class<?> c = t.getClass(); c != null; c = c.getSuperclass())
+                try {
+                  var f = c.getDeclaredField("damageBucket");
+                  if (f.getType() != float.class) return Double.NaN;
+                  f.setAccessible(true);
+                  float bucket = f.getFloat(t);
+                  return bucket + value > cap ? (cap - bucket > 0 ? cap - bucket : .1) : value;
+                } catch (NoSuchFieldException ignored) {
+                }
+              return Double.NaN;
+            }
+            return value;
           }
 
           public boolean compensate(
@@ -214,6 +254,41 @@ public final class DomainTargetCompatibility {
         return new State(0, 0, true, "unsupported-adapter");
       }
     return State.unknown(target);
+  }
+
+  public static double expectedNativeLimit(
+      LivingEntity target, net.minecraft.world.damagesource.DamageSource source, float raw) {
+    if (!verified(target)) return Double.NaN;
+    for (var a : ADAPTERS.values())
+      try {
+        if (a.supports(target))
+          return a.expectedNativeLimit(target, source, raw, inspect(target).hitCap());
+      } catch (ReflectiveOperationException | RuntimeException e) {
+        CompatDiagnostics.warnOnce("native-limit-evidence", e);
+        return Double.NaN;
+      }
+    return Double.NaN;
+  }
+
+  public static boolean observationHealthVerified(LivingEntity t){return version("legendary_monsters","2.1.15")&&Set.of("net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.CloudGolem.Cloud_GolemEntity","net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.TheObliterator.TheObliteratorEntity").contains(t.getClass().getName());}
+
+  public static boolean ordinaryApostle(LivingEntity t) {
+    if (!t.getClass().getName().equals("com.Polarice3.Goety.common.entities.boss.Apostle")
+        || !version("goety", "2.5.58.4")) return false;
+    if (!ModList.get().isLoaded("goety_revelation")) return true;
+    if (!version("goety_revelation", "2.3.4")) return false;
+    try {
+      return Boolean.FALSE.equals(read(t, "allTitlesApostle_1_20_1$isApollyon"));
+    } catch (ReflectiveOperationException | RuntimeException e) {
+      return false;
+    }
+  }
+
+  public static boolean normalDefenseVerified(
+      LivingEntity t, net.minecraft.world.damagesource.DamageSource s) {
+    return ordinaryApostle(t)
+        && s.getEntity() != t
+        && !s.is(net.minecraft.tags.DamageTypeTags.WITCH_RESISTANT_TO);
   }
 
   public static boolean verified(LivingEntity target) {

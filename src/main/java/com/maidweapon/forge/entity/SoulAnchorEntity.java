@@ -8,7 +8,6 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.syncher.*;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkHooks;
 
@@ -38,7 +37,6 @@ public final class SoulAnchorEntity extends Entity {
     super(type, level);
     noPhysics = true;
     setNoGravity(true);
-
   }
 
   protected void defineSynchedData() {

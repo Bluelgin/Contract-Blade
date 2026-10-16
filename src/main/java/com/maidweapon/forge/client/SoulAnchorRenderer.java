@@ -71,7 +71,7 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
             b,
             pose.last().pose(),
             Vec3.ZERO,
-            delta,
+            delta.multiply(1 / .72, 1 / .85, 1 / .72),
             .012f,
             0x9D142B,
             shake > 0 ? shake * .6f : (12 - e.tickCount) / 20f);

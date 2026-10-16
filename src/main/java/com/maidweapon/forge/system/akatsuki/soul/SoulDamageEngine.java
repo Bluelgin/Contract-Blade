@@ -93,22 +93,57 @@ public final class SoulDamageEngine {
         SoulDamageConfig.BURST_COOLDOWN.get());
   }
 
-  public static SoulDamageFeedback cut(ServerPlayer p,LivingEntity t,AkatsukiDomainSession session){
-    if(!authorized(p,t,session)||now(p)-session.lastContact>AkatsukiDomainConfig.CONTACT_GAP.get())return null;
-    boolean recovery=SoulDamageDebtService.hasDebt(p,t);
-    double requested=recovery?SoulDamageDebtService.available(p,t,false):Math.min(SoulDamageConfig.BASE_CUT_MAXIMUM.get(),Math.max(0,p.getAttributeValue(Attributes.ATTACK_DAMAGE))*SoulDamageConfig.BASE_CUT_FRACTION.get());
-    double amount=SAFETY.reserve(p.getUUID(),t.getUUID(),now(p),SPACE_CUT,requested,limits());if(amount<=0)return null;
-    if(!recovery)return execute(p,t,session,SPACE_CUT,amount,null,false);
-    var reservation=SoulDamageDebtService.reserve(p,t,false,amount);if(reservation==null)return null;
-    SoulDamageFeedback result=null;
-    try(reservation){try{return result=execute(p,t,session,SPACE_CUT,reservation.total(),null,true);}finally{reservation.settle(reservation.total(),result==null?0:result.loss(),result!=null&&result.attempted(),result==null?-1:result.sequence());}}
+  public static SoulDamageFeedback cut(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession session) {
+    if (!authorized(p, t, session)
+        || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
+    boolean recovery = SoulDamageDebtService.hasDebt(p, t);
+    double requested =
+        recovery
+            ? SoulDamageDebtService.available(p, t, false)
+            : Math.min(
+                SoulDamageConfig.BASE_CUT_MAXIMUM.get(),
+                Math.max(0, p.getAttributeValue(Attributes.ATTACK_DAMAGE))
+                    * SoulDamageConfig.BASE_CUT_FRACTION.get());
+    double amount =
+        SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested, limits());
+    if (amount <= 0) return null;
+    if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
+    var reservation = SoulDamageDebtService.reserve(p, t, false, amount);
+    if (reservation == null) return null;
+    SoulDamageFeedback result = null;
+    try (reservation) {
+      try {
+        return result = execute(p, t, session, SPACE_CUT, reservation.total(), null, true);
+      } finally {
+        reservation.settle(
+            reservation.total(),
+            result == null ? 0 : result.loss(),
+            result != null && result.attempted(),
+            result == null ? -1 : result.sequence());
+      }
+    }
   }
-  public static SoulDamageDebtService.Reservation reserveBurst(ServerPlayer p,LivingEntity t,AkatsukiDomainSession s){
-    if(!authorized(p,t,s))return null;
-    double request=Math.min(SoulDamageDebtService.available(p,t,true),Math.min(SoulDamageConfig.BURST_CEILING.get(),SoulDamageConfig.HIT_CEILING.get()*SoulDamageConfig.BURST_STAGES.get()));
-    double amount=SAFETY.reserve(p.getUUID(),t.getUUID(),now(p),SOUL_BURST,request,limits());return amount<=0?null:SoulDamageDebtService.reserve(p,t,true,amount);
+
+  public static SoulDamageDebtService.Reservation reserveBurst(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
+    if (!authorized(p, t, s)) return null;
+    double request =
+        Math.min(
+            SoulDamageDebtService.available(p, t, true),
+            Math.min(
+                SoulDamageConfig.BURST_CEILING.get(),
+                SoulDamageConfig.HIT_CEILING.get() * SoulDamageConfig.BURST_STAGES.get()));
+    double amount = SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SOUL_BURST, request, limits());
+    return amount <= 0 ? null : SoulDamageDebtService.reserve(p, t, true, amount);
   }
-  static SoulDamageFeedback burstStage(ServerPlayer p,LivingEntity t,AkatsukiDomainSession s,double amount,Channel channel){return authorized(p,t,s)&&amount<=SoulDamageConfig.HIT_CEILING.get()+.0001?execute(p,t,s,SOUL_BURST,amount,channel,true):null;}
+
+  static SoulDamageFeedback burstStage(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession s, double amount, Channel channel) {
+    return authorized(p, t, s) && amount <= SoulDamageConfig.HIT_CEILING.get() + .0001
+        ? execute(p, t, s, SOUL_BURST, amount, channel, true)
+        : null;
+  }
 
   private static SoulDamageFeedback execute(
       ServerPlayer p,
@@ -116,10 +151,11 @@ public final class SoulDamageEngine {
       AkatsukiDomainSession session,
       SoulDamagePolicy.Mode mode,
       double amount,
-      Channel preferred, boolean recovery) {
+      Channel preferred,
+      boolean recovery) {
     if (!Double.isFinite(amount) || amount <= 0) return null;
     var beforeState = DomainTargetCompatibility.inspect(t);
-    if(beforeState.protectedPhase() || DomainTargetCompatibility.initializing(t))return null;
+    if (beforeState.protectedPhase() || DomainTargetCompatibility.initializing(t)) return null;
     var slot = ADAPTATION.computeIfAbsent(t, ignored -> new FeedbackSlot());
     slot.touched = now(p);
     var memory = slot.adaptation;
@@ -151,10 +187,11 @@ public final class SoulDamageEngine {
             ? DomainTargetCompatibility.hitWindow(t, false)
             : null;
     if (vanilla == null || SoulDamageConfig.KNOWN_ADAPTERS.get() && boss == null) return null;
-    boolean aggressive = recovery && SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
+    boolean aggressive =
+        recovery && SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
     float before = t.getHealth();
     boolean returned = false;
-    boolean[] attempted={false};
+    boolean[] attempted = {false};
     String reason = "NO_PROGRESS";
     var context =
         new SoulStrikeContext(
@@ -168,7 +205,9 @@ public final class SoulDamageEngine {
             recovery,
             aggressive && SoulDamageConfig.EVENT_OVERRIDE.get(),
             aggressive,
-            recovery && SoulDamageConfig.STRATEGY.get() == SoulDamageConfig.Strategy.UNRESTRICTED_EXPERIMENTAL);
+            recovery
+                && SoulDamageConfig.STRATEGY.get()
+                    == SoulDamageConfig.Strategy.UNRESTRICTED_EXPERIMENTAL);
     DomainTargetCompatibility.State afterState;
     try (context;
         vanilla;
@@ -178,7 +217,7 @@ public final class SoulDamageEngine {
           AkatsukiCombatCompat.guarded(
               () -> {
                 try {
-                  attempted[0]=true;
+                  attempted[0] = true;
                   return t.hurt(source, (float) amount);
                 } catch (RuntimeException failure) {
                   callbackFailure[0] = failure;

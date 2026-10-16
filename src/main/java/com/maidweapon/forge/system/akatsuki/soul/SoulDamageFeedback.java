@@ -22,7 +22,7 @@ public record SoulDamageFeedback(
     String phaseAfter,
     String reason) {
   public double loss() {
-    return Float.isFinite(before-after)?Math.max(0, before - after):0;
+    return Float.isFinite(before - after) ? Math.max(0, before - after) : 0;
   }
 
   public boolean success() {

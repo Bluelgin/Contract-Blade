@@ -19,6 +19,58 @@ public final class SoulBossMixinPlugin implements IMixinConfigPlugin {
 
   public boolean shouldApplyMixin(String target, String mixin) {
     try {
+      if (mixin.substring(mixin.lastIndexOf('.') + 1).startsWith("Observation")) {
+        String modId =
+            target.startsWith("com.Polarice3")
+                ? "goety"
+                : target.startsWith("com.github.L_Ender") ? "cataclysm" : "legendary_monsters";
+        var file = LoadingModList.get().getModFileById(modId);
+        if (file == null) return false;
+        String version =
+            file.getMods().stream()
+                .filter(m -> m.getModId().equals(modId))
+                .findFirst()
+                .orElseThrow()
+                .getVersion()
+                .toString();
+        if (modId.equals("legendary_monsters"))
+          try (var in =
+              Files.newInputStream(file.getFile().findResource("META-INF", "MANIFEST.MF"))) {
+            version =
+                new java.util.jar.Manifest(in)
+                    .getMainAttributes()
+                    .getValue("Implementation-Version");
+          }
+        if (!java.util.Objects.equals(
+                version,
+                modId.equals("goety") ? "2.5.58.4" : modId.equals("cataclysm") ? "3.31" : "2.1.15")
+            && !java.util.Objects.equals(version, "2.1.15 MC 1.20.1")) return false;
+        var node = MixinService.getService().getBytecodeProvider().getClassNode(target);
+        boolean hurt =
+            node.methods.stream()
+                .anyMatch(
+                    m ->
+                        (m.name.equals("hurt") || m.name.equals("m_6469_"))
+                            && m.desc.equals(
+                                "(Lnet/minecraft/world/damagesource/DamageSource;F)Z"));
+        if (!hurt) return false;
+        if (mixin.endsWith("BaseMixin") || mixin.endsWith("ObservationApostleMixin"))
+          return node.methods.stream()
+              .anyMatch(
+                  m -> {
+                    if (!(m.name.equals(modId.equals("goety") ? "actuallyHurt" : "hurt")
+                        || m.name.equals(modId.equals("goety") ? "m_6475_" : "m_6469_")))
+                      return false;
+                    for (var i : m.instructions)
+                      if (i instanceof org.objectweb.asm.tree.MethodInsnNode call
+                          && call.owner.equals("java/lang/Math")
+                          && call.name.equals("min")
+                          && call.desc.equals(
+                              modId.equals("legendary_monsters") ? "(DD)D" : "(FF)F")) return true;
+                    return false;
+                  });
+        return true;
+      }
       boolean goety = mixin.endsWith("SoulApostleTimerMixin");
       var mod = LoadingModList.get().getModFileById(goety ? "goety" : "legendary_monsters");
       if (mod == null) return false;

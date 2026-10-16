@@ -33,12 +33,13 @@ public final class SoulBurstService {
     Burst(ServerPlayer p, SoulAnchorEntity c, SoulDamageDebtService.Reservation plan, long now) {
       player = p;
       core = c;
-      reservation=plan;total = plan.total();
+      reservation = plan;
+      total = plan.total();
       start = now;
       next = now;
       stages = SoulDamageConfig.BURST_STAGES.get();
       duration = SoulDamageConfig.BURST_DURATION.get();
-      allocations=SoulStageAllocation.split(total,stages,SoulDamageConfig.HIT_CEILING.get());
+      allocations = SoulStageAllocation.split(total, stages, SoulDamageConfig.HIT_CEILING.get());
     }
   }
 
@@ -56,7 +57,8 @@ public final class SoulBurstService {
     if (!(entity instanceof LivingEntity t)) return false;
     var total = SoulDamageEngine.reserveBurst(p, t, AkatsukiDomainService.session(p));
     if (total == null) return false;
-    core.burstUntil=now+32;core.expires=Math.max(core.expires,now+32);
+    core.burstUntil = now + 32;
+    core.expires = Math.max(core.expires, now + 32);
     ACTIVE.put(core.original, new Burst(p, core, total, now));
     return true;
   }
@@ -72,7 +74,8 @@ public final class SoulBurstService {
       var entity = p.serverLevel().getEntity(entry.getKey());
       if (now > b.start + 32
           || !SoulAnchorBinding.valid(b.core)
-          || !(entity instanceof LivingEntity t) || !b.reservation.valid(p,(LivingEntity)entity)) {
+          || !(entity instanceof LivingEntity t)
+          || !b.reservation.valid(p, (LivingEntity) entity)) {
         done.add(entry.getKey());
         continue;
       }
@@ -84,25 +87,41 @@ public final class SoulBurstService {
       }
       var fallback = Channel.values()[Math.min(b.stage, Channel.values().length - 1)];
       var channel = b.stage >= 2 ? SoulDamageEngine.best(t, fallback) : fallback;
-      int stage=b.stage++; b.last=now;
-      double amount=b.allocations[stage];SoulDamageFeedback result=null;
+      int stage = b.stage++;
+      b.last = now;
+      double amount = b.allocations[stage];
+      SoulDamageFeedback result = null;
       try {
-        try { result=SoulDamageEngine.burstStage(p,t,AkatsukiDomainService.session(p),amount,channel); }
-        finally { b.reservation.settle(amount,result==null?0:result.loss(),result!=null&&result.attempted(),result==null?-1:result.sequence()); }
-        SoulBurstNetwork.send(p,b.core,t,stage,b.stages,result!=null&&result.success());
-      } catch(RuntimeException failure){com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("soul-burst-stage",failure);done.add(entry.getKey());}
+        try {
+          result =
+              SoulDamageEngine.burstStage(p, t, AkatsukiDomainService.session(p), amount, channel);
+        } finally {
+          b.reservation.settle(
+              amount,
+              result == null ? 0 : result.loss(),
+              result != null && result.attempted(),
+              result == null ? -1 : result.sequence());
+        }
+        SoulBurstNetwork.send(p, b.core, t, stage, b.stages, result != null && result.success());
+      } catch (RuntimeException failure) {
+        com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("soul-burst-stage", failure);
+        done.add(entry.getKey());
+      }
       if (b.stage >= b.stages || !t.isAlive() || t.isRemoved()) done.add(entry.getKey());
       else b.next = now + Math.max(1, b.duration / (b.stages - 1));
     }
     for (var id : done) {
       var b = ACTIVE.remove(id);
-      if (b != null) {b.reservation.close();b.core.discard();}
+      if (b != null) {
+        b.reservation.close();
+        b.core.discard();
+      }
       SoulDamageEngine.finishBurst(id, now);
     }
   }
 
   public static void clear() {
-    ACTIVE.values().forEach(b->b.reservation.close());
+    ACTIVE.values().forEach(b -> b.reservation.close());
     ACTIVE.clear();
   }
 

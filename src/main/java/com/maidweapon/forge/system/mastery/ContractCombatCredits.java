@@ -85,7 +85,12 @@ public final class ContractCombatCredits {
         SETTLED.add(target); return killer.credit();
     }
     public static void invalidate(UUID owner) { GENERATIONS.merge(owner, 1L, Long::sum); }
-    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) { invalidate(event.getEntity().getUUID()); }
+    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
+        UUID owner=event.getEntity().getUUID();
+        LAUNCHES.values().removeIf(v->v.stamp().credit().player().getUUID().equals(owner));
+        HITS.values().removeIf(v->v.credit().player().getUUID().equals(owner));
+        GENERATIONS.remove(owner);
+    }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) { LAUNCHES.clear(); HITS.clear(); GENERATIONS.clear(); SETTLED.clear(); }
     private ContractCombatCredits() { }
 }
