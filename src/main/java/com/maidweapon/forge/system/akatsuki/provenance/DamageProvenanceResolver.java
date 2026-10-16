@@ -25,7 +25,7 @@ public final class DamageProvenanceResolver {
     }
   }
 
-  public static Proof resolve(DamageSource source) {
+  public static Proof resolve(DamageSource source, net.minecraft.world.entity.LivingEntity target) {
     if (AkatsukiDomainDamage.domain(source)
         || com.maidweapon.forge.compat.AkatsukiCombatCompat.secondary(source)
         || source
@@ -35,6 +35,11 @@ public final class DamageProvenanceResolver {
             .orElse(false)) return null;
     var credit = ContractCombatCredits.resolveHit(source);
     if (credit == null) return null;
+    if (source.getEntity() instanceof ServerPlayer
+        && source.getDirectEntity() == source.getEntity()
+        && com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.projectile() == null
+        && !NativeAttackOrigin.claim(credit.player(), credit.carrier(), source, target))
+      return null;
     var p =
         new Proof(
             credit.player(),
@@ -44,7 +49,7 @@ public final class DamageProvenanceResolver {
             com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.projectile() != null
                     || source.getDirectEntity() != source.getEntity()
                 ? "REGISTERED_LAUNCH"
-                : "DIRECT_ACTOR");
+                : NativeAttackOrigin.active() ? NativeAttackOrigin.kind() : "REGISTERED_ACTOR");
     return p.valid() ? p : null;
   }
 

@@ -11,7 +11,11 @@ import org.spongepowered.asm.mixin.Mixin;
  * Native held-item operations invalidate receipts even when switching away and back in one tick.
  */
 @Mixin(
-    value = {ServerboundSetCarriedItemPacket.class, ServerboundPlayerActionPacket.class},
+    value = {
+      ServerboundSetCarriedItemPacket.class,
+      ServerboundPlayerActionPacket.class,
+      ServerboundContainerClickPacket.class
+    },
     remap = false)
 public abstract class SoulCarrierChangeMixin {
   @WrapMethod(
@@ -35,6 +39,20 @@ public abstract class SoulCarrierChangeMixin {
               case SWAP_ITEM_WITH_OFFHAND, DROP_ITEM, DROP_ALL_ITEMS -> true;
               default -> false;
             };
+      if (packet instanceof ServerboundContainerClickPacket click
+          && click.getContainerId() == server.player.containerMenu.containerId) {
+        int slot = click.getSlotNum();
+        boolean heldSlot =
+            slot >= 0
+                && slot < server.player.containerMenu.slots.size()
+                && !server.player.getMainHandItem().isEmpty()
+                && server.player.containerMenu.getSlot(slot).getItem()
+                    == server.player.getMainHandItem();
+        invalidate |=
+            heldSlot
+                || click.getClickType() == net.minecraft.world.inventory.ClickType.SWAP
+                    && click.getButtonNum() == server.player.getInventory().selected;
+      }
       if (invalidate) SoulDamageDebtService.invalidate(server.player);
     }
     original.call(listener);

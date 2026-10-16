@@ -289,6 +289,9 @@ dependencies {
             runtimeOnly fg.deobf("compat:${name}:1")
         }
     }
+    if (providers.gradleProperty('soulGoetyOnlyTest').orElse('false').get().toBoolean()) {
+        ['goety-soul-test','curios-soul-test'].each { name -> runtimeOnly fg.deobf("compat:${name}:1") }
+    }
     if (providers.gradleProperty('soulGoetyTest').orElse('false').get().toBoolean()) {
         ['goety-soul-test', 'revelation-soul-test', 'ending-soul-test', 'curios-soul-test'].each { name ->
             runtimeOnly fg.deobf("compat:${name}:1")

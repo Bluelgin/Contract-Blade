@@ -15,7 +15,8 @@ public final class SoulAnchorPlacement {
             t.getY() + SoulDamageConfig.ANCHOR_MIN_HEIGHT.get(),
             t.getBoundingBox().maxY + SoulDamageConfig.ANCHOR_HEAD_OFFSET.get());
     double max = t.getY() + SoulDamageConfig.ANCHOR_MAX_HEIGHT.get();
-    double side = y > max ? Math.min(12, t.getBbWidth() * .5 + 1.5) : 0;
+    double side =
+        y > max ? Math.min(SoulDamageConfig.LINK_RANGE.get() - 4, t.getBbWidth() * .5 + 1.5) : 0;
     y = Math.min(y, max);
     for (double dy : new double[] {0, -.5, -1}) {
       if (y + dy < t.getY() + SoulDamageConfig.ANCHOR_MIN_HEIGHT.get()) continue;
@@ -29,6 +30,7 @@ public final class SoulAnchorPlacement {
                 point.x - .65, point.y, point.z - .65, point.x + .65, point.y + 1.8, point.z + .65);
         if (point.y < t.level().getMaxBuildHeight() - 2
             && t.level().hasChunkAt(BlockPos.containing(point))
+            && !box.intersects(t.getBoundingBox())
             && !t.level().getBlockCollisions(null, box).iterator().hasNext()) return point;
       }
     }

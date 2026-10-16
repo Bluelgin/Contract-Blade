@@ -40,7 +40,8 @@ public record DamageObservation(
     boolean recoverable,
     boolean returned,
     long expires) {
-  public record Defense(int armor, double toughness, int resistance, int enchantment, boolean blocking) {}
+  public record Defense(
+      int armor, double toughness, int resistance, int enchantment, boolean blocking) {}
 
   public enum Confidence {
     VERIFIED_NATIVE_LIMIT,

@@ -20,9 +20,19 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class DamageObservationService {
   private static final ThreadLocal<Scope> CURRENT = new ThreadLocal<>();
-  private static final ClassValue<Boolean> VANILLA_HEALTH = new ClassValue<>() {
-    protected Boolean computeValue(Class<?> type){for(Class<?> c=type;c!=null;c=c.getSuperclass())for(String name:new String[]{"getHealth","m_21223_"})try{c.getDeclaredMethod(name);return c==LivingEntity.class;}catch(NoSuchMethodException ignored){}return false;}
-  };
+  private static final ClassValue<Boolean> VANILLA_HEALTH =
+      new ClassValue<>() {
+        protected Boolean computeValue(Class<?> type) {
+          for (Class<?> c = type; c != null; c = c.getSuperclass())
+            for (String name : new String[] {"getHealth", "m_21223_"})
+              try {
+                c.getDeclaredMethod(name);
+                return c == LivingEntity.class;
+              } catch (NoSuchMethodException ignored) {
+              }
+          return false;
+        }
+      };
   private static final Map<MinecraftServer, Long> SEQUENCES = new WeakHashMap<>();
   private static final Map<MinecraftServer, Deque<DamageObservation>> RECENT = new WeakHashMap<>();
 
@@ -159,7 +169,8 @@ public final class DamageObservationService {
         t.getArmorValue(),
         t.getAttributeValue(Attributes.ARMOR_TOUGHNESS),
         r == null ? 0 : r.getAmplifier() + 1,
-        EnchantmentHelper.getDamageProtection(t.getArmorSlots(), s), t.isBlocking());
+        EnchantmentHelper.getDamageProtection(t.getArmorSlots(), s),
+        t.isBlocking());
   }
 
   public static boolean sameNormalDefense(DamageObservation o, LivingEntity t) {
@@ -182,7 +193,7 @@ public final class DamageObservationService {
       if (delegation) f = previous.f;
       else {
         var proof =
-            Float.isFinite(raw) && raw > 0 ? DamageProvenanceResolver.resolve(source) : null;
+            Float.isFinite(raw) && raw > 0 ? DamageProvenanceResolver.resolve(source, t) : null;
         if (proof != null || previous != null) f = new Frame(t, source, raw, entry, proof);
       }
     } catch (RuntimeException | LinkageError e) {
@@ -247,15 +258,20 @@ public final class DamageObservationService {
 
   /** Called only at bytecode- and version-gated native Math.min cap sites. */
   public static float capped(float a, float b, float result) {
-    var scope = CURRENT.get();
-    var f = scope == null ? null : scope.f;
-    if (f != null && f.proof != null && DomainTargetCompatibility.verified(f.t)) {
-      double cap = DomainTargetCompatibility.inspect(f.t).hitCap();
-      double raw = same(a, cap) ? b : same(b, cap) ? a : Double.NaN;
-      if (cap > 0 && same(raw, f.raw) && Float.isFinite(result) && result >= 0) {
-        f.capEvidence = true;
-        f.capResult = f.expectedLimit;
+    try {
+      var scope = CURRENT.get();
+      var f = scope == null ? null : scope.f;
+      if (f != null && f.proof != null && DomainTargetCompatibility.verified(f.t)) {
+        double cap = DomainTargetCompatibility.inspect(f.t).hitCap();
+        double raw = same(a, cap) ? b : same(b, cap) ? a : Double.NaN;
+        if (cap > 0 && same(raw, f.raw) && Float.isFinite(result) && result >= 0) {
+          f.capEvidence = true;
+          f.capResult = f.expectedLimit;
+        }
       }
+
+    } catch (RuntimeException | LinkageError failure) {
+      com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("damage-cap-observation", failure);
     }
     return result;
   }
@@ -283,7 +299,8 @@ public final class DamageObservationService {
     else if ((!VANILLA_DEFENSE.get(t.getClass())
             && !DomainTargetCompatibility.normalDefenseVerified(t, f.source))
         || f.source.getClass() != DamageSource.class) kind = CUSTOM_HEALTH_UNKNOWN;
-    else if(!VANILLA_HEALTH.get(t.getClass())&&!DomainTargetCompatibility.observationHealthVerified(t))kind=CUSTOM_HEALTH_UNKNOWN;
+    else if (!VANILLA_HEALTH.get(t.getClass())
+        && !DomainTargetCompatibility.observationHealthVerified(t)) kind = CUSTOM_HEALTH_UNKNOWN;
     else if (state.protectedPhase() || !f.phase.equals(state.phase())) kind = PROTECTED_PHASE;
     else if (!Float.isFinite(t.getHealth()) || actual > f.raw + .02) kind = AMBIGUOUS_CHANGE;
     else if (Double.isFinite(f.damageOut) && !same(actual, Math.min(f.before, f.damageOut)))
@@ -303,6 +320,21 @@ public final class DamageObservationService {
       effective = actual;
       kind = f.absorption > 0 ? ABSORPTION : NORMAL_DEFENSE;
     }
+    if (kind == CUSTOM_HEALTH_UNKNOWN
+        && (SoulDamageConfig.DIAGNOSTICS.get()
+            || Boolean.getBoolean("contractblade.soul.validation")))
+      com.mojang.logging.LogUtils.getLogger()
+          .info(
+              "SOUL_OBSERVATION_BOUNDARIES target={} vanillaDefense={} verifiedDefense={}"
+                  + " vanillaHealth={} verifiedHealth={} sourceClass={} actual={} damageOut={}",
+              t.getClass().getName(),
+              VANILLA_DEFENSE.get(t.getClass()),
+              DomainTargetCompatibility.normalDefenseVerified(t, f.source),
+              VANILLA_HEALTH.get(t.getClass()),
+              DomainTargetCompatibility.observationHealthVerified(t),
+              f.source.getClass().getName(),
+              actual,
+              f.damageOut);
     boolean recover =
         valid && t.isAlive() && kind == VERIFIED_SPECIAL_CAP && Double.isFinite(effective);
     long now = p.getServer().overworld().getGameTime();

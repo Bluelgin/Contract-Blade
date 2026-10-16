@@ -40,6 +40,7 @@ public final class BlackFoxEncounters {
         if (boss != null) { boss.combat().close(); boss.body().discard(); }
         var returns = BlackFoxShrineReturn.get(player.getServer());
         if (returns.pending(player.getUUID())) returns.settle(player);
+        BlackFoxAttackTrace.forget(player.getUUID());
         SWINGS.remove(player);
         COMBO_B.remove(player);
         PARRY.remove(player);

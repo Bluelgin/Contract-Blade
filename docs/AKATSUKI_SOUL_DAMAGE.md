@@ -1,3 +1,5 @@
+> 历史记录：本文对应 PR #18 的 `02ffd9c` 独立灵魂伤害机制。新的溯源/累计追偿和空中魂核见 [当前架构](AKATSUKI_DAMAGE_PROVENANCE.md)，本页历史扣血数值不作为新版本验收。
+
 # 赤月灵魂伤害与「绯月·拘魂」
 
 本轮基线是 PR #18 `100e138113ffe3a12acd7b746e9700ae34e7eff2`，开发分支继续为 `codex/akatsuki-domain`。仅修改 Contract-Blade；BladeTetra、Goety Revelation 与 Boss JAR 均只读，均未变为正式依赖。Lv8 救援、Lv9 `AkatsukiRainDirector` 随机高速落剑及十级授权沿用原实现。

@@ -6,14 +6,18 @@
 
 | 编号 | 严重程度 | 类/方法、触发与实际错误 | 根因 | 修复与回归 | 状态 |
 |---|---|---|---|---|---|
-| A01 | P1 | SoulAnchorService.observe/confirm：A 攻击失败，B/环境同 tick 扣血，A 获得魂核 | tick 总血差不代表单次调用归因 | 全调用同步 Scope；嵌套同目标扣血隔离；A/B、环境、范围多序列、异常测试 | 已实现，待重跑 |
-| A02 | P1 | SoulAnchorEntity.hurt：自动范围斩/投射物激活核心 | LivingEntity 与伤害入口兼作操作意图 | 普通 Entity，hurt 固定拒绝；原生 AttackEntityEvent + 服务端精准射线 | 已实现，待重跑 |
-| A03 | P2 | SoulBurstService.tick：384 预留最后一段153.6被128截断；预留与执行不一致 | 分段后截断且没有重新分配 | 预留前容量约束、水位分配；128/384/512/1024 边界及实际 HP | 已实现，待重跑 |
-| A04 | P2 | ContractCombatCredits.logout：所有历史玩家 UUID 留在 GENERATIONS 直到停服 | 只递增不删除 | 清理该玩家发射、命中证明后移除 generation；原生归因回归 | 已实现，待重跑 |
-| A05 | P2 | SoulAnchorService.create：公开调用无需对应原生成功攻击凭据 | API 隐含调用约定 | 仅消费已签发、不可重放的原生观测债务 | 已实现，待重跑 |
-| A06 | P1 | SlashEffectProvenanceMixin.tick：第三方 tick 抛异常，RETURN 不执行，残留黑狐弹幕权限；嵌套覆盖外层 | HEAD/RETURN 不构成 finally | WrapMethod + 嵌套 AutoCloseable Scope；异常/父级恢复 | 已实现，待重跑 |
-| A07 | P2 | SoulAnchorService.create：同 tick 死目标的核心未执行 tick，仍占玩家数量上限 | 只回收 isRemoved | 创建前检查真实绑定/目标有效性并 discard | 已实现，待重跑 |
+| A01 | P1 | SoulAnchorService.observe/confirm：A 攻击失败，B/环境同 tick 扣血，A 获得魂核 | tick 总血差不代表单次调用归因 | 全调用同步 Scope；嵌套同目标扣血隔离；A/B、环境、范围多序列、异常测试 | 已实现；专服/最终回归见验收记录 |
+| A02 | P1 | SoulAnchorEntity.hurt：自动范围斩/投射物激活核心 | LivingEntity 与伤害入口兼作操作意图 | 普通 Entity，hurt 固定拒绝；原生 AttackEntityEvent + 服务端精准射线 | 已实现；专服/最终回归见验收记录 |
+| A03 | P2 | SoulBurstService.tick：384 预留最后一段153.6被128截断；预留与执行不一致 | 分段后截断且没有重新分配 | 预留前容量约束、水位分配；128/384/512/1024 边界及实际 HP | 已实现；专服/最终回归见验收记录 |
+| A04 | P2 | ContractCombatCredits.logout：所有历史玩家 UUID 留在 GENERATIONS 直到停服 | 只递增不删除 | 清理该玩家发射、命中证明后移除 generation；原生归因回归 | 已实现；专服/最终回归见验收记录 |
+| A05 | P2 | SoulAnchorService.create：公开调用无需对应原生成功攻击凭据 | API 隐含调用约定 | 仅消费已签发、不可重放的原生观测债务 | 已实现；专服/最终回归见验收记录 |
+| A06 | P1 | SlashEffectProvenanceMixin.tick：第三方 tick 抛异常，RETURN 不执行，残留黑狐弹幕权限；嵌套覆盖外层 | HEAD/RETURN 不构成 finally | WrapMethod + 嵌套 AutoCloseable Scope；异常/父级恢复 | 已实现；专服/最终回归见验收记录 |
+| A07 | P2 | SoulAnchorService.create：同 tick 死目标的核心未执行 tick，仍占玩家数量上限 | 只回收 isRemoved | 创建前检查真实绑定/目标有效性并 discard | 已实现；专服/最终回归见验收记录 |
 | A08 | P2 | 旧额外黑狐验证入口依赖/文本断言过时 | 与现有三轮时序实现脱节；独立 javac 未列传递依赖 | 基线与新树分别原样执行，保留失败断言，见验证记录 | 未修复独立脚本 |
+
+| A09 | P2 | BlackFoxAttackTrace.MELEE：WeakHashMap 的值 HitContext 反向持有玩家键，历史参与者无法依赖弱键回收 | 值到键形成强引用链 | 登出/停止挑战清除对应 owner 的近战与出生证明；不改战斗时序 | 已实现；专服/最终回归见验收记录 |
+
+| A10 | P1 | 仅凭 player_attack DamageSource + 当前手持可误认延迟或第三方裸调用 | 缺少本次原生调用证明 | Player.attack 的实际 hurt 操作与 SlashBlade1.9.65 AttackHelper 精确 Source/目标/载体单次凭据；裸调用拒绝、原生API实测 | 已通过原生专服 |
 
 ## 审查范围与未证实风险
 

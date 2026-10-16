@@ -3,7 +3,23 @@
   "minVersion": "0.8",
   "package": "com.maidweapon.forge.compat.fox.mixin",
   "compatibilityLevel": "JAVA_17",
-  "mixins": ["SlashBladeIngredientProtectionMixin", "ShrineBladeStandMixin", "SlashBladeDurabilityMixin", "SlashEffectProvenanceMixin", "BlackFoxNativeTargetsMixin", "BlackFoxNativeTimelineMixin", "BlackFoxHeldSwordMixin", "BlackFoxSwordDriveMixin"],
-  "client": ["BlackFoxSlashColorMixin"],
-  "injectors": {"defaultRequire": 1}
+  "mixins": [
+    "SlashBladeIngredientProtectionMixin",
+    "ShrineBladeStandMixin",
+    "SlashBladeDurabilityMixin",
+    "SlashEffectProvenanceMixin",
+    "BlackFoxNativeTargetsMixin",
+    "BlackFoxNativeTimelineMixin",
+    "BlackFoxHeldSwordMixin",
+    "BlackFoxSwordDriveMixin",
+    "SoulNativeMeleeMixin",
+    "SoulAttackHelperMixin"
+  ],
+  "client": [
+    "BlackFoxSlashColorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "plugin": "com.maidweapon.forge.mixin.SoulSlashMixinPlugin"
 }

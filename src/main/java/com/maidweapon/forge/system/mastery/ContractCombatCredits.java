@@ -90,6 +90,7 @@ public final class ContractCombatCredits {
         LAUNCHES.values().removeIf(v->v.stamp().credit().player().getUUID().equals(owner));
         HITS.values().removeIf(v->v.credit().player().getUUID().equals(owner));
         GENERATIONS.remove(owner);
+        com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.forget(owner);
     }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) { LAUNCHES.clear(); HITS.clear(); GENERATIONS.clear(); SETTLED.clear(); }
     private ContractCombatCredits() { }

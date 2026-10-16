@@ -53,6 +53,8 @@ public final class SoulDamageDebtService {
     if (o == null
         || event.target == null
         || !DamageObservationService.issued(o, event.target)
+        || o.server() == null
+        || !o.server().isSameThread()
         || !o.recoverable()
         || o.loss() <= .01
         || !o.proof().currentCarrier()

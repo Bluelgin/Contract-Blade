@@ -81,15 +81,17 @@ public final class SoulProvenanceValidation {
 
   public static void run(MinecraftServer server) throws Exception {
     install();
+    nativeInvocationProof(server);
     var l = server.overworld();
     var p = player(l, "ProvenanceOwner");
     foreign = player(l, "ProvenanceForeign");
+    nativeSlashProof(p);
     for (int level = 1; level <= 10; level++) {
       setLevel(p, level);
       advance(l, 240);
       var t = cap(l);
       float before = t.getHealth();
-      t.hurt(p.damageSources().playerAttack(p), 100);
+      nativeHit(t, p, 100);
       var o = DamageObservationService.latest(server);
       check(o.recoverable() && near(o.effective(), 100) && near(o.actual(), 5), "E100 A5 evidence");
       var s = AkatsukiDomainService.session(p);
@@ -136,15 +138,106 @@ public final class SoulProvenanceValidation {
     negatives(server, p);
     isolation(server, p);
     interaction(server, p);
+    lateAndInvalidated(server, p);
     highBudgets(server, p);
     bosses(server, p);
     benchmark(server, p);
     traceScopes(l);
     check(
-        !DamageObservationService.active() && SoulStrikeContext.current() == null,
+        !DamageObservationService.active()
+            && !NativeAttackOrigin.active()
+            && SoulStrikeContext.current() == null,
         "all permission scopes closed");
     p.getInventory().setItem(0, ItemStack.EMPTY);
     check(!AkatsukiDomainService.session(p).active(), "switch suspends");
+  }
+
+  public static boolean nativeHit(LivingEntity t, ServerPlayer p, float amount) {
+    if (!Boolean.getBoolean("contractblade.soul.validation")
+        && !Boolean.getBoolean("contractblade.soulVisual.validation"))
+      throw new IllegalStateException("Controlled request outside fixture");
+    var source = p.damageSources().playerAttack(p);
+    try (var origin = NativeAttackOrigin.strike(p, "VALIDATION_CONTROLLED_REQUEST", source, t)) {
+      return t.hurt(source, amount);
+    }
+  }
+
+  private static void nativeSlashProof(ServerPlayer p) throws Exception {
+    var l = p.serverLevel();
+    advance(l, 240);
+    var t = cap(l);
+    double attack = p.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue();
+    try {
+      p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(100);
+      p.moveTo(1, 150, .5, 0, 0);
+      Class.forName("mods.flammpfeil.slashblade.util.AttackManager")
+          .getMethod(
+              "doMeleeAttack",
+              LivingEntity.class,
+              Entity.class,
+              boolean.class,
+              boolean.class,
+              float.class)
+          .invoke(null, p, t, true, false, 1f);
+      var observation = DamageObservationService.latest(p.getServer());
+      check(
+          observation != null
+              && observation.target().equals(t.getUUID())
+              && observation.raw() > 5
+              && observation.recoverable(),
+          "native SlashBlade actual hurt provenance observation="+observation);
+      LogUtils.getLogger()
+          .info(
+              "SOUL_NATIVE_SLASHBLADE_INVOCATION_PASS raw={} E={} A={} origin={}",
+              observation.raw(),
+              observation.effective(),
+              observation.actual(),
+              observation.proof().origin());
+    } finally {
+      p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(attack);
+      t.discard();
+    }
+  }
+
+  public static void nativeInvocationProof(MinecraftServer server) {
+    var l = server.overworld();
+    var p =
+        new net.minecraftforge.common.util.FakePlayer(
+            l,
+            new GameProfile(
+                UUID.nameUUIDFromBytes(
+                    "PlainNativeProof".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                "PlainNativeProof"));
+    p.getInventory().selected = 0;
+    p.getInventory().setItem(0, new ItemStack(Items.IRON_SWORD));
+    p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(20);
+    p.getAttribute(Attributes.ATTACK_SPEED).setBaseValue(1024);
+    p.moveTo(1, 150, .5, 0, 0);
+    var target = new NativeProbe(l);
+    prepare(target);
+    l.addFreshEntity(target);
+    float before = target.getHealth();
+    p.attack(target);
+    check(
+        target.proved && target.getHealth() < before && !NativeAttackOrigin.active(),
+        "actual Player.attack invocation capability");
+    target.discard();
+    LogUtils.getLogger().info("SOUL_NATIVE_PLAYER_INVOCATION_PASS");
+  }
+
+  private static final class NativeProbe extends Zombie {
+    boolean proved;
+
+    NativeProbe(ServerLevel l) {
+      super(EntityType.ZOMBIE, l);
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+      if (source.getEntity() instanceof ServerPlayer p)
+        proved |= NativeAttackOrigin.claim(p, p.getMainHandItem(), source, this);
+      return super.hurt(source, amount);
+    }
   }
 
   private static ServerPlayer player(ServerLevel l, String name) throws Exception {
@@ -201,7 +294,7 @@ public final class SoulProvenanceValidation {
       if (mode.equals("event_reduced")) reduced = t;
       if (mode.equals("event_canceled")) canceled = t;
       float hp = t.getHealth();
-      t.hurt(p.damageSources().playerAttack(p), 100);
+      nativeHit(t, p, 100);
       check(
           !SoulDamageDebtService.hasDebt(p, t) && SoulAnchorService.create(p, t) == null,
           "no invented debt " + mode);
@@ -215,9 +308,15 @@ public final class SoulProvenanceValidation {
       reduced = canceled = null;
       t.discard();
     }
+    var unscoped = cap(l);
+    unscoped.hurt(p.damageSources().playerAttack(p), 100);
+    check(
+        !SoulDamageDebtService.hasDebt(p, unscoped),
+        "unscoped player source cannot borrow current blade");
+    unscoped.discard();
     var t = cap(l);
     t.getAttribute(Attributes.ARMOR).setBaseValue(20);
-    t.hurt(p.damageSources().playerAttack(p), 120);
+    nativeHit(t, p, 120);
     var o = DamageObservationService.latest(server);
     check(
         o.recoverable()
@@ -229,18 +328,18 @@ public final class SoulProvenanceValidation {
     var unknown = new UnknownPreCap(l);
     prepare(unknown);
     l.addFreshEntity(unknown);
-    unknown.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(unknown, p, 100);
     check(!SoulDamageDebtService.hasDebt(p, unknown), "unwrapped outer entry fail closed");
     unknown.discard();
     var nonlinear = new Nonlinear(l);
     prepare(nonlinear);
     l.addFreshEntity(nonlinear);
-    nonlinear.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(nonlinear, p, 100);
     check(!SoulDamageDebtService.hasDebt(p, nonlinear), "unknown normal defense fail closed");
     nonlinear.discard();
     t = cap(l);
     t.setAbsorptionAmount(8);
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     o = DamageObservationService.latest(server);
     check(
         o.recoverable() && near(o.effective(), 92) && near(o.actual(), 0),
@@ -250,7 +349,7 @@ public final class SoulProvenanceValidation {
     t.discard();
     t = cap(l);
     t.protectedPhase = true;
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     check(!SoulDamageDebtService.hasDebt(p, t), "protected phase not debt");
     t.discard();
   }
@@ -259,29 +358,29 @@ public final class SoulProvenanceValidation {
     var l = p.serverLevel();
     var t = cap(l);
     canceled = t;
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     canceled = null;
-    t.hurt(foreign.damageSources().playerAttack(foreign), 100);
+    nativeHit(t, foreign, 100);
     check(
         !SoulDamageDebtService.hasDebt(p, t) && SoulDamageDebtService.hasDebt(foreign, t),
         "same tick failed A cannot steal B");
     t.discard();
     t = cap(l);
     canceled = t;
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     canceled = null;
     t.hurt(p.damageSources().generic(), 100);
     check(!SoulDamageDebtService.hasDebt(p, t), "environment cannot confirm failed hit");
     t.discard();
     t = cap(l);
     nested = t;
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     check(!SoulDamageDebtService.hasDebt(p, t), "nested foreign HP subtracted");
     t.discard();
     t = cap(l);
     throwing = t;
     try {
-      t.hurt(p.damageSources().playerAttack(p), 100);
+      nativeHit(t, p, 100);
     } catch (IllegalStateException expected) {
     }
     throwing = null;
@@ -291,9 +390,9 @@ public final class SoulProvenanceValidation {
     t.discard();
     var a = cap(l);
     var b = cap(l);
-    a.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(a, p, 100);
     long first = DamageObservationService.latest(server).sequence();
-    b.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(b, p, 100);
     check(
         first != DamageObservationService.latest(server).sequence()
             && SoulDamageDebtService.hasDebt(p, a)
@@ -322,7 +421,7 @@ public final class SoulProvenanceValidation {
     var l = p.serverLevel();
     advance(l, 240);
     var t = cap(l);
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     var c = SoulAnchorService.create(p, t);
     check(c != null, "receipt core");
     check(
@@ -356,7 +455,7 @@ public final class SoulProvenanceValidation {
     t.discard();
     advance(l, 240);
     t = cap(l);
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     c = SoulAnchorService.create(p, t);
     t.phase++;
     check(
@@ -365,12 +464,76 @@ public final class SoulProvenanceValidation {
     t.discard();
     advance(l, 240);
     t = cap(l);
-    t.hurt(p.damageSources().playerAttack(p), 100);
+    nativeHit(t, p, 100);
     var receipt = DamageObservationService.latest(server);
     SoulDamageDebtService.invalidate(p);
     net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new DamageObservedEvent(receipt, t));
     check(!SoulDamageDebtService.hasDebt(p, t), "receipt replay cannot reset invalidated debt");
     t.discard();
+  }
+
+  private static void lateAndInvalidated(MinecraftServer server, ServerPlayer p) {
+    var l = p.serverLevel();
+    setLevel(p, 2);
+    advance(l, 240);
+    var t = cap(l);
+    nativeHit(t, p, 100);
+    var o = DamageObservationService.latest(server);
+    new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(1).handle(p.connection);
+    new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(0).handle(p.connection);
+    check(
+        !SoulDamageDebtService.hasDebt(p, t),
+        "native same-tick hotbar switch invalidates old weapon permission");
+    net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new DamageObservedEvent(o, t));
+    check(!SoulDamageDebtService.hasDebt(p, t), "native switch receipt cannot replay");
+    t.discard();
+    advance(l, 240);
+    t = cap(l);
+    nativeHit(t, p, 100);
+    t.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 0));
+    check(!SoulDamageDebtService.hasDebt(p, t), "new normal resistance invalidates old receipt");
+    t.discard();
+    int lifetime = SoulDamageConfig.ANCHOR_LIFETIME.get();
+    try {
+      SoulDamageConfig.ANCHOR_LIFETIME.set(200);
+      advance(l, 240);
+      t = cap(l);
+      nativeHit(t, p, 100);
+      var core = SoulAnchorService.create(p, t);
+      float hp = t.getHealth();
+      advance(l, 119);
+      aim(p, core);
+      p.attack(core);
+      for (int i = 0; i < 14; i++) {
+        advance(l, 1);
+        SoulDamageDebtService.tick(
+            new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+        SoulBurstService.tick(
+            new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+      }
+      check(near(hp - t.getHealth(), 28.5), "reserved burst survives ordinary receipt expiry");
+      t.discard();
+    } finally {
+      SoulDamageConfig.ANCHOR_LIFETIME.set(lifetime);
+    }
+    advance(l, 240);
+    t = cap(l);
+    nativeHit(t, p, 100);
+    var core = SoulAnchorService.create(p, t);
+    aim(p, core);
+    p.attack(core);
+    SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+    float hp = t.getHealth();
+    t.phase++;
+    for (int i = 0; i < 14; i++) {
+      advance(l, 1);
+      SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+    }
+    check(
+        near(t.getHealth(), hp) && core.isRemoved(),
+        "phase change cancels remaining reserved stages");
+    t.discard();
+    LogUtils.getLogger().info("SOUL_NATIVE_PACKET_AND_LATE_BURST_PASS");
   }
 
   private static void highBudgets(MinecraftServer server, ServerPlayer p) {
@@ -382,7 +545,7 @@ public final class SoulProvenanceValidation {
       for (double total : new double[] {128, 384, 512, 1024}) {
         advance(l, 240);
         var t = cap(l);
-        t.hurt(p.damageSources().playerAttack(p), (float) (total + 5));
+        nativeHit(t, p, (float) (total + 5));
         var c = SoulAnchorService.create(p, t);
         check(c != null, "high core");
         aim(p, c);
@@ -437,7 +600,7 @@ public final class SoulProvenanceValidation {
         }
         p.moveTo(1, 150, .5, 0, 0);
         float before = t.getHealth();
-        t.hurt(p.damageSources().playerAttack(p), 100);
+        nativeHit(t, p, 100);
         var o = DamageObservationService.latest(server);
         double nativeLoss = before - t.getHealth();
         if (!o.recoverable()) {
@@ -452,7 +615,17 @@ public final class SoulProvenanceValidation {
         }
         var s = AkatsukiDomainService.session(p);
         s.contact(l.getGameTime(), t.getUUID());
+        int originalInvulnerable = t.invulnerableTime, originalHurt = t.hurtTime;
+        if (id.endsWith("cloud_golem"))
+          t.getClass().getField("GolemInvulnerabilityTime").setInt(t, 60);
         var cut = SoulDamageEngine.cut(p, t, s);
+        check(
+            t.invulnerableTime == originalInvulnerable && t.hurtTime == originalHurt,
+            "vanilla hit timers restored");
+        if (id.endsWith("cloud_golem"))
+          check(
+              t.getClass().getField("GolemInvulnerabilityTime").getInt(t) == 60,
+              "native golem timer restored");
         check(
             cut != null && near(cut.loss(), o.loss() * SoulRecoveryPolicy.cut(level)),
             "real cut " + id);
@@ -485,6 +658,17 @@ public final class SoulProvenanceValidation {
                 air,
                 before,
                 t.getHealth());
+        if (level == 10 && id.endsWith("ignis")) {
+          var animation = t.getClass().getField("PHASE_2").get(null);
+          t.getClass().getMethod("setAnimation", animation.getClass()).invoke(t, animation);
+          t.invulnerableTime = 0;
+          nativeHit(t, p, 100);
+          check(
+              !SoulDamageDebtService.hasDebt(p, t)
+                  && !DamageObservationService.latest(server).recoverable(),
+              "real Ignis initialization is not debt");
+          LogUtils.getLogger().info("SOUL_REAL_PROTECTED_PHASE_PASS {}", id);
+        }
         t.discard();
       }
     }
@@ -501,7 +685,7 @@ public final class SoulProvenanceValidation {
       t.setHealth(1000);
       t.invulnerableTime = 0;
       long start = System.nanoTime();
-      t.hurt(p.damageSources().playerAttack(p), 100);
+      nativeHit(t, p, 100);
       var s = AkatsukiDomainService.session(p);
       s.contact(l.getGameTime(), t.getUUID());
       var f = SoulDamageEngine.cut(p, t, s);
@@ -535,6 +719,10 @@ public final class SoulProvenanceValidation {
       check(
           com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.projectile() == a,
           "restore parent projectile");
+    }
+    try (var ignored = com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.open(a)) {
+      throw new IllegalStateException("EXPECTED_PROJECTILE_EXCEPTION");
+    } catch (IllegalStateException expected) {
     }
     check(
         com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.projectile() == null,

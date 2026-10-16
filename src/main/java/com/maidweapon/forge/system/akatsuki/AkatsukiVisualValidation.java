@@ -86,7 +86,7 @@ public final class AkatsukiVisualValidation {
         if (age > 40 && age < 550 && local == 50) {
           target.setHealth(1024);
           target.invulnerableTime = 0;
-          target.hurt(p.damageSources().playerAttack(p), 100);
+          SoulProvenanceValidation.nativeHit(target, p, 100);
         }
         if (age > 40 && age < 550 && local == 79) {
           var a =

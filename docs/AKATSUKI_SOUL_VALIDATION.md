@@ -1,3 +1,5 @@
+> 历史记录：本文对应 PR #18 的 `02ffd9c` 独立灵魂伤害机制。新的溯源/累计追偿和空中魂核见 [当前架构](AKATSUKI_DAMAGE_PROVENANCE.md)，本页历史扣血数值不作为新版本验收。
+
 # 灵魂伤害验收记录
 
 基线：PR #18 `100e138113ffe3a12acd7b746e9700ae34e7eff2`。所有修改位于 Contract-Blade；BladeTetra 仓库仅只读引用。Java 17 / Forge 47.4.10 / Minecraft 1.20.1 / SlashBlade Resharped 1.9.65 / TLM 1.5.3 / 可选 BladeTetra 1.5.9。

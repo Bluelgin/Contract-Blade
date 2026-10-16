@@ -55,6 +55,11 @@ public final class BlackFoxAttackTrace {
         }
     }
     public static Scope open(Entity projectile){return new Scope(projectile);}
+    /** Weak keys alone do not release MELEE: its HitContext can reference the same player. */
+    public static void forget(java.util.UUID owner) {
+        MELEE.values().removeIf(v -> v.context().owner().getUUID().equals(owner));
+        BIRTH.values().removeIf(v -> v.owner().getUUID().equals(owner));
+    }
     public static void enter(Entity projectile){open(projectile);}
     public static void exit(){var scope=SCOPES.get();if(scope!=null)scope.close();else{ACTIVE.remove();PROJECTILE.remove();}}
     public static Entity projectile() { return PROJECTILE.get(); }

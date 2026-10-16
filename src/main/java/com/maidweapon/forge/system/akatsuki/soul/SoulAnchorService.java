@@ -195,6 +195,7 @@ public final class SoulAnchorService {
               if (!valid(c)) c.discard();
               return c.isRemoved();
             });
+    HOVER.values().removeIf(t -> t <= now);
     NEXT.values().removeIf(t -> t < now - 200);
     LAST_HIT.values().removeIf(t -> t < now - 60);
   }

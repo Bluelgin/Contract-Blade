@@ -20,7 +20,7 @@ class SoulRecoveryTest {
           d.recovered(),
           1e-8);
       assertTrue(5 + d.recovered() <= 100);
-      assertEquals(0, d.reserve(1, 1000, true));
+      assertEquals(0, d.reserve(SoulRecoveryPolicy.aerial(level), 1000, true));
     }
   }
 

@@ -13,7 +13,8 @@
     "SoulDamageAmountMixin",
     "DamageObservationMixin",
     "DamageObservationForgeMixin",
-    "SoulCarrierChangeMixin"
+    "SoulCarrierChangeMixin",
+    "SoulNativePlayerAttackMixin"
   ],
   "injectors": {
     "defaultRequire": 1

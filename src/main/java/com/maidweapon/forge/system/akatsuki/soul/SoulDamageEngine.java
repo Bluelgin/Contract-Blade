@@ -289,9 +289,10 @@ public final class SoulDamageEngine {
     if (SoulDamageConfig.DIAGNOSTICS.get() || Boolean.getBoolean("contractblade.soul.validation"))
       LogUtils.getLogger()
           .info(
-              "SOUL_DAMAGE_RESULT attacker={} target={} {}",
+              "SOUL_DAMAGE_RESULT attacker={} target={} accounting={} {}",
               p.getUUID(),
               net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(t.getType()),
+              recovery ? "VERIFIED_RECOVERY" : "BASE_CUT",
               feedback);
     return feedback;
   }

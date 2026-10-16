@@ -270,11 +270,19 @@ public final class DomainTargetCompatibility {
     return Double.NaN;
   }
 
-  public static boolean observationHealthVerified(LivingEntity t){return version("legendary_monsters","2.1.15")&&Set.of("net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.CloudGolem.Cloud_GolemEntity","net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.TheObliterator.TheObliteratorEntity").contains(t.getClass().getName());}
+  public static boolean observationHealthVerified(LivingEntity t) {
+    return ordinaryApostle(t)
+        || version("legendary_monsters", "2.1.15")
+            && Set.of(
+                    "net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.CloudGolem.Cloud_GolemEntity",
+                    "net.miauczel.legendary_monsters.entity.AnimatedMonster.IAnimatedBoss.TheObliterator.TheObliteratorEntity")
+                .contains(t.getClass().getName());
+  }
 
   public static boolean ordinaryApostle(LivingEntity t) {
     if (!t.getClass().getName().equals("com.Polarice3.Goety.common.entities.boss.Apostle")
         || !version("goety", "2.5.58.4")) return false;
+    if (ModList.get().isLoaded("revelationfix") && !version("revelationfix", "4.6")) return false;
     if (!ModList.get().isLoaded("goety_revelation")) return true;
     if (!version("goety_revelation", "2.3.4")) return false;
     try {
