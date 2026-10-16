@@ -31,7 +31,7 @@ class WhiteFoxBlessingTest {
   }
 
   @Test
-  void eachLevelAddsAPhysicalAbilityAndGuardHasAbsoluteCap() {
+  void eachLevelAddsAPhysicalAbilityAndGuardUsesUncappedPercent() {
     String[] route = {
       "guard",
       "cleanse",
@@ -47,8 +47,11 @@ class WhiteFoxBlessingTest {
     for (int lv = 1; lv <= 10; lv++) {
       var p = new WhiteFoxBlessingGrowth.Profile(WhiteFoxBlessingGrowth.fallback().resolve(lv));
       for (int i = 0; i < 10; i++) assertEquals(i < lv, p.has("blessing_" + route[i]));
-      assertEquals(8.5f, p.guardedDamage(10), .0001);
-      assertEquals(997f, p.guardedDamage(1000), .0001);
+      double reduction = p.number("guard_reduction");
+      assertTrue(reduction >= .06 && reduction <= .20);
+      assertEquals(10 * (1 - reduction), p.guardedDamage(10), .0001);
+      assertEquals(1000 * (1 - reduction), p.guardedDamage(1000), .0001);
+      assertEquals(60, p.ticks("guard_cooldown"));
       assertEquals(0, p.guardedDamage(0));
       assertTrue(Float.isNaN(p.guardedDamage(Float.NaN)));
     }
