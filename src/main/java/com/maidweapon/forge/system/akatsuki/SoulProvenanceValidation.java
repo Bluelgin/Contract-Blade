@@ -552,7 +552,9 @@ public final class SoulProvenanceValidation {
       advance(l, 240);
       var t = cap(l);
       float startingHealth = (float) Math.max(1000, total + 10);
-      t.getAttribute(Attributes.MAX_HEALTH).setBaseValue(startingHealth);
+      // Vanilla MAX_HEALTH attribute is hard-capped at 1024. This fixture
+      // explicitly supports larger test HP; production boss health is untouched.
+      t.fixtureMaxHealth = startingHealth;
       t.setHealth(startingHealth);
       nativeHit(t, p, (float) (total + 5));
       var o = DamageObservationService.latest(server);
@@ -780,6 +782,12 @@ public final class SoulProvenanceValidation {
   }
 
   private static class Capped extends Zombie {
+    float fixtureMaxHealth;
+    @Override
+    public float getMaxHealth() {
+      return fixtureMaxHealth > 0 ? fixtureMaxHealth : super.getMaxHealth();
+    }
+
     float bucket;
     long bucketTick;
     boolean blocked, protectedPhase;
