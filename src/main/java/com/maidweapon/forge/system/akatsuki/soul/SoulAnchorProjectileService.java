@@ -40,10 +40,17 @@ public final class SoulAnchorProjectileService {
     if (core == null || core.level() != level || !SoulAnchorService.valid(core)) return false;
     var owner = SoulAnchorBinding.owner(core);
     if (owner == null) return false;
-    // The projectile is queried by its current position; future movement is
-    // checked separately below so it can traverse the whole generous region.
-    for (Projectile sword : level.getEntitiesOfClass(Projectile.class,
-        core.getBoundingBox().inflate(9.5))) {
+    // Check nearby trajectory sweeps AND fresh swords by the owner's hand.
+    // Otherwise a native boss lock could send a distant new sword toward the
+    // boss before it ever enters the high core's broad hit neighborhood.
+    var candidates = new java.util.LinkedHashSet<Projectile>(
+        level.getEntitiesOfClass(Projectile.class, core.getBoundingBox().inflate(9.5)));
+    if (SoulAnchorProjectileGeometry.aimedAt(
+            core.getBoundingBox(), owner.getEyePosition(), owner.getLookAngle())
+        && clear(level, owner.getEyePosition(), core.getBoundingBox().getCenter(), owner))
+      candidates.addAll(level.getEntitiesOfClass(
+          Projectile.class, owner.getBoundingBox().inflate(4)));
+    for (Projectile sword : candidates) {
       if (!BASIC_SUMMONED_SWORD.equals(
           BuiltInRegistries.ENTITY_TYPE.getKey(sword.getType()).toString())
           || sword.isRemoved() || sword.getOwner() != owner) continue;
