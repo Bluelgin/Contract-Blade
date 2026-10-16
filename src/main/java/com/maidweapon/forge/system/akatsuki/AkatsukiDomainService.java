@@ -88,12 +88,13 @@ public final class AkatsukiDomainService {
 
   private static AkatsukiDomainSession refresh(ServerPlayer player, ContractAbilityFeatureSet f) {
     var state = SESSIONS.computeIfAbsent(player, p -> new AkatsukiDomainSession());
-    String binding = ContractCarrierData.getBindingId(player.getMainHandItem());
-    if (!state.binding.equals(binding)) state.suspend();
-    state.binding = binding;
+    // Switching to an unbound item/empty hand returns null. Rebind closes the old
+    // domain (sending END) before the old session can be resumed with new authority.
+    state.rebind(ContractCarrierData.getBindingId(player.getMainHandItem()),
+        () -> stop(player, state));
     boolean changed =
         state.lifecycle.update(
-            has(f, "garden") && !player.isSpectator(),
+            has(f, "garden") && !state.binding.isBlank() && !player.isSpectator(),
             player.isAlive(),
             player.getHealth() / Math.max(1f, player.getMaxHealth()),
             now(player),

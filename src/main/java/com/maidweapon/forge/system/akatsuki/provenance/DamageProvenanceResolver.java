@@ -10,13 +10,18 @@ import net.minecraft.world.item.ItemStack;
 public final class DamageProvenanceResolver {
   public record Proof(
       ServerPlayer player, ItemStack carrier, String binding, String maid, String origin) {
+    /** A null/malformed binding cannot authorize damage, even if the new item also lacks one. */
+    static boolean matchesBinding(String original, String current) {
+      return original != null && !original.isBlank() && original.equals(current);
+    }
+
     public boolean currentCarrier() {
       return player.isAlive()
           && !player.isRemoved()
           && (!player.isCreative() || com.maidweapon.common.SoulDamageConfig.CREATIVE_DAMAGE.get())
           && !player.isSpectator()
           && player.getMainHandItem() == carrier
-          && binding.equals(ContractCarrierData.getBindingId(carrier))
+          && matchesBinding(binding, ContractCarrierData.getBindingId(carrier))
           && java.util.Objects.equals(maid, ContractCarrierData.getBoundMaidUUID(carrier));
     }
 
