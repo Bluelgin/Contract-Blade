@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT)
 public final class AkatsukiVisualCapture {
   private static final Set<String> TAKEN = new HashSet<>();
+  private static final Set<Integer> INPUTS = new HashSet<>();
   private static long start = -1;
   private static int loadingTicks;
 
@@ -69,7 +70,49 @@ public final class AkatsukiVisualCapture {
     long age = mc.level.getGameTime() - start;
     if (Boolean.getBoolean("contractblade.soulVisual.validation")) {
       mc.gui.getChat().clearMessages(true);
+      long local = age % 80;
+      boolean overview = local >= 50 && local <= 60;
+      boolean jumping =
+          age > 40
+              && age < 550
+              && (local >= 52 && local <= 54
+                  || local >= 60 && local <= 62
+                  || local >= 68 && local <= 70
+                  || local >= 76 && local <= 78);
+      mc.options.keyJump.setDown(jumping);
+      var cores =
+          mc.level.getEntitiesOfClass(
+              com.maidweapon.forge.entity.SoulAnchorEntity.class,
+              mc.player.getBoundingBox().inflate(12),
+              c -> c.ownerId().map(id -> id.equals(mc.player.getUUID())).orElse(false));
+      if (!cores.isEmpty()) {
+        var core = cores.get(0);
+        var point = core.getBoundingBox().getCenter();
+        var boss = mc.level.getEntity(core.targetId());
+        if (overview && boss != null) point = boss.getBoundingBox().getCenter().add(1.5, .9, 0);
+        var d = point.subtract(mc.player.getEyePosition());
+        mc.player.setYRot((float) Math.toDegrees(Math.atan2(-d.x, d.z)));
+        mc.player.setXRot(
+            (float) -Math.toDegrees(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z))));
+        if (local >= 63
+            && local <= 78
+            && mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+            && hit.getEntity() == core
+            && !mc.player.onGround()
+            && mc.player.getEyeY() >= core.getY() - .5
+            && INPUTS.add(core.getId())) {
+          mc.gameMode.attack(mc.player, core);
+          mc.player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+          LogUtils.getLogger()
+              .info(
+                  "SOUL_NATIVE_CLICK_PACKET age={} crosshair={} feetY={}",
+                  age,
+                  core.getId(),
+                  mc.player.getY());
+        }
+      }
       if (age >= 580) {
+        mc.options.keyJump.setDown(false);
         LogUtils.getLogger().info("SOUL_VISUAL_CLIENT_COMPLETE captures={}", TAKEN.size());
         mc.stop();
         return;
@@ -77,7 +120,10 @@ public final class AkatsukiVisualCapture {
       int quality = age >= 470 ? 0 : age >= 310 ? 2 : 1;
       if (com.maidweapon.common.AkatsukiDomainConfig.QUALITY.get() != quality)
         com.maidweapon.common.AkatsukiDomainConfig.QUALITY.set(quality);
-      mc.options.setCameraType(age >= 310 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
+      mc.options.setCameraType(
+          overview || age >= 310 ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON);
+      if (mc.options.fov().get() != (overview ? 100 : 70))
+        mc.options.fov().set(overview ? 100 : 70);
       String name =
           age >= 551
               ? "soul-06-low-burst"
@@ -87,7 +133,11 @@ public final class AkatsukiVisualCapture {
                       ? "soul-04-high-core"
                       : age >= 231
                           ? "soul-03-rampage-burst"
-                          : age >= 135 ? "soul-02-core" : age >= 71 ? "soul-01-normal-burst" : null;
+                          : age >= 135
+                              ? "soul-02-core"
+                              : age >= 71
+                                  ? "soul-01-normal-burst"
+                                  : age >= 52 ? "soul-00-overview" : null;
       if (name != null && TAKEN.add(name))
         Screenshot.grab(
             mc.gameDirectory,

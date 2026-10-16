@@ -60,13 +60,17 @@ public final class AkatsukiVisualValidation {
               .setGameTime(receipt.readyAt(p.getUUID()));
         AkatsukiDomainValidation.prepareBlade(p);
         ContractMasteryService.setLevel(p.getServer().createCommandSourceStack(), p, 10);
-        var target = EntityType.HUSK.create(p.serverLevel());
+        var target =
+            Boolean.getBoolean("contractblade.soulVisual.validation")
+                ? (Zombie) SoulProvenanceValidation.visualTarget(p.serverLevel())
+                : EntityType.HUSK.create(p.serverLevel());
         target.moveTo(.5, 81, 4.5, 180, 0);
         target.setNoAi(true);
         target.setPersistenceRequired();
         target.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1024);
         target.setHealth(1024);
-        p.serverLevel().addFreshEntity(target);
+        if (!Boolean.getBoolean("contractblade.soulVisual.validation"))
+          p.serverLevel().addFreshEntity(target);
         scene = new Scene(p.level().getGameTime(), target);
         SCENES.put(p, scene);
         STARTS.put(p.getUUID(), scene.started());
@@ -77,20 +81,22 @@ public final class AkatsukiVisualValidation {
       if (Boolean.getBoolean("contractblade.soulVisual.validation")) {
         if (age == 160) p.setHealth(p.getMaxHealth() * .4f);
         target.moveTo(.5, 81, 3.4, 180, 0);
-        if (age > 40 && age < 550 && age % 80 == 50) {
+        long local = age % 80;
+        if (age > 40 && age < 550 && local == 48) p.teleportTo(p.serverLevel(), .5, 81, 1.9, 0, 0);
+        if (age > 40 && age < 550 && local == 50) {
           target.setHealth(1024);
           target.invulnerableTime = 0;
-          target.hurt(p.damageSources().playerAttack(p), 1);
+          SoulProvenanceValidation.nativeHit(target, p, 100);
         }
-        if (age > 40 && age < 550 && age % 80 == 70) {
-          var cores =
-              p.serverLevel()
-                  .getEntitiesOfClass(
-                      com.maidweapon.forge.entity.SoulAnchorEntity.class,
-                      p.getBoundingBox().inflate(8));
-          for (var core : cores)
-            com.maidweapon.forge.system.akatsuki.soul.SoulAnchorService.attack(
-                new net.minecraftforge.event.entity.player.AttackEntityEvent(p, core));
+        if (age > 40 && age < 550 && local == 79) {
+          var a =
+              p.getServer()
+                  .getAdvancements()
+                  .getAdvancement(
+                      net.minecraft.resources.ResourceLocation.parse(
+                          "slashblade:abilities/enemy_step"));
+          if (a != null && p.getAdvancements().getOrStartProgress(a).isDone())
+            LogUtils.getLogger().info("SOUL_NATIVE_ENEMY_STEP_OBSERVED age={}", age);
         }
         return;
       }

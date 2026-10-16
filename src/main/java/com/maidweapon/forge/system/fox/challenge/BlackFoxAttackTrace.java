@@ -45,10 +45,25 @@ public final class BlackFoxAttackTrace {
                 && SlashBladeCompat.isMatchingPhantom(original, maid.getMainHandItem())
                 ? new BlackFoxEncounterApi.HitContext(owner, original) : null;
     }
-    public static void enter(Entity projectile) { ACTIVE.set(BIRTH.get(projectile)); PROJECTILE.set(projectile); }
-    public static void exit() { ACTIVE.remove(); PROJECTILE.remove(); }
+    private static final ThreadLocal<Scope> SCOPES=new ThreadLocal<>();
+    public static final class Scope implements AutoCloseable {
+        final Scope previous;final Entity projectile;final BlackFoxEncounterApi.HitContext context;boolean closed;
+        Scope(Entity entity){previous=SCOPES.get();projectile=PROJECTILE.get();context=ACTIVE.get();SCOPES.set(this);ACTIVE.set(BIRTH.get(entity));PROJECTILE.set(entity);}
+        public void close(){if(closed)return;closed=true;if(SCOPES.get()!=this){SCOPES.remove();ACTIVE.remove();PROJECTILE.remove();return;}
+            if(previous==null)SCOPES.remove();else SCOPES.set(previous);
+            if(context==null)ACTIVE.remove();else ACTIVE.set(context);if(projectile==null)PROJECTILE.remove();else PROJECTILE.set(projectile);
+        }
+    }
+    public static Scope open(Entity projectile){return new Scope(projectile);}
+    /** Weak keys alone do not release MELEE: its HitContext can reference the same player. */
+    public static void forget(java.util.UUID owner) {
+        MELEE.values().removeIf(v -> v.context().owner().getUUID().equals(owner));
+        BIRTH.values().removeIf(v -> v.owner().getUUID().equals(owner));
+    }
+    public static void enter(Entity projectile){open(projectile);}
+    public static void exit(){var scope=SCOPES.get();if(scope!=null)scope.close();else{ACTIVE.remove();PROJECTILE.remove();}}
     public static Entity projectile() { return PROJECTILE.get(); }
     public static BlackFoxEncounterApi.HitContext current() { return ACTIVE.get(); }
-    public static void clear() { BIRTH.clear(); MELEE.clear(); exit(); }
+    public static void clear() { BIRTH.clear(); MELEE.clear(); SCOPES.remove();ACTIVE.remove();PROJECTILE.remove(); }
     private BlackFoxAttackTrace() { }
 }

@@ -9,6 +9,7 @@ public record SoulDamageFeedback(
     float before,
     float after,
     boolean returned,
+    boolean attempted,
     float attack,
     float hurtInput,
     float hurtFinal,
@@ -21,7 +22,7 @@ public record SoulDamageFeedback(
     String phaseAfter,
     String reason) {
   public double loss() {
-    return Math.max(0, before - after);
+    return Float.isFinite(before - after) ? Math.max(0, before - after) : 0;
   }
 
   public boolean success() {

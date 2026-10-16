@@ -63,6 +63,7 @@ public final class AkatsukiDomainConfig {
         b.comment("Client blades per rain cue; NOT damage calls.")
             .defineInRange("rainBlades", 48, 8, 96);
     MAX_TARGETS = b.defineInRange("maximumTargetsPerPulse", 4, 1, 8);
+    // DEPRECATED legacy domain-budget keys: preserved for old configs/tests, not recovery limits.
     RATIO_5 = b.defineInRange("limitFractionLevel5", .10, 0, .20);
     RATIO_9 = b.defineInRange("limitFractionLevel9", .15, 0, .20);
     RATIO_10 = b.defineInRange("limitFractionLevel10", .20, 0, .20);
@@ -70,7 +71,9 @@ public final class AkatsukiDomainConfig {
     TARGET_SECOND = b.defineInRange("sharedTargetPerSecondHP", 4d, .1, 4d);
     PLAYER_SECOND = b.defineInRange("playerPerSecondHP", 6d, .1, 6d);
     DOMAIN_CAP =
-        b.comment("Shared rolling combat window; never refilled by opening a domain.")
+        b.comment(
+                "DEPRECATED: legacy 24 HP combat budget; soul recovery uses SoulDamageConfig safety"
+                    + " caps.")
             .defineInRange("combatWindowHP", 24d, 1d, 24d);
     FALLBACK_HIT = b.defineInRange("unknownLimitHitHP", .5, .1, .5);
     FALLBACK_SECOND = b.defineInRange("unknownLimitPerSecondHP", 1d, .1, 1d);

@@ -15,6 +15,7 @@ on:
       - codex/simplify-contract-lifecycle
       - codex/architecture-refinement
       - codex/white-fox-growth-rework
+      - codex/akatsuki-domain
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}

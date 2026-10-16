@@ -102,6 +102,14 @@ if result.returncode:
 marker = 'SOUL_VISUAL_CLIENT_COMPLETE' if args.soul else 'AKATSUKI_RAIN_CLIENT_COMPLETE' if args.rain else 'AKATSUKI_VISUAL_CLIENT_COMPLETE'
 if marker not in (root / 'client.log').read_text(errors='replace'):
     raise SystemExit(f'Client exited before completing fixture; inspect {root / "client.log"}')
+if args.soul:
+    content=(root / 'client.log').read_text(errors='replace')
+    missing=[m for m in ['SOUL_NATIVE_CLICK_PACKET','SOUL_DIRECT_CLICK_ACCEPTED','SOUL_NATIVE_ENEMY_STEP_OBSERVED','SOUL_DEBT_SETTLEMENT'] if m not in content]
+    if missing: raise SystemExit(f'Native aerial input is unverified: {missing}; see {root / "client.log"}')
+    import re, collections
+    accepted=collections.Counter(re.findall(r'SOUL_DIRECT_CLICK_ACCEPTED owner=\S+ core=(\d+)',content))
+    if not accepted or any(count!=1 for count in accepted.values()):
+        raise SystemExit('Expected one accepted activation per core; repeat clicks must not report success')
 if args.record and recorder is None:
     raise SystemExit('Scene was not observed; no recording was produced')
 if args.record:

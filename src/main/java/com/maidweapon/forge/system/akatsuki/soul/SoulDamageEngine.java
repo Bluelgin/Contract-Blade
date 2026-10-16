@@ -42,6 +42,7 @@ public final class SoulDamageEngine {
         && p.isAlive()
         && !p.isRemoved()
         && !p.isSpectator()
+        && !p.isCreative()
         && !applying()
         && p.getServer().isSameThread()
         && session != null
@@ -55,6 +56,8 @@ public final class SoulDamageEngine {
         && t.getHealth() > 0;
   }
 
+  /** Legacy independent policy helper, retained for compatibility tests; never mints recovery. */
+  @Deprecated
   public static double requested(ServerPlayer p, LivingEntity t, SoulDamagePolicy.Mode mode) {
     var state = DomainTargetCompatibility.inspect(t);
     double scale =
@@ -94,25 +97,51 @@ public final class SoulDamageEngine {
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession session) {
     if (!authorized(p, t, session)
         || now(p) - session.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) return null;
+    boolean recovery = SoulDamageDebtService.hasDebt(p, t);
+    double requested =
+        recovery
+            ? SoulDamageDebtService.available(p, t, false)
+            : Math.min(
+                SoulDamageConfig.BASE_CUT_MAXIMUM.get(),
+                Math.max(0, p.getAttributeValue(Attributes.ATTACK_DAMAGE))
+                    * SoulDamageConfig.BASE_CUT_FRACTION.get());
     double amount =
-        SAFETY.reserve(
-            p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested(p, t, SPACE_CUT), limits());
-    return amount <= 0 ? null : execute(p, t, session, SPACE_CUT, amount, null);
+        SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SPACE_CUT, requested, limits());
+    if (amount <= 0) return null;
+    if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
+    var reservation = SoulDamageDebtService.reserve(p, t, false, amount);
+    if (reservation == null) return null;
+    SoulDamageFeedback result = null;
+    try (reservation) {
+      try {
+        return result = execute(p, t, session, SPACE_CUT, reservation.total(), null, true);
+      } finally {
+        reservation.settle(
+            reservation.total(),
+            result == null ? 0 : result.loss(),
+            result != null && result.attempted(),
+            result == null ? -1 : result.sequence());
+      }
+    }
   }
 
-  public static double reserveBurst(ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
-    return !authorized(p, t, s)
-        ? 0
-        : SAFETY.reserve(
-            p.getUUID(), t.getUUID(), now(p), SOUL_BURST, requested(p, t, SOUL_BURST), limits());
+  public static SoulDamageDebtService.Reservation reserveBurst(
+      ServerPlayer p, LivingEntity t, AkatsukiDomainSession s) {
+    if (!authorized(p, t, s)) return null;
+    double request =
+        Math.min(
+            SoulDamageDebtService.available(p, t, true),
+            Math.min(
+                SoulDamageConfig.BURST_CEILING.get(),
+                SoulDamageConfig.HIT_CEILING.get() * SoulDamageConfig.BURST_STAGES.get()));
+    double amount = SAFETY.reserve(p.getUUID(), t.getUUID(), now(p), SOUL_BURST, request, limits());
+    return amount <= 0 ? null : SoulDamageDebtService.reserve(p, t, true, amount);
   }
 
-  /** Called only by the burst service holding a single-use reservation and bounded stage index. */
   static SoulDamageFeedback burstStage(
       ServerPlayer p, LivingEntity t, AkatsukiDomainSession s, double amount, Channel channel) {
-    return authorized(p, t, s)
-        ? execute(
-            p, t, s, SOUL_BURST, Math.min(amount, SoulDamageConfig.HIT_CEILING.get()), channel)
+    return authorized(p, t, s) && amount <= SoulDamageConfig.HIT_CEILING.get() + .0001
+        ? execute(p, t, s, SOUL_BURST, amount, channel, true)
         : null;
   }
 
@@ -122,9 +151,11 @@ public final class SoulDamageEngine {
       AkatsukiDomainSession session,
       SoulDamagePolicy.Mode mode,
       double amount,
-      Channel preferred) {
+      Channel preferred,
+      boolean recovery) {
     if (!Double.isFinite(amount) || amount <= 0) return null;
     var beforeState = DomainTargetCompatibility.inspect(t);
+    if (beforeState.protectedPhase() || DomainTargetCompatibility.initializing(t)) return null;
     var slot = ADAPTATION.computeIfAbsent(t, ignored -> new FeedbackSlot());
     slot.touched = now(p);
     var memory = slot.adaptation;
@@ -156,9 +187,11 @@ public final class SoulDamageEngine {
             ? DomainTargetCompatibility.hitWindow(t, false)
             : null;
     if (vanilla == null || SoulDamageConfig.KNOWN_ADAPTERS.get() && boss == null) return null;
-    boolean aggressive = SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
+    boolean aggressive =
+        recovery && SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
     float before = t.getHealth();
     boolean returned = false;
+    boolean[] attempted = {false};
     String reason = "NO_PROGRESS";
     var context =
         new SoulStrikeContext(
@@ -169,9 +202,12 @@ public final class SoulDamageEngine {
             mode,
             source,
             (float) amount,
+            recovery,
             aggressive && SoulDamageConfig.EVENT_OVERRIDE.get(),
             aggressive,
-            SoulDamageConfig.STRATEGY.get() == SoulDamageConfig.Strategy.UNRESTRICTED_EXPERIMENTAL);
+            recovery
+                && SoulDamageConfig.STRATEGY.get()
+                    == SoulDamageConfig.Strategy.UNRESTRICTED_EXPERIMENTAL);
     DomainTargetCompatibility.State afterState;
     try (context;
         vanilla;
@@ -181,6 +217,7 @@ public final class SoulDamageEngine {
           AkatsukiCombatCompat.guarded(
               () -> {
                 try {
+                  attempted[0] = true;
                   return t.hurt(source, (float) amount);
                 } catch (RuntimeException failure) {
                   callbackFailure[0] = failure;
@@ -235,6 +272,7 @@ public final class SoulDamageEngine {
             before,
             t.getHealth(),
             returned,
+            attempted[0],
             context.attack,
             context.hurtInput,
             context.hurtFinal,
@@ -251,9 +289,10 @@ public final class SoulDamageEngine {
     if (SoulDamageConfig.DIAGNOSTICS.get() || Boolean.getBoolean("contractblade.soul.validation"))
       LogUtils.getLogger()
           .info(
-              "SOUL_DAMAGE_RESULT attacker={} target={} {}",
+              "SOUL_DAMAGE_RESULT attacker={} target={} accounting={} {}",
               p.getUUID(),
               net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(t.getType()),
+              recovery ? "VERIFIED_RECOVERY" : "BASE_CUT",
               feedback);
     return feedback;
   }

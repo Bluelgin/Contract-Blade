@@ -71,7 +71,7 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
             b,
             pose.last().pose(),
             Vec3.ZERO,
-            delta,
+            delta.multiply(1 / .72, 1 / .85, 1 / .72),
             .012f,
             0x9D142B,
             shake > 0 ? shake * .6f : (12 - e.tickCount) / 20f);
@@ -107,7 +107,10 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
 
   private static void ribbon(
       VertexConsumer b, Matrix4f m, Vec3 a, Vec3 z, float width, int color, float alpha) {
-    var side = z.subtract(a).cross(new Vec3(0, 1, 0)).normalize().scale(width);
+    var direction = z.subtract(a);
+    var side = direction.cross(new Vec3(0, 1, 0));
+    if (side.lengthSqr() < 1e-8) side = direction.cross(new Vec3(1, 0, 0));
+    side = side.normalize().scale(width);
     vertex(b, m, a.add(side), color, alpha);
     vertex(b, m, z.add(side), color, alpha);
     vertex(b, m, z.subtract(side), color, alpha);

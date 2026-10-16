@@ -8,70 +8,140 @@
       "features": [
         "maid_weapon:akatsuki_garden"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.1,
+        "maid_weapon:soul_aerial_rate": 0,
+        "maid_weapon:anchor_lifetime_bonus": 0,
+        "maid_weapon:precision_tolerance": 0.04,
+        "maid_weapon:aerial_hover_ticks": 0,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 2,
       "features": [
         "maid_weapon:akatsuki_swords"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.12,
+        "maid_weapon:soul_aerial_rate": 0.3,
+        "maid_weapon:anchor_lifetime_bonus": 0,
+        "maid_weapon:precision_tolerance": 0.04,
+        "maid_weapon:aerial_hover_ticks": 0,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 3,
       "features": [
         "maid_weapon:akatsuki_ring"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.15,
+        "maid_weapon:soul_aerial_rate": 0.35,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.04,
+        "maid_weapon:aerial_hover_ticks": 0,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 4,
       "features": [
         "maid_weapon:akatsuki_tracking"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.18,
+        "maid_weapon:soul_aerial_rate": 0.4,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 0,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 5,
       "features": [
         "maid_weapon:akatsuki_adaptation"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.22,
+        "maid_weapon:soul_aerial_rate": 0.5,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 0,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 6,
       "features": [
         "maid_weapon:akatsuki_counter"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.26,
+        "maid_weapon:soul_aerial_rate": 0.6,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 4,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 7,
       "features": [
         "maid_weapon:akatsuki_chain"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.3,
+        "maid_weapon:soul_aerial_rate": 0.7,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 4,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 8,
       "features": [
         "maid_weapon:akatsuki_cloak"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.35,
+        "maid_weapon:soul_aerial_rate": 0.8,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 4,
+        "maid_weapon:debt_lifetime": 120
+      }
     },
     {
       "level": 9,
       "features": [
         "maid_weapon:akatsuki_rain"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.4,
+        "maid_weapon:soul_aerial_rate": 0.9,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 4,
+        "maid_weapon:debt_lifetime": 200
+      }
     },
     {
       "level": 10,
       "features": [
         "maid_weapon:akatsuki_complete"
       ],
-      "parameters": {}
+      "parameters": {
+        "maid_weapon:soul_recovery_rate": 0.45,
+        "maid_weapon:soul_aerial_rate": 1,
+        "maid_weapon:anchor_lifetime_bonus": 10,
+        "maid_weapon:precision_tolerance": 0.12,
+        "maid_weapon:aerial_hover_ticks": 4,
+        "maid_weapon:debt_lifetime": 200
+      }
     }
   ]
 }

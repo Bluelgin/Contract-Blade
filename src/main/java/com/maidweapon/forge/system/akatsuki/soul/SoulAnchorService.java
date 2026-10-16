@@ -1,196 +1,225 @@
 package com.maidweapon.forge.system.akatsuki.soul;
 
 import com.maidweapon.common.SoulDamageConfig;
-import com.maidweapon.forge.compat.AkatsukiCombatCompat;
 import com.maidweapon.forge.entity.SoulAnchorEntity;
 import com.maidweapon.forge.init.ModSoulEntities;
 import com.maidweapon.forge.system.akatsuki.*;
-import com.maidweapon.forge.system.mastery.ContractCombatCredits;
+import com.maidweapon.forge.system.akatsuki.provenance.*;
 import java.util.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.*;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.*;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.*;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.*;
 import net.minecraftforge.fml.common.Mod;
 
-/** Server-owned binding and actual-health hit confirmation. A visual contact cannot mint a soul. */
+/**
+ * Only an owner-directed native attack packet can activate an aerial core. DamageSource is
+ * insufficient.
+ */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulAnchorService {
   private record Key(UUID owner, UUID target) {}
 
-  private record Pending(ServerPlayer owner, LivingEntity target, float before, long tick) {}
-
   private static final Map<Key, SoulAnchorEntity> ANCHORS = new HashMap<>();
   private static final Map<Key, Long> NEXT = new HashMap<>();
-  private static final Map<Key, Pending> PENDING = new HashMap<>();
-  private static final Map<UUID, Long> LAST_HIT = new HashMap<>();
+  private static final Map<UUID, Long> LAST_HIT = new HashMap<>(), HOVER = new HashMap<>();
 
-  private static boolean unlocked(ServerPlayer p) {
-    return !p.isSpectator()
-        && AkatsukiDomainGrowth.has(AkatsukiDomainGrowth.capabilities(p), "swords")
-        && AkatsukiDomainAuthorization.allows(p, p.getMainHandItem());
+  @SubscribeEvent(priority = EventPriority.LOWEST)
+  public static void observed(DamageObservedEvent e) {
+    if (e.observation.recoverable() && DamageObservationService.issued(e.observation, e.target))
+      create(e.observation.proof().player(), e.target);
   }
 
-  @SubscribeEvent(priority = EventPriority.HIGHEST)
-  public static void observe(LivingAttackEvent event) {
-    observe(event.getEntity(), event.getSource(), event.getAmount());
-  }
-
-  private static void observe(LivingEntity target, DamageSource source, float amount) {
-    if (amount <= 0
-        || AkatsukiDomainDamage.domain(source)
-        || AkatsukiCombatCompat.secondary(source)
-        || source
-            .typeHolder()
-            .unwrapKey()
-            .map(k -> k.location().toString().equals("blade_tetra:akatsuki_execution"))
-            .orElse(false)) return;
-    var hit = ContractCombatCredits.resolveHit(source);
-    if (hit == null || hit.carrier() != hit.player().getMainHandItem() || !unlocked(hit.player()))
-      return;
-    var p = hit.player();
+  public static SoulAnchorEntity create(ServerPlayer p, LivingEntity t) {
     var s = AkatsukiDomainService.session(p);
-    if (!SoulDamageEngine.authorized(p, target, s) || p.distanceToSqr(target) > 1024) return;
-    var key = new Key(p.getUUID(), target.getUUID());
-    if (PENDING.size() < 256)
-      PENDING.putIfAbsent(key, new Pending(p, target, target.getHealth(), SoulDamageEngine.now(p)));
-  }
-
-  @SubscribeEvent(priority = EventPriority.HIGHEST)
-  public static void confirm(TickEvent.PlayerTickEvent event) {
-    if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer p)) return;
-    long now = SoulDamageEngine.now(p);
-    var ready = new ArrayList<Pending>();
-    PENDING
-        .entrySet()
+    if (!SoulAnchorBinding.unlocked(p)
+        || !SoulDamageEngine.authorized(p, t, s)
+        || SoulDamageDebtService.available(p, t, true) <= .01) return null;
+    ANCHORS
+        .values()
         .removeIf(
-            e -> {
-              var pending = e.getValue();
-              if (pending.owner == p) {
-                ready.add(pending);
-                return true;
-              }
-              return now - pending.tick > 2 || pending.owner.isRemoved();
+            c -> {
+              if (!SoulAnchorBinding.valid(c)) c.discard();
+              return c.isRemoved();
             });
-    for (var hit : ready)
-      if (hit.target.isAlive()
-          && !hit.target.isRemoved()
-          && hit.target.getHealth() < hit.before
-          && unlocked(p)) create(p, hit.target);
-  }
-
-  /** Invoked only after a real native HP loss; also used by the opt-in runtime fixture. */
-  public static SoulAnchorEntity create(ServerPlayer p, LivingEntity target) {
-    var s = AkatsukiDomainService.session(p);
-    if (!unlocked(p) || !SoulDamageEngine.authorized(p, target, s)) return null;
-    ANCHORS.entrySet().removeIf(entry -> entry.getValue().isRemoved());
-    long now = SoulDamageEngine.now(p);
-    var key = new Key(p.getUUID(), target.getUUID());
+    var key = new Key(p.getUUID(), t.getUUID());
     var existing = ANCHORS.get(key);
-    if (existing != null && !existing.isRemoved()) return existing;
+    if (existing != null) return existing;
+    long now = SoulDamageEngine.now(p);
     if (now < NEXT.getOrDefault(key, Long.MIN_VALUE)
         || ANCHORS.size() >= 256
         || ANCHORS.keySet().stream().filter(k -> k.owner.equals(p.getUUID())).count()
             >= SoulDamageConfig.OWNER_ANCHORS.get()) return null;
-    var core = ModSoulEntities.ANCHOR.get().create(p.serverLevel());
-    if (core == null) return null;
-    core.owner(p.getUUID());
-    core.original = target.getUUID();
-    core.binding = s.binding;
-    core.expires = now + SoulDamageConfig.ANCHOR_LIFETIME.get();
-    core.targetId(target.getId());
-    var direction = p.position().subtract(target.position()).multiply(1, 0, 1).normalize();
-    double distance = Math.min(p.distanceTo(target) * .5, target.getBbWidth() * .5 + 1.3);
-    var point =
-        target
-            .position()
-            .add(direction.scale(distance))
-            .add(direction.cross(new net.minecraft.world.phys.Vec3(0, 1, 0)).scale(.85));
-    core.moveTo(point.x, target.getY() + .25, point.z, 0, 0);
-    if (!p.serverLevel().addFreshEntity(core)) return null;
-    ANCHORS.put(key, core);
+    var point = SoulAnchorPlacement.find(t);
+    if (point == null) return null;
+    var c = ModSoulEntities.ANCHOR.get().create(p.serverLevel());
+    if (c == null) return null;
+    c.owner(p.getUUID());
+    c.original = t.getUUID();
+    c.binding = s.binding;
+    c.expires =
+        now
+            + SoulDamageConfig.ANCHOR_LIFETIME.get()
+            + (long) AkatsukiDomainGrowth.parameter(p, "anchor_lifetime_bonus");
+    c.targetId(t.getId());
+    c.moveTo(point.x, point.y, point.z, 0, 0);
+    if (!p.serverLevel().addFreshEntity(c)) return null;
+    ANCHORS.put(key, c);
     NEXT.put(key, now + SoulDamageConfig.ANCHOR_INTERVAL.get());
-    return core;
+    return c;
   }
 
-  public static boolean valid(SoulAnchorEntity core) {
-    if (core.owner == null || core.original == null || core.isRemoved()) return false;
-    var p = core.getServer().getPlayerList().getPlayer(core.owner);
-    // Fake players are not in PlayerList; runtime fixtures explicitly register their owner below.
-    if (p == null) p = FIXTURE_OWNERS.get(core.owner);
-    if (p == null
-        || p.level() != core.level()
-        || !p.isAlive()
-        || !unlocked(p)
-        || SoulDamageEngine.now(p) >= core.expires) return false;
-    var s = AkatsukiDomainService.session(p);
-    var target = p.serverLevel().getEntity(core.original);
-    return core.binding.equals(s.binding)
-        && target instanceof LivingEntity t
-        && t.getId() == core.targetId()
-        && SoulDamageEngine.authorized(p, t, s)
-        && core.distanceToSqr(t)
-            <= SoulDamageConfig.LINK_RANGE.get() * SoulDamageConfig.LINK_RANGE.get();
+  public static boolean valid(SoulAnchorEntity c) {
+    return SoulAnchorBinding.valid(c);
   }
-
-  private static final Map<UUID, ServerPlayer> FIXTURE_OWNERS = new HashMap<>();
 
   public static void fixtureOwner(ServerPlayer p) {
-    if (Boolean.getBoolean("contractblade.soul.validation")) FIXTURE_OWNERS.put(p.getUUID(), p);
+    SoulAnchorBinding.fixtureOwner(p);
   }
 
-  @SubscribeEvent(priority = EventPriority.HIGHEST)
+  public static void follow(SoulAnchorEntity c) {
+    if (!valid(c)) {
+      c.discard();
+      return;
+    }
+    var t = c.level().getEntity(c.targetId());
+    if (!(t instanceof LivingEntity living)) {
+      c.discard();
+      return;
+    }
+    var point = SoulAnchorPlacement.find(living);
+    if (point == null) c.discard();
+    else c.setPos(point);
+  }
+
+  @Deprecated
+  public static boolean strike(SoulAnchorEntity c, DamageSource source) {
+    return false;
+  }
+
+  /** Compatibility no-op: old tick-delta confirmation deliberately cannot mint a receipt. */
+  @Deprecated
+  public static void confirm(TickEvent.PlayerTickEvent e) {}
+
+  @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
   public static void attack(AttackEntityEvent e) {
-    if (!(e.getTarget() instanceof SoulAnchorEntity core)) return;
+    if (!(e.getTarget() instanceof SoulAnchorEntity c)) return;
     e.setCanceled(true);
-    if (e.getEntity() instanceof ServerPlayer p
-        && p.getAttackStrengthScale(.5f) >= .2f
-        && strike(core, p.damageSources().playerAttack(p))) {
+    if (!(e.getEntity() instanceof ServerPlayer p) || !precise(p, c)) return;
+    long now = SoulDamageEngine.now(p);
+    if (LAST_HIT.getOrDefault(c.getUUID(), Long.MIN_VALUE) == now) return;
+    LAST_HIT.put(c.getUUID(), now);
+    if (SoulBurstService.strike(p, c)) {
+      c.shake();
       p.resetAttackStrengthTicker();
       p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+      long hover = (long) AkatsukiDomainGrowth.parameter(p, "aerial_hover_ticks");
+      if (hover > 0) HOVER.put(p.getUUID(), now + hover);
+      if (Boolean.getBoolean("contractblade.soul.validation")
+          || Boolean.getBoolean("contractblade.soulVisual.validation"))
+        com.mojang.logging.LogUtils.getLogger()
+            .info(
+                "SOUL_DIRECT_CLICK_ACCEPTED owner={} core={} feetY={}",
+                p.getUUID(),
+                c.getId(),
+                p.getY());
     }
   }
 
-  public static boolean strike(SoulAnchorEntity core, DamageSource source) {
-    if (AkatsukiDomainDamage.domain(source)
-        || AkatsukiCombatCompat.secondary(source)
-        || !(source.getEntity() instanceof ServerPlayer p)
-        || !p.getUUID().equals(core.owner)
-        || !valid(core)) return false;
-    var credit = ContractCombatCredits.resolveHit(source);
-    if (credit == null || credit.player() != p || credit.carrier() != p.getMainHandItem())
-      return false;
-    double reach = p.getAttributeValue(net.minecraftforge.common.ForgeMod.ENTITY_REACH.get()) + .3;
-    if (core.getBoundingBox().distanceToSqr(p.getEyePosition()) > reach * reach
-        || !p.hasLineOfSight(core)) return false;
-    long now = SoulDamageEngine.now(p);
-    if (LAST_HIT.getOrDefault(core.getUUID(), Long.MIN_VALUE) == now) return false;
-    LAST_HIT.put(core.getUUID(), now);
-    boolean accepted = SoulBurstService.strike(p, core);
-    if (accepted) core.shake();
-    return accepted;
+  private static boolean precise(ServerPlayer p, SoulAnchorEntity c) {
+    if (!p.getUUID().equals(c.owner)
+        || !valid(c)
+        || p.onGround()
+        || p.getEyeY() < c.getY() - .8
+        || p.getAttackStrengthScale(.5f) < .2f) return false;
+    double reach =
+        Math.min(
+            8,
+            Math.max(0, p.getAttributeValue(net.minecraftforge.common.ForgeMod.ENTITY_REACH.get()))
+                + .3);
+    var eye = p.getEyePosition();
+    var end = eye.add(p.getLookAngle().scale(reach));
+    var hit =
+        c.getBoundingBox()
+            .inflate(AkatsukiDomainGrowth.parameter(p, "precision_tolerance"))
+            .clip(eye, end);
+    if (hit.isEmpty()) return false;
+    double distance = eye.distanceToSqr(hit.get());
+    var block =
+        p.level()
+            .clip(
+                new ClipContext(
+                    eye, hit.get(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p));
+    if (block.getType() != HitResult.Type.MISS
+        && eye.distanceToSqr(block.getLocation()) + 1e-5 < distance) return false;
+    for (var other :
+        p.level()
+            .getEntities(
+                p,
+                p.getBoundingBox().expandTowards(end.subtract(eye)).inflate(1),
+                x -> x != c && x.isPickable() && !(x instanceof SoulAnchorEntity))) {
+      var occlusion = other.getBoundingBox().clip(eye, hit.get());
+      if (occlusion.isPresent() && eye.distanceToSqr(occlusion.get()) + 1e-5 < distance)
+        return false;
+    }
+    return true;
+  }
+
+  @SubscribeEvent
+  public static void playerTick(TickEvent.PlayerTickEvent e) {
+    if (e.phase != TickEvent.Phase.END || !(e.player instanceof ServerPlayer p)) return;
+    var until = HOVER.get(p.getUUID());
+    if (until != null) {
+      if (SoulDamageEngine.now(p) >= until || p.onGround() || !SoulAnchorBinding.unlocked(p))
+        HOVER.remove(p.getUUID());
+      else if (p.getDeltaMovement().y < 0) {
+        p.setDeltaMovement(p.getDeltaMovement().multiply(1, .15, 1));
+        p.hurtMarked = true;
+      }
+    }
   }
 
   @SubscribeEvent
   public static void prune(TickEvent.ServerTickEvent e) {
     if (e.phase != TickEvent.Phase.END || e.getServer().getTickCount() % 20 != 0) return;
     long now = e.getServer().overworld().getGameTime();
-    ANCHORS.entrySet().removeIf(entry -> entry.getValue().isRemoved());
-    NEXT.entrySet().removeIf(entry -> entry.getValue() < now - 200);
-    LAST_HIT.entrySet().removeIf(entry -> entry.getValue() < now - 60);
+    ANCHORS
+        .values()
+        .removeIf(
+            c -> {
+              if (!valid(c)) c.discard();
+              return c.isRemoved();
+            });
+    HOVER.values().removeIf(t -> t <= now);
+    NEXT.values().removeIf(t -> t < now - 200);
+    LAST_HIT.values().removeIf(t -> t < now - 60);
+  }
+
+  @SubscribeEvent
+  public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
+    UUID id = e.getEntity().getUUID();
+    ANCHORS
+        .values()
+        .removeIf(
+            c -> {
+              if (id.equals(c.owner)) c.discard();
+              return c.isRemoved();
+            });
+    HOVER.remove(id);
   }
 
   @SubscribeEvent
   public static void stop(ServerStoppedEvent e) {
     ANCHORS.clear();
     NEXT.clear();
-    PENDING.clear();
     LAST_HIT.clear();
-    FIXTURE_OWNERS.clear();
+    HOVER.clear();
+    SoulAnchorBinding.clear();
     SoulBurstService.clear();
   }
 

@@ -162,7 +162,16 @@ if (!stableRelease) sourceSets.main.resources { srcDir 'src/generated/resources'
 
 
 // 依赖配置
+jarJar.enable()
+tasks.named('jar').configure { archiveClassifier = 'slim' }
+tasks.named('jarJar').configure { archiveClassifier = ''; finalizedBy 'reobfJarJar' }
+
 dependencies {
+    implementation 'io.github.llamalad7:mixinextras-common:0.4.1'
+    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.4.1'
+    runtimeOnly 'io.github.llamalad7:mixinextras-forge:0.4.1'
+    jarJar('io.github.llamalad7:mixinextras-forge:0.4.1') { jarJar.ranged(it, '[0.4.1,0.5)') }
+
     // Optional local play-test UI only; remap the published jar rather than loading SRG names from run/mods.
     if (providers.gradleProperty('configScreens').map { it.toBoolean() }.orElse(false).get()) {
         runtimeOnly fg.deobf("local:configured:1.20.1-2.2.3")
@@ -172,7 +181,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     // Only the native extension API is linked. TLM itself is never bundled.
-    if (ciMode) {
+    if (ciMode && !file("libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar").exists()) {
         compileOnly fg.deobf("curse.maven:touhou-little-maid-355044:8061847")
     } else {
         compileOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
@@ -279,6 +288,9 @@ dependencies {
         ['cataclysm-soul-test', 'legendary-soul-test', 'lionfish-soul-test', 'curios-soul-test'].each { name ->
             runtimeOnly fg.deobf("compat:${name}:1")
         }
+    }
+    if (providers.gradleProperty('soulGoetyOnlyTest').orElse('false').get().toBoolean()) {
+        ['goety-soul-test','curios-soul-test'].each { name -> runtimeOnly fg.deobf("compat:${name}:1") }
     }
     if (providers.gradleProperty('soulGoetyTest').orElse('false').get().toBoolean()) {
         ['goety-soul-test', 'revelation-soul-test', 'ending-soul-test', 'curios-soul-test'].each { name ->

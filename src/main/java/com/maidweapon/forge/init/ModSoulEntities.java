@@ -2,8 +2,6 @@ package com.maidweapon.forge.init;
 
 import com.maidweapon.forge.entity.SoulAnchorEntity;
 import net.minecraft.world.entity.*;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.*;
 
@@ -22,11 +20,6 @@ public final class ModSoulEntities {
                   .noSave()
                   .noSummon()
                   .build("maid_weapon:soul_anchor"));
-
-  @SubscribeEvent
-  public static void attributes(EntityAttributeCreationEvent e) {
-    e.put(ANCHOR.get(), LivingEntity.createLivingAttributes().build());
-  }
 
   private ModSoulEntities() {}
 }
