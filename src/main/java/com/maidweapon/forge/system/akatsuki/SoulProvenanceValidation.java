@@ -138,6 +138,7 @@ public final class SoulProvenanceValidation {
     negatives(server, p);
     isolation(server, p);
     interaction(server, p);
+    summonedSwordInteraction(server, p);
     lateAndInvalidated(server, p);
     highBudgets(server, p);
     bosses(server, p);
@@ -477,6 +478,73 @@ public final class SoulProvenanceValidation {
     net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new DamageObservedEvent(receipt, t));
     check(!SoulDamageDebtService.hasDebt(p, t), "receipt replay cannot reset invalidated debt");
     t.discard();
+  }
+
+  /**
+   * Actual SlashBlade registry projectile + native ContractCombatCredits launch
+   * stamping. Simulates its next swept movement without relying on renderer frames.
+   */
+  private static void summonedSwordInteraction(MinecraftServer server, ServerPlayer p) {
+    var l = p.serverLevel();
+    setLevel(p, 2);
+    advance(l, 240);
+    var t = cap(l);
+    p.moveTo(t.getX() - 3, t.getY(), t.getZ(), 0, 0);
+    p.setOnGround(true); // Projectiles intentionally do NOT require the owner to jump.
+    nativeHit(t, p, 100);
+    var core = SoulAnchorService.create(p, t);
+    check(core != null && core.getY() >= t.getBoundingBox().maxY + 4,
+        "summoned sword high core");
+    var summonType = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(
+        net.minecraft.resources.ResourceLocation.parse("slashblade:abstract_summoned_sword"));
+    check(summonType != null && summonType != EntityType.PIG,
+        "SlashBlade native summoned sword entity ID available");
+    var foreignShot = summonType.create(l);
+    check(foreignShot instanceof net.minecraft.world.entity.projectile.Projectile,
+        "native summoned sword must be projectile");
+    var foreignProjectile = (net.minecraft.world.entity.projectile.Projectile) foreignShot;
+    foreignProjectile.setOwner(foreign);
+    foreignProjectile.moveTo(core.getX() - 4, core.getY() + .9, core.getZ(), 0, 0);
+    foreignProjectile.setDeltaMovement(6, 0, 0);
+    l.addFreshEntity(foreignProjectile);
+    check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
+        "foreign native sword cannot trigger owner's core");
+    foreignProjectile.discard();
+
+    // Non-SlashBlade projectiles must not become an implicit authorization token.
+    var arrow = new net.minecraft.world.entity.projectile.Arrow(l, p);
+    arrow.setPos(core.getX() - 4, core.getY() + .9, core.getZ());
+    arrow.setDeltaMovement(6, 0, 0);
+    l.addFreshEntity(arrow);
+    check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
+        "ordinary projectile cannot trigger core");
+    arrow.discard();
+
+    var ownedShot = summonType.create(l);
+    check(ownedShot instanceof net.minecraft.world.entity.projectile.Projectile,
+        "owned native summoned sword must be projectile");
+    var sword = (net.minecraft.world.entity.projectile.Projectile) ownedShot;
+    sword.setOwner(p);
+    sword.moveTo(core.getX() - 4, core.getY() + .9, core.getZ(), 0, 0);
+    sword.setDeltaMovement(6, 0, 0);
+    l.addFreshEntity(sword);
+    var evidence = com.maidweapon.forge.system.mastery.ContractCombatCredits.resolveHit(
+        p.damageSources().indirectMagic(sword, p));
+    check(evidence != null && evidence.player() == p,
+        "native projectile launch must retain exact carrier proof");
+    float hp = t.getHealth();
+    check(SoulAnchorProjectileService.sweep(l, core) && core.burstUntil > 0,
+        "owner's launched summoned sword triggers soul core from the ground");
+    check(sword.isRemoved() && !SoulAnchorProjectileService.sweep(l, core),
+        "one sword cannot trigger a second burst");
+    for (int i = 0; i < 14; i++) {
+      advance(l, 1);
+      SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+    }
+    check(near(hp - t.getHealth(), 28.5),
+        "summoned sword uses identical bounded verified debt as direct melee");
+    t.discard();
+    LogUtils.getLogger().info("SOUL_NATIVE_SUMMONED_SWORD_PASS");
   }
 
   private static void lateAndInvalidated(MinecraftServer server, ServerPlayer p) {
