@@ -5,6 +5,8 @@ import com.maidweapon.common.system.LoyaltySystem;
 import com.maidweapon.forge.compat.BladeTetraStoryCompat;
 import com.maidweapon.forge.compat.SlashBladeCompat;
 import com.maidweapon.forge.item.MaidInfusion;
+import com.maidweapon.forge.api.IntrinsicSpiritApi;
+import com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 import com.maidweapon.forge.system.fox.FoxSpiritState;
 import com.maidweapon.forge.system.mastery.ContractMasteryService;
@@ -25,7 +27,6 @@ public final class ContractTooltipComposer {
     public static void append(ItemStack stack, @Nullable Player viewer, List<Component> tooltip) {
         MaidWeaponData data = MaidInfusion.data(stack);
         var mastery = ContractMasteryService.getProgress(viewer);
-        boolean stored = MaidInfusion.containsMaid(stack);
         boolean transferred = ContractCarrierData.isContractSuperseded(stack);
         boolean ownerAccess = viewer != null && ContractCarrierData.isOwner(stack, viewer);
         boolean expanded = Screen.hasShiftDown();
@@ -33,7 +34,12 @@ public final class ContractTooltipComposer {
         boolean black = FoxSpiritState.BLACK.equals(spirit) && FoxSpiritState.isOriginalHome(stack);
         boolean white = FoxSpiritState.WHITE.equals(spirit) && FoxSpiritState.isOriginalHome(stack);
         boolean red = BladeTetraStoryCompat.isAkatsuki(stack)
-                && com.maidweapon.forge.api.IntrinsicSpiritApi.hasIntrinsicSpirit(stack, "blade_tetra:akatsuki");
+                && IntrinsicSpiritApi.hasIntrinsicSpirit(stack, "blade_tetra:akatsuki");
+        // The intrinsic Akatsuki channel can be archived independently of ordinary maid
+        // storage. Never claim that an archived (or manifested) spirit is stationed.
+        boolean stored = red
+                ? IntrinsicSpiritApi.stored(stack, "blade_tetra:akatsuki")
+                : MaidInfusion.containsMaid(stack);
 
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.identity",
@@ -57,7 +63,16 @@ public final class ContractTooltipComposer {
                     data.getResonance(), MaidWeaponData.maximumResonance()));
         }
 
-        if (!kind.isEmpty() && (!ownerAccess || !stored || transferred
+        if (red && !stored) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.spirit_away")
+                    .withStyle(ChatFormatting.GRAY));
+        } else if (red && (viewer == null || !sameCarrier(stack, viewer.getMainHandItem()))) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.not_mainhand")
+                    .withStyle(ChatFormatting.GRAY));
+        } else if (red && (!ownerAccess || transferred || !active(viewer, stack, kind))) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.not_authorized")
+                    .withStyle(ChatFormatting.GRAY));
+        } else if (!kind.isEmpty() && (!ownerAccess || !stored || transferred
                 || !active(viewer, stack, kind))) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.inactive")
                     .withStyle(ChatFormatting.GRAY));
@@ -170,27 +185,69 @@ public final class ContractTooltipComposer {
         }
     }
 
+    /**
+     * Red Moon presents real server-resolved mastery values, not a claim that damage
+     * bypasses a protected boss phase. Aerial recovery only unlocks at Lv.2.
+     */
     private static void appendRed(List<Component> tooltip, CompoundTag profile, boolean expanded) {
-        double limit = ContractTooltipSnapshot.value(profile, "space_cut_level_cap");
-        Component cap = limit <= 0 ? Component.translatable("maid_weapon.tooltip.compact.red.uncapped")
-                : Component.translatable("maid_weapon.tooltip.compact.red.cap", decimal(limit));
+        double capValue = ContractTooltipSnapshot.value(profile, "space_cut_level_cap");
+        Component cap = capValue <= 0
+                ? Component.translatable("maid_weapon.tooltip.compact.red.uncapped")
+                : Component.translatable("maid_weapon.tooltip.compact.red.cap", decimal(capValue));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.domain")
+                .withStyle(ChatFormatting.DARK_RED));
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.red.cut",
                 percent(ContractTooltipSnapshot.value(profile, "space_cut_multiplier")),
                 cap).withStyle(ChatFormatting.RED));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.red.soul",
-                percent(ContractTooltipSnapshot.value(profile, "soul_recovery_rate")),
-                percent(ContractTooltipSnapshot.value(profile, "soul_aerial_rate")))
+
+        String ordinary = percent(ContractTooltipSnapshot.value(profile, "soul_recovery_rate"));
+        boolean aerial = ContractTooltipSnapshot.unlocked(profile, "akatsuki_swords");
+        if (aerial)
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.soul_ready",
+                    ordinary, percent(ContractTooltipSnapshot.value(profile, "soul_aerial_rate")))
+                    .withStyle(ChatFormatting.GRAY));
+        else
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.soul_locked", ordinary)
+                    .withStyle(ChatFormatting.GRAY));
+
+        if (!expanded) return;
+        tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.cut_explain")
                 .withStyle(ChatFormatting.GRAY));
-        if (expanded) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain"));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_soul_anchor"));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.early"));
-            if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_adaptation"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.middle"));
-            if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_rain"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.akatsuki_domain.late"));
+        if (capValue <= 0)
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.no_level_cap")
+                    .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.debt_explain")
+                .withStyle(ChatFormatting.GRAY));
+        if (aerial) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_spawn")
+                    .withStyle(ChatFormatting.AQUA));
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_hit")
+                    .withStyle(ChatFormatting.GRAY));
+        } else {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_locked")
+                    .withStyle(ChatFormatting.GRAY));
         }
+        if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_cloak"))
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.rescue")
+                    .withStyle(ChatFormatting.GRAY));
+        appendRedSkillGroup(tooltip, profile, 0, 4);
+        appendRedSkillGroup(tooltip, profile, 4, 8);
+        appendRedSkillGroup(tooltip, profile, 8, 10);
+    }
+
+    /** Three compact sections instead of ten redundant paragraphs at max mastery. */
+    private static void appendRedSkillGroup(List<Component> tooltip, CompoundTag profile,
+                                            int from, int to) {
+        var names = new ArrayList<String>();
+        for (int index = from; index < to; index++) {
+            String ability = AkatsukiDomainGrowth.ROUTE.get(index);
+            if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_" + ability))
+                names.add(Component.translatable("maid_weapon.tooltip.red.skill." + ability).getString());
+        }
+        if (!names.isEmpty())
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.skill_group",
+                    from + 1, to, String.join(" · ", names)).withStyle(ChatFormatting.DARK_GRAY));
     }
 
     private static void appendContractSection(ItemStack stack, MaidWeaponData data, List<Component> tooltip) {

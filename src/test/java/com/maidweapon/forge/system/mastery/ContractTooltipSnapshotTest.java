@@ -9,6 +9,27 @@ import org.junit.jupiter.api.Test;
 
 class ContractTooltipSnapshotTest {
   @Test
+  void akatsukiCoreUnlockAndMasteryHpLimitAreNotConfused() {
+    var routes = Map.of("red", AkatsukiDomainGrowth.fallback());
+    var first = ContractTooltipSnapshot.project(1, routes).getCompound("red");
+    assertTrue(ContractTooltipSnapshot.unlocked(first, "akatsuki_garden"));
+    assertFalse(ContractTooltipSnapshot.unlocked(first, "akatsuki_swords"));
+    assertEquals(0, ContractTooltipSnapshot.value(first, "soul_aerial_rate"), 1e-9);
+    assertEquals(1, ContractTooltipSnapshot.value(first, "space_cut_level_cap"), 1e-9);
+    var second = ContractTooltipSnapshot.project(2, routes).getCompound("red");
+    assertTrue(ContractTooltipSnapshot.unlocked(second, "akatsuki_swords"));
+    assertTrue(ContractTooltipSnapshot.value(second, "soul_aerial_rate") > 0);
+    var seventh = ContractTooltipSnapshot.project(7, routes).getCompound("red");
+    assertFalse(ContractTooltipSnapshot.unlocked(seventh, "akatsuki_cloak"));
+    var eighth = ContractTooltipSnapshot.project(8, routes).getCompound("red");
+    assertTrue(ContractTooltipSnapshot.unlocked(eighth, "akatsuki_cloak"));
+    var max = ContractTooltipSnapshot.project(10, routes).getCompound("red");
+    assertEquals(0, ContractTooltipSnapshot.value(max, "space_cut_level_cap"), 1e-9);
+    assertEquals(1, ContractTooltipSnapshot.value(max, "soul_aerial_rate"), 1e-9);
+    assertTrue(ContractTooltipSnapshot.unlocked(max, "akatsuki_complete"));
+  }
+
+  @Test
   void projectsRealResolvedValuesAndOnlyUnlockedFeatures() {
     var routes = Map.of(
       "black", BlackFoxSwordCoreGrowth.fallback(),
