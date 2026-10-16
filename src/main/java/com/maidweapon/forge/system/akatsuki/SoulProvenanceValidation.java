@@ -520,6 +520,28 @@ public final class SoulProvenanceValidation {
         "ordinary projectile cannot trigger core");
     arrow.discard();
 
+    // A locked-on boss would otherwise redirect the native sword away from a
+    // high core. Explicit player aim must retarget a fresh sword at launch.
+    var targetDirection = core.getBoundingBox().getCenter().subtract(p.getEyePosition());
+    p.setYRot((float) Math.toDegrees(Math.atan2(-targetDirection.x, targetDirection.z)));
+    p.setXRot((float) -Math.toDegrees(Math.atan2(targetDirection.y,
+        Math.sqrt(targetDirection.x * targetDirection.x
+            + targetDirection.z * targetDirection.z))));
+    var lockedShot = summonType.create(l);
+    check(lockedShot instanceof net.minecraft.world.entity.projectile.Projectile,
+        "locked native summoned sword must be projectile");
+    var lockedSword = (net.minecraft.world.entity.projectile.Projectile) lockedShot;
+    lockedSword.setOwner(p);
+    lockedSword.setPos(p.getX(), p.getEyeY(), p.getZ());
+    lockedSword.setDeltaMovement(3, 0, 0); // boss-lock direction, NOT the high core
+    l.addFreshEntity(lockedSword);
+    check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
+        "distant native shot cannot trigger without physically reaching the core");
+    var expectedFlight = core.getBoundingBox().getCenter().subtract(lockedSword.position()).normalize();
+    check(lockedSword.getDeltaMovement().normalize().dot(expectedFlight) > .99,
+        "player crosshair overrides native locked-boss sword trajectory");
+    lockedSword.discard();
+
     var ownedShot = summonType.create(l);
     check(ownedShot instanceof net.minecraft.world.entity.projectile.Projectile,
         "owned native summoned sword must be projectile");
