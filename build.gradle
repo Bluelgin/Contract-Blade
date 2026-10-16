@@ -111,6 +111,7 @@ minecraft {
             property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
             property 'contractblade.soulVisual.validation', providers.gradleProperty('soulVisualTest').orElse('false').get()
             property 'contractblade.soul.validation', providers.gradleProperty('soulTest').orElse('false').get()
+            property 'contractblade.soul.mowzieValidation', providers.gradleProperty('soulMowzieTest').orElse('false').get()
             property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
             property 'contractblade.akatsukiVisual.validation', providers.gradleProperty('akatsukiVisualTest').orElse('false').get()
             property 'contractblade.akatsukiRain.validation', providers.gradleProperty('akatsukiRainTest').orElse('false').get()
@@ -284,6 +285,10 @@ dependencies {
         runtimeOnly fg.deobf(nativePowerDependency)
     }
     // Explicit development-only boss fixture jars, never runtime dependencies of the release.
+    if (providers.gradleProperty('soulMowzieTest').orElse('false').get().toBoolean()) {
+        runtimeOnly fg.deobf('compat:mowziesmobs:1.8.2')
+        runtimeOnly fg.deobf('compat:geckolib-forge-1.20.1:4.8.4')
+    }
     if (providers.gradleProperty('soulBossTest').orElse('false').get().toBoolean()) {
         ['cataclysm-soul-test', 'legendary-soul-test', 'lionfish-soul-test', 'curios-soul-test'].each { name ->
             runtimeOnly fg.deobf("compat:${name}:1")

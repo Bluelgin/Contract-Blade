@@ -155,6 +155,78 @@ public final class SoulProvenanceValidation {
     check(!AkatsukiDomainService.session(p).active(), "switch suspends");
   }
 
+  /** Exact installed Mowzie 1.8.2 entity, not a simulated weakness gate. */
+  public static void runMowzie(MinecraftServer server) throws Exception {
+    install();
+    var l = server.overworld();
+    var p = player(l, "WroughtnautSoulOwner");
+    var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(
+        net.minecraft.resources.ResourceLocation.parse("mowziesmobs:ferrous_wroughtnaut"));
+    check(type != null && type != EntityType.PIG, "real wroughtnaut installed");
+    var t = (LivingEntity) type.create(l);
+    check(t != null, "real wroughtnaut entity");
+    t.moveTo(3, 150, .5, 0, 0);
+    ((Mob) t).setNoAi(true);
+    l.addFreshEntity(t);
+    var weakness = t.getClass().getField("vulnerable");
+    check(!weakness.getBoolean(t), "initial closed weakness");
+    var originalStrategy = SoulDamageConfig.STRATEGY.get();
+    try {
+      float hp = t.getHealth();
+      nativeHit(t, p, 10);
+      check(near(hp, t.getHealth()), "ordinary front attack remains blocked");
+      var s = AkatsukiDomainService.session(p);
+      s.contact(l.getGameTime(), t.getUUID());
+      SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.STANDARD);
+      var standard = SoulDamageEngine.cut(p, t, s);
+      check(standard != null && near(standard.loss(), 0), "standard respects native weakness");
+      advance(l, 20);
+      s.contact(l.getGameTime(), t.getUUID());
+      SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.AGGRESSIVE);
+      var cut = SoulDamageEngine.cut(p, t, s);
+      check(cut != null && cut.loss() > 0 && !cut.compensated(), "aggressive native cut really hurts");
+      check(!weakness.getBoolean(t), "weakness flag untouched");
+      check(t.getKillCredit() == p, "native player kill attribution retained");
+      check(((Mob) t).getTarget() == p, "native aggro retained");
+      hp = t.getHealth();
+      nativeHit(t, p, 10);
+      check(near(hp, t.getHealth()), "ordinary hit still blocked after scope");
+      check(SoulStrikeContext.current() == null, "no bypass scope leaked");
+      var core = SoulAnchorService.create(p, t);
+      check(core != null, "real wroughtnaut core created");
+      double expected = baseBurst(p, t);
+      aim(p, core);
+      p.attack(core);
+      check(core.burstUntil > 0, "real core click accepted");
+      for (int i = 0; i < 14; i++) {
+        advance(l, 1);
+        SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+      }
+      check(near(hp - t.getHealth(), expected), "real four-stage native damage");
+      check(!weakness.getBoolean(t), "burst leaves weakness untouched");
+      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_PASS cutHP={} burstHP={} expectedBurstHP={} credit={}",
+          cut.loss(), hp - t.getHealth(), expected, t.getKillCredit().getUUID());
+      // Native hurt() must initiate its normal death animation rather than remove the boss.
+      setLevel(p, 10);
+      p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(10000);
+      advance(l, 240);
+      s = AkatsukiDomainService.session(p);
+      s.contact(l.getGameTime(), t.getUUID());
+      var finisher = SoulDamageEngine.cut(p, t, s);
+      check(finisher != null && finisher.loss() > 0 && t.getHealth() <= 0, "native lethal damage");
+      check(t.getClass().getMethod("getAnimation").invoke(t)
+          == t.getClass().getField("DIE_ANIMATION").get(null), "native death animation entered");
+      check(!t.isRemoved(), "not forcibly discarded on lethal strike");
+      for (int i = 0; i < 160 && !t.isRemoved(); i++) { advance(l, 1); t.tick(); }
+      check(t.isRemoved(), "native death sequence finishes removal");
+      check(SoulStrikeContext.current() == null, "lethal scope closed");
+      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NATIVE_DEATH_PASS");
+    } finally {
+      SoulDamageConfig.STRATEGY.set(originalStrategy);
+      if (!t.isRemoved()) t.discard();
+    }
+  }
+
   public static boolean nativeHit(LivingEntity t, ServerPlayer p, float amount) {
     if (!Boolean.getBoolean("contractblade.soul.validation")
         && !Boolean.getBoolean("contractblade.soulVisual.validation"))

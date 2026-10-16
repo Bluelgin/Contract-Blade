@@ -14,7 +14,9 @@ public final class SoulDamageValidation {
   public static void started(ServerStartedEvent e) {
     if (!Boolean.getBoolean("contractblade.soul.validation")) return;
     try {
-      SoulProvenanceValidation.run(e.getServer());
+      if (Boolean.getBoolean("contractblade.soul.mowzieValidation"))
+        SoulProvenanceValidation.runMowzie(e.getServer());
+      else SoulProvenanceValidation.run(e.getServer());
       com.mojang.logging.LogUtils.getLogger().info("SOUL_SERVER_PASS");
     } catch (Throwable failure) {
       com.mojang.logging.LogUtils.getLogger().error("SOUL_SERVER_FAIL", failure);

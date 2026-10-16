@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--gradle', default='gradle')
 p.add_argument('--bosses', action='store_true')
+p.add_argument('--mowzie', action='store_true', help='Exact Mowzie 1.8.2 native weakness/death fixture')
 p.add_argument('--goety', action='store_true')
 p.add_argument('--goety-only',action='store_true')
 p.add_argument('--output', type=Path)
@@ -31,6 +32,8 @@ command = [args.gradle, '--no-daemon', 'runServer', '-x', 'downloadAssets', '-Pc
     '-PtlmRuntimeTest=true', '-PfoxBladeTetraTest=true', '-PsoulTest=true', f'-PcompatRunDir={root}']
 if args.bosses:
     command.append('-PsoulBossTest=true')
+if args.mowzie:
+    command.append('-PsoulMowzieTest=true')
 if args.goety_only:
     command.append('-PsoulGoetyOnlyTest=true')
 if args.goety:
@@ -42,7 +45,7 @@ with log.open('w') as out:
                             stderr=subprocess.STDOUT, timeout=1200)
 content = log.read_text(errors='replace')
 for line in content.splitlines():
-    if any(marker in line for marker in ('SOUL_RECOVERY_LEVEL','SOUL_REAL_BOSS_PROVENANCE','SOUL_HIGH_BUDGET','SOUL_PROVENANCE_BENCHMARK','SOUL_HP_COMPARISON', 'SOUL_REAL_BOSS_COMPARISON',
+    if any(marker in line for marker in ('SOUL_WROUGHTNAUT_', 'SOUL_RECOVERY_LEVEL','SOUL_REAL_BOSS_PROVENANCE','SOUL_HIGH_BUDGET','SOUL_PROVENANCE_BENCHMARK','SOUL_HP_COMPARISON', 'SOUL_REAL_BOSS_COMPARISON',
                                          'SOUL_BOSS_NOT_INSTALLED', 'SOUL_SERVER_')):
         print(line)
 if result.returncode or 'SOUL_SERVER_PASS' not in content or 'SOUL_SERVER_FAIL' in content:

@@ -17,6 +17,8 @@ $taskMods = @(
     'tmp/compat-test/curios-forge-5.14.1+1.20.1.jar',
     'tmp/compat-test/dummmmmmy-1.20-2.0.12-forge.jar',
     'tmp/compat-test/moonlight-1.20-2.16.37-forge.jar',
+    'tmp/compat-test/mowziesmobs-1.8.2.jar',
+    'tmp/compat-test/geckolib-forge-1.20.1-4.8.4.jar',
     'libs/configured-1.20.1-2.2.3.jar'
 )
 foreach ($taskRelative in $taskMods) {
