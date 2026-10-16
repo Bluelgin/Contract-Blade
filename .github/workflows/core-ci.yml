@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - codex/unified-contract-interior-land
+      - codex/fox-level-stats-passive-blessing
   pull_request:
     branches:
       - master
