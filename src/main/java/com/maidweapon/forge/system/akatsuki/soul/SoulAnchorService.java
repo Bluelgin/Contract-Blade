@@ -7,7 +7,6 @@ import com.maidweapon.forge.system.akatsuki.*;
 import com.maidweapon.forge.system.akatsuki.provenance.*;
 import java.util.*;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.*;
@@ -18,8 +17,8 @@ import net.minecraftforge.eventbus.api.*;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Only an owner-directed native attack packet can activate an aerial core. DamageSource is
- * insufficient.
+ * One authority for owner-directed melee and launch-authenticated native
+ * SlashBlade summoned-sword collisions. Raw DamageSource never activates cores.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulAnchorService {
@@ -110,38 +109,43 @@ public final class SoulAnchorService {
     }
   }
 
-  @Deprecated
-  public static boolean strike(SoulAnchorEntity c, DamageSource source) {
-    return false;
-  }
-
-  /** Compatibility no-op: old tick-delta confirmation deliberately cannot mint a receipt. */
-  @Deprecated
-  public static void confirm(TickEvent.PlayerTickEvent e) {}
-
   @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
   public static void attack(AttackEntityEvent e) {
     if (!(e.getTarget() instanceof SoulAnchorEntity c)) return;
     e.setCanceled(true);
     if (!(e.getEntity() instanceof ServerPlayer p) || !precise(p, c)) return;
-    long now = SoulDamageEngine.now(p);
-    if (LAST_HIT.getOrDefault(c.getUUID(), Long.MIN_VALUE) == now) return;
-    LAST_HIT.put(c.getUUID(), now);
-    if (SoulBurstService.strike(p, c)) {
-      c.shake();
+    if (activate(p, c)) {
       p.resetAttackStrengthTicker();
       p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
       long hover = (long) AkatsukiDomainGrowth.parameter(p, "aerial_hover_ticks");
-      if (hover > 0) HOVER.put(p.getUUID(), now + hover);
+      if (hover > 0) HOVER.put(p.getUUID(), SoulDamageEngine.now(p) + hover);
       if (Boolean.getBoolean("contractblade.soul.validation")
           || Boolean.getBoolean("contractblade.soulVisual.validation"))
-        com.mojang.logging.LogUtils.getLogger()
-            .info(
-                "SOUL_DIRECT_CLICK_ACCEPTED owner={} core={} feetY={}",
-                p.getUUID(),
-                c.getId(),
-                p.getY());
+        com.mojang.logging.LogUtils.getLogger().info(
+            "SOUL_DIRECT_CLICK_ACCEPTED owner={} core={} feetY={}",
+            p.getUUID(), c.getId(), p.getY());
     }
+  }
+
+  /** Called only after native projectile-launch provenance and swept LOS validation. */
+  static boolean projectileHit(ServerPlayer p, SoulAnchorEntity c) {
+    return p.getUUID().equals(c.owner) && valid(c) && activate(p, c);
+  }
+
+  /** Shared single-activation gate; projectile hits never reset melee swing timing. */
+  private static boolean activate(ServerPlayer p, SoulAnchorEntity c) {
+    long now = SoulDamageEngine.now(p);
+    if (LAST_HIT.getOrDefault(c.getUUID(), Long.MIN_VALUE) == now) return false;
+    if (!SoulBurstService.strike(p, c)) return false;
+    LAST_HIT.put(c.getUUID(), now);
+    c.shake();
+    return true;
+  }
+
+  /** Active cores only, not a whole-world entity scan. */
+  static java.util.List<SoulAnchorEntity> inLevel(net.minecraft.server.level.ServerLevel level) {
+    return ANCHORS.values().stream()
+        .filter(c -> !c.isRemoved() && c.level() == level).toList();
   }
 
   private static boolean precise(ServerPlayer p, SoulAnchorEntity c) {

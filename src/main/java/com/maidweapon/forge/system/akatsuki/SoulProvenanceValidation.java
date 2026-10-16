@@ -103,7 +103,7 @@ public final class SoulProvenanceValidation {
       double ordinary = cut.loss(), air = 0;
       if (level >= 2) {
         var core = SoulAnchorService.create(p, t);
-        check(core != null && core.getY() >= t.getBoundingBox().maxY + 1.5, "aerial top placement");
+        check(core != null && core.getY() >= t.getBoundingBox().maxY + 4, "high aerial placement");
         check(!core.hurt(p.damageSources().playerAttack(p), 100), "damage cannot activate core");
         float hp = t.getHealth();
         aim(p, core);
@@ -432,9 +432,8 @@ public final class SoulProvenanceValidation {
     nativeHit(t, p, 100);
     var c = SoulAnchorService.create(p, t);
     check(c != null, "receipt core");
-    check(
-        !SoulAnchorService.strike(c, p.damageSources().playerAttack(p)),
-        "source alone insufficient");
+    check(!c.hurt(p.damageSources().playerAttack(p), 100),
+        "raw damage source cannot activate core");
     float hp = t.getHealth();
     p.moveTo(c.getX(), t.getY(), c.getZ() - 1, 0, -90);
     p.setOnGround(true);

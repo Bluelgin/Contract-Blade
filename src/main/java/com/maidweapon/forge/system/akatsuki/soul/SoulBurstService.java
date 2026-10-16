@@ -22,7 +22,6 @@ public final class SoulBurstService {
   private static final class Burst {
     final ServerPlayer player;
     final SoulAnchorEntity core;
-    final double total;
     final SoulDamageDebtService.Reservation reservation;
     final double[] allocations;
     final int stages, duration;
@@ -34,12 +33,11 @@ public final class SoulBurstService {
       player = p;
       core = c;
       reservation = plan;
-      total = plan.total();
       start = now;
       next = now;
       stages = SoulDamageConfig.BURST_STAGES.get();
       duration = SoulDamageConfig.BURST_DURATION.get();
-      allocations = SoulStageAllocation.split(total, stages);
+      allocations = SoulStageAllocation.split(plan.total(), stages);
     }
   }
 

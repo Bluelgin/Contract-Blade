@@ -89,9 +89,12 @@ public final class SoulDamageConfig {
     RECOVERY_GAP = b.defineInRange("sharedTargetRecoveryGapTicks", 12, 1, 100);
     BASE_CUT_FRACTION = b.defineInRange("baseSpaceCutAttackFraction", .05, 0, 1);
     BASE_CUT_MAXIMUM = b.defineInRange("baseSpaceCutMaximumHP", .5, 0, 8);
-    ANCHOR_HEAD_OFFSET = b.defineInRange("aerialAnchorHeadOffset", 2d, 1.5, 4);
-    ANCHOR_MIN_HEIGHT = b.defineInRange("aerialAnchorMinimumHeight", 3.8, 3, 6);
-    ANCHOR_MAX_HEIGHT = b.defineInRange("aerialAnchorGiantSideHeight", 12d, 6, 20);
+    ANCHOR_HEAD_OFFSET = b.comment("Vertical gap above the boss hitbox; summoned swords can hit from below.")
+        .defineInRange("aerialAnchorHeadOffset", 5d, 4, 10);
+    ANCHOR_MIN_HEIGHT = b.comment("Minimum anchor altitude above target feet, if higher than head clearance.")
+        .defineInRange("aerialAnchorMinimumHeight", 6d, 4, 12);
+    ANCHOR_MAX_HEIGHT = b.comment("Legacy cap above target feet; tall bosses still retain >=4 blocks head clearance.")
+        .defineInRange("aerialAnchorGiantSideHeight", 18d, 8, 36);
     SPEC = b.build();
   }
 
