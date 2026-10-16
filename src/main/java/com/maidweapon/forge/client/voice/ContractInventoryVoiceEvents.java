@@ -73,7 +73,8 @@ public final class ContractInventoryVoiceEvents {
     public static void loggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
         POLICY.resetSession();
         currentScreen = null;
-        TlmPecoVoiceBridge.stop();
+        if (ModList.get().isLoaded("touhou_little_maid"))
+            TlmPecoVoiceBridge.stop();
     }
 
     private ContractInventoryVoiceEvents() {}

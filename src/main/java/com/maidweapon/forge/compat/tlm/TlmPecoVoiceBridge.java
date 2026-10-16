@@ -13,10 +13,8 @@ import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.sound.PlaySoundSourceEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 /**
  * TLM 1.5.3 custom pack bridge. Reuses its decoded SoundCache buffers without
@@ -25,7 +23,6 @@ import net.minecraftforge.fml.common.Mod;
  * The native MaidSoundInstance requires a live maid entity; an inventory weapon
  * can have its maid stored/compressed, hence our non-entity SoundInstance.
  */
-@Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT)
 public final class TlmPecoVoiceBridge {
     public static final String PECO_PACK_ID = "littlemaid_peco";
     private static InventoryVoiceSound playing;
