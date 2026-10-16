@@ -34,6 +34,12 @@ public final class ContractTooltipSnapshot {
               && Double.isFinite(number.getValue()))
             parameters.putDouble(number.getKey().getPath(), number.getValue());
         }
+        // Akatsuki runtime has explicit built-in fallbacks for omitted datapack keys.
+        if (entry.getKey().equals("red")) {
+          AkatsukiDomainGrowth.parameters(mastery).forEach((key, value) -> {
+            if (!parameters.contains(key.getPath())) parameters.putDouble(key.getPath(), value);
+          });
+        }
         route.put("values", parameters);
       }
       result.put(entry.getKey(), route);
@@ -81,7 +87,12 @@ public final class ContractTooltipSnapshot {
   }
 
   public static double value(CompoundTag route, String key) {
-    return route.getCompound("values").getDouble(key);
+    return value(route, key, 0);
+  }
+
+  public static double value(CompoundTag route, String key, double fallback) {
+    var values = route.getCompound("values");
+    return values.contains(key) ? values.getDouble(key) : fallback;
   }
 
   private ContractTooltipSnapshot() {}

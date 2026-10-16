@@ -114,7 +114,7 @@ public final class ContractTooltipComposer {
 
     private static void appendBlack(List<Component> tooltip, CompoundTag profile, boolean expanded) {
         double attack = ContractTooltipSnapshot.value(profile, "weapon_attack_bonus");
-        double core = ContractTooltipSnapshot.value(profile, "core_damage_multiplier");
+        double core = ContractTooltipSnapshot.value(profile, "core_damage_multiplier", 1);
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.attack",
                 percent(attack), decimal(core)).withStyle(ChatFormatting.LIGHT_PURPLE));
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.skill",
@@ -127,8 +127,8 @@ public final class ContractTooltipComposer {
         if (expanded) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.area",
-                    decimal(ContractTooltipSnapshot.value(profile, "barrage_radius")),
-                    decimal(ContractTooltipSnapshot.value(profile, "combo_radius"))));
+                    decimal(ContractTooltipSnapshot.value(profile, "barrage_radius", 16)),
+                    decimal(ContractTooltipSnapshot.value(profile, "combo_radius", 8))));
             if (ContractTooltipSnapshot.unlocked(profile, "domain_sync"))
                 tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.sync"));
         }

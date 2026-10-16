@@ -42,5 +42,14 @@ class ContractTooltipSnapshotTest {
     assertTrue(ContractTooltipSnapshot.unlocked(projected.getCompound("white"),"blessing_guard"));
     assertEquals(.11,ContractTooltipSnapshot.value(projected.getCompound("white"),"guard_reduction"),1e-8);
     assertFalse(projected.getCompound("black").getBoolean("known"));
+    assertEquals(1, ContractTooltipSnapshot.value(projected.getCompound("black"),
+        "core_damage_multiplier", 1), 1e-8);
+    var minimalRed = new ContractAbilityDefinition(AkatsukiDomainGrowth.ID, List.of(
+        new ContractAbilityMilestone(1, Set.of(AkatsukiDomainGrowth.id("akatsuki_garden")),
+            Map.of())));
+    routes.put("red", minimalRed);
+    var withRuntimeFallback = ContractTooltipSnapshot.project(4, routes);
+    assertEquals(.16, ContractTooltipSnapshot.value(withRuntimeFallback.getCompound("red"),
+        "space_cut_multiplier"), 1e-8);
   }
 }
