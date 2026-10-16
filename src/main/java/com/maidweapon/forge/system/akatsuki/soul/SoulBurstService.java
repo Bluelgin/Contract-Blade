@@ -48,10 +48,8 @@ public final class SoulBurstService {
   static boolean strike(ServerPlayer p, SoulAnchorEntity core) {
     long now = SoulDamageEngine.now(p);
     var current = ACTIVE.get(core.original);
-    if (current != null) {
-      if (current.player != p || current.core != core) return false;
-      return true;
-    }
+    if (current != null)
+      return false; // Already reserved: no fake success, re-hover or added quota.
     if (ACTIVE.size() >= 128 || !SoulDamageEngine.burstReady(core.original, now)) return false;
     var entity = p.serverLevel().getEntity(core.original);
     if (!(entity instanceof LivingEntity t)) return false;

@@ -19,6 +19,8 @@
 
 | A10 | P1 | 仅凭 player_attack DamageSource + 当前手持可误认延迟或第三方裸调用 | 缺少本次原生调用证明 | Player.attack 的实际 hurt 操作与 SlashBlade1.9.65 AttackHelper 精确 Source/目标/载体单次凭据；裸调用拒绝、原生API实测 | 已通过原生专服 |
 
+| A11 | P2 | SoulAnchorRenderer.ribbon：魂核改到正上方后，与UP平行的牵引向量叉积为零，连接线消失；旧局部缩放也截短牵引 | 固定UP叉积且混用局部/世界单位 | 平行时改用X轴，补偿局部缩放；真实客户端截图复核 | 已实现，待最终图形复核 |
+
 ## 审查范围与未证实风险
 
 | 模块 | 关键调用链检查 | 运行风险/剩余验证 |
