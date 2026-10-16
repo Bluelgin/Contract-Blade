@@ -10,6 +10,7 @@ public final class ContractVoiceClientConfig {
     public static final ForgeConfigSpec.DoubleValue GREETING_CHANCE;
     public static final ForgeConfigSpec.DoubleValue CURIOUS_CHANCE;
     public static final ForgeConfigSpec.DoubleValue PLAYFUL_CHANCE;
+    public static final ForgeConfigSpec.BooleanValue AUTO_SHORTLIST;
     public static final ForgeConfigSpec.IntValue GREETING_VARIANT;
     public static final ForgeConfigSpec.IntValue CURIOUS_VARIANT;
     public static final ForgeConfigSpec.IntValue PLAYFUL_VARIANT;
@@ -29,6 +30,11 @@ public final class ContractVoiceClientConfig {
                 .defineInRange("curiousChance", .80, 0, 1);
         PLAYFUL_CHANCE = b.comment("Chance for a rare reaction on 3+ rapid lifts.")
                 .defineInRange("playfulChance", .35, 0, 1);
+        AUTO_SHORTLIST = b.comment(
+                "Choose a small subset (up to 8/6/5 samples) by PCM length, loudness,",
+                "silence and duplicate checks; this does NOT recognize spoken Japanese.",
+                "Manual sample index overrides the automatic shortlist.")
+                .define("acousticShortlist", true);
         b.comment("Optional sample selection within the listed PECO event category.",
                 "-1 = random among all available clips; 0+ = exact indexed clip.",
                 "Indexes must be manually auditioned: category alone does not confirm meaning.");

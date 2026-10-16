@@ -23,9 +23,11 @@ public final class TlmPecoVoicePreviewCommands {
                 .then(Commands.literal("list").executes(ctx -> {
                     for (String mood : MOODS) {
                         int count = TlmPecoVoiceBridge.sampleCount(mood);
+                        var selection = TlmPecoVoiceBridge.curatedIndices(mood);
                         ctx.getSource().sendSuccess(
                                 () -> Component.literal("PECO " + mood + ": " + count + " clips (0–"
-                                        + Math.max(0, count - 1) + ")"), false);
+                                        + Math.max(0, count - 1) + ") | acoustic shortlist: "
+                                        + selection), false);
                     }
                     return 1;
                 }))
