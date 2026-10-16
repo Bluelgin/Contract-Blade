@@ -14,8 +14,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * One shared target reservation, 3–5 stages, at most one stage per tick; extra swings add no
- * budget.
+ * One verifiable debt reservation per target, 3–5 stages, max one stage/tick;
+ * extra swings cannot restart or duplicate a previously reserved burst.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulBurstService {
@@ -39,7 +39,7 @@ public final class SoulBurstService {
       next = now;
       stages = SoulDamageConfig.BURST_STAGES.get();
       duration = SoulDamageConfig.BURST_DURATION.get();
-      allocations = SoulStageAllocation.split(total, stages, SoulDamageConfig.HIT_CEILING.get());
+      allocations = SoulStageAllocation.split(total, stages);
     }
   }
 
