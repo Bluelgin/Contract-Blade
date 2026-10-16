@@ -1,6 +1,7 @@
 package com.maidweapon.forge.event;
 
 import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
+import com.maidweapon.forge.compat.tlm.ContractMaidKeys;
 import com.maidweapon.forge.system.contract.*;
 import com.maidweapon.forge.system.deployment.ContractEmergencyCarrier;
 import net.minecraft.world.entity.Entity;
@@ -19,21 +20,21 @@ public final class ContractAnomalyEvents {
         var maid = event.getEntity();
         if (event.getLevel().isClientSide || !TlmEntityAdapter.isMaidEntity(maid) || !(maid instanceof TamableAnimal tamed)
                 || tamed.getOwnerUUID() == null || maid.getServer() == null
-                || maid.getPersistentData().getBoolean("MaidWeaponCoreStorageTransfer")) return;
+                || maid.getPersistentData().getBoolean(ContractMaidKeys.CORE_STORAGE_TRANSFER)) return;
         var reason = maid.getRemovalReason();
         if (reason == Entity.RemovalReason.KILLED || reason == Entity.RemovalReason.DISCARDED)
-            ContractRecoveryJournal.get(maid.getServer()).worldPresent(maid.getStringUUID(), false);
+            ContractRecoveryJournal.get(maid.getServer()).markMaidAbsent(maid.getStringUUID());
         var owner = maid.getServer().getPlayerList().getPlayer(tamed.getOwnerUUID());
         if (owner == null) return;
         var carrier = ContractEmergencyCarrier.resolve(owner, maid).stack();
         if (carrier.isEmpty() || ContractCarrierData.hasMaidEntityData(carrier)
-                || maid.getPersistentData().getBoolean("MaidWeaponNativeStorageTransfer")
+                || maid.getPersistentData().getBoolean(ContractMaidKeys.NATIVE_STORAGE_TRANSFER)
                 || ContractAnomalyRecoveryService.state(owner, carrier) == ContractAnomalyRecoveryService.State.TRANSITIONING) return;
         if (reason == Entity.RemovalReason.KILLED || reason == Entity.RemovalReason.DISCARDED) {
             if (maid instanceof net.minecraft.world.entity.LivingEntity living
                     && ContractAnomalyRecoveryService.preserveRemoved(owner, carrier, living)) {
                 ContractEmergencyCarrier.resolve(owner, maid).publish(owner);
-            } else ContractAnomalyRecoveryService.record(owner, carrier, reason.name(), true);
+            } else ContractAnomalyRecoveryService.confirmedRemoved(owner, carrier);
         }
         // UNLOADED_TO_CHUNK, UNLOADED_WITH_PLAYER and CHANGED_DIMENSION are not death evidence.
     }
@@ -50,7 +51,7 @@ public final class ContractAnomalyEvents {
             entity.getPersistentData().remove(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID);
             if (destination.contains("Fox")) entity.getPersistentData().put(com.maidweapon.forge.system.fox.FoxSpiritState.ROOT, destination.getCompound("Fox").copy());
         }
-        if (event.loadedFromDisk()) journal.worldPresent(entity.getStringUUID(), true);
+        if (event.loadedFromDisk()) journal.markMaidPresent(entity.getStringUUID());
         // Fresh spawns are recorded after successful addEntity, not during a cancellable join event.
     }
     @SubscribeEvent public static void tick(TickEvent.PlayerTickEvent event) {

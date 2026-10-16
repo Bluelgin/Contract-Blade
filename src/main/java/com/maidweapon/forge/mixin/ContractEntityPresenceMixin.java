@@ -16,6 +16,6 @@ public abstract class ContractEntityPresenceMixin {
             at = @At("RETURN"), require = 1)
     private void contractblade$added(Entity entity, CallbackInfoReturnable<Boolean> result) {
         if (result.getReturnValueZ() && TlmEntityAdapter.isMaidEntity(entity))
-            ContractRecoveryJournal.get(entity.getServer()).worldPresent(entity.getStringUUID(), true);
+            ContractRecoveryJournal.get(entity.getServer()).markMaidPresent(entity.getStringUUID());
     }
 }

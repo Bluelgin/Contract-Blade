@@ -67,19 +67,23 @@ public final class ContractMaidStorage {
             return false;
         }
         weapon.setTag(candidate);
-        ContractNbtGuard.Result result = ContractNbtGuard.inspect(candidate);
-        if (result.warning()) {
-            ContractNbtAudit.Report audit = ContractNbtAudit.inspect(weapon);
-            LOGGER.warn("[MaidWeapon] Large contract NBT: item={}, tag={}, maid={}, compressed={}, "
-                            + "intrinsicArchive={}, externalArchive={}, duplicateProjection={}",
-                    ContractNbtGuard.formatBytes(audit.completeItemBytes()),
-                    ContractNbtGuard.formatBytes(audit.itemTagBytes()),
-                    ContractNbtGuard.formatBytes(audit.currentMaidBytes()),
-                    ContractNbtGuard.formatBytes(audit.currentCompressedBytes()),
-                    ContractNbtGuard.formatBytes(audit.intrinsicArchiveBytes()),
-                    ContractNbtGuard.formatBytes(audit.externalArchiveBytes()),
-                    audit.duplicateProjection());
-            notifySize(player, result, ContractNbtGuard.inspect(maidData), false);
+        try {
+            ContractNbtGuard.Result result = ContractNbtGuard.inspect(candidate);
+            if (result.warning()) {
+                ContractNbtAudit.Report audit = ContractNbtAudit.inspect(weapon);
+                LOGGER.warn("[MaidWeapon] Large contract NBT: item={}, tag={}, maid={}, compressed={}, "
+                                + "intrinsicArchive={}, externalArchive={}, duplicateProjection={}",
+                        ContractNbtGuard.formatBytes(audit.completeItemBytes()),
+                        ContractNbtGuard.formatBytes(audit.itemTagBytes()),
+                        ContractNbtGuard.formatBytes(audit.currentMaidBytes()),
+                        ContractNbtGuard.formatBytes(audit.currentCompressedBytes()),
+                        ContractNbtGuard.formatBytes(audit.intrinsicArchiveBytes()),
+                        ContractNbtGuard.formatBytes(audit.externalArchiveBytes()),
+                        audit.duplicateProjection());
+                notifySize(player, result, ContractNbtGuard.inspect(maidData), false);
+            }
+        } catch (RuntimeException failure) {
+            LOGGER.error("[Contract Blade] NBT audit failed after storage commit; snapshot remains committed", failure);
         }
         return true;
     }

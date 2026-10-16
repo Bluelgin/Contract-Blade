@@ -25,8 +25,8 @@ public final class ContractMaidRebirthBridge {
             if (!event.getMaid().level().isClientSide && event.getMaid().getServer() != null
                     && event.getMaid().level() instanceof net.minecraft.server.level.ServerLevel level
                     && level.getEntity(event.getMaid().getUUID()) == event.getMaid()) {
-                event.getMaid().getPersistentData().putBoolean("MaidWeaponNativeStorageTransfer", true);
-                ContractRecoveryJournal.get(event.getMaid().getServer()).worldPresent(event.getMaid().getStringUUID(), false);
+                event.getMaid().getPersistentData().putBoolean(ContractMaidKeys.NATIVE_STORAGE_TRANSFER, true);
+                ContractRecoveryJournal.get(event.getMaid().getServer()).markMaidAbsent(event.getMaid().getStringUUID());
             }
         });
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, false, MaidAndItemTransformEvent.ToMaid.class, ContractMaidRebirthBridge::rebirth);
@@ -43,7 +43,7 @@ public final class ContractMaidRebirthBridge {
         if (maid.level().isClientSide || maid.getServer() == null || !data.hasUUID("UUID")) return;
         String id = data.getUUID("UUID").toString();
         var journal = ContractRecoveryJournal.get(maid.getServer());
-        boolean collision = journal.transfer(id).getBoolean("WorldPresent");
+        boolean collision = journal.isMaidPresent(id);
         for (var level : maid.getServer().getAllLevels()) if (level.getEntity(data.getUUID("UUID")) != null) collision = true;
         if (collision) { REJECTED.add(maid); return; }
         Player owner = data.hasUUID("Owner") ? maid.getServer().getPlayerList().getPlayer(data.getUUID("Owner")) : null;
@@ -67,8 +67,8 @@ public final class ContractMaidRebirthBridge {
         }
         maid.setUUID(data.getUUID("UUID")); // ItemFilm does not call Entity.load; ItemPhoto subsequently does.
         data.getCompound("ForgeData").remove("MaidWeaponRecoveryRejected");
-        data.getCompound("ForgeData").remove("MaidWeaponCoreStorageTransfer");
-        data.getCompound("ForgeData").remove("MaidWeaponNativeStorageTransfer");
+        data.getCompound("ForgeData").remove(ContractMaidKeys.CORE_STORAGE_TRANSFER);
+        data.getCompound("ForgeData").remove(ContractMaidKeys.NATIVE_STORAGE_TRANSFER);
         if (owner != null) restoreIdentity(owner, maid, data);
         // A native photo is a historical snapshot. The player explicitly requested its restoration.
         if (owner != null && net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(event.getItem().getItem()).getPath().equals("photo"))

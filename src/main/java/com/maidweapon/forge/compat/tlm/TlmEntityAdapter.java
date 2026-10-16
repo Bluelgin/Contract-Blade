@@ -131,8 +131,8 @@ public final class TlmEntityAdapter {
                 method.setAccessible(true); method.invoke(maid, data.getCompound("ForgeCaps").copy());
             }
             maid.getPersistentData().merge(data.getCompound("ForgeData").copy());
-            maid.getPersistentData().remove("MaidWeaponCoreStorageTransfer");
-            maid.getPersistentData().remove("MaidWeaponNativeStorageTransfer");
+            maid.getPersistentData().remove(ContractMaidKeys.CORE_STORAGE_TRANSFER);
+            maid.getPersistentData().remove(ContractMaidKeys.NATIVE_STORAGE_TRANSFER);
             maid.getPersistentData().remove(ContractMaidKeys.ENTITY_BINDING_ID);
             return true;
         } catch (ReflectiveOperationException | RuntimeException failure) { return false; }

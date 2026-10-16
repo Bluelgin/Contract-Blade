@@ -322,8 +322,12 @@ public final class IntrinsicSpiritApi {
     }
 
     public static CompoundTag readOnlyContract(ItemStack weapon, String spiritId) {
-        return transferContract(weapon, spiritId).copy();
+        // captureContract already returns independent data; only archive views need a copy.
+        return spiritId.equals(projection(weapon)) || EmbeddedSpiritApi.isSpirit(weapon, spiritId)
+                ? captureContract(weapon) : intrinsicContract(weapon, spiritId).copy();
     }
+    /** Legacy metadata summary; insufficient as an authorization cache key for mutable NBT. */
+    @Deprecated
     public static java.util.List<Object> proofKey(ItemStack weapon,String spiritId) {
         CompoundTag view=spiritId.equals(projection(weapon))||EmbeddedSpiritApi.isSpirit(weapon,spiritId)?weapon.getTag():intrinsicContract(weapon,spiritId);
         if(view==null)return java.util.List.of();

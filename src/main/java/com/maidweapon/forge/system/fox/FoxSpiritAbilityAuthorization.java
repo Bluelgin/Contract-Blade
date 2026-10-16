@@ -1,10 +1,17 @@
 package com.maidweapon.forge.system.fox;
 
-import com.maidweapon.forge.api.*;
+import com.maidweapon.forge.api.ContractAuthorization;
+import com.maidweapon.forge.api.IntrinsicSpiritApi;
 import com.maidweapon.forge.system.MaidEntityDataCodec;
-import com.maidweapon.forge.system.contract.*;
+import com.maidweapon.forge.system.contract.ContractAnomalyRecoveryService;
+import com.maidweapon.forge.compat.tlm.ContractMaidKeys;
+import net.minecraft.server.MinecraftServer;
+import java.util.UUID;
 import com.maidweapon.forge.system.deployment.ContractTransferSafetyService;
-import java.util.*;
+import java.util.Map;
+import java.util.WeakHashMap;
+import net.minecraft.nbt.CompoundTag;
+import com.maidweapon.forge.system.deployment.ContractWeaponLocator;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -15,7 +22,9 @@ import net.minecraft.world.item.ItemStack;
 public final class FoxSpiritAbilityAuthorization {
   public record Result(boolean allowed, String reason) {}
 
-  private record Proof(long time, Object tag, java.util.List<Object> key, boolean valid) {}
+  private record Proof(long time, MinecraftServer server, UUIDOwner owner, CompoundTag contract, boolean valid) {}
+
+  private record UUIDOwner(UUID id, String originalMaid) {}
 
   private static final Map<ItemStack, Proof> PROOFS = new WeakHashMap<>();
 
@@ -36,21 +45,27 @@ public final class FoxSpiritAbilityAuthorization {
       return new Result(false, "identity");
     if (ContractAnomalyRecoveryService.transitioning(carrier)
         || !IntrinsicSpiritApi.stored(carrier, spirit)) return new Result(false, "not_stored");
+    // World identity is cheap and volatile: never cache a permission to spawn/use a second UUID.
+    var contract = IntrinsicSpiritApi.readOnlyContract(carrier, spirit);
+    String originalMaid = FoxSpiritLedger.get(owner.getServer()).maid(identity);
+    String maidId = contract.getString("MaidUUID");
+    if (!originalMaid.isEmpty() && !originalMaid.equals(maidId)) return new Result(false, "identity");
+    if (!ContractWeaponLocator.mayManifest(owner, maidId)) return new Result(false, "not_stored");
     long now = owner.getServer().overworld().getGameTime();
-    var key = IntrinsicSpiritApi.proofKey(carrier, spirit);
+    var currentOwner = new UUIDOwner(owner.getUUID(), originalMaid);
     var cached = PROOFS.get(carrier);
     if (cached != null
-        && cached.tag() == carrier.getTag()
-        && cached.key().equals(key)
+        && cached.server() == owner.getServer()
+        && cached.owner().equals(currentOwner)
+        // Structural comparison detects legacy and compressed payload edits in place, even
+        // when the root tag, declared checksum and decoded length all remain unchanged.
+        && cached.contract().equals(contract)
         && now >= cached.time()
         && now - cached.time() < 20)
       return new Result(cached.valid(), cached.valid() ? "ready" : "snapshot");
     boolean valid = false;
     try {
-      var contract = IntrinsicSpiritApi.readOnlyContract(carrier, spirit);
       String binding = contract.getString("MaidBindingId"), maid = contract.getString("MaidUUID");
-      String originalMaid = FoxSpiritLedger.get(owner.getServer()).maid(identity);
-      if (!originalMaid.isEmpty() && !originalMaid.equals(maid)) return new Result(false, "identity");
       var data = MaidEntityDataCodec.read(contract);
       valid =
           contract.hasUUID("OwnerUUID")
@@ -59,21 +74,20 @@ public final class FoxSpiritAbilityAuthorization {
               && owner.getUUID().equals(data.getUUID("Owner"))
               && data.hasUUID("UUID")
               && maid.equals(data.getUUID("UUID").toString())
-              && com.maidweapon.forge.system.deployment.ContractWeaponLocator.mayManifest(owner, maid)
               && !binding.isEmpty()
               && (data.getCompound("ForgeData")
-                      .getString(com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID)
+                      .getString(ContractMaidKeys.ENTITY_BINDING_ID)
                       .isEmpty()
                   || binding.equals(
                       data.getCompound("ForgeData")
                           .getString(
-                              com.maidweapon.forge.compat.tlm.ContractMaidKeys.ENTITY_BINDING_ID)));
-      String declared = data.getCompound("ForgeData").getString("MaidWeaponEmbeddedSpirit");
+                              ContractMaidKeys.ENTITY_BINDING_ID)));
+      String declared = data.getCompound("ForgeData").getString(ContractMaidKeys.EMBEDDED_SPIRIT);
       if (!declared.isEmpty() && !declared.equals(spirit)) valid = false;
     } catch (java.io.IOException | RuntimeException rejected) {
       valid = false;
     }
-    PROOFS.put(carrier, new Proof(now, carrier.getTag(), key, valid));
+    PROOFS.put(carrier, new Proof(now, owner.getServer(), currentOwner, contract, valid));
     return new Result(valid, valid ? "ready" : "snapshot");
   }
 

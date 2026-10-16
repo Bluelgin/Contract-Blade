@@ -35,7 +35,7 @@ assert "ContractInteriorService.recoverDestroyedActiveContract" in bridge
 assert "maid.discard()" not in bridge
 assert "createEmergencyResurrectionFilm" not in bridge
 
-resolver = loss[loss.index("private static boolean resolve("):]
+resolver = loss[loss.index("private static RecoveryResult resolve("):]
 assert "ContractLifecycleService.manifest(player, transientCarrier, false)" in resolver
 assert "ContractMaidKeys.EMERGENCY_FILM_PROGRESS" in resolver
 assert 'snapshot.getTag().getCompound("MaidData").copy()' in resolver
