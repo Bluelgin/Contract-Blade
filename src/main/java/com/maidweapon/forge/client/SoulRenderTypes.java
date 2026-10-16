@@ -20,6 +20,27 @@ final class SoulRenderTypes extends RenderType {
               .setWriteMaskState(COLOR_WRITE)
               .createCompositeState(false));
 
+  /**
+   * High-contrast owner-only locator. The shell keeps ordinary occlusion; only the
+   * small aiming reticle and target tether ignore depth so tall bosses cannot hide them.
+   * COLOR_WRITE never modifies the depth buffer for the other entities.
+   */
+  static final RenderType OWNER_MARKER =
+      create(
+          "maid_weapon_soul_owner_marker",
+          DefaultVertexFormat.POSITION_COLOR,
+          VertexFormat.Mode.QUADS,
+          256,
+          false,
+          true,
+          CompositeState.builder()
+              .setShaderState(POSITION_COLOR_SHADER)
+              .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+              .setDepthTestState(NO_DEPTH_TEST)
+              .setCullState(NO_CULL)
+              .setWriteMaskState(COLOR_WRITE)
+              .createCompositeState(false));
+
   private SoulRenderTypes(
       String n,
       VertexFormat f,

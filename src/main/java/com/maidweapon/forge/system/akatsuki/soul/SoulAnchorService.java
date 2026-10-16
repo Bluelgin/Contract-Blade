@@ -93,8 +93,21 @@ public final class SoulAnchorService {
       return;
     }
     var point = SoulAnchorPlacement.find(living);
-    if (point == null) c.discard();
-    else c.setPos(point);
+    if (point == null) {
+      c.discard();
+    } else {
+      c.setPos(point);
+      // Fallback for low graphics presets, shaders and resource packs that suppress
+      // the translucent shard renderer. Only the owner receives these particles.
+      if (c.tickCount % 5 == 0) {
+        var owner = SoulAnchorBinding.owner(c);
+        if (owner != null && owner.distanceToSqr(c) <= 4096)
+          owner.serverLevel().sendParticles(
+              owner, net.minecraft.core.particles.ParticleTypes.END_ROD, true,
+              c.getX(), c.getY() + .85, c.getZ(),
+              2, .18, .27, .18, .008);
+      }
+    }
   }
 
   @Deprecated
