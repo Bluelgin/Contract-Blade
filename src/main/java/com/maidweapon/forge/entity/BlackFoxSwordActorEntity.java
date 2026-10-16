@@ -12,6 +12,7 @@ public final class BlackFoxSwordActorEntity extends PathfinderMob {
     private BlackFoxSwordCoreEntity core;
     private ServerPlayer owner;
     private LivingEntity victim;
+    private com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.AttackMode emitterMode = com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.AttackMode.BARRAGE;
     private ResourceLocation stage;
     private int rest;
     public BlackFoxSwordActorEntity(EntityType<? extends PathfinderMob> type, Level level) {
@@ -23,8 +24,9 @@ public final class BlackFoxSwordActorEntity extends PathfinderMob {
     }
     public void initialize(BlackFoxSwordCoreEntity formation, ServerPlayer player, LivingEntity target) {
         core = formation; owner = player; victim = target;
-        setItemSlot(EquipmentSlot.MAINHAND, player.getMainHandItem().copy());
+        setItemSlot(EquipmentSlot.MAINHAND, core.sourceBlade().copy());
         getMainHandItem().getOrCreateTag().putBoolean("Unbreakable", true);
+        BlackFoxJudgementCompat.purpleBlade(this);
         BlackFoxNativeCombo.proxyTarget(this, target);
         getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).setBaseValue(
                 player.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE));
@@ -32,21 +34,28 @@ public final class BlackFoxSwordActorEntity extends PathfinderMob {
     }
     public com.maidweapon.forge.api.ContractCombatCreditResolver.Credit masteryCredit() {
         if (core == null || core.isRemoved() || owner == null || !owner.isAlive() || owner.level() != level()) return null;
-        var origin = getMainHandItem().getTag();
-        if (origin == null || !origin.hasUUID(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN)) return null;
-        for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {
-            var real = owner.getInventory().getItem(slot);
-            if (BlackFoxSwordArtCompat.entitled(real, owner) && real.getTag().getUUID(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN)
-                    .equals(origin.getUUID(com.maidweapon.forge.system.fox.FoxSpiritState.ORIGIN)))
-                return new com.maidweapon.forge.api.ContractCombatCreditResolver.Credit(owner, real);
-        }
-        return null;
+        return core.credit(owner);
     }
+    public BlackFoxSwordCoreEntity core() { return core; }
+    public ServerPlayer contractOwner() { return owner; }
+
+    public void setEmitterMode(com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.AttackMode mode) { emitterMode = mode; }
+    public LivingEntity victim() { return victim; }
+    public boolean validVictim() { return victim != null && permits(victim); }
     public boolean permits(Entity entity) {
         return core != null && !core.isRemoved() && owner != null && entity instanceof LivingEntity living
-                && (victim == null || living == victim) && core.eligible(owner, living);
+                && (victim == null || living == victim) && core.eligible(owner, living, victim == null
+                ? emitterMode
+                : com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth.AttackMode.COMBO_B);
     }
-    public void capture(Entity shot) { if (core != null) core.capture(shot); }
+    public void capture(Entity shot) {
+        if (core != null) {
+            try { shot.getClass().getMethod("setColor",int.class).invoke(shot,0xB04CE5); }
+            catch (ReflectiveOperationException error) { throw new IllegalStateException("Sword core native projectile palette",error); }
+            core.capture(shot);
+            com.maidweapon.forge.system.mastery.ContractCombatCredits.stampLaunch(shot,masteryCredit());
+        }
+    }
     public ResourceLocation nativeStage() { return stage; }
     @Override public void tick() {
         super.tick(); if (level().isClientSide) return;

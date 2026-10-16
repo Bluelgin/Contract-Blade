@@ -22,8 +22,9 @@ public final class BlackFoxSwordCoreValidation {
                     new com.mojang.authlib.GameProfile(UUID.randomUUID(), "SwordCoreFixture"));
             player.setPos(.5, 150, .5);
             var blade = BlackFoxSlashCompat.blade(level);
-            blade.getOrCreateTag().putUUID(FoxSpiritState.ORIGIN, UUID.randomUUID());
+            prepareEarnedBlade(player,blade);
             player.setItemSlot(EquipmentSlot.MAINHAND, blade);
+            com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(event.getServer().createCommandSourceStack(),player,10);
             var core = BlackFoxBossCompat.spawnSwordCore(player); check(core != null, "Core registered"); spawned.add(core);
             var enemy = EntityType.ZOMBIE.create(level); check(enemy != null, "Enemy fixture");
             enemy.setNoAi(true); enemy.setNoGravity(true); enemy.setPos(1.5, 150, 1.5);
@@ -55,11 +56,13 @@ public final class BlackFoxSwordCoreValidation {
             for (int i = 1; i <= 7; i++) check(stages.contains("slashblade:combo_b" + i), "Native B stage " + i);
             check(enemy.getHealth() < initial, "Native B actually damages enemy");
             check(friend.getHealth() == friendlyHealth, "Native B excludes friend");
+            core.tickCount = 12;
             core.follow(null); check(core.following(), "Switch to native B");
             core.follow(null); check(!core.following(), "Switch back to native barrage");
             core.follow(null); check(core.following(), "Switch again");
             spawned.forEach(Entity::discard); // The subsequent area-credit fixture must have exactly one living target.
             validateRelease(event.getServer(), player, blade);
+            BlackFoxSwordCoreGrowthValidation.run(player,blade);
             LogUtils.getLogger().info("SWORD_CORE_NATIVE_PASS: B1-B7={}, enemy damage={}, bidirectional switches, friendly protection", stages, initial - enemy.getHealth());
         } catch (Throwable failure) { LogUtils.getLogger().error("SWORD_CORE_NATIVE_FAIL", failure); }
         finally { spawned.forEach(Entity::discard); event.getServer().halt(false); }
@@ -71,12 +74,17 @@ public final class BlackFoxSwordCoreValidation {
         blade.enchant(net.minecraft.world.item.enchantment.Enchantments.SHARPNESS, 1);
         var state = nativeState(blade);
         state.getClass().getMethod("setProudSoulCount", int.class).invoke(state, 150);
+        com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(server.createCommandSourceStack(),player,1);
         check(com.maidweapon.forge.system.mastery.ContractMasteryService.getLevel(player) == 1, "SA fixture starts at player mastery 1");
         release(player, blade, state);
         var deployed = BlackFoxSwordArtCompat.active(player);
-        check(deployed != null, "real native release summons core at Lv1 without a growth gate");
+        check(deployed != null, "real native release summons basic core at Lv1");
         check(((Number)state.getClass().getMethod("getProudSoulCount").invoke(state)).intValue() == 130, "native deploy costs twenty souls");
         deployed.tickCount = 12;
+        release(player,blade,state);
+        check(!deployed.following() && ((Number)state.getClass().getMethod("getProudSoulCount").invoke(state)).intValue() == 130,
+                "Lv1 cannot switch or spend souls on locked combo B");
+        com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(server.createCommandSourceStack(),player,5);
         for (boolean following : new boolean[]{true, false, true}) {
             release(player, blade, state);
             check(deployed.following() == following, "native release repeatedly toggles modes");
@@ -96,8 +104,9 @@ public final class BlackFoxSwordCoreValidation {
             BlackFoxSwordArtCompat.clear(player);
             if (previous == null) index.remove(player.getUUID()); else index.put(player.getUUID(), previous);
         }
+        com.maidweapon.forge.system.mastery.ContractMasteryService.setLevel(server.createCommandSourceStack(),player,1);
         validateCredit(player, blade);
-        LogUtils.getLogger().info("SWORD_CORE_RELEASE_PASS: actual native SA, Lv1 full release, 20/30 soul costs, repeated switches, 400-tick lifetime");
+        LogUtils.getLogger().info("SWORD_CORE_RELEASE_PASS: actual native SA, Lv1 basic release / denied switch, Lv5 native B, 20/30 soul costs, repeated switches, 400-tick lifetime");
     }
     private static void validateCredit(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack blade) throws ReflectiveOperationException {
         var relation = new com.maidweapon.common.data.MaidWeaponData("Native credit fixture");
@@ -136,12 +145,28 @@ public final class BlackFoxSwordCoreValidation {
         shot.discard(); rebound.discard(); enemy.discard();
         LogUtils.getLogger().info("SWORD_CORE_MASTERY_CREDIT_PASS: native source, birth carrier, hand switch, changed-owner rejection");
     }
+    /** Fixture server grants identity explicitly; actual earned reward remains covered by shrine-return validation. */
+    static void prepareEarnedBlade(net.minecraft.server.level.ServerPlayer player,net.minecraft.world.item.ItemStack blade) {
+        var identity = new net.minecraft.nbt.CompoundTag(); var origin = UUID.randomUUID(); var maid = UUID.randomUUID();
+        identity.putInt("Version",1); identity.putString("SpiritId",FoxSpiritState.BLACK);
+        identity.putUUID("SpiritUUID",maid); identity.putUUID("OriginUUID",origin);
+        identity.putUUID("OwnerUUID",player.getUUID()); identity.putUUID("Token",UUID.randomUUID());
+        blade.getOrCreateTag().putUUID(FoxSpiritState.ORIGIN,origin); blade.getOrCreateTag().put(FoxSpiritState.ROOT,identity);
+        com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).record(identity,"WEAPON");
+        com.maidweapon.forge.system.contract.ContractCarrierData.setMaidData(blade,new com.maidweapon.common.data.MaidWeaponData("Sword fixture"));
+        com.maidweapon.forge.system.contract.ContractCarrierData.setOwner(blade,player);
+        com.maidweapon.forge.system.contract.ContractCarrierData.setBoundMaidUUID(blade,maid.toString());
+        com.maidweapon.forge.system.contract.ContractCarrierData.ensureBindingId(blade);
+        var persisted = player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG);
+        persisted.putBoolean("MaidWeaponBlackFoxDefeated",true); player.getPersistentData().put(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG,persisted);
+        BlackFoxSwordArtCompat.unlock(blade,player);
+    }
     static Object nativeState(net.minecraft.world.item.ItemStack blade) throws ReflectiveOperationException {
         var cap = (net.minecraftforge.common.capabilities.Capability<?>) Class.forName("mods.flammpfeil.slashblade.item.ItemSlashBlade")
                 .getField("BLADESTATE").get(null);
         return blade.getCapability(cap).resolve().orElseThrow();
     }
-    private static void release(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack blade, Object state)
+    static void release(net.minecraft.server.level.ServerPlayer player, net.minecraft.world.item.ItemStack blade, Object state)
             throws ReflectiveOperationException {
         state.getClass().getMethod("setComboSeq", ResourceLocation.class).invoke(state, ResourceLocation.parse("slashblade:none"));
         state.getClass().getMethod("setLastActionTime", long.class).invoke(state, player.level().getGameTime());

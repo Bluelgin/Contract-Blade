@@ -1,16 +1,15 @@
 package com.maidweapon.forge.compat;
 
 import com.maidweapon.forge.api.ability.ContractAbilityRegistry;
-import java.util.Map;
-import java.util.Set;
+import com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth;
 
-/** Optional SlashBlade bridge. Phase one registers permission only, with no execution gate or growth route. */
+/** Optional SlashBlade bridge: independent reward permission plus declarative shared mastery growth. */
 public final class BlackFoxAbilityAdapter {
     public static void register() {
         if (!SlashBladeCompat.isLoaded()) return;
         ContractAbilityRegistry.register(BlackFoxSwordArtCompat.ID,
                 (player, carrier) -> BlackFoxSwordArtCompat.progressionEntitled(carrier, player),
-                Set.of(), Map.of(), null);
+                BlackFoxSwordCoreGrowth.FEATURES, BlackFoxSwordCoreGrowth.PARAMETERS, BlackFoxSwordCoreGrowth.fallback());
     }
     private BlackFoxAbilityAdapter() { }
 }

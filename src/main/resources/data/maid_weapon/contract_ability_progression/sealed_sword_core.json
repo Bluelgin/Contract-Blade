@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "ability": "maid_weapon:sealed_sword_core",
+  "level_source": "player_mastery",
+  "milestones": [
+    {
+      "level": 1,
+      "features": [
+        "maid_weapon:summon_core"
+      ],
+      "parameters": {
+        "maid_weapon:barrage_radius": 16,
+        "maid_weapon:combo_radius": 8,
+        "maid_weapon:max_targets": 8,
+        "maid_weapon:max_hunters": 1,
+        "maid_weapon:projectile_count": 4,
+        "maid_weapon:barrage_interval": 12
+      }
+    },
+    {
+      "level": 2,
+      "features": [
+        "maid_weapon:mark_priority"
+      ],
+      "parameters": {
+        "maid_weapon:mark_duration": 80
+      }
+    },
+    {
+      "level": 3,
+      "features": [
+        "maid_weapon:protect_owner"
+      ]
+    },
+    {
+      "level": 4,
+      "features": [
+        "maid_weapon:chain_attack",
+        "maid_weapon:phantom_blade"
+      ],
+      "parameters": {
+        "maid_weapon:chain_count": 2,
+        "maid_weapon:chain_cooldown": 40
+      }
+    },
+    {
+      "level": 5,
+      "features": [
+        "maid_weapon:combo_mode"
+      ]
+    },
+    {
+      "level": 6,
+      "features": [
+        "maid_weapon:owner_follow"
+      ]
+    },
+    {
+      "level": 7,
+      "features": [
+        "maid_weapon:multi_hunter",
+        "maid_weapon:phantom_blade_vertical"
+      ],
+      "parameters": {
+        "maid_weapon:max_hunters": 3
+      }
+    },
+    {
+      "level": 8,
+      "features": [
+        "maid_weapon:focus_target",
+        "maid_weapon:wave_edge"
+      ]
+    },
+    {
+      "level": 9,
+      "features": [
+        "maid_weapon:retaliate_owner"
+      ],
+      "parameters": {
+        "maid_weapon:retaliate_window": 60,
+        "maid_weapon:retaliate_cooldown": 24
+      }
+    },
+    {
+      "level": 10,
+      "features": [
+        "maid_weapon:domain_sync"
+      ],
+      "parameters": {
+        "maid_weapon:sync_duration": 24
+      }
+    }
+  ]
+}

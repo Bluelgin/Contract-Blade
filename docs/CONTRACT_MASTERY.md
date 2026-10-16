@@ -1,5 +1,10 @@
 # Player Contract Mastery and ability progression (phase one)
 
+This document records the phase-one API at PR #11. The current phase-two branch
+registers and executes the Black Fox route described in
+[BLACK_FOX_SWORD_CORE_GROWTH.md](BLACK_FOX_SWORD_CORE_GROWTH.md); historical
+statements below about an entitlement-only adapter refer to the phase-one baseline.
+
 This branch depends on `codex/fox-native-sword-art` at `d10a309` (PR #10).
 It changes the owner of growth, not Black Fox's native combat implementation.
 No Black Fox milestone, level gate, cooldown, damage multiplier, duration change,

@@ -3,6 +3,8 @@ package com.maidweapon.forge.compat;
 import com.maidweapon.forge.entity.BlackFoxSwordCoreEntity;
 import com.maidweapon.forge.system.fox.FoxSpiritState;
 import com.maidweapon.forge.system.fox.BlackFoxSwordCoreTimeline;
+import com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth;
+import com.maidweapon.forge.api.ability.ContractAbilityProgressionService;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -22,6 +24,11 @@ public final class BlackFoxSwordArtCompat {
     private static final ResourceLocation NONE = ResourceLocation.parse("slashblade:none");
     private static final String UNLOCK = "MaidWeaponBlackFoxSwordArt";
     private static final WeakHashMap<ServerPlayer, BlackFoxSwordCoreEntity> CORES = new WeakHashMap<>();
+    private record Release(net.minecraft.world.item.ItemStack blade, BlackFoxSwordCoreEntity core,
+                           BlackFoxSwordCoreGrowth.Profile profile, int mastery, long time) { }
+    private record Resolution(int mastery, com.maidweapon.forge.api.ability.ContractAbilityDefinition definition) { }
+    private static final WeakHashMap<ServerPlayer, Resolution> RESOLUTIONS = new WeakHashMap<>();
+    private static final WeakHashMap<ServerPlayer, Release> RELEASES = new WeakHashMap<>();
     public static void bootstrap(IEventBus bus) { bus.addListener(BlackFoxSwordArtCompat::register); }
     private static void register(RegisterEvent event) {
         if (!SlashBladeCompat.isLoaded()) return;
@@ -29,7 +36,7 @@ public final class BlackFoxSwordArtCompat {
         try {
             if (registry.equals("slashblade:slash_arts")) {
                 var type = Class.forName("mods.flammpfeil.slashblade.slasharts.SlashArts");
-                Function<LivingEntity, ResourceLocation> choose = user -> user instanceof ServerPlayer player && ready(player)
+                Function<LivingEntity, ResourceLocation> choose = user -> user instanceof ServerPlayer player && prepare(player)
                         ? active(player) == null ? DEPLOY : FOLLOW : NONE;
                 Object art = type.getConstructor(Function.class).newInstance(choose);
                 type.getMethod("setComboStateSuper", Function.class).invoke(art, choose);
@@ -78,9 +85,11 @@ public final class BlackFoxSwordArtCompat {
         return reward.hasUUID("Owner") && reward.getUUID("Owner").equals(player.getUUID()) && reward.hasUUID("Origin")
                 && blade.getTag().hasUUID(FoxSpiritState.ORIGIN) && reward.getUUID("Origin").equals(blade.getTag().getUUID(FoxSpiritState.ORIGIN));
     }
-    /** Phase-one query adapter only; existing native release readiness does not call it. */
+    /** Reward permission remains independent of shared mastery. */
     public static boolean progressionEntitled(ItemStack blade, ServerPlayer player) {
         if (!entitled(blade, player) || !FoxSpiritState.isOriginalHome(blade)
+                || !FoxSpiritState.BLACK.equals(FoxSpiritState.resident(blade).getString("SpiritId"))
+                || !FoxSpiritState.resident(blade).getUUID("OwnerUUID").equals(player.getUUID())
                 || !player.getPersistentData().getCompound(net.minecraft.world.entity.player.Player.PERSISTED_NBT_TAG)
                 .getBoolean("MaidWeaponBlackFoxDefeated")
                 || !com.maidweapon.forge.system.fox.FoxSpiritLedger.get(player.getServer()).owns(FoxSpiritState.resident(blade), "WEAPON")) return false;
@@ -90,7 +99,7 @@ public final class BlackFoxSwordArtCompat {
     }
     public static BlackFoxSwordCoreEntity active(ServerPlayer player) {
         var core = CORES.get(player);
-        if (core != null && (core.isRemoved() || core.level() != player.level())) { core.discard(); CORES.remove(player); return null; }
+        if (core != null && (core.isRemoved() || core.level() != player.level())) { core.discard(); CORES.remove(player); RESOLUTIONS.remove(player); return null; }
         return core;
     }
     private static int souls(ItemStack blade) {
@@ -98,30 +107,42 @@ public final class BlackFoxSwordArtCompat {
         try { return state == null ? 0 : ((Number)state.getClass().getMethod("getProudSoulCount").invoke(state)).intValue(); }
         catch (ReflectiveOperationException error) { throw new IllegalStateException("Sword art Proud Soul", error); }
     }
-    private static boolean ready(ServerPlayer player) {
+    private static boolean prepare(ServerPlayer player) {
+        RELEASES.remove(player);
         if (!com.maidweapon.forge.compat.fox.BlackFoxBossCompat.available() || !player.isAlive() || player.isSpectator() || !entitled(player.getMainHandItem(), player)) return false;
+        var result = ContractAbilityProgressionService.query(player, player.getMainHandItem(), ID);
+        var profile = BlackFoxSwordCoreGrowth.ready(result);
+        if (profile == null) return false;
         var core = active(player);
         String denied = null;
-        if (core != null && !BlackFoxSwordCoreTimeline.canFollow(core.tickCount, core.following())) denied = "follow_unavailable";
+        if (core != null && !profile.has(BlackFoxSwordCoreGrowth.COMBO)) denied = "combo_locked";
+        else if (core != null && !BlackFoxSwordCoreTimeline.canFollow(core.tickCount, core.following())) denied = "follow_unavailable";
         else if (!player.getAbilities().instabuild && souls(player.getMainHandItem()) < (core == null ? 20 : 30)) denied = "souls";
         if (denied != null) player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.sa." + denied), true);
+        if (denied == null) RELEASES.put(player, new Release(player.getMainHandItem(), core, profile, result.masteryLevel(), player.level().getGameTime()));
         return denied == null;
     }
     private static void execute(ServerPlayer player, boolean follow) {
-        if (!ready(player)) return;
+        // The native chooser and combo click run synchronously. Resolve growth once, then pass its immutable profile.
+        var release = RELEASES.remove(player);
+        if (release == null || release.time() != player.level().getGameTime()
+                || release.blade() != player.getMainHandItem() || !progressionEntitled(release.blade(), player)
+                || !com.maidweapon.forge.api.ContractCombatCreditResolver.valid(new com.maidweapon.forge.api.ContractCombatCreditResolver.Credit(player,release.blade()))) return;
         var core = active(player);
+        if (core != release.core()) return;
+        RESOLUTIONS.put(player,new Resolution(release.mastery(),com.maidweapon.forge.api.ability.ContractAbilityRegistry.definition(ID)));
         if (follow) {
             if (core == null) return;
-            var target = core.followTarget(player);
             if (!player.getAbilities().instabuild) {
                 var state = SlashBladeCompat.resolveBladeState(player.getMainHandItem());
                 try { state.getClass().getMethod("setProudSoulCount", int.class).invoke(state, souls(player.getMainHandItem()) - 10); }
                 catch (ReflectiveOperationException error) { throw new IllegalStateException("Sword art follow payment", error); }
             }
-            core.follow(target); // The native release charges the remaining twenty souls once.
+            core.applyGrowth(release.profile());
+            core.switchAttackMode(); // The native release charges the remaining twenty souls once.
         } else {
             if (core != null) return;
-            core = com.maidweapon.forge.compat.fox.BlackFoxBossCompat.spawnSwordCore(player);
+            core = com.maidweapon.forge.compat.fox.BlackFoxBossCompat.spawnSwordCore(player, release.profile());
             if (core != null) CORES.put(player, core);
         }
     }
@@ -130,7 +151,18 @@ public final class BlackFoxSwordArtCompat {
         try { return state == null ? null : player.level().getEntity(((Number)state.getClass().getMethod("getTargetEntityId").invoke(state)).intValue()); }
         catch (ReflectiveOperationException error) { throw new IllegalStateException("Sword art target", error); }
     }
-    public static void clear(ServerPlayer player) { var core = CORES.remove(player); if (core != null) core.discard(); }
+    /** Central refresh on a real player/mastery or datapack change; executors only consume the resulting profile. */
+    public static void refreshGrowth(ServerPlayer player) {
+        var core = active(player); if (core == null) return;
+        var resolution = new Resolution(com.maidweapon.forge.system.mastery.ContractMasteryService.getLevel(player),
+                com.maidweapon.forge.api.ability.ContractAbilityRegistry.definition(ID));
+        if (resolution.equals(RESOLUTIONS.get(player))) return;
+        var credit = core.credit(player);
+        var profile = credit == null ? null : BlackFoxSwordCoreGrowth.ready(ContractAbilityProgressionService.query(player,credit.carrier(),ID));
+        if (profile == null) { clear(player); return; }
+        core.applyGrowth(profile); RESOLUTIONS.put(player,resolution);
+    }
+    public static void clear(ServerPlayer player) { RESOLUTIONS.remove(player); RELEASES.remove(player); var core = CORES.remove(player); if (core != null) core.discard(); }
     public static boolean select(ServerPlayer player) {
         if (!entitled(player.getMainHandItem(), player)) return false;
         Object state = SlashBladeCompat.resolveBladeState(player.getMainHandItem());
@@ -138,6 +170,7 @@ public final class BlackFoxSwordArtCompat {
         catch (ReflectiveOperationException error) { throw new IllegalStateException("Select Black Fox sword art", error); }
         player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.sa.selected")); return true;
     }
-    public static void clearAll() { CORES.values().forEach(net.minecraft.world.entity.Entity::discard); CORES.clear(); }
+    public static java.util.List<BlackFoxSwordCoreEntity> activeCores() { return java.util.List.copyOf(CORES.values()); }
+    public static void clearAll() { CORES.values().forEach(net.minecraft.world.entity.Entity::discard); CORES.clear(); RELEASES.clear(); RESOLUTIONS.clear(); }
     private BlackFoxSwordArtCompat() { }
 }
