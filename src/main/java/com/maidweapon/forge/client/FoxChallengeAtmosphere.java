@@ -9,14 +9,14 @@ import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-/** Cold teal void, with enough visibility for melee tells. Dedicated servers never load this class. */
+/** End-like void, with enough visibility for melee tells. Dedicated servers never load this class. */
 @Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT)
 public final class FoxChallengeAtmosphere {
     @Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
     public static final class Registration {
         @SubscribeEvent
         public static void effects(RegisterDimensionSpecialEffectsEvent event) {
-            event.register(FoxChallengeService.LEVEL.location(), new DimensionSpecialEffects.NetherEffects());
+            event.register(FoxChallengeService.LEVEL.location(), new DimensionSpecialEffects.EndEffects());
         }
     }
 
@@ -28,7 +28,7 @@ public final class FoxChallengeAtmosphere {
     @SubscribeEvent
     public static void color(ViewportEvent.ComputeFogColor event) {
         if (!inside() || event.getCamera().getFluidInCamera() != net.minecraft.world.level.material.FogType.NONE) return;
-        event.setRed(0.025f); event.setGreen(0.17f); event.setBlue(0.19f);
+        event.setRed(0.055f); event.setGreen(0.04f); event.setBlue(0.085f);
     }
 
     @SubscribeEvent

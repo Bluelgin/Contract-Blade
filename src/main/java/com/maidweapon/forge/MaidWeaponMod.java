@@ -29,12 +29,11 @@ public final class MaidWeaponMod {
 
     public MaidWeaponMod() {
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
-                com.maidweapon.common.AkatsukiClientConfig.SPEC, "maid_weapon-akatsuki-client.toml");
-        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
                 com.maidweapon.common.BlackFoxClientConfig.SPEC, "maid_weapon-client.toml");
         com.maidweapon.forge.api.ContractAuthorization.register("maid_weapon:fox_spirit",
                 com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
         com.maidweapon.forge.compat.fox.FoxModelPackBootstrap.install();
+        com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.install();
         var modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
@@ -51,6 +50,7 @@ public final class MaidWeaponMod {
         com.maidweapon.forge.network.ContractCompanionNetwork.register();
         TaczCompat.bootstrap(modBus);
         com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.bootstrap(modBus);
+        com.maidweapon.forge.compat.BlackFoxSwordArtCompat.bootstrap(modBus);
         com.maidweapon.forge.compat.fox.BlackFoxBossCompat.bootstrap(modBus);
 
         modBus.addListener(this::commonSetup);

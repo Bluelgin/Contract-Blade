@@ -6,7 +6,8 @@ public final class BlackFoxSlashPresentation {
     public static final double MELEE_REACH = 6, MELEE_DOT = .8;
     public static final float MELEE_SWEEP = 10, MELEE_END = 16;
     public static boolean melee(BlackFoxFight.Skill skill) {
-        return supported(skill) && skill!=BlackFoxFight.Skill.STANDING_IAIDO && skill!=BlackFoxFight.Skill.DIMENSION_STRIKE;
+        return supported(skill) && skill!=BlackFoxFight.Skill.STANDING_IAIDO && skill!=BlackFoxFight.Skill.DIMENSION_STRIKE
+                && skill!=BlackFoxFight.Skill.RETURN_BLADE;
     }
     public static float arrival(float along) { return MELEE_SWEEP*(float)Math.sqrt(Math.max(0,Math.min(1,along))); }
     public static float meleeAlpha(float elapsed,float along,int layer) {
@@ -27,6 +28,7 @@ public final class BlackFoxSlashPresentation {
             case CROSS_CUT -> .60f;
             case STANDING_IAIDO -> 1;
             case DIMENSION_STRIKE -> 1.15f;
+            case RETURN_BLADE -> .8f; // B7-only presentation snapshot; native damage remains unchanged.
             default -> 0;
         };
     }

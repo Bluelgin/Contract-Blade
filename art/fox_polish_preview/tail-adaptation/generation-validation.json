@@ -1,0 +1,30 @@
+[
+  {
+    "color": "white",
+    "clips": [
+      "pre_parallel0",
+      "pre_parallel3"
+    ],
+    "tailTracks": 21,
+    "secondOrderChannels": 32,
+    "originalActivityClipsUnchanged": true,
+    "originalFlightUnchanged": true,
+    "foxFormTracksUnchanged": true,
+    "playerControllerReferences": 0,
+    "file": "E:\\Little maid\\art\\fox_polish_preview\\tail-adaptation\\white.animation.json"
+  },
+  {
+    "color": "black",
+    "clips": [
+      "pre_parallel0",
+      "pre_parallel3"
+    ],
+    "tailTracks": 21,
+    "secondOrderChannels": 32,
+    "originalActivityClipsUnchanged": true,
+    "originalFlightUnchanged": true,
+    "foxFormTracksUnchanged": true,
+    "playerControllerReferences": 0,
+    "file": "E:\\Little maid\\art\\fox_polish_preview\\tail-adaptation\\black.animation.json"
+  }
+]

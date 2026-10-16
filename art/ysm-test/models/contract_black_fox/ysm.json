@@ -1,0 +1,81 @@
+{
+  "spec": 2,
+  "metadata": {
+    "name": "黑狐",
+    "tips": "契约之刃 · 本地 YSM 玩家测试版（不包含 Boss 技能）",
+    "authors": [
+      {
+        "name": "TartaricAcid / 酒石酸菌及 Wine Fox contributors",
+        "role": "原酒狐模型"
+      },
+      {
+        "name": "Blade Tetra contributors / 用户提供角色包",
+        "role": "角色及模型适配"
+      },
+      {
+        "name": "哥斯拉",
+        "role": "YSM CC0 基础动作 / 模型"
+      },
+      {
+        "name": "端木一动不动",
+        "role": "YSM CC0 基础动作 / 动画"
+      },
+      {
+        "name": "甜粽子",
+        "role": "YSM CC0 基础动作 / 动画"
+      },
+      {
+        "name": "星屑海螺",
+        "role": "YSM CC0 基础动作 / 动画"
+      },
+      {
+        "name": "蓝玫瑰",
+        "role": "YSM CC0 基础动作 / 材质/模型"
+      },
+      {
+        "name": "艾雷克亚",
+        "role": "YSM CC0 基础动作 / 铁魔法动画"
+      },
+      {
+        "name": "星屑海螺、祸御神、羊毛及大正酒狐动画贡献者",
+        "role": "CC BY-NC-SA 4.0 原版旋转尾巴飞行动作"
+      }
+    ],
+    "license": {
+      "type": "CC BY-NC-SA 4.0",
+      "desc": "模型原授权保留；YSM 默认动作 CC0。详见 RESOURCE_NOTES.md，不统一改为 MIT。"
+    }
+  },
+  "properties": {
+    "height_scale": 0.7,
+    "width_scale": 0.7,
+    "preview_animation": "idle",
+    "default_texture": "default",
+    "free": true
+  },
+  "files": {
+    "player": {
+      "model": {
+        "main": "models/main.json",
+        "arm": "models/arm.json"
+      },
+      "animation": {
+        "main": "animations/main.animation.json",
+        "arm": "animations/arm.animation.json",
+        "extra": "animations/extra.animation.json",
+        "tac": "animations/tac.animation.json",
+        "carryon": "animations/carryon.animation.json",
+        "parcool": "animations/parcool.animation.json",
+        "swem": "animations/swem.animation.json",
+        "slashblade": "animations/slashblade.animation.json",
+        "tlm": "animations/tlm.animation.json",
+        "immersive_melodies": "animations/immersive_melodies.animation.json",
+        "irons_spell_books": "animations/irons_spell_books.animation.json",
+        "fp_arm": "animations/fp_arm.animation.json"
+      },
+      "texture": [
+        "textures/default.png"
+      ]
+    }
+  }
+}

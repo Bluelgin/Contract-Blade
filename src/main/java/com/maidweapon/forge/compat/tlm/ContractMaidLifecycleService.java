@@ -42,6 +42,7 @@ public final class ContractMaidLifecycleService {
             Entity maid = (Entity) maidClass.getConstructor(net.minecraft.world.level.Level.class)
                     .newInstance(player.level());
             TlmEntityAdapter.tame(maid, player);
+            PresetSpiritModels.initialize(maid, spiritId);
             maid.setCustomName(Component.literal(displayName));
             maid.setCustomNameVisible(false);
             maid.moveTo(player.getX(), player.getY(), player.getZ(),

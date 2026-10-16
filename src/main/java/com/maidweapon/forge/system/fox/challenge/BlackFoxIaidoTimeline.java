@@ -2,10 +2,7 @@ package com.maidweapon.forge.system.fox.challenge;
 
 /** Presentation samples the existing strike clock; never changes its damage or parry timing. */
 public final class BlackFoxIaidoTimeline {
-    public static final int CHARGE = BlackFoxDimensionTimeline.EMERGE;
-    public static final int DRAW = BlackFoxDimensionTimeline.HIT - 2;
-    public static final int HIT = BlackFoxDimensionTimeline.HIT;
-    public static final int END = BlackFoxDimensionTimeline.END;
+    public static final int CHARGE = 50, DRAW = 62, HIT = 64, END = 84;
 
     public static boolean charging(float age) { return age >= CHARGE && age < DRAW; }
     public static boolean drawn(float age) { return age >= DRAW && age < END - 3; }

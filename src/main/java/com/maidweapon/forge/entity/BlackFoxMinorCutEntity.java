@@ -34,7 +34,7 @@ public final class BlackFoxMinorCutEntity extends Projectile {
         ((ServerLevel) level()).sendParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getY(), getZ(), 1, 0, 0, 0, 0);
         var contact = player.getBoundingBox().inflate(.65);
         if (contact.contains(before) || contact.clip(before, after).isPresent()) {
-            if (!boss.combat().protects(player) && !boss.combat().parryNative(player))
+            if (!boss.combat().protects(player) && !boss.combat().parryNative(player, this))
                 player.hurt(boss.body().damageSources().mobAttack(boss.body()), 8);
             ((ServerLevel) level()).sendParticles(BlackFoxEffects.POLLUTION, getX(), getY(), getZ(), 10, .2, .2, .2, .02);
             playSound(net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, .5f, 1.3f);

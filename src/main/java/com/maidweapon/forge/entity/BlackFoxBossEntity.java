@@ -43,6 +43,7 @@ public final class BlackFoxBossEntity extends Monster implements BlackFoxCombata
     private static final EntityDataAccessor<Integer> SLASH_KIND = SynchedEntityData.defineId(BlackFoxBossEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> SLASH_YAW = SynchedEntityData.defineId(BlackFoxBossEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> SLASH_ROLL = SynchedEntityData.defineId(BlackFoxBossEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Boolean> SLASH_HEAVY = SynchedEntityData.defineId(BlackFoxBossEntity.class, EntityDataSerializers.BOOLEAN);
     private final BlackFoxController controller = new BlackFoxController(this);
     private UUID challenger;
     private BlockPos origin = BlockPos.ZERO;
@@ -81,6 +82,7 @@ public final class BlackFoxBossEntity extends Monster implements BlackFoxCombata
         entityData.define(ARENA,BlockPos.ZERO); entityData.define(SLASH_AT,new org.joml.Vector3f());
         entityData.define(SLASH_BORN,Long.MIN_VALUE); entityData.define(SLASH_KIND,0);
         entityData.define(SLASH_YAW,0f); entityData.define(SLASH_ROLL,0f);
+        entityData.define(SLASH_HEAVY,false);
         entityData.define(CROSS_LEFT, new org.joml.Vector3f()); entityData.define(CROSS_RIGHT, new org.joml.Vector3f());
         entityData.define(SWORDS_AT, 0L); entityData.define(SWORDS_MASK, 0); entityData.define(SWORDS_YAW, 0f);
         entityData.define(MOTION, 0); entityData.define(PHASE, false); entityData.define(MOTION_AT, 0L);
@@ -163,6 +165,8 @@ public final class BlackFoxBossEntity extends Monster implements BlackFoxCombata
         entityData.set(SLASH_AT,position().subtract(net.minecraft.world.phys.Vec3.atLowerCornerOf(origin)).toVector3f());
         entityData.set(SLASH_YAW,getYRot()); entityData.set(SLASH_ROLL,BlackFoxSlashPresentation.roll(skill,age));
         entityData.set(SLASH_KIND,skill.ordinal()); entityData.set(SLASH_BORN,level().getGameTime());
+        entityData.set(SLASH_HEAVY, skill == BlackFoxFight.Skill.RETURN_BLADE
+                || skill == BlackFoxFight.Skill.DIMENSION_STRIKE && BlackFoxDimensionTimeline.heavy(age));
     }
     public net.minecraft.world.phys.Vec3 slashOrigin() {
         return net.minecraft.world.phys.Vec3.atLowerCornerOf(entityData.get(ARENA)).add(new net.minecraft.world.phys.Vec3(entityData.get(SLASH_AT)));
@@ -171,6 +175,7 @@ public final class BlackFoxBossEntity extends Monster implements BlackFoxCombata
     public BlackFoxFight.Skill slashKind() { return BlackFoxFight.Skill.values()[entityData.get(SLASH_KIND)]; }
     public float slashYaw() { return entityData.get(SLASH_YAW); }
     public float slashRoll() { return entityData.get(SLASH_ROLL); }
+    public boolean slashHeavy() { return entityData.get(SLASH_HEAVY); }
     public float slashArenaRadius() {
         var local=slashOrigin().subtract(net.minecraft.world.phys.Vec3.atBottomCenterOf(entityData.get(ARENA)));
         double side=FoxChallengeArena.RADIUS;
@@ -184,8 +189,8 @@ public final class BlackFoxBossEntity extends Monster implements BlackFoxCombata
     public net.minecraft.world.phys.Vec3 crossRight() { return position().add(new net.minecraft.world.phys.Vec3(entityData.get(CROSS_RIGHT))); }
     public float skillAge(float partial) { return level().getGameTime() - entityData.get(SKILL_AT) + partial; }
     public long skillStartedAt() { return entityData.get(SKILL_AT); }
-    public net.minecraft.world.phys.Vec3 strikeSink() { return new net.minecraft.world.phys.Vec3(entityData.get(SINK)); }
-    public net.minecraft.world.phys.Vec3 strikeEmerge() { return new net.minecraft.world.phys.Vec3(entityData.get(EMERGE)); }
+    public net.minecraft.world.phys.Vec3 strikeSink() { return net.minecraft.world.phys.Vec3.atLowerCornerOf(entityData.get(ARENA)).add(new net.minecraft.world.phys.Vec3(entityData.get(SINK))); }
+    public net.minecraft.world.phys.Vec3 strikeEmerge() { return net.minecraft.world.phys.Vec3.atLowerCornerOf(entityData.get(ARENA)).add(new net.minecraft.world.phys.Vec3(entityData.get(EMERGE))); }
     public float strikeYaw() { return entityData.get(STRIKE_YAW); }
     public long motionStartedAt() { return entityData.get(MOTION_AT); }
     public BlackFoxFight.Motion motion() { return BlackFoxFight.Motion.values()[entityData.get(MOTION)]; }

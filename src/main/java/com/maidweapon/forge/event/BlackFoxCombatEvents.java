@@ -36,8 +36,31 @@ public final class BlackFoxCombatEvents {
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void parryProtection(LivingAttackEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && FoxChallengeCollapse.active(player)) {
+            event.setCanceled(true); return;
+        }
+        if (event.getEntity() instanceof ServerPlayer player && FoxChallengeService.failurePending(player)) {
+            event.setCanceled(true);
+            return;
+        }
         if (event.getEntity() instanceof ServerPlayer player
                 && event.getSource().getEntity() instanceof BlackFoxCombatant boss && boss.combat().protects(player))
+            event.setCanceled(true);
+    }
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void lethalChallengeDamage(LivingDamageEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && FoxChallengeCollapse.active(player)) {
+            event.setCanceled(true); return;
+        }
+        if (event.getEntity() instanceof ServerPlayer player && event.getAmount() >= player.getHealth()
+                && FoxChallengeService.queueFailure(player)) event.setCanceled(true);
+    }
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void challengeDeath(net.minecraftforge.event.entity.living.LivingDeathEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && FoxChallengeCollapse.active(player)) {
+            event.setCanceled(true); return;
+        }
+        if (event.getEntity() instanceof ServerPlayer player && FoxChallengeService.queueFailure(player))
             event.setCanceled(true);
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST)

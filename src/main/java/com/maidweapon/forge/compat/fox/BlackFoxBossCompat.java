@@ -18,6 +18,9 @@ public final class BlackFoxBossCompat {
     private static RegistryObject<EntityType<BlackFoxBossEntity>> type;
     private static RegistryObject<EntityType<com.maidweapon.forge.entity.BlackFoxCoreEntity>> core;
     private static RegistryObject<EntityType<com.maidweapon.forge.entity.BlackFoxMinorCutEntity>> minorCut;
+    private static RegistryObject<EntityType<com.maidweapon.forge.entity.BlackFoxSwordCoreEntity>> swordCore;
+    private static RegistryObject<EntityType<com.maidweapon.forge.entity.BlackFoxSwordBoltEntity>> swordBolt;
+    private static RegistryObject<EntityType<com.maidweapon.forge.entity.BlackFoxSwordActorEntity>> swordActor;
     private static RegistryObject<net.minecraft.core.particles.SimpleParticleType> parry;
     public static void bootstrap(IEventBus bus) {
         if (!available()) return;
@@ -36,6 +39,15 @@ public final class BlackFoxBossCompat {
         minorCut = entities.register("black_fox_minor_cut", () -> EntityType.Builder
                 .of(com.maidweapon.forge.entity.BlackFoxMinorCutEntity::new, MobCategory.MISC).sized(.6f, .6f)
                 .clientTrackingRange(12).updateInterval(1).noSave().fireImmune().build("maid_weapon:black_fox_minor_cut"));
+        swordCore = entities.register("black_fox_sword_core", () -> EntityType.Builder
+                .of(com.maidweapon.forge.entity.BlackFoxSwordCoreEntity::new, MobCategory.MISC).sized(1, 1)
+                .clientTrackingRange(12).updateInterval(1).noSave().fireImmune().build("maid_weapon:black_fox_sword_core"));
+        swordBolt = entities.register("black_fox_sword_bolt", () -> EntityType.Builder
+                .of(com.maidweapon.forge.entity.BlackFoxSwordBoltEntity::new, MobCategory.MISC).sized(.4f, .4f)
+                .clientTrackingRange(12).updateInterval(1).noSave().fireImmune().build("maid_weapon:black_fox_sword_bolt"));
+        swordActor = entities.register("black_fox_sword_actor", () -> EntityType.Builder
+                .of(com.maidweapon.forge.entity.BlackFoxSwordActorEntity::new, MobCategory.MISC).sized(.1f, 1.8f)
+                .clientTrackingRange(12).updateInterval(1).noSave().fireImmune().build("maid_weapon:black_fox_sword_actor"));
         entities.register(bus);
         var particles = DeferredRegister.create(ForgeRegistries.PARTICLE_TYPES, "maid_weapon");
         parry = particles.register("black_fox_parry", () -> new net.minecraft.core.particles.SimpleParticleType(false));
@@ -52,22 +64,52 @@ public final class BlackFoxBossCompat {
     private static void attributes(EntityAttributeCreationEvent event) {
         event.put(type.get(), BlackFoxBossEntity.bossAttributes().build());
         event.put(core.get(), com.maidweapon.forge.entity.BlackFoxCoreEntity.attributes().build());
+        event.put(swordActor.get(), com.maidweapon.forge.entity.BlackFoxSwordActorEntity.attributes().build());
     }
     static EntityType<BlackFoxBossEntity> type() { return type.get(); }
     public static net.minecraft.core.particles.SimpleParticleType parryParticle() { return parry.get(); }
     static EntityType<com.maidweapon.forge.entity.BlackFoxCoreEntity> coreType() { return core.get(); }
     static EntityType<com.maidweapon.forge.entity.BlackFoxMinorCutEntity> minorCutType() { return minorCut.get(); }
+    static EntityType<com.maidweapon.forge.entity.BlackFoxSwordCoreEntity> swordCoreType() { return swordCore.get(); }
+    static EntityType<com.maidweapon.forge.entity.BlackFoxSwordBoltEntity> swordBoltType() { return swordBolt.get(); }
+    static EntityType<com.maidweapon.forge.entity.BlackFoxSwordActorEntity> swordActorType() { return swordActor.get(); }
+    public static com.maidweapon.forge.entity.BlackFoxSwordActorEntity spawnSwordActor(
+            com.maidweapon.forge.entity.BlackFoxSwordCoreEntity formation, ServerPlayer player, net.minecraft.world.entity.LivingEntity target) {
+        var entity = swordActor.get().create(player.level()); if (entity == null) return null;
+        entity.initialize(formation, player, target);
+        return player.level().addFreshEntity(entity) ? entity : null;
+    }
+    public static com.maidweapon.forge.entity.BlackFoxSwordBoltEntity spawnSwordBolt(ServerPlayer player, net.minecraft.world.entity.LivingEntity target,
+            net.minecraft.world.phys.Vec3 at, boolean blade, float damage, float speed) {
+        var entity = swordBolt.get().create(player.level()); if (entity == null) return null;
+        entity.initialize(player, target, at, blade, damage, speed);
+        return player.level().addFreshEntity(entity) ? entity : null;
+    }
+    public static com.maidweapon.forge.entity.BlackFoxSwordCoreEntity spawnSwordCore(ServerPlayer player) {
+        if (swordCore == null) return null;
+        var entity = swordCore.get().create(player.level());
+        if (entity == null) return null;
+        entity.initialize(player);
+        return player.level().addFreshEntity(entity) ? entity : null;
+    }
     public static com.maidweapon.forge.entity.BlackFoxMinorCutEntity spawnMinorCut(BlackFoxCombatant owner,
             net.minecraft.world.phys.Vec3 at, net.minecraft.world.phys.Vec3 velocity) {
         var entity = minorCut.get().create(owner.body().level());
         if (entity == null) return null;
         entity.setOwner(owner.body()); entity.setPos(at); entity.setDeltaMovement(velocity);
+        com.maidweapon.forge.system.fox.challenge.BlackFoxAttackOrigin.stamp(entity, owner.combat().fight());
         return owner.body().level().addFreshEntity(entity) ? entity : null;
     }
     public static com.maidweapon.forge.entity.BlackFoxCoreEntity spawnCore(BlackFoxCombatant owner, net.minecraft.world.phys.Vec3 at) {
         var entity = core.get().create(owner.body().level());
         if (entity == null) return null;
         entity.initialize(owner); entity.setPos(at);
+        return owner.body().level().addFreshEntity(entity) ? entity : null;
+    }
+    public static com.maidweapon.forge.entity.BlackFoxCoreEntity spawnSeal(BlackFoxCombatant owner, net.minecraft.world.phys.Vec3 at, int slot) {
+        var entity = core.get().create(owner.body().level());
+        if (entity == null) return null;
+        entity.initializeSeal(owner, slot); entity.setPos(at);
         return owner.body().level().addFreshEntity(entity) ? entity : null;
     }
     public static BlackFoxCombatant spawn(ServerPlayer player, BlockPos origin) {

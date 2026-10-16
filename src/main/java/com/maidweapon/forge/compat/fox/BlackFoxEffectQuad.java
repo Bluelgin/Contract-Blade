@@ -19,6 +19,22 @@ final class BlackFoxEffectQuad {
                 .normal(stack.last().normal(),0,0,1).endVertex();
     }
     private BlackFoxEffectQuad() { }
+    /** Fixed atlas UVs, inset half a texel to prevent neighboring-frame bleeding. */
+    static void atlas(PoseStack stack, MultiBufferSource buffers, ResourceLocation texture,
+                      float width, float height, float alpha, int frame) {
+        if (alpha <= 0) return;
+        frame = Math.max(0, Math.min(23, frame));
+        float u0 = (frame % 6 * 128 + .5f) / 768, u1 = (frame % 6 * 128 + 127.5f) / 768;
+        float v0 = (frame / 6 * 320 + .5f) / 1280, v1 = (frame / 6 * 320 + 319.5f) / 1280;
+        var vertices = buffers.getBuffer(RenderType.entityTranslucentEmissive(texture));
+        for (int corner = 0; corner < 4; corner++) {
+            boolean right = corner == 1 || corner == 2, top = corner >= 2;
+            vertices.vertex(stack.last().pose(), (right ? 1 : -1) * width / 2,
+                            (top ? 1 : -1) * height / 2, 0).color(1f, 1f, 1f, alpha)
+                    .uv(right ? u1 : u0, top ? v0 : v1).overlayCoords(OverlayTexture.NO_OVERLAY)
+                    .uv2(LightTexture.FULL_BRIGHT).normal(stack.last().normal(), 0, 0, 1).endVertex();
+        }
+    }
     /** Shared geometric mask for base texture and glow, including the no-custom-shader fallback. */
     static void sweep(PoseStack stack, MultiBufferSource buffers, ResourceLocation texture,
                       boolean energy, float width, float height, float alpha, float age, BlackFoxSlashTimeline.Layer layer) {

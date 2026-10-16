@@ -1,0 +1,77 @@
+{
+  "scope": "Blockbench main-clip + tail-layer poses, previous-frame Root bounce; numerical spring approximation, not live YSM integration",
+  "models": [
+    {
+      "id": "fox_white",
+      "frames": 1003,
+      "invalidMatrices": 0,
+      "tested": [
+        "pre_parallel3"
+      ],
+      "locomotionScenarios": [
+        {
+          "scenario": "idle",
+          "frames": 181,
+          "maxFrameBodyBounce": 0
+        },
+        {
+          "scenario": "walk",
+          "frames": 181,
+          "maxFrameBodyBounce": 0.55
+        },
+        {
+          "scenario": "run",
+          "frames": 181,
+          "maxFrameBodyBounce": 1.59
+        },
+        {
+          "scenario": "start-stop",
+          "frames": 181,
+          "maxFrameBodyBounce": 1.04
+        },
+        {
+          "scenario": "turn",
+          "frames": 181,
+          "maxFrameBodyBounce": 1.04
+        }
+      ],
+      "preview": "E:/Little maid/art/fox_polish_preview/tail-adaptation/tail-preview/fox_white"
+    },
+    {
+      "id": "fox_black",
+      "frames": 1003,
+      "invalidMatrices": 0,
+      "tested": [
+        "pre_parallel3"
+      ],
+      "locomotionScenarios": [
+        {
+          "scenario": "idle",
+          "frames": 181,
+          "maxFrameBodyBounce": 0
+        },
+        {
+          "scenario": "walk",
+          "frames": 181,
+          "maxFrameBodyBounce": 0.55
+        },
+        {
+          "scenario": "run",
+          "frames": 181,
+          "maxFrameBodyBounce": 1.59
+        },
+        {
+          "scenario": "start-stop",
+          "frames": 181,
+          "maxFrameBodyBounce": 1.04
+        },
+        {
+          "scenario": "turn",
+          "frames": 181,
+          "maxFrameBodyBounce": 1.04
+        }
+      ],
+      "preview": "E:/Little maid/art/fox_polish_preview/tail-adaptation/tail-preview/fox_black"
+    }
+  ]
+}

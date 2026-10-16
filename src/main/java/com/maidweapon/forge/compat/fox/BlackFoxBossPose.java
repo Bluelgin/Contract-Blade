@@ -36,7 +36,8 @@ final class BlackFoxBossPose extends AnimatableEntity<BlackFoxBossEntity> {
                 if (expected.equals("contract_fox_boss.iaido")) {
                     elapsed = entity.skill()==BlackFoxFight.Skill.STANDING_IAIDO
                             ? com.maidweapon.forge.system.fox.challenge.BlackFoxStandingIaidoTimeline.animationTick((float)elapsed)
-                            : com.maidweapon.forge.system.fox.challenge.BlackFoxIaidoTimeline.animationTick((float) elapsed);
+                            : com.maidweapon.forge.system.fox.challenge.BlackFoxIaidoTimeline.animationTick(
+                                    com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.poseAge((float) elapsed));
                 }
                 return clipTick(elapsed, currentAnimation.animationLength,
                         expected.equals("contract_fox_boss.walk"));

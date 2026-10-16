@@ -54,6 +54,12 @@ public final class BlackFoxDomainAttacks {
             launch(core.add(direction.scale(1.4)), direction, (i & 1) != 0, (i&1)==0?1.35f:1.1f);
         }
     }
+    public Entity sealPulse(Vec3 at, Vec3 target, long sequence, int slot) {
+        prune(); if (shots.size() >= MAX_SHOTS) return null;
+        var shot = BlackFoxPhantomCompat.spawn(actor.body(), at, target.subtract(at).normalize(), false, 1.1f);
+        BlackFoxAttackOrigin.stamp(shot, BlackFoxFight.Skill.SEAL_ARRAY, sequence, slot);
+        shots.add(new Shot(shot, now() + 60)); return shot;
+    }
     public void wheel(ServerPlayer player) {
         prune(); formation.beginWheel(player, MAX_SHOTS - shots.size(), shot -> shots.add(new Shot(shot, now() + 120)));
     }

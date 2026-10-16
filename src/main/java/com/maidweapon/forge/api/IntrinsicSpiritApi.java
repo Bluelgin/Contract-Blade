@@ -8,6 +8,7 @@ import com.maidweapon.forge.system.contract.ContractCarrierData;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.maidweapon.forge.system.MaidEntityDataCodec;
+import com.maidweapon.forge.compat.tlm.PresetSpiritModels;
 import com.maidweapon.common.MaidWeaponConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -36,6 +37,7 @@ public final class IntrinsicSpiritApi {
     private static final String CONTRACT = "Contract";
     private static final String SPIRIT_ID = "SpiritId";
     private static final String DISPLAY_NAME = "DisplayName";
+    private static final String DEFAULT_MODEL = "DefaultModelApplied";
     /** Creates or safely migrates an intrinsic spirit without activating it. */
     public static boolean ensureIntrinsicSpirit(
             Player owner,
@@ -45,7 +47,10 @@ public final class IntrinsicSpiritApi {
         if (!valid(owner, weapon, spiritId)) return false;
         if (weapon.hasTag() && weapon.getTag().getCompound(DETACHED).getBoolean(spiritId)) return false;
         migrateProjectedAuthority(weapon);
-        if (hasIntrinsicSpirit(weapon, spiritId)) return true;
+        if (hasIntrinsicSpirit(weapon, spiritId)) {
+            applyPresetModel(owner, weapon, spiritId);
+            return true;
+        }
         CompoundTag existingRoot = weapon.getTag();
         if (existingRoot != null
                 && existingRoot.getCompound(ROOT).getAllKeys().size()
@@ -62,6 +67,7 @@ public final class IntrinsicSpiritApi {
             storeIntrinsic(weapon, spiritId, displayName, legacy);
             clearContract(weapon);
             weapon.getOrCreateTag().putInt(SCHEMA, SCHEMA_VERSION);
+            applyPresetModel(owner, weapon, spiritId);
             return true;
         }
 
@@ -83,7 +89,45 @@ public final class IntrinsicSpiritApi {
         storeIntrinsic(weapon, spiritId, displayName, intrinsic);
         restoreContract(weapon, external);
         weapon.getOrCreateTag().putInt(SCHEMA, SCHEMA_VERSION);
-        return finishStorageChange(weapon, beforeCreation);
+        if (!finishStorageChange(weapon, beforeCreation)) return false;
+        applyPresetModel(owner, weapon, spiritId);
+        return true;
+    }
+
+    /** One-time default/migration; provider synchronization never forces the player's skin back. */
+    private static void applyPresetModel(Player owner, ItemStack weapon, String spiritId) {
+        String model = PresetSpiritModels.modelFor(spiritId);
+        CompoundTag entry = intrinsicEntry(weapon, spiritId);
+        if (model.isEmpty() || model.equals(entry.getString(DEFAULT_MODEL))
+                || !PresetSpiritModels.isAvailable(model)) return;
+        CompoundTag candidate = weapon.getTag().copy();
+        CompoundTag spirits = candidate.getCompound(ROOT);
+        entry = spirits.getCompound(spiritId);
+        Entity manifested = null;
+        boolean applied;
+        if (spiritId.equals(projection(weapon))) {
+            if (MaidEntityDataCodec.hasData(candidate)) {
+                applied = PresetSpiritModels.applyDefault(candidate, model);
+            } else {
+                String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
+                manifested = maidId == null || maidId.isBlank() ? null
+                        : InfusedMaidDeploymentSystem.findManifestedMaid(owner, maidId);
+                applied = manifested != null;
+            }
+        } else {
+            applied = PresetSpiritModels.applyDefault(entry.getCompound(CONTRACT), model);
+        }
+        if (!applied) return;
+        entry.putString(DEFAULT_MODEL, model);
+        spirits.put(spiritId, entry);
+        candidate.put(ROOT, spirits);
+        try {
+            MaidEntityDataCodec.validateContainer(candidate);
+        } catch (java.io.IOException rejected) {
+            return; // Keep the complete original contract, including a live maid, untouched.
+        }
+        if (manifested != null && !PresetSpiritModels.applyDefault(manifested, model)) return;
+        weapon.setTag(candidate);
     }
 
     /**

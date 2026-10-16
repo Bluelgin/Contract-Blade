@@ -20,7 +20,7 @@ final class BlackFoxSkills {
             default -> { }
         }
     }
-    /** Native B attacks from the committed position; only phase one ends at the B3 boundary. */
+    /** Full native B1-B7; completion, not a phase-specific truncation, starts recovery. */
     private static void pursuit(BlackFoxActions actions, ServerPlayer player, int age) {
         var fight = actions.fight;
         var boss = actions.boss();
@@ -28,7 +28,7 @@ final class BlackFoxSkills {
         if (age == 1) BlackFoxEffects.tell(boss, true);
         actions.nativeCombo().tick();
         actions.stopHorizontal();
-        if (!fight.phaseTwo() && actions.nativeCombo().finished()) fight.endRush();
+        if (actions.nativeCombo().finished()) fight.endRush();
     }
     private static void sky(BlackFoxActions actions, ServerPlayer player, int age) {
         Mob boss = actions.boss();

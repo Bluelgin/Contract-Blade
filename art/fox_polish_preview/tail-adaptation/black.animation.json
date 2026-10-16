@@ -1,0 +1,190 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "pre_parallel0": {
+      "loop": true,
+      "animation_length": 3,
+      "bones": {
+        "LeftEyebrow": {
+          "position": [
+            0,
+            "ysm.is_close_eyes ? -1 : 0",
+            0
+          ]
+        },
+        "RightEyebrow": {
+          "position": [
+            0,
+            "ysm.is_close_eyes ? -1 : 0",
+            0
+          ]
+        },
+        "RightEyelid": {
+          "scale": "ysm.is_close_eyes ? 0 : 1"
+        },
+        "LeftEyelid": {
+          "scale": "ysm.is_close_eyes ? 0 : 1"
+        }
+      }
+    },
+    "pre_parallel3": {
+      "loop": true,
+      "bones": {
+        "molang2": {
+          "rotation": [
+            "v.maid_fox_tail_move=math.clamp(ysm.second_order('maid_fox_tail_move_blend',((((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)&&query.is_on_ground)&&query.ground_speed>0.05)||((((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)&&query.is_on_ground)&&query.ground_speed>0.05)&&query.is_sprinting))?math.clamp(query.ground_speed/3.2,0,1):0,2.4,0.85,0),0,1);",
+            "v.maid_fox_tail_run=math.clamp(ysm.second_order('maid_fox_tail_run_blend',((((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)&&query.is_on_ground)&&query.ground_speed>0.05)&&query.is_sprinting)?1:0,2.2,0.85,0),0,1);",
+            0
+          ]
+        },
+        "Tail": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(0)+25)*(2.0-1.5*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_1',-2.0*(v.maid_fox_tail_move??0)-5.0*(v.maid_fox_tail_run??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.55+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.35,-4,4),3.6,0.85,0)",
+            "math.sin(query.anim_time*120+(0))*(8.5-(8.5-3)*(v.maid_fox_tail_move??0))+(0)*(3.0*(v.maid_fox_tail_move??0)+7.0*(v.maid_fox_tail_run??0))+ysm.second_order('maid_fox_tail_center_turn_1',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.025,-8,8),3.0,0.8,0)",
+            "math.sin(query.anim_time*120+(0)-65)*(4.5-3.0*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "Tail2": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-17)+20)*(1.6-1.35*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_2',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.77+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),3.4,0.72,0)",
+            "math.sin(query.anim_time*120+(-17))*(3.20-2.31*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-57))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-17)-65)*1.32*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "Tail3": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-34)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_3',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.88+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),3.1,0.72,0)",
+            "math.sin(query.anim_time*120+(-34))*(3.25-2.24*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-74))*0.5*(1-0.6*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_turn_3',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.007,-2.2,2.2),2.3,0.72,0)",
+            "math.sin(query.anim_time*120+(-34)-65)*1.48*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "Tail4": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-51)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_4',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.99+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.8,0.72,0)",
+            "math.sin(query.anim_time*120+(-51))*(3.60-2.47*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-91))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-51)-65)*1.64*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "Tail5": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-68)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_5',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.10+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.5,0.72,0)",
+            "math.sin(query.anim_time*120+(-68))*(3.95-2.70*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-108))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-68)-65)*1.80*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "Tail6": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-85)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_6',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.21+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.2,0.72,0)",
+            "math.sin(query.anim_time*120+(-85))*(4.30-2.93*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-125))*0.5*(1-0.6*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_turn_6',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.007,-2.2,2.2),1.8,0.72,0)",
+            "math.sin(query.anim_time*120+(-85)-65)*1.96*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "Tail7": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-102)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_center_pitch_7',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.32+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2,0.72,0)",
+            "math.sin(query.anim_time*120+(-102))*(4.60-3.11*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-142))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-102)-65)*2.12*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(68)+25)*(2.0-1.5*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_1',-2.0*(v.maid_fox_tail_move??0)-5.0*(v.maid_fox_tail_run??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.52+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.35,-4,4),3.46,0.85,0)",
+            "math.sin(query.anim_time*120+(68))*(8.5-(8.5-4.5)*(v.maid_fox_tail_move??0))+(-1)*(3.0*(v.maid_fox_tail_move??0)+7.0*(v.maid_fox_tail_run??0))+ysm.second_order('maid_fox_tail_left_turn_1',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.025,-8,8),3.0,0.8,0)",
+            "math.sin(query.anim_time*120+(68)-65)*(4.5-3.0*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail2": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(51)+20)*(1.6-1.35*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_2',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.72+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),3.26,0.74,0)",
+            "math.sin(query.anim_time*120+(51))*(3.20-2.31*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(11))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(51)-65)*1.32*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail3": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(34)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_3',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.83+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.96,0.74,0)",
+            "math.sin(query.anim_time*120+(34))*(3.25-2.24*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-6))*0.5*(1-0.6*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_turn_3',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.007,-2.2,2.2),2.3,0.72,0)",
+            "math.sin(query.anim_time*120+(34)-65)*1.48*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail4": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(17)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_4',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.93+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.66,0.74,0)",
+            "math.sin(query.anim_time*120+(17))*(3.60-2.47*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-23))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(17)-65)*1.64*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail5": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(0)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_5',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.03+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.36,0.74,0)",
+            "math.sin(query.anim_time*120+(0))*(3.95-2.70*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-40))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(0)-65)*1.80*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail6": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-17)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_6',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.14+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.06,0.74,0)",
+            "math.sin(query.anim_time*120+(-17))*(4.30-2.93*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-57))*0.5*(1-0.6*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_turn_6',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.007,-2.2,2.2),1.8,0.72,0)",
+            "math.sin(query.anim_time*120+(-17)-65)*1.96*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "LeftSpirit_Tail7": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-34)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_left_pitch_7',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.24+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),1.86,0.74,0)",
+            "math.sin(query.anim_time*120+(-34))*(4.60-3.11*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-74))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-34)-65)*2.12*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-76)+25)*(2.0-1.5*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_1',-2.0*(v.maid_fox_tail_move??0)-5.0*(v.maid_fox_tail_run??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.57+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.35,-4,4),3.74,0.85,0)",
+            "math.sin(query.anim_time*120+(-76))*(8.5-(8.5-4.5)*(v.maid_fox_tail_move??0))+(1)*(3.0*(v.maid_fox_tail_move??0)+7.0*(v.maid_fox_tail_run??0))+ysm.second_order('maid_fox_tail_right_turn_1',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.025,-8,8),3.0,0.8,0)",
+            "math.sin(query.anim_time*120+(-76)-65)*(4.5-3.0*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail2": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-93)+20)*(1.6-1.35*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_2',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.79+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),3.54,0.7,0)",
+            "math.sin(query.anim_time*120+(-93))*(3.20-2.31*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-133))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-93)-65)*1.32*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail3": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-110)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_3',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*0.91+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),3.24,0.7,0)",
+            "math.sin(query.anim_time*120+(-110))*(3.25-2.24*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-150))*0.5*(1-0.6*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_turn_3',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.007,-2.2,2.2),2.3,0.72,0)",
+            "math.sin(query.anim_time*120+(-110)-65)*1.48*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail4": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-127)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_4',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.02+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.94,0.7,0)",
+            "math.sin(query.anim_time*120+(-127))*(3.60-2.47*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-167))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-127)-65)*1.64*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail5": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-144)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_5',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.13+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.64,0.7,0)",
+            "math.sin(query.anim_time*120+(-144))*(3.95-2.70*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-184))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-144)-65)*1.80*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail6": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-161)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_6',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.25+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.34,0.7,0)",
+            "math.sin(query.anim_time*120+(-161))*(4.30-2.93*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-201))*0.5*(1-0.6*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_turn_6',math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.yaw_speed:0)*0.007,-2.2,2.2),1.8,0.72,0)",
+            "math.sin(query.anim_time*120+(-161)-65)*1.96*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        },
+        "RightSpirit_Tail7": {
+          "rotation": [
+            "math.sin(query.anim_time*120+(-178)+20)*(0.7-0.45*(v.maid_fox_tail_move??0))+ysm.second_order('maid_fox_tail_right_pitch_7',-0.25*(v.maid_fox_tail_move??0)+math.clamp(-ysm.bone_pos('Root').y*1.5,-3,3)*(v.maid_fox_tail_move??0)*1.36+math.clamp(-((query.health/math.max(query.max_health,1)>=0.2&&!tlm.is_sitting&&!ysm.is_sleep&&!query.is_riding&&!query.is_in_water&&!query.is_swimming)?query.vertical_speed:0)*0.10,-4,4),2.14,0.7,0)",
+            "math.sin(query.anim_time*120+(-178))*(4.60-3.11*(v.maid_fox_tail_move??0))+math.sin(query.anim_time*240+(-218))*0.5*(1-0.6*(v.maid_fox_tail_move??0))",
+            "math.sin(query.anim_time*120+(-178)-65)*2.12*(1-0.5*(v.maid_fox_tail_move??0))"
+          ]
+        }
+      }
+    }
+  }
+}

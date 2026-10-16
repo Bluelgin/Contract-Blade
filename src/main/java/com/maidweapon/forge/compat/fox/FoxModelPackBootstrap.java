@@ -67,6 +67,10 @@ public final class FoxModelPackBootstrap {
             LogUtils.getLogger().warn("[MaidWeapon] Existing managed fox pack was not overwritten; inspect it if models are missing");
             return;
         }
+        if (com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.hasUnmanagedPack(directory, upgrade ? target : null)) {
+            LogUtils.getLogger().warn("[MaidWeapon] Custom Akatsuki pack found; shared fox page installation skipped to preserve it");
+            return;
+        }
         Path temporary = Files.createTempFile(directory, ".contract-fox-", ".tmp");
         try (var source = FoxModelPackBootstrap.class.getResourceAsStream(RESOURCE)) {
             if (source == null) throw new IOException("Missing bundled fox model archive");
@@ -95,7 +99,13 @@ public final class FoxModelPackBootstrap {
         try {
             return Set.of(ORIGINAL_SHA256, "2d4563d5afd573e1ee85fedffaf28184bd70890bfc2f629374cabacd08ee6289",
                     "a369393325c064bc9f8cb40ffc73f9f27b134696dc69d616ad8f7dc28cdb4e90",
-                    "9c907d7583939b1576fca9ba9c3eb77ee2738e000653c0095054e391cd09d6e9")
+                    "9c907d7583939b1576fca9ba9c3eb77ee2738e000653c0095054e391cd09d6e9",
+                    "99dbec3f847173ace1e2c5d946c6187689a421675285cfacf8684feffb7e8b31",
+                    "cbff29358e1b4d918045b5795c716ae9ca9d6ec3ada4fada94af263dbc92c886",
+                    "9f0dabf01a62e9d64a7ea3a272dfe5bc4dfb89fdb6b967c2865a70442a9a8bf0",
+                    "49807e70c4eddb95321a8b1ada8fbfa9d6be6eb43c8a7d991744055fa3bd4bd4",
+                    "cf1b17abe896e83d20987858e28d41f2cb3c55a1024d0a4126880ba03098d732",
+                    "8c713434e70c14869164a67f2634c3de764800dd3b1248daaaf93e4906abbf8d")
                     .contains(java.util.HexFormat.of().formatHex(
                     java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path))));
         } catch (java.security.NoSuchAlgorithmException impossible) {

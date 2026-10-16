@@ -31,6 +31,25 @@ public final class BlackFoxCorruption {
         cross = new BlackFoxDomainCross(actions);
     }
     public BlackFoxDomainCross cross() { return cross; }
+    /** Standalone legacy attacks without the old hovering phase, ambient spam or parry interruption. */
+    void combatSkills(ServerPlayer player) {
+        if (fight.skill() == BlackFoxFight.Skill.STAGGER || actor.combat().seals().active()) {
+            rifts.clear(); return;
+        }
+        switch (fight.skill()) {
+            case SWORD_WHEEL -> { if (fight.age() == 1) ranged.wheel(player); }
+            case DOMAIN_CROSS -> cross.tick(player);
+            case DOMAIN_RAIN -> { if (fight.age() == 1) ranged.rain(player); }
+            case DOMAIN_SEAL -> {
+                if (fight.age() == 1) ranged.seal(player);
+                // Keep the former dimensional black holes as one advertised pair, not ambient stacking.
+                if (fight.age() == 8) rifts.spawn(player, center());
+            }
+            default -> { }
+        }
+        rifts.pruneVisuals(); rifts.tick(player);
+    }
+    void clearCombatRifts() { rifts.clear(); }
     private long now() { return actor.body().level().getGameTime(); }
     private Vec3 center() { return Vec3.atBottomCenterOf(actor.arenaOrigin()).add(0, 1, 0); }
     public void begin() {

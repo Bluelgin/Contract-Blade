@@ -60,7 +60,9 @@ public final class BlackFoxShrineReturn extends SavedData {
     public boolean rescue(ServerPlayer player) {
         Ticket ticket = tickets.get(player.getUUID());
         if (ticket == null || !ticket.active) return false;
-        if (FoxSpiritState.hasResident(ticket.blade)) return true;
+        if (FoxSpiritState.hasResident(ticket.blade)) {
+            com.maidweapon.forge.compat.BlackFoxSwordArtCompat.unlock(ticket.blade, player); setDirty(); return true;
+        }
         var identity = new CompoundTag();
         UUID origin = UUID.randomUUID();
         identity.putInt("Version", 1);
@@ -72,6 +74,7 @@ public final class BlackFoxShrineReturn extends SavedData {
         ticket.blade.getOrCreateTag().putUUID(FoxSpiritState.ORIGIN, origin);
         ticket.blade.getOrCreateTag().put(FoxSpiritState.ROOT, identity);
         FoxSpiritLedger.get(player.getServer()).record(identity, "WEAPON");
+        com.maidweapon.forge.compat.BlackFoxSwordArtCompat.unlock(ticket.blade, player);
         setDirty();
         return true;
     }

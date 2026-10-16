@@ -61,7 +61,8 @@ public final class BlackFoxSlashCompat {
             Method actor = update.getMethod("getEntity");
             MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, false, update, action -> {
                 try {
-                    if (actor.invoke(action) instanceof com.maidweapon.forge.system.fox.challenge.BlackFoxCombatant)
+                    if (actor.invoke(action) instanceof com.maidweapon.forge.system.fox.challenge.BlackFoxCombatant
+                            || actor.invoke(action) instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity)
                         action.setCanceled(true);
                 } catch (ReflectiveOperationException error) { throw new IllegalStateException(error); }
             });

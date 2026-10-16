@@ -16,10 +16,12 @@ public final class BlackFoxSwordFormation {
     private final BlackFoxCombatant actor;
     private final List<Sword> held = new ArrayList<>();
     private long born;
-    private boolean second, locked, arc, wheel;
-    public static final int WHEEL_FLAG = 1 << 12, WHEEL_STOP = 32, WHEEL_FIRST = 40, WHEEL_SECOND = 56;
+    private boolean second, locked, relocked, arc, wheel;
+    public static final int WHEEL_FLAG = 1 << 12, WHEEL_STOP = 28, WHEEL_FIRST = 32, WHEEL_SECOND = 42;
+    public static final float SECOND_SPEED = 1.9f;
     private float yaw;
     private Vec3 target = Vec3.ZERO;
+    private Vec3 secondTarget = Vec3.ZERO;
     BlackFoxSwordFormation(BlackFoxCombatant actor) { this.actor = actor; }
     public long born() { return born; }
     public int mask() {
@@ -48,6 +50,12 @@ public final class BlackFoxSwordFormation {
     public static int fireAge(int slot, boolean second) {
         return (second ? SECOND_HOLD : FIRST_HOLD) + slot * (second ? 2 : 3);
     }
+    /** Each phase-two batch commits its aim four ticks before that batch's first sword. */
+    public static int lockAge(int slot, boolean second, boolean wheel) {
+        if (wheel) return (slot < 6 ? WHEEL_FIRST : WHEEL_SECOND) - LOCK_LEAD;
+        return second && slot >= 3 ? fireAge(3, true) - LOCK_LEAD
+                : (second ? SECOND_HOLD : FIRST_HOLD) - LOCK_LEAD;
+    }
     void begin(ServerPlayer player, int capacity, Consumer<Entity> track) {
         begin(player, capacity, track, false);
     }
@@ -55,7 +63,7 @@ public final class BlackFoxSwordFormation {
         if (!held.isEmpty()) return;
         this.arc = arc; wheel = false;
         second = actor.combat().fight().phaseTwo();
-        born = actor.body().level().getGameTime(); locked = false; yaw = actor.body().getYRot();
+        born = actor.body().level().getGameTime(); locked = relocked = false; yaw = actor.body().getYRot();
         int count = Math.min(second || arc ? 5 : 3, capacity);
         for (int slot = 0; slot < count; slot++) {
             Vec3 at = actor.body().position().add(arc ? arcOffset(slot, yaw) : offset(slot, yaw));
@@ -67,7 +75,7 @@ public final class BlackFoxSwordFormation {
     }
     void beginWheel(ServerPlayer player, int capacity, Consumer<Entity> track) {
         if (!held.isEmpty()) return;
-        wheel = true; arc = false; second = true; locked = false;
+        wheel = true; arc = false; second = true; locked = relocked = false;
         born = actor.body().level().getGameTime(); yaw = actor.body().getYRot();
         for (int slot = 0; slot < Math.min(12, capacity); slot++) {
             Vec3 at = actor.body().position().add(wheelOffset(slot, yaw, 0));
@@ -81,10 +89,17 @@ public final class BlackFoxSwordFormation {
         long age = actor.body().level().getGameTime() - born;
         if (!locked) {
             yaw = actor.body().getYRot();
-            if (age >= (wheel ? WHEEL_STOP : (second ? SECOND_HOLD : FIRST_HOLD) - LOCK_LEAD)) {
+            if (age >= lockAge(0, second, wheel)) {
                 locked = true; target = player.getEyePosition();
                 BlackFoxEffects.tell(actor.body(), true);
             }
+        }
+        if (second && !relocked && age >= lockAge(wheel ? 6 : 3, true, wheel)
+                && held.stream().anyMatch(sword -> sword.slot() >= (wheel ? 6 : 3))) {
+            relocked = true;
+            secondTarget = player.getEyePosition();
+            BlackFoxEffects.tell(actor.body(), true);
+            actor.body().playSound(net.minecraft.sounds.SoundEvents.TRIDENT_RETURN, .5f, 1.6f);
         }
         var iterator = held.iterator();
         while (iterator.hasNext()) {
@@ -93,11 +108,14 @@ public final class BlackFoxSwordFormation {
             Vec3 at = actor.body().position().add(wheel ? wheelOffset(sword.slot(), yaw, age)
                     : arc ? arcOffset(sword.slot(), yaw) : offset(sword.slot(), yaw));
             sword.entity().teleportTo(at.x, at.y, at.z);
-            Vec3 aim = (locked ? target : player.getEyePosition()).subtract(at);
+            boolean secondBatch = second && sword.slot() >= (wheel ? 6 : 3);
+            Vec3 committed = secondBatch ? (relocked ? secondTarget : player.getEyePosition())
+                    : (locked ? target : player.getEyePosition());
+            Vec3 aim = committed.subtract(at);
             if (arc) aim = aim.yRot((float) Math.toRadians((sword.slot() - 2) * 6));
             if (aim.lengthSqr() < .0001) aim = new Vec3(0,0,1);
             boolean firing = age >= (wheel ? wheelFireAge(sword.slot()) : fireAge(sword.slot(), second));
-            BlackFoxPhantomCompat.fire(sword.entity(), aim, firing ? (second ? 1.5f : 1.2f) : 0);
+            BlackFoxPhantomCompat.fire(sword.entity(), aim, firing ? (second ? SECOND_SPEED : 1.2f) : 0);
             if (firing) {
                 sword.entity().playSound(net.minecraft.sounds.SoundEvents.TRIDENT_THROW, .45f, 1.5f);
                 iterator.remove();

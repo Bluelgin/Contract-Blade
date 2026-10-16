@@ -11,21 +11,29 @@ import static com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimelin
 final class BlackFoxDimensionEffects {
     static void draw(BlackFoxBossEntity boss, float partial, PoseStack stack, MultiBufferSource buffers) {
         if (boss.skill() != BlackFoxFight.Skill.DIMENSION_STRIKE) return;
-        if (boss.skillAge(partial)>=HIT) return; // The cut is drawn from the synchronized world-space snapshot.
-        sample(boss.skillAge(partial), boss.strikeSink(), boss.strikeEmerge(), boss.strikeYaw(), stack, buffers,
-                net.minecraft.client.Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation());
+        sampleAt(boss.skillAge(partial), boss.strikeSink(), boss.strikeEmerge(), boss.strikeYaw(), stack, buffers,
+                boss.position());
     }
     static void sample(float age, Vec3 sink, Vec3 emerge, float yaw, PoseStack stack, MultiBufferSource buffers,
                        org.joml.Quaternionf cameraOrientation) {
         if (age < 0 || age >= END) return;
-        Vec3 base = age < EMERGE ? sink : emerge;
-        if (age < DIVE_END+4) BlackFoxRiftVisual.draw(stack, buffers, sink.subtract(base),
-                1.4f, (float)Math.sin(Math.PI*progress(age,0,DIVE_END+4)), true, cameraOrientation,age);
-        if (age >= WARNING && age < HIT) BlackFoxRiftVisual.draw(stack, buffers, emerge.subtract(base).add(0,1.1,0),
-                .2f+progress(age,WARNING,WARNING+2)*1.8f, 1-progress(age,EMERGE,EMERGE+4), false, cameraOrientation,age);
-        // Windup belongs to the bone-bound iaido charge, not an outward slash preview.
-        if (age >= HIT) BlackFoxArcSlashVisual.draw(stack, buffers, yaw,age-HIT,
-                .85f+progress(age,HIT,HIT+2)*.3f,-12,1);
+        sampleAt(age, sink, emerge, yaw, stack, buffers, localAge(age) < EMERGE ? sink : emerge);
+    }
+    private static void sampleAt(float age, Vec3 sink, Vec3 emerge, float yaw, PoseStack stack,
+                                 MultiBufferSource buffers, Vec3 base) {
+        if (age < 0 || age >= END) return;
+        int hit = hitAge(age);
+        age = localAge(age);
+        if (age < DIVE_END + 5) BlackFoxRiftVisual.tear(stack, buffers, sink.subtract(base), yaw,
+                true, Math.min(23, age / (DIVE_END + 5) * 23), .9f);
+        if (age >= WARNING && age < hit + 2) {
+            // Thin directional crack first; opening is reserved for the emergence, then rapidly seals.
+            float frame = age < EMERGE ? 1 + (age - WARNING) / (EMERGE - WARNING) * 5
+                    : age < EMERGE + 3 ? 6 + (age - EMERGE) / 3 * 9
+                    : age < hit - 5 ? 15 : 15 + (age - hit + 5) / 7 * 8;
+            BlackFoxRiftVisual.tear(stack, buffers, emerge.subtract(base).add(0, 1.3, 0), yaw, false, frame, 1);
+        }
+        // Actual cuts remain exclusively owned by the synchronized slash snapshot renderer.
     }
     private BlackFoxDimensionEffects() { }
 }

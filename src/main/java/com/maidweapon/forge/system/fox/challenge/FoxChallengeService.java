@@ -24,6 +24,36 @@ public final class FoxChallengeService {
     public static final ResourceKey<Level> LEVEL = ResourceKey.create(Registries.DIMENSION,
             ResourceLocation.parse("maid_weapon:fox_challenge"));
     private static final String RETURN = "MaidWeaponFoxChallengeReturn";
+    private static final String FAILURE = "MaidWeaponFoxChallengeFailed";
+
+    public static boolean failurePending(ServerPlayer player) {
+        return inside(player) && player.getPersistentData().getBoolean(FAILURE);
+    }
+
+    /** Cancel lethal damage now; travel at the player tick boundary, not inside an attack callback. */
+    public static boolean queueFailure(ServerPlayer player) {
+        if (FoxChallengeCollapse.active(player)) return false;
+        if (!inside(player) || BlackFoxEncounters.get(player) == null && !failurePending(player)) return false;
+        player.getPersistentData().putBoolean(FAILURE, true);
+        player.setHealth(Math.max(1, player.getMaxHealth() * .25f));
+        player.clearFire();
+        for (var effect : player.getActiveEffects().stream().map(instance -> instance.getEffect()).toList())
+            if (effect.getCategory() == net.minecraft.world.effect.MobEffectCategory.HARMFUL) player.removeEffect(effect);
+        player.fallDistance = 0;
+        player.invulnerableTime = 40;
+        return true;
+    }
+
+    public static boolean tickFailure(ServerPlayer player) {
+        if (!failurePending(player)) return false;
+        BlackFoxEncounters.stop(player);
+        // Use the same companion-safe recall/return path; pending failure blocks further damage if recall must retry.
+        if (leave(player)) {
+            player.invulnerableTime = 40;
+            player.sendSystemMessage(Component.translatable("maid_weapon.fox.challenge.failed"));
+        }
+        return true;
+    }
 
     public static boolean inside(ServerPlayer player) { return player.level().dimension().equals(LEVEL); }
 
@@ -127,6 +157,8 @@ public final class FoxChallengeService {
     }
 
     public static void forgetReturn(ServerPlayer player) {
+        FoxChallengeCollapse.clear(player);
+        player.getPersistentData().remove(FAILURE);
         var root = player.getPersistentData();
         var persisted = root.getCompound(Player.PERSISTED_NBT_TAG);
         persisted.remove(RETURN);

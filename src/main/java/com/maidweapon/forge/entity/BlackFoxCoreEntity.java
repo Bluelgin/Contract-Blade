@@ -14,7 +14,22 @@ import net.minecraftforge.network.NetworkHooks;
 
 /** Targetable phantom-sword/air-melee objective. It has no AI, loot, inventory or saved state. */
 public final class BlackFoxCoreEntity extends Monster {
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> SEAL_SLOT =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(BlackFoxCoreEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> OWNER_ID =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(BlackFoxCoreEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
     private BlackFoxCombatant encounter;
+    @Override protected void defineSynchedData() {
+        super.defineSynchedData(); entityData.define(SEAL_SLOT, -1); entityData.define(OWNER_ID, -1);
+    }
+    public int sealSlot() { return entityData.get(SEAL_SLOT); }
+    public int ownerId() { return entityData.get(OWNER_ID); }
+    public boolean isSeal() { return sealSlot() >= 0; }
+    public void initializeSeal(BlackFoxCombatant owner, int slot) {
+        initialize(owner); entityData.set(SEAL_SLOT, slot); entityData.set(OWNER_ID, owner.body().getId());
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(24); setHealth(24);
+        setCustomName(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.boss.seal_core"));
+    }
     public BlackFoxCoreEntity(EntityType<BlackFoxCoreEntity> type, Level level) {
         super(type, level); setNoGravity(true); setNoAi(true); setGlowingTag(true);
     }
@@ -30,7 +45,10 @@ public final class BlackFoxCoreEntity extends Monster {
         return super.hurt(source, damage);
     }
     @Override public void die(DamageSource source) {
-        if (encounter != null) encounter.combat().corruption().breakCore(this);
+        if (encounter != null) {
+            if (isSeal()) encounter.combat().seals().breakCore(this, sealSlot());
+            else encounter.combat().corruption().breakCore(this);
+        }
         discard();
     }
     @Override public void tick() {

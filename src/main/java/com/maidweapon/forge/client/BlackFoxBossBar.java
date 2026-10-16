@@ -17,18 +17,24 @@ public final class BlackFoxBossBar {
     public static final ResourceLocation TEXTURE = ResourceLocation.parse("maid_weapon:textures/gui/black_fox_bar.png");
     private static ClientLevel source;
     private static UUID barId;
-    private static int marks, style;
+    private static int marks, style, seals;
     private static final int[] FISSURES = {24, 73, 129};
     public static void state(UUID id, int count, int appearance, boolean active) {
+        state(id, count, appearance, active, 0);
+    }
+    public static void state(UUID id, int count, int appearance, boolean active, int remaining) {
         var level = Minecraft.getInstance().level;
         if (!active) { if (id.equals(barId)) clear(); return; }
         if (level == null) return;
         source = level; barId = id; marks = Math.max(0, Math.min(5, count)); style = Math.max(0, Math.min(2, appearance));
+        seals = Math.max(0, Math.min(4, remaining));
     }
     public static boolean matches(UUID id) { return source != null && source == Minecraft.getInstance().level && id.equals(barId); }
     @SubscribeEvent public static void render(CustomizeGuiOverlayEvent.BossEventProgress event) {
         if (!matches(event.getBossEvent().getId())) return;
-        event.setCanceled(true); event.setIncrement(30);
+        event.setCanceled(true); event.setIncrement(seals > 0 ? 40 : 30);
+        if (seals > 0) event.getGuiGraphics().drawCenteredString(Minecraft.getInstance().font,
+                net.minecraft.network.chat.Component.translatable("maid_weapon.fox.boss.seal_remaining", seals), event.getX() + 91, event.getY() + 24, 0xe4b8ff);
         draw(event.getGuiGraphics(), event.getX(), event.getY(), event.getBossEvent().getProgress(), marks, style);
         event.getGuiGraphics().drawCenteredString(Minecraft.getInstance().font, event.getBossEvent().getName(),
                 event.getX() + 91, event.getY() - 9, 0xe4d5f1);
@@ -59,6 +65,6 @@ public final class BlackFoxBossBar {
         }
     }
     @SubscribeEvent public static void logout(ClientPlayerNetworkEvent.LoggingOut event) { clear(); }
-    private static void clear() { source = null; barId = null; marks = style = 0; }
+    private static void clear() { source = null; barId = null; marks = style = seals = 0; }
     private BlackFoxBossBar() { }
 }

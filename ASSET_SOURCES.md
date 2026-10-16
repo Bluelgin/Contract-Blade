@@ -1,14 +1,41 @@
 # Asset sources
 
-## Akatsuki signature katana and swordplay (2026-10-07)
+## Three-fox maid-pack cover (2026-10-10)
 
-`assets/maid_weapon/akatsuki/katana.json` is original small cuboid cosmetic geometry
+The square pack cover/tab illustration is AI-assisted artwork generated with the
+built-in image tool from the project-provided Akatsuki/White Fox/Black Fox portrait.
+Source artwork, exact prompts and 256/512-pixel variants are retained under
+`art/maid_pack_icons/`. It replaces only each pack's `pack.png` and
+`textures/maid_icon.png`, not native 3D model preview thumbnails, character textures,
+geometry, animations or the YSM release. Original character attribution and asset
+license notices are retained with the distributed derivative.
+
+## Bundled Akatsuki maid model (2026-10-10)
+
+`modelpacks/contract-akatsuki-1.0.0.zip` contains the approved pink-white Akatsuki
+model, matching fox tail, cream-to-crimson clothing and native maid motion adaptation.
+The existing stockings are retained; the rear moon and withdrawn signature weapon
+are absent. It derives from Wine Fox / 酒狐 (TartaricAcid / 酒石酸菌 and Touhou Little
+Maid model-pack contributors), via the Akatsuki Wine Fox 1.2.3 adaptation by Blade
+Tetra contributors. Original maid/TAC animations plus the approved adaptation layer
+are retained byte-for-byte. Source: https://github.com/TartaricAcid/TouhouLittleMaid .
+The project character-pack provider confirmed CC BY-NC-SA 4.0 distribution for this
+Akatsuki derivative. Full attribution, change notes, license and asset checksums are
+included in the archive and `src/main/resources/licenses/akatsuki/`. These resources
+are not covered by the code MIT license. No YSM assets are added to this maid pack.
+
+## Archived Akatsuki katana and swordplay experiment (withdrawn 2026-10-08)
+
+The withdrawn `katana.json` is original small cuboid cosmetic geometry
 following this project's wine-red, black and gold concept. The one-pixel neutral
 material is generated procedurally; no concept bitmap or character texture is
 resampled into it. Short attack curves adapt the existing approved SlashBlade
 Combo B sample (amplitude/direction/recovery changes); its original MIT copyright
-and license are included separately in `licenses/akatsuki/SlashBlade-animation-MIT.txt`.
+and license are preserved in the archived `src/main/resources/licenses/akatsuki/SlashBlade-animation-MIT.txt`.
 Draw/sheathing curves, grip solver and client-only state machine are project additions.
+This prototype's code, resources and build/test tools are retained only under
+`art/akatsuki/swordplay/retired-20261008/`; they are not compiled or shipped.
+Native maid weapon rendering and combat animations are used instead.
 The external Akatsuki/TLM character pack is not copied, redistributed, overwritten
 or relicensed by this change. Its original notices continue to apply.
 

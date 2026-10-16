@@ -53,6 +53,16 @@ public final class BlackFoxEffects {
         var level = (ServerLevel) boss.level();
         level.sendParticles(POLLUTION, boss.getX(), boss.getY() + 1, boss.getZ(), 24, .45, .6, .45, .09);
         level.playSound(null, boss.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.HOSTILE, .65f, .7f);
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, boss.getX(), boss.getY() + 1,
+                boss.getZ(), 20, .35, .5, .35, .12);
+        level.playSound(null, boss.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.HOSTILE, .6f, .65f);
+    }
+    public static void heavyStrike(LivingEntity boss) {
+        var level = (ServerLevel) boss.level();
+        Vec3 at = boss.position().add(boss.getLookAngle().scale(2));
+        level.sendParticles(POLLUTION, at.x, boss.getY() + .25, at.z, 12, .8, .15, .8, .05);
+        level.sendParticles(ParticleTypes.CRIT, at.x, boss.getY() + 1, at.z, 8, .3, .3, .3, .08);
+        level.playSound(null, boss.blockPosition(), SoundEvents.IRON_GOLEM_ATTACK, SoundSource.HOSTILE, .85f, .6f);
     }
     private BlackFoxEffects() { }
 }

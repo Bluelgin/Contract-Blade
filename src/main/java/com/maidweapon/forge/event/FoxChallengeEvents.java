@@ -49,6 +49,8 @@ public final class FoxChallengeEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void tick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        if (com.maidweapon.forge.system.fox.challenge.FoxChallengeCollapse.tick(player)) return;
+        if (FoxChallengeService.tickFailure(player)) return;
         com.maidweapon.forge.system.fox.challenge.FoxChallengeDrops.tickRecovery(player);
         if (player.tickCount % 20 == 0)
             com.maidweapon.forge.system.fox.challenge.BlackFoxShrineReturn.get(player.getServer())
@@ -137,6 +139,7 @@ public final class FoxChallengeEvents {
     @SubscribeEvent
     public static void commands(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("foxchallenge")
+                .then(Commands.literal("swordart").executes(ctx -> com.maidweapon.forge.compat.BlackFoxSwordArtCompat.select(ctx.getSource().getPlayerOrException()) ? 1 : 0))
                 .then(Commands.literal("recover").requires(source -> source.hasPermission(2)).executes(ctx ->
                         com.maidweapon.forge.system.fox.challenge.FoxChallengeDrops.startRecovery(ctx.getSource().getPlayerOrException()) ? 1 : 0))
                 .then(Commands.literal("leave").executes(ctx -> FoxChallengeService.leave(ctx.getSource().getPlayerOrException()) ? 1 : 0))

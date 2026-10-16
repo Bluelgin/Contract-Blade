@@ -14,7 +14,7 @@ final class BlackFoxSlashEffects {
         var kind=boss.slashKind();
         float elapsed=boss.level().getGameTime()-boss.slashBorn()+partial;
         float age=BlackFoxSlashPresentation.melee(kind) ? elapsed : BlackFoxSlashPresentation.visualAge(elapsed,
-                BlackFoxSlashPresentation.speed(kind));
+                boss.slashHeavy() ? .8f : BlackFoxSlashPresentation.speed(kind));
         float lifetime=BlackFoxSlashPresentation.melee(kind) ? BlackFoxSlashPresentation.MELEE_END : BlackFoxSlashPresentation.LIFETIME;
         if(age<0 || age>=lifetime) return;
         // EntityRenderDispatcher uses interpolated coordinates, not boss.position(). Cancel exactly that transform.
@@ -29,7 +29,8 @@ final class BlackFoxSlashEffects {
             else if(BlackFoxSlashPresentation.melee(kind)) BlackFoxArcSlashVisual.drawMelee(stack,buffers,
                     boss.slashYaw(),elapsed,boss.slashRoll());
             else BlackFoxArcSlashVisual.draw(stack,buffers,boss.slashYaw(),age,
-                    BlackFoxSlashPresentation.scale(kind),boss.slashRoll(),kind==BlackFoxFight.Skill.STANDING_IAIDO
+                    BlackFoxSlashPresentation.scale(kind) * (boss.slashHeavy() ? 1.16f : 1),boss.slashRoll(),
+                    boss.slashHeavy() ? 1.15f : kind==BlackFoxFight.Skill.STANDING_IAIDO
                             || kind==BlackFoxFight.Skill.DIMENSION_STRIKE ? 1 : .65f);
         } finally { stack.popPose(); }
     }

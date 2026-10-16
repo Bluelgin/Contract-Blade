@@ -19,6 +19,7 @@ final class BlackFoxIaidoCharge {
         float age = boss.skillAge(partial);
         if(boss.skill()==BlackFoxFight.Skill.STANDING_IAIDO)
             age=com.maidweapon.forge.system.fox.challenge.BlackFoxStandingIaidoTimeline.poseAge(age);
+        else age=com.maidweapon.forge.system.fox.challenge.BlackFoxDimensionTimeline.poseAge(age);
         if (!BlackFoxIaidoTimeline.charging(age)) return;
         var anchor = BlackFoxBossRenderer.hierarchy(model.bones(), "LeftHandLocator");
         if (anchor.isEmpty()) return;

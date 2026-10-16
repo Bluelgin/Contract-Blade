@@ -52,9 +52,12 @@ final class BlackFoxActions {
     }
     boolean parryArena(ServerPlayer player) { return parry(player,true); }
     private boolean parry(ServerPlayer player,boolean arena) {
+        return parryProjectile(player, null, arena);
+    }
+    boolean parryProjectile(ServerPlayer player, net.minecraft.world.entity.Entity incoming, boolean arena) {
         if ((!arena && (!front(player) || !facingBoss(player))) || !BlackFoxEncounters.consumeParry(player)) return false;
         actor.combat().protectParry();
-        actor.combat().feedbackParry(player, false);
+        actor.combat().feedbackParry(player, false, incoming);
         BlackFoxEffects.contact(boss(), player, false);
         player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.boss.parry"), true);
         return true;
