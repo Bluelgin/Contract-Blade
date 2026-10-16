@@ -472,5 +472,5 @@
   "maid_weapon.tooltip.red.skill.complete": "Full domain",
   "maid_weapon.tooltip.red.resonance": "§6Sword resonance: %s of verified real hit damage as a bonus cut",
   "maid_weapon.tooltip.red.resonance_explain": "§7Resonance triggers after a real native hit (up to once per 0.5s/target). It uses actual HP lost, not denied theoretical damage; the bonus can still be mitigated.",
-  "maid_weapon.tooltip.red.channel_explain": "§7Ambient cuts keep pressure; soul debt recovery uses separate verified receipts. On recovery cooldown, ordinary cuts remain safety-capped and never refund or duplicate lost damage."
+  "maid_weapon.tooltip.red.channel_explain": "§7Ambient cuts are frequency-limited, not HP-budgeted. Soul debt uses verified receipts only; recovery cooldown never duplicates or blocks ordinary cuts."
 }

@@ -544,36 +544,34 @@ public final class SoulProvenanceValidation {
     LogUtils.getLogger().info("SOUL_NATIVE_PACKET_AND_LATE_BURST_PASS");
   }
 
+  /** Native Forge fixture: proved soul debt is NEVER clipped at legacy HP limits. */
   private static void highBudgets(MinecraftServer server, ServerPlayer p) {
     var l = p.serverLevel();
     setLevel(p, 10);
-    double player = SoulDamageConfig.PLAYER_SECOND.get();
-    try {
-      SoulDamageConfig.PLAYER_SECOND.set(8192d);
-      for (double total : new double[] {128, 384, 512, 1024}) {
-        advance(l, 240);
-        var t = cap(l);
-        nativeHit(t, p, (float) (total + 5));
-        var c = SoulAnchorService.create(p, t);
-        check(c != null, "high core");
-        aim(p, c);
-        float hp = t.getHealth();
-        p.attack(c);
-        for (int i = 0; i < 14; i++) {
-          advance(l, 1);
-          SoulBurstService.tick(
-              new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
-        }
-        double expected = Math.min(Math.min(total, 995), 512);
-        check(
-            near(hp - t.getHealth(), expected),
-            "high stage total " + total + " actual=" + (hp - t.getHealth()));
-        LogUtils.getLogger()
-            .info("SOUL_HIGH_BUDGET requested={} actualHP={}", total, hp - t.getHealth());
-        t.discard();
+    for (double total : new double[] {128, 384, 512, 1024, 10000}) {
+      advance(l, 240);
+      var t = cap(l);
+      float startingHealth = (float) Math.max(1000, total + 10);
+      t.getAttribute(Attributes.MAX_HEALTH).setBaseValue(startingHealth);
+      t.setHealth(startingHealth);
+      nativeHit(t, p, (float) (total + 5));
+      var o = DamageObservationService.latest(server);
+      check(o != null && o.recoverable() && near(o.loss(), total),
+          "uncapped verified debt amount=" + total + " observed=" + o);
+      var c = SoulAnchorService.create(p, t);
+      check(c != null, "uncapped core " + total);
+      aim(p, c);
+      float hp = t.getHealth();
+      p.attack(c);
+      for (int i = 0; i < 14; i++) {
+        advance(l, 1);
+        SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
-    } finally {
-      SoulDamageConfig.PLAYER_SECOND.set(player);
+      check(near(hp - t.getHealth(), total),
+          "uncapped burst total=" + total + " actual=" + (hp - t.getHealth()));
+      LogUtils.getLogger().info("SOUL_UNCAPPED_RECOVERY requested={} actualHP={}",
+          total, hp - t.getHealth());
+      t.discard();
     }
   }
 

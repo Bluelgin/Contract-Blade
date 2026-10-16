@@ -474,5 +474,5 @@
   "maid_weapon.tooltip.red.skill.complete": "完整领域",
   "maid_weapon.tooltip.red.resonance": "§6刀势共鸣：按真实命中扣血的 %s 追加斩击请求",
   "maid_weapon.tooltip.red.resonance_explain": "§7原生攻击真正扣血后才触发共鸣（同一目标约 0.5 秒一次）；以实际扣血为基准，不借用被限伤拦截的数值，追加斩击仍受防御影响。",
-  "maid_weapon.tooltip.red.channel_explain": "§7领域自动斩负责持续压制；限伤追偿只使用经验证的差额凭据。追偿冷却时普通斩仍可按安全预算发动，不会重复索取差额。"
+  "maid_weapon.tooltip.red.channel_explain": "§7自动斩只限制频率，不再设额外伤害总额度；限伤追偿仅使用真实凭据，冷却期间不重复领取差额，也不会阻断普通斩。"
 }

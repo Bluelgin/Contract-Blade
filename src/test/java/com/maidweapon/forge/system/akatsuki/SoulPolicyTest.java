@@ -45,59 +45,49 @@ class SoulPolicyTest {
   }
 
   @Test
-  void maxMasteryIsUncappedYetCannotBypassSharedCooldownOrRefillRecovery() {
-    var b = new SoulDamageSafetyBudget();
+  void multiMillionDamageHasNoNumericBudgetButCooldownsAreEnforced() {
+    var hits = new SoulHitScheduler();
     var p = UUID.randomUUID();
     var t = UUID.randomUUID();
-    assertEquals(5000, b.reserveUncappedCut(p, t, 0, 5000, limits));
-    assertEquals(0, b.reserveUncappedCut(p, t, 1, 5000, limits));
-    assertEquals(0, b.reserve(p, t, 4, SPACE_CUT, 128, limits));
-    assertEquals(50, b.reserveUncappedCut(p, t, 4, 50, limits));
-    assertEquals(0, b.reserveUncappedCut(p, t, 8, Double.NaN, limits));
-    assertEquals(100, b.reserveUncappedCut(p, t, 201, 100, limits));
-    assertEquals(100, b.reserve(p, t, 201, SOUL_BURST, 100, limits));
-  }
-
-  private final SoulDamageSafetyBudget.Limits limits =
-      new SoulDamageSafetyBudget.Limits(128, 512, 384, 3072, 2048, 4, 60);
-
-  @Test
-  void allModesBladesAndPlayersShareTargetCooldownAndBurstReservation() {
-    var b = new SoulDamageSafetyBudget();
-    var p = UUID.randomUUID();
-    var t = UUID.randomUUID();
-    assertEquals(100, b.reserve(p, t, 0, SOUL_BURST, 100, limits));
-    assertEquals(0, b.reserve(UUID.randomUUID(), t, 0, SOUL_BURST, 100, limits));
-    assertEquals(0, b.reserve(p, t, 1, SPACE_CUT, 10, limits));
-    b.finishBurst(t, 10);
-    assertEquals(10, b.reserve(p, t, 10, SPACE_CUT, 10, limits));
-    assertFalse(b.burstReady(t, 59));
-    assertTrue(b.burstReady(t, 60));
-    assertEquals(0, b.reserve(p, t, 10, SPACE_CUT, 10, limits));
+    assertEquals(5_000_000, hits.reserveCut(p, t, 0, 5_000_000, 4));
+    assertEquals(0, hits.reserveCut(p, t, 1, 5_000_000, 4));
+    assertEquals(1_000_000, hits.reserveResonance(p, t, 1, 1_000_000));
+    assertEquals(0, hits.reserveCut(p, t, 4, 5_000_000, 4)); // manual hit priority
+    assertEquals(5_000_000, hits.reserveCut(p, t, 7, 5_000_000, 4));
+    assertEquals(1_000_000, hits.reserveResonance(p, t, 11, 1_000_000));
+    assertEquals(0, hits.reserveResonance(p, t, 12, 1_000_000));
+    assertEquals(0, hits.reserveCut(p, t, 14, Double.NaN, 4));
+    assertEquals(0, hits.reserveCut(p, t, 14, Double.POSITIVE_INFINITY, 4));
   }
 
   @Test
-  void failedDamageStaysChargedButPermanentDomainRecoversWithoutBankingCredit() {
-    var b = new SoulDamageSafetyBudget();
+  void preciseSoulCoreOutranksAutomaticsWithoutAnHpLimit() {
+    var hits = new SoulHitScheduler();
     var p = UUID.randomUUID();
     var t = UUID.randomUUID();
-    assertEquals(384, b.reserve(p, t, 0, SOUL_BURST, 1000, limits));
-    b.finishBurst(t, 10);
-    assertEquals(0, b.reserve(p, t, 10, SPACE_CUT, 10, limits));
-    assertEquals(128, b.reserve(p, t, 20, SPACE_CUT, 1000, limits));
-    assertEquals(128, b.reserve(p, t, 100000, SPACE_CUT, 1000, limits));
-    assertEquals(0, b.reserve(p, t, 100000, SPACE_CUT, 10, limits));
-    assertEquals(0, b.reserve(p, t, 100004, SPACE_CUT, Double.NaN, limits));
+    assertEquals(10_000_000, hits.reserveCut(p, t, 0, 10_000_000, 4));
+    assertEquals(9_999_995, hits.reserveBurst(p, t, 1, 9_999_995, 60));
+    assertEquals(0, hits.reserveCut(p, t, 4, 200, 4));
+    assertEquals(0, hits.reserveResonance(p, t, 4, 100));
+    assertEquals(0, hits.reserveBurst(p, t, 4, 9_999_995, 60));
+    hits.finishBurst(t, 14);
+    assertEquals(0, hits.reserveBurst(p, t, 59, 9_999_995, 60));
+    assertEquals(9_999_995, hits.reserveBurst(p, t, 61, 9_999_995, 60));
   }
 
   @Test
-  void multiplayerCannotMultiplyTheSharedDpsWindow() {
-    var b = new SoulDamageSafetyBudget();
+  void noHpLimitsDoNotPermitInvalidOrUnsupportedFloatDamage() {
+    var hits = new SoulHitScheduler();
+    var p = UUID.randomUUID();
     var t = UUID.randomUUID();
-    assertEquals(384, b.reserve(UUID.randomUUID(), t, 0, SOUL_BURST, 384, limits));
-    b.finishBurst(t, 10);
-    assertEquals(128, b.reserve(UUID.randomUUID(), t, 10, SPACE_CUT, 128, limits));
-    assertEquals(0, b.reserve(UUID.randomUUID(), t, 14, SPACE_CUT, 128, limits));
-    assertEquals(128, b.reserve(UUID.randomUUID(), t, 20, SPACE_CUT, 128, limits));
+    assertEquals(0, hits.reserveResonance(p, t, 10, Double.NaN));
+    assertEquals(0, hits.reserveBurst(p, t, 10, Double.POSITIVE_INFINITY, 60));
+    assertEquals(0, hits.reserveCut(p, t, 10, Double.POSITIVE_INFINITY, 4));
+    assertEquals(0, hits.reserveCut(p, t, 10, (double) Float.MAX_VALUE * 2, 4));
+    assertEquals(0, hits.reserveCut(p, t, 10, -1, 4));
+    assertEquals(100_000, hits.reserveCut(p, t, 10, 100_000, 4));
+    hits.prune(1000);
+    assertEquals(100_000, hits.reserveCut(p, t, 1000, 100_000, 4));
   }
+
 }
