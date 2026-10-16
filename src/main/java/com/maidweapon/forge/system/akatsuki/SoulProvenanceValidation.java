@@ -94,6 +94,17 @@ public final class SoulProvenanceValidation {
       nativeHit(t, p, 100);
       var o = DamageObservationService.latest(server);
       check(o.recoverable() && near(o.effective(), 100) && near(o.actual(), 5), "E100 A5 evidence");
+      // Real native hits now trigger an independently budgeted resonance AFTER
+      // the observation was sealed. Verify that it never increases this receipt
+      // or mistakes denied theoretical damage for bonus damage.
+      double resonance = Math.max(0, o.after() - t.getHealth());
+      double resonanceLimit = SoulResonancePolicy.requested(
+          o.actual(), AkatsukiDomainGrowth.parameter(p, "resonance_hit_ratio"));
+      check(resonance <= resonanceLimit + .025,
+          "resonance must use actual native loss, not 95 denied HP");
+      // Test recovery separately: the native echo receives a brief priority
+      // interval and the dummy's 20-tick custom DPS bucket must roll over.
+      advance(l, 20);
       var s = AkatsukiDomainService.session(p);
       s.contact(l.getGameTime(), t.getUUID());
       var cut = SoulDamageEngine.cut(p, t, s);
@@ -119,7 +130,8 @@ public final class SoulProvenanceValidation {
             "cumulative aerial level " + level);
         check(core.isRemoved(), "core final fracture");
       }
-      check(before - t.getHealth() <= 100.025, "never native plus 100 percent again");
+      check(before - t.getHealth() <= 100 + resonance + .025,
+          "never repay beyond the verified debt plus separate real-hit resonance");
       LogUtils.getLogger()
           .info(
               "SOUL_RECOVERY_LEVEL level={} E={} A={} L={} ordinary={} aerialAdditional={}"
