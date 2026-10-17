@@ -6,14 +6,11 @@ import com.maidweapon.forge.compat.BladeTetraStoryCompat;
 import com.maidweapon.forge.compat.SlashBladeCompat;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.api.IntrinsicSpiritApi;
-import com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 import com.maidweapon.forge.system.fox.FoxSpiritState;
 import com.maidweapon.forge.system.mastery.ContractMasteryService;
 import com.maidweapon.forge.system.mastery.ContractTooltipSnapshot;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,9 +49,11 @@ public final class ContractTooltipComposer {
         CompoundTag route = kind.isEmpty() ? new CompoundTag() : ContractTooltipSnapshot.route(viewer, kind);
         boolean known = route.getBoolean("known");
         if (known) {
-            if (black) appendBlack(tooltip, route, expanded);
-            else if (white) appendWhite(tooltip, route, expanded);
-            else if (red) appendRed(tooltip, route, expanded);
+            tooltip.add(Component.translatable("maid_weapon.tooltip.lore." + kind)
+                    .withStyle(ChatFormatting.GRAY));
+            if (black) BlackFoxTooltipSection.append(tooltip, route, expanded);
+            else if (white) WhiteFoxTooltipSection.append(tooltip, route, expanded);
+            else if (red) AkatsukiTooltipSection.append(tooltip, route, expanded);
         } else if (!kind.isEmpty()) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.waiting")
                     .withStyle(ChatFormatting.DARK_GRAY));
@@ -117,144 +116,6 @@ public final class ContractTooltipComposer {
         return id != null && !id.isBlank()
                 && id.equals(ContractCarrierData.getBindingId(b))
                 && ItemStack.isSameItemSameTags(a, b);
-    }
-
-    private static String decimal(double number) {
-        return String.format(Locale.ROOT, "%.1f", number);
-    }
-
-    private static String percent(double fraction) {
-        return decimal(fraction * 100) + "%";
-    }
-
-    private static void appendBlack(List<Component> tooltip, CompoundTag profile, boolean expanded) {
-        double attack = ContractTooltipSnapshot.value(profile, "weapon_attack_bonus");
-        double core = ContractTooltipSnapshot.value(profile, "core_damage_multiplier", 1);
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.attack",
-                percent(attack), decimal(core)).withStyle(ChatFormatting.LIGHT_PURPLE));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.skill",
-                Component.translatable(ContractTooltipSnapshot.unlocked(profile, "multi_hunter")
-                        ? "maid_weapon.tooltip.compact.black.multi"
-                        : ContractTooltipSnapshot.unlocked(profile, "combo_mode")
-                        ? "maid_weapon.tooltip.compact.black.combo"
-                        : "maid_weapon.tooltip.compact.black.barrage"))
-                .withStyle(ChatFormatting.GRAY));
-        if (expanded) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.area",
-                    decimal(ContractTooltipSnapshot.value(profile, "barrage_radius", 16)),
-                    decimal(ContractTooltipSnapshot.value(profile, "combo_radius", 8))));
-            if (ContractTooltipSnapshot.unlocked(profile, "domain_sync"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.sync"));
-        }
-    }
-
-    private static void appendWhite(List<Component> tooltip, CompoundTag profile, boolean expanded) {
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.stats",
-                percent(ContractTooltipSnapshot.value(profile, "health_bonus")),
-                percent(ContractTooltipSnapshot.value(profile, "attack_speed_bonus")))
-                .withStyle(ChatFormatting.GREEN));
-        List<String> buffs = new ArrayList<>();
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_heal"))
-            buffs.add(Component.translatable("maid_weapon.tooltip.compact.buff.speed").getString());
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_lantern"))
-            buffs.add(Component.translatable("maid_weapon.tooltip.compact.buff.regen").getString());
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_crisis"))
-            buffs.add(Component.translatable("maid_weapon.tooltip.compact.buff.resist").getString());
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.passives",
-                buffs.isEmpty() ? Component.translatable("maid_weapon.tooltip.compact.buff.none").getString()
-                        : String.join(" / ", buffs)).withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.guard",
-                percent(ContractTooltipSnapshot.value(profile, "guard_reduction")),
-                decimal(ContractTooltipSnapshot.value(profile, "guard_cooldown") / 20))
-                .withStyle(ChatFormatting.AQUA));
-        if (expanded) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
-            if (ContractTooltipSnapshot.unlocked(profile, "blessing_cleanse"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.cleanse"));
-            if (ContractTooltipSnapshot.unlocked(profile, "blessing_heal"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.heal",
-                        decimal(ContractTooltipSnapshot.value(profile, "heal_amount"))));
-            if (ContractTooltipSnapshot.unlocked(profile, "blessing_lantern"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.shield"));
-            if (ContractTooltipSnapshot.unlocked(profile, "blessing_resonance"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.resonance"));
-            if (ContractTooltipSnapshot.unlocked(profile, "blessing_oath"))
-                tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.oath",
-                        decimal(ContractTooltipSnapshot.value(profile, "oath_cooldown") / 1200)));
-        }
-    }
-
-    /**
-     * Red Moon presents real server-resolved mastery values, not a claim that damage
-     * bypasses a protected boss phase. Aerial recovery only unlocks at Lv.2.
-     */
-    private static void appendRed(List<Component> tooltip, CompoundTag profile, boolean expanded) {
-        double capValue = ContractTooltipSnapshot.value(profile, "space_cut_level_cap");
-        Component cap = capValue <= 0
-                ? Component.translatable("maid_weapon.tooltip.compact.red.uncapped")
-                : Component.translatable("maid_weapon.tooltip.compact.red.cap", decimal(capValue));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.domain")
-                .withStyle(ChatFormatting.DARK_RED));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.red.cut",
-                percent(ContractTooltipSnapshot.value(profile, "space_cut_multiplier")),
-                cap).withStyle(ChatFormatting.RED));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.resonance",
-                percent(ContractTooltipSnapshot.value(profile, "resonance_hit_ratio")))
-                .withStyle(ChatFormatting.GOLD));
-
-        String ordinary = percent(ContractTooltipSnapshot.value(profile, "soul_recovery_rate"));
-        boolean aerial = ContractTooltipSnapshot.unlocked(profile, "akatsuki_swords");
-        if (aerial)
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.soul_ready",
-                    ordinary, percent(ContractTooltipSnapshot.value(profile, "soul_aerial_rate")))
-                    .withStyle(ChatFormatting.GRAY));
-        else
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.soul_locked", ordinary)
-                    .withStyle(ChatFormatting.GRAY));
-
-        if (!expanded) return;
-        tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.cut_explain")
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.resonance_explain")
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.channel_explain")
-                .withStyle(ChatFormatting.GRAY));
-        if (capValue <= 0)
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.no_level_cap")
-                    .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.debt_explain")
-                .withStyle(ChatFormatting.GRAY));
-        if (aerial) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_spawn")
-                    .withStyle(ChatFormatting.AQUA));
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_hit")
-                    .withStyle(ChatFormatting.GRAY));
-        } else {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_locked")
-                    .withStyle(ChatFormatting.GRAY));
-        }
-        if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_cloak"))
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.rescue")
-                    .withStyle(ChatFormatting.GRAY));
-        appendRedSkillGroup(tooltip, profile, 0, 4);
-        appendRedSkillGroup(tooltip, profile, 4, 8);
-        appendRedSkillGroup(tooltip, profile, 8, 10);
-    }
-
-    /** Three compact sections instead of ten redundant paragraphs at max mastery. */
-    private static void appendRedSkillGroup(List<Component> tooltip, CompoundTag profile,
-                                            int from, int to) {
-        var names = new ArrayList<String>();
-        for (int index = from; index < to; index++) {
-            String ability = AkatsukiDomainGrowth.ROUTE.get(index);
-            if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_" + ability))
-                names.add(Component.translatable("maid_weapon.tooltip.red.skill." + ability).getString());
-        }
-        if (!names.isEmpty())
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.skill_group",
-                    from + 1, to, String.join(" · ", names)).withStyle(ChatFormatting.DARK_GRAY));
     }
 
     private static void appendContractSection(ItemStack stack, MaidWeaponData data, List<Component> tooltip) {
