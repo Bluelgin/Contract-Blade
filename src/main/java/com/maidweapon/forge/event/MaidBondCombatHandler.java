@@ -4,7 +4,6 @@ import com.maidweapon.forge.system.contract.ContractCarrierData;
 
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.common.data.MaidWeaponData;
-import com.maidweapon.common.system.ResonanceSystem;
 import com.maidweapon.forge.system.resonance.*;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
@@ -104,7 +103,6 @@ public final class MaidBondCombatHandler {
     }
 
     private static void tickResonance(Player player, ItemStack weapon) {
-        MaidWeaponData data = MaidInfusion.data(weapon);
         long time = player.level().getGameTime();
         long lastCombat = LAST_COMBAT.getOrDefault(player.getUUID(), Long.MIN_VALUE / 2);
         boolean inCombat = time - lastCombat <= MaidWeaponConfig.RESONANCE_RECOVERY_DELAY.get();
@@ -113,7 +111,7 @@ public final class MaidBondCombatHandler {
             int interval = MaidWeaponConfig.RESONANCE_COMBAT_DRAIN_INTERVAL.get();
             if (interval > 0 && time % interval == 0) ResonanceService.drain(player, weapon, 1);
         }
-        data = MaidInfusion.data(weapon);
+        MaidWeaponData data = MaidInfusion.data(weapon);
 
         if (data.getResonance() <= 0 && !ResonanceService.waived(player, weapon)) {
             String maidId = ContractCarrierData.getBoundMaidUUID(weapon);

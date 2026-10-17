@@ -5,13 +5,19 @@ import net.minecraft.world.entity.player.Player;
 
 public final class ResonanceProgressService {
     public enum Upgrade { SUCCESS, ALREADY, SKIPPED, UNSUPPORTED }
-    public static int stage(Player player) { return ResonanceProgressSavedData.get(player.getServer()).stage(player.getUUID()); }
+    private static boolean server(Player player) {
+        return player != null && !player.level().isClientSide && player.getServer() != null && player.getServer().isSameThread();
+    }
+    public static int stage(Player player) {
+        return server(player) ? ResonanceProgressSavedData.get(player.getServer()).stage(player.getUUID()) : 0;
+    }
     public static double multiplier(Player player) {
+        if (!server(player)) return 1;
         var values = MaidWeaponConfig.RESONANCE_PROGRESS_MULTIPLIERS.get();
         return values.get(Math.min(stage(player), values.size() - 1)).doubleValue();
     }
     public static Upgrade upgrade(Player player, int requested) {
-        if (player.level().isClientSide || player.getServer() == null || !player.getServer().isSameThread()) return Upgrade.UNSUPPORTED;
+        if (!server(player)) return Upgrade.UNSUPPORTED;
         var data = ResonanceProgressSavedData.get(player.getServer());
         if (!data.writable(player.getUUID())) return Upgrade.UNSUPPORTED;
         int current = data.stage(player.getUUID());

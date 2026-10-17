@@ -1,6 +1,5 @@
 package com.maidweapon.forge.compat.tlm;
 
-import com.maidweapon.forge.item.ContractProjectionBaubleItem;
 import com.maidweapon.forge.system.deployment.ContractProjectionMode;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.items.IItemHandler;

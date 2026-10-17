@@ -68,6 +68,7 @@ public final class ContractResonanceValidation {
         ItemStack duplicate = first.copy(); a.getInventory().setItem(2, duplicate);
         check(ResonanceService.canPay(a, first, binding, 1) == UNAUTHORIZED, "duplicate binding rejected");
         advance(a, 20); check(value(first) == 2, "duplicate reference cannot recover"); a.getInventory().setItem(2, ItemStack.EMPTY);
+        check(ResonanceService.canPay(a, null, binding, 0) == UNAUTHORIZED && !ResonanceService.waived(null, null), "null/invalid contexts fail closed");
         check(ResonanceService.canPay(b, first, binding, 0) == UNAUTHORIZED, "foreign player rejected");
         check(ResonanceService.canPay(a, first.copy(), binding, 0) == UNAUTHORIZED, "detached copy rejected");
         check(ResonanceService.canPay(a, first, binding, 20) == INSUFFICIENT, "insufficient mock ability");
@@ -87,8 +88,18 @@ public final class ContractResonanceValidation {
         check(ContractLifecycleService.manifest(a, first, false), "manifest waived zero contract");
         var maid = (Mob) ContractWeaponLocator.findManifestedMaid(a, ContractCarrierData.getBoundMaidUUID(first));
         check(maid != null && ResonanceService.waived(a, first), "live native waiver");
+        advance(a, 20); check(value(first) == 4, "manifested idle recovery times global multiplier");
+        set(first, 0);
+        // TLM reads ATTACK_TARGET from its Brain rather than Mob's legacy target field.
+        maid.getBrain().setMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET,
+                new net.minecraft.world.entity.monster.Zombie(level));
+        check(maid.getTarget() != null, "native brain has a real combat target");
+        advance(a, 20); check(value(first) == 1, "actual maid combat target reduces recovery");
+        maid.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET); set(first, 0);
+        ResonanceService.drain(a, first, 20); check(value(first) == 0, "zero live mandatory upkeep waived");
         check(TlmProjectionBaubles.mode(maid) == ContractProjectionMode.COMBINED, "ultimate inherits combined projection");
         var slots = (IItemHandlerModifiable) maid.getClass().getMethod("getMaidBauble").invoke(maid);
+        check(slots.isItemValid(0, new ItemStack(ModItems.ENDLESS_CONTRACT.get())), "ultimate accepted by native bauble slot");
         slots.setStackInSlot(0, ItemStack.EMPTY);
         a.getInventory().setItem(2, new ItemStack(ModItems.ENDLESS_CONTRACT.get()));
         check(!ResonanceService.waived(a, first), "removal immediate; player inventory is not a bauble slot");
@@ -118,6 +129,9 @@ public final class ContractResonanceValidation {
         com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.set(oldMaximum);
         advance(a, 1); // one actual tick never pays elapsed/offline time
         check(value(first) <= 81, "no elapsed time catch-up");
+        first.getTag().getCompound("MaidData").putInt("ContractSchema", 99);
+        check(ResonanceService.canPay(a, first, binding, 0) == UNAUTHORIZED, "future contract schema read-only");
+        first.getTag().getCompound("MaidData").putInt("ContractSchema", 2);
         ContractCarrierData.setContractSuperseded(first, true);
         check(ResonanceService.canPay(a, first, binding, 0) == UNAUTHORIZED, "superseded rejected");
         for (String name : new String[]{"awakening_vein", "flowing_vein", "endless_vein", "endless_contract"})

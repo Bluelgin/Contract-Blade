@@ -3,7 +3,6 @@ package com.maidweapon.forge.system.resonance;
 import com.maidweapon.common.MaidWeaponConfig;
 import com.maidweapon.forge.compat.tlm.StoredMaidBaubleResolver;
 import com.maidweapon.forge.system.contract.ContractChannelStorage;
-import net.minecraft.world.entity.Mob;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;

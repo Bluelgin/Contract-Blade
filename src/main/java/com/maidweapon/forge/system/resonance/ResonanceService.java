@@ -24,7 +24,7 @@ public final class ResonanceService {
                 ? ResonanceProgressService.multiplier(owner) : 1;
     }
     public static boolean waived(Player owner, ItemStack carrier) {
-        return waived(owner, carrier, ContractCarrierData.getBindingId(carrier));
+        return carrier != null && waived(owner, carrier, ContractCarrierData.getBindingId(carrier));
     }
     public static boolean waived(Player owner, ItemStack carrier, String binding) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
@@ -51,6 +51,7 @@ public final class ResonanceService {
     }
     /** Existing mandatory upkeep/damage costs drain to zero even when the full amount is unavailable. */
     public static void drain(Player owner, ItemStack carrier, int cost) {
+        if (carrier == null) return;
         var context = ResonanceContract.resolve(owner, carrier, ContractCarrierData.getBindingId(carrier));
         if (context == null || cost <= 0 || ContractBaubleEffects.hasWaiver(context)) return;
         var data = context.data(); data.reduceResonance(cost); context.write(data);
