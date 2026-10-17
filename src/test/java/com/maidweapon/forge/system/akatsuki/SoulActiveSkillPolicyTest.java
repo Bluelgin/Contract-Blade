@@ -8,10 +8,11 @@ import org.junit.jupiter.api.Test;
 
 class SoulActiveSkillPolicyTest {
   @Test void unknownAndNormalHitsOfferCoresWithoutClaimingDebt() {
-    for (String kind : new String[] {"UNVERIFIED_REJECTION", "NORMAL_DEFENSE",
-        "CUSTOM_HEALTH_UNKNOWN", "VERIFIED_SPECIAL_CAP", "ABSORPTION"})
+    for (String kind : new String[] {"NORMAL_DEFENSE", "VERIFIED_SPECIAL_CAP", "ABSORPTION"})
       assertTrue(SoulAnchorTriggerPolicy.eligible(true, true, 1, kind));
     assertFalse(SoulAnchorTriggerPolicy.eligible(true, true, 1, "PROTECTED_PHASE"));
+    assertFalse(SoulAnchorTriggerPolicy.eligible(true, true, 1, "UNVERIFIED_REJECTION"));
+    assertFalse(SoulAnchorTriggerPolicy.eligible(true, true, 1, "CUSTOM_HEALTH_UNKNOWN"));
     assertFalse(SoulAnchorTriggerPolicy.eligible(true, true, 1, "UNSUPPORTED_SOURCE"));
     assertFalse(SoulAnchorTriggerPolicy.eligible(false, true, 1, "NORMAL_DEFENSE"));
     assertFalse(SoulAnchorTriggerPolicy.eligible(true, false, 1, "NORMAL_DEFENSE"));
@@ -19,19 +20,20 @@ class SoulActiveSkillPolicyTest {
     assertFalse(SoulAnchorTriggerPolicy.eligible(true, true, 0, "NORMAL_DEFENSE"));
   }
 
-  @Test void independentDamageGrowsAndFourStagesConserveIt() {
+  @Test void observedNativeDamageOnlyProducesUpToFiftyPercentCriticalBonus() {
     double previous = 0;
     for (int level = 2; level <= 10; level++) {
-      double base = SoulBurstBasePolicy.requested(8, 1000, level, 5, .005);
-      assertTrue(base > previous);
-      assertEquals(base, Arrays.stream(SoulStageAllocation.split(base, 4)).sum(), .00001);
-      previous = base;
+      double rate = AkatsukiDomainGrowth.parameters(level)
+          .get(AkatsukiDomainGrowth.id("resonance_hit_ratio"));
+      double bonus = SoulResonancePolicy.requested(100, rate);
+      assertTrue(bonus > previous);
+      assertTrue(bonus <= 50);
+      assertEquals(bonus, Arrays.stream(SoulStageAllocation.split(bonus, 4)).sum(), .00001);
+      previous = bonus;
     }
-    assertEquals(27, SoulBurstBasePolicy.requested(8, 1000, 2, 5, .005), .00001);
-    assertEquals(45, previous, .00001);
-    assertEquals(0, SoulBurstBasePolicy.requested(8, 1000, 1, 5, .005));
-    assertEquals(0, SoulBurstBasePolicy.requested(Double.NaN, 1000, 2, 5, .005));
-    assertTrue(Double.isFinite(SoulBurstBasePolicy.requested(Double.MAX_VALUE, 1000, 10, 5, 0)));
+    assertEquals(50, previous, .00001);
+    assertEquals(0, SoulResonancePolicy.requested(0, .5));
+    assertEquals(0, SoulResonancePolicy.requested(Double.NaN, .5));
   }
 
   @Test void independentBurstSharesCooldownAcrossPlayersAndWeaponChanges() {

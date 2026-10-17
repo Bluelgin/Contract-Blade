@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 class SoulResonancePolicyTest {
   @Test
-  void scalesOnlyRealNativeDamageNeverTheBlockedTheoreticalPart() {
+  void coreCriticalOnlyUsesRealNativeDamageNeverTheBlockedTheoreticalPart() {
     assertEquals(2.5, SoulResonancePolicy.requested(5, .5), .00001);
     assertEquals(50, SoulResonancePolicy.requested(100, .5), .00001);
     assertEquals(0, SoulResonancePolicy.requested(0, .5));
@@ -15,7 +15,7 @@ class SoulResonancePolicyTest {
     assertEquals(0, SoulResonancePolicy.requested(100, 1.0));
   }
   @Test
-  void tenLevelsRemainMonotoneAndDatapackDefaultsMatch() {
+  void coreCriticalBonusReachesFiftyPercentAtMaxLevel() {
     double previous = 0;
     for (int level = 1; level <= 10; level++) {
       var values = AkatsukiDomainGrowth.parameters(level);

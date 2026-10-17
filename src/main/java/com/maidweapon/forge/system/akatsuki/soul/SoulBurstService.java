@@ -14,8 +14,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * One independent skill plus optional verified debt per target, 3–5 stages.
- * Extra swings cannot restart or duplicate a running burst or its recovery.
+ * One verified recovery OR native-hit critical bonus per target, 3–5 stages.
+ * Extra swings cannot restart or duplicate a running burst or its accounting.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulBurstService {
@@ -60,7 +60,7 @@ public final class SoulBurstService {
     ACTIVE.put(core.original, new Burst(p, core, total, now));
     if (SoulDamageConfig.DIAGNOSTICS.get())
       com.mojang.logging.LogUtils.getLogger().info(
-          "SOUL_BURST_STARTED owner={} target={} core={} baseHP={} verifiedRecoveryHP={}",
+          "SOUL_BURST_STARTED owner={} target={} core={} criticalBonusHP={} verifiedRecoveryHP={}",
           p.getUUID(), t.getUUID(), core.getId(), total.base(),
           total.recovery() == null ? 0 : total.recovery().total());
     return true;

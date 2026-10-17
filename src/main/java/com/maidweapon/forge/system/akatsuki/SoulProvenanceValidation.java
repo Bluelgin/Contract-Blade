@@ -101,7 +101,7 @@ public final class SoulProvenanceValidation {
       check(
           cut != null && near(cut.loss(), 95 * SoulRecoveryPolicy.cut(level)),
           "ordinary level " + level + " feedback=" + cut);
-      double ordinary = cut.loss(), air = 0, basic = level >= 2 ? baseBurst(p, t) : 0;
+      double ordinary = cut.loss(), air = 0;
       if (level >= 2) {
         var core = SoulAnchorService.create(p, t);
         check(core != null && core.getY() >= t.getBoundingBox().maxY + 4, "high aerial placement");
@@ -114,14 +114,14 @@ public final class SoulProvenanceValidation {
           SoulBurstService.tick(
               new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
         }
-        air = hp - t.getHealth() - basic;
+        air = hp - t.getHealth();
         check(
             near(ordinary + air, 95 * SoulRecoveryPolicy.aerial(level)),
             "cumulative aerial level " + level);
         check(core.isRemoved(), "core final fracture");
       }
-      check(before - t.getHealth() <= 100.025 + basic,
-          "verified recovery never exceeds debt; independent base is separate");
+      check(before - t.getHealth() <= 100.025,
+          "verified recovery never exceeds original theoretical damage");
       LogUtils.getLogger()
           .info(
               "SOUL_RECOVERY_LEVEL level={} E={} A={} L={} ordinary={} aerialAdditional={}"
@@ -192,20 +192,16 @@ public final class SoulProvenanceValidation {
       nativeHit(t, p, 10);
       check(near(hp, t.getHealth()), "ordinary hit still blocked after scope");
       check(SoulStrikeContext.current() == null, "no bypass scope leaked");
+      // Rejected native damage cannot authorize free independent core damage.
       var core = SoulAnchorService.create(p, t);
-      check(core != null, "real wroughtnaut core created");
-      double expected = baseBurst(p, t);
-      aim(p, core);
-      p.attack(core);
-      check(core.burstUntil > 0, "real core click accepted");
-      for (int i = 0; i < 14; i++) {
-        advance(l, 1);
-        SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+      if (core != null) {
+        aim(p, core);
+        p.attack(core);
+        check(core.burstUntil == 0 && near(hp, t.getHealth()),
+            "rejected native hit cannot mint a critical");
+        core.discard();
       }
-      check(near(hp - t.getHealth(), expected), "real four-stage native damage");
-      check(!weakness.getBoolean(t), "burst leaves weakness untouched");
-      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_PASS cutHP={} burstHP={} expectedBurstHP={} credit={}",
-          cut.loss(), hp - t.getHealth(), expected, t.getKillCredit().getUUID());
+      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NO_FREE_CORE_PASS");
       // Native hurt() must initiate its normal death animation rather than remove the boss.
       setLevel(p, 10);
       p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(10000);
@@ -261,14 +257,9 @@ public final class SoulProvenanceValidation {
               && observation.raw() > 5
               && observation.recoverable(),
           "native SlashBlade actual hurt provenance observation="+observation);
-      // Actual SlashBlade AttackManager provenance (unlike synthetic direct
-      // damage validation) must earn a native-hit resonance based on HP dealt,
-      // without feeding the blocked theoretical deficit into that resonance.
+      // Actual native hit gives only a receipt: no immediate passive damage echo.
       double actualEcho = observation.after() - t.getHealth();
-      double allowedEcho = SoulResonancePolicy.requested(
-          observation.actual(), AkatsukiDomainGrowth.parameter(p, "resonance_hit_ratio"));
-      check(actualEcho > .01 && actualEcho <= allowedEcho + .025,
-          "real SlashBlade native-hit resonance = " + actualEcho + " max=" + allowedEcho);
+      check(near(actualEcho, 0), "native SlashBlade does not trigger free echo");
       LogUtils.getLogger()
           .info(
               "SOUL_NATIVE_SLASHBLADE_INVOCATION_PASS raw={} E={} A={} origin={}",
@@ -533,8 +524,8 @@ public final class SoulProvenanceValidation {
       advance(l, 1);
       SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
     }
-    check(near(hp - t.getHealth(), 28.5 + baseBurst(p, t)),
-        "single click complete independent base plus recovery, no repeat");
+    check(near(hp - t.getHealth(), 28.5),
+        "single click redeems only verified debt");
     t.discard();
     advance(l, 240);
     t = cap(l);
@@ -638,7 +629,7 @@ public final class SoulProvenanceValidation {
       advance(l, 1);
       SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
     }
-    check(near(hp - t.getHealth(), 28.5 + baseBurst(p, t)),
+    check(near(hp - t.getHealth(), 28.5),
         "summoned sword uses identical bounded verified debt as direct melee");
     t.discard();
     LogUtils.getLogger().info("SOUL_NATIVE_SUMMONED_SWORD_PASS");
@@ -683,8 +674,8 @@ public final class SoulProvenanceValidation {
         SoulBurstService.tick(
             new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
-      check(near(hp - t.getHealth(), 28.5 + baseBurst(p, t)),
-          "reserved recovery plus base survives ordinary receipt expiry");
+      check(near(hp - t.getHealth(), 28.5),
+          "reserved recovery survives receipt expiry");
       t.discard();
     } finally {
       SoulDamageConfig.ANCHOR_LIFETIME.set(lifetime);
@@ -736,7 +727,7 @@ public final class SoulProvenanceValidation {
         advance(l, 1);
         SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
-      check(near(hp - t.getHealth(), Math.min(hp, verifiedDebt + baseBurst(p, t))),
+      check(near(hp - t.getHealth(), Math.min(hp, verifiedDebt)),
           "uncapped burst debt=" + verifiedDebt + " actual=" + (hp - t.getHealth()));
       LogUtils.getLogger().info("SOUL_UNCAPPED_RECOVERY raw={} debt={} actualHP={}",
           total, verifiedDebt, hp - t.getHealth());
@@ -944,13 +935,7 @@ public final class SoulProvenanceValidation {
     return Math.abs(a - b) < .025;
   }
 
-  private static double baseBurst(ServerPlayer p, LivingEntity t) {
-    return SoulBurstBasePolicy.requested(p.getAttributeValue(Attributes.ATTACK_DAMAGE),
-        t.getMaxHealth(), ContractMasteryService.getLevel(p),
-        SoulDamageConfig.BURST_MULTIPLIER.get(), SoulDamageConfig.BURST_HEALTH_FRACTION.get());
-  }
-
-  /** Actual native observations, world entities, owner click and four server stages. */
+  /** Normal native hits issue one consumable critical; unknown sources issue none. */
   private static void activeSkillWithoutDebt(MinecraftServer server, ServerPlayer p) {
     var l = p.serverLevel();
     setLevel(p, 2);
@@ -962,39 +947,44 @@ public final class SoulProvenanceValidation {
       t.getAttribute(Attributes.ARMOR).setBaseValue(0);
       l.addFreshEntity(t);
       AkatsukiDomainService.session(p).contact(l.getGameTime(), t.getUUID());
+      float before = t.getHealth();
       nativeHit(t, p, 20);
-      check(!SoulDamageDebtService.hasDebt(p, t), "no invented unknown/ordinary recovery");
+      double actual = before - t.getHealth();
+      check(!SoulDamageDebtService.hasDebt(p, t), "ordinary hit cannot invent debt");
       var cores = l.getEntitiesOfClass(SoulAnchorEntity.class, t.getBoundingBox().inflate(32),
           c -> t.getUUID().equals(c.original) && p.getUUID().equals(c.owner));
-      check(cores.size() == 1, "native hit automatically creates one debt-free core");
+      if (unknown) {
+        check(cores.isEmpty() && SoulCoreCriticalService.available(p, t) == 0,
+            "unverified source cannot mint critical damage");
+        t.discard();
+        continue;
+      }
+      check(cores.size() == 1, "normal native hit creates core");
       var core = cores.get(0);
-      check(SoulAnchorService.create(p, t) == core, "repeated hits reuse core");
+      check(SoulAnchorService.create(p, t) == core, "repeat hit reuses core");
       float hp = t.getHealth();
-      double expected = baseBurst(p, t);
+      double expected = SoulResonancePolicy.requested(
+          actual, AkatsukiDomainGrowth.parameter(p, "resonance_hit_ratio"));
+      check(near(SoulCoreCriticalService.available(p, t), expected),
+          "critical uses actual native HP loss only");
       aim(foreign, core);
       foreign.attack(core);
-      check(core.burstUntil == 0, "foreign owner denied without debt too");
+      check(core.burstUntil == 0, "foreign denied");
       aim(p, core);
       p.attack(core);
-      check(core.burstUntil > 0, "debt-free core activated");
+      check(core.burstUntil > 0, "normal core activated");
+      check(SoulCoreCriticalService.available(p, t) == 0, "credit consumed once");
       p.attack(core);
-      // Unknown adapter fixture additionally cancels native attacks: only the
-      // exact soul-source scope may override that cancellation, not other hits.
-      if (unknown) canceled = t;
-      try {
-        for (int i = 0; i < 14; i++) {
-          advance(l, 1);
-          SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
-        }
-      } finally { canceled = null; }
-      check(near(hp - t.getHealth(), expected), "four independent stages actualHP=" + (hp - t.getHealth()));
-      check(core.isRemoved(), "independent core finishes");
-      check(!SoulDamageDebtService.hasDebt(p, t), "independent damage never creates debt");
-      check(!SoulDamageEngine.burstReady(t.getUUID(), l.getGameTime()), "cooldown survives finish");
-      check(SoulAnchorService.create(p, t) == null, "creation cooldown remains");
-      check(SoulStrikeContext.current() == null, "aggressive capability cleared");
-      LogUtils.getLogger().info("SOUL_ACTIVE_SKILL_PASS unknown={} expectedHP={} actualHP={}",
-          unknown, expected, hp - t.getHealth());
+      for (int i = 0; i < 14; i++) {
+        advance(l, 1);
+        SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
+      }
+      check(near(hp - t.getHealth(), expected), "no five-times base attack");
+      check(core.isRemoved(), "core finishes");
+      check(!SoulDamageDebtService.hasDebt(p, t), "critical creates no debt");
+      check(!SoulDamageEngine.burstReady(t.getUUID(), l.getGameTime()), "cooldown survives");
+      check(SoulAnchorService.create(p, t) == null, "creation cooldown");
+      check(SoulStrikeContext.current() == null, "scope closed");
       t.discard();
     }
   }
