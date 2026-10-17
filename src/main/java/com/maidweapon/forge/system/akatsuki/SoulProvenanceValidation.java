@@ -107,8 +107,7 @@ public final class SoulProvenanceValidation {
         check(core != null && core.getY() >= t.getBoundingBox().maxY + 4, "high aerial placement");
         check(!core.hurt(p.damageSources().playerAttack(p), 100), "damage cannot activate core");
         float hp = t.getHealth();
-        aim(p, core);
-        p.attack(core);
+        finishEclipse(p, core);
         for (int i = 0; i < 14; i++) {
           advance(l, 1);
           SoulBurstService.tick(
@@ -141,6 +140,7 @@ public final class SoulProvenanceValidation {
     isolation(server, p);
     interaction(server, p);
     summonedSwordInteraction(server, p);
+    eclipseFailures(server, p);
     lateAndInvalidated(server, p);
     noUncreditedSpaceCutBypass(server, p);
     highBudgets(server, p);
@@ -531,9 +531,8 @@ public final class SoulProvenanceValidation {
     t.setPos(t.position().add(2, 0, 0));
     SoulAnchorService.follow(c);
     check(Math.abs(c.getX() - t.getX()) < .1, "follows target");
-    aim(p, c);
-    p.attack(c);
-    check(c.burstUntil > 0, "native direct click starts");
+    finishEclipse(p, c);
+    check(c.burstUntil > 0, "native direct click follows ordered star chain");
     p.attack(c);
     for (int i = 0; i < 14; i++) {
       advance(l, 1);
@@ -603,7 +602,8 @@ public final class SoulProvenanceValidation {
 
     // A locked-on boss would otherwise redirect the native sword away from a
     // high core. Explicit player aim must retarget a fresh sword at launch.
-    var targetDirection = core.getBoundingBox().getCenter().subtract(p.getEyePosition());
+    var targetDirection = SoulAnchorProjectileService.starBox(core, 0)
+        .getCenter().subtract(p.getEyePosition());
     p.setYRot((float) Math.toDegrees(Math.atan2(-targetDirection.x, targetDirection.z)));
     p.setXRot((float) -Math.toDegrees(Math.atan2(targetDirection.y,
         Math.sqrt(targetDirection.x * targetDirection.x
@@ -618,7 +618,8 @@ public final class SoulProvenanceValidation {
     l.addFreshEntity(lockedSword);
     check(!SoulAnchorProjectileService.sweep(l, core) && core.burstUntil == 0,
         "distant native shot cannot trigger without physically reaching the core");
-    var expectedFlight = core.getBoundingBox().getCenter().subtract(lockedSword.position()).normalize();
+    var expectedFlight = SoulAnchorProjectileService.starBox(core, 0)
+        .getCenter().subtract(lockedSword.position()).normalize();
     check(lockedSword.getDeltaMovement().normalize().dot(expectedFlight) > .99,
         "player crosshair overrides native locked-boss sword trajectory");
     lockedSword.discard();
@@ -628,18 +629,40 @@ public final class SoulProvenanceValidation {
         "owned native summoned sword must be projectile");
     var sword = (net.minecraft.world.entity.projectile.Projectile) ownedShot;
     sword.setOwner(p);
-    sword.moveTo(core.getX() - 4, core.getY() + .9, core.getZ(), 0, 0);
-    sword.setDeltaMovement(6, 0, 0);
+    var first = SoulAnchorProjectileService.starBox(core, 0).getCenter();
+    sword.moveTo(first.x, first.y, first.z - 3, 0, 0);
+    sword.setDeltaMovement(0, 0, 5);
     l.addFreshEntity(sword);
     var evidence = com.maidweapon.forge.system.mastery.ContractCombatCredits.resolveHit(
         p.damageSources().indirectMagic(sword, p));
     check(evidence != null && evidence.player() == p,
         "native projectile launch must retain exact carrier proof");
     float hp = t.getHealth();
-    check(SoulAnchorProjectileService.sweep(l, core) && core.burstUntil > 0,
-        "owner's launched summoned sword triggers soul core from the ground");
+    check(SoulAnchorProjectileService.sweep(l, core)
+            && core.chainProgress() == 1 && core.burstUntil == 0,
+        "first native summoned sword only advances first orbit star");
     check(sword.isRemoved() && !SoulAnchorProjectileService.sweep(l, core),
-        "one sword cannot trigger a second burst");
+        "one sword cannot trigger a second star");
+    for (int index = 1; index <= 3; index++) {
+      advance(l, 1);
+      boolean moon = index == 3;
+      var next = moon ? core.getBoundingBox().getCenter()
+          : SoulAnchorProjectileService.starBox(core, index).getCenter();
+      aimAt(p, next);
+      var shot = summonType.create(l);
+      check(shot instanceof net.minecraft.world.entity.projectile.Projectile,
+          "additional native summoned sword exists");
+      var launched = (net.minecraft.world.entity.projectile.Projectile) shot;
+      launched.setOwner(p);
+      launched.setPos(next.x, next.y, next.z - 3);
+      launched.setDeltaMovement(0, 0, 5);
+      l.addFreshEntity(launched);
+      check(SoulAnchorProjectileService.sweep(l, core)
+              && core.chainProgress() == (moon ? 3 : index + 1)
+              && (core.burstUntil > 0) == moon,
+          "each of three real summoned swords must hit the next actual orbit star");
+      check(launched.isRemoved(), "no native projectile may hit twice");
+    }
     for (int i = 0; i < 14; i++) {
       advance(l, 1);
       SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
@@ -648,6 +671,42 @@ public final class SoulProvenanceValidation {
         "summoned sword uses identical bounded verified debt as direct melee");
     t.discard();
     LogUtils.getLogger().info("SOUL_NATIVE_SUMMONED_SWORD_PASS");
+  }
+
+  /** Wrong order, premature moon and timeout revoke only this receipt's
+   * aerial claim; no retry-loop reward, ordinary weak cut remains authorized.
+   */
+  private static void eclipseFailures(MinecraftServer server, ServerPlayer p) {
+    var l = p.serverLevel();
+    setLevel(p, 2);
+    for (int reason = 0; reason < 3; reason++) {
+      advance(l, 240);
+      var t = cap(l);
+      nativeHit(t, p, 100);
+      var c = SoulAnchorService.create(p, t);
+      check(c != null && c.eclipse() && c.chainProgress() == 0,
+          "verified limit starts locked three-star challenge");
+      double hp = t.getHealth();
+      if (reason == 0) {
+        aim(p, c);
+        p.attack(c); // Early moon: no star may be skipped.
+      } else if (reason == 1) {
+        check(!SoulAnchorService.fixtureEclipseHit(p, c, 2),
+            "wrong order must fail immediately");
+      } else {
+        advance(l, SoulEclipseChallenge.FIRST_TICKS + 1);
+        SoulAnchorService.follow(c);
+      }
+      check(c.chainProgress() == -1 && c.burstUntil == 0
+              && near(hp, t.getHealth()),
+          "failed chain must never emit damage");
+      check(SoulDamageDebtService.available(p, t, true) == 0,
+          "failed chain forfeits all aerial recovery from same receipt");
+      check(SoulDamageDebtService.available(p, t, false) > 0,
+          "small ordinary recovery stays independent from aerial failure");
+      t.discard();
+    }
+    LogUtils.getLogger().info("SOUL_ECLIPSE_CHAIN_FAILURES_PASS");
   }
 
   private static void lateAndInvalidated(MinecraftServer server, ServerPlayer p) {
@@ -679,9 +738,8 @@ public final class SoulProvenanceValidation {
       nativeHit(t, p, 100);
       var core = SoulAnchorService.create(p, t);
       float hp = t.getHealth();
-      advance(l, 119);
-      aim(p, core);
-      p.attack(core);
+      advance(l, 40);
+      finishEclipse(p, core);
       for (int i = 0; i < 14; i++) {
         advance(l, 1);
         SoulDamageDebtService.tick(
@@ -690,7 +748,7 @@ public final class SoulProvenanceValidation {
             new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
       }
       check(near(hp - t.getHealth(), 28.5),
-          "reserved recovery survives receipt expiry");
+          "completed star chain reserves exact verified recovery");
       t.discard();
     } finally {
       SoulDamageConfig.ANCHOR_LIFETIME.set(lifetime);
@@ -699,8 +757,7 @@ public final class SoulProvenanceValidation {
     t = cap(l);
     nativeHit(t, p, 100);
     var core = SoulAnchorService.create(p, t);
-    aim(p, core);
-    p.attack(core);
+    finishEclipse(p, core);
     SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
     float hp = t.getHealth();
     t.phase++;
@@ -796,9 +853,8 @@ public final class SoulProvenanceValidation {
           "uncapped verified debt raw=" + total + " observed=" + o);
       var c = SoulAnchorService.create(p, t);
       check(c != null, "uncapped core " + total);
-      aim(p, c);
       float hp = t.getHealth();
-      p.attack(c);
+      finishEclipse(p, c);
       for (int i = 0; i < 14; i++) {
         advance(l, 1);
         SoulBurstService.tick(new TickEvent.ServerTickEvent(TickEvent.Phase.END, () -> true, server));
@@ -875,9 +931,8 @@ public final class SoulProvenanceValidation {
         if (level >= 2) {
           var core = SoulAnchorService.create(p, t);
           check(core != null, "real boss core " + id);
-          aim(p, core);
           float hp = t.getHealth();
-          p.attack(core);
+          finishEclipse(p, core);
           for (int n = 0; n < 14; n++) {
             advance(l, 1);
             SoulBurstService.tick(
@@ -970,6 +1025,31 @@ public final class SoulProvenanceValidation {
         com.maidweapon.forge.system.fox.challenge.BlackFoxAttackTrace.projectile() == null,
         "no projectile leak");
     LogUtils.getLogger().info("SOUL_TRACE_EXCEPTION_PASS");
+  }
+
+  private static void aimAt(ServerPlayer p, net.minecraft.world.phys.Vec3 point) {
+    var d = point.subtract(p.getEyePosition());
+    p.setYRot((float) Math.toDegrees(Math.atan2(-d.x, d.z)));
+    p.setXRot((float) -Math.toDegrees(Math.atan2(d.y,
+        Math.sqrt(d.x * d.x + d.z * d.z))));
+  }
+
+  /** Opt-in native dedicated-server fixture simulates already validated star collisions.
+   * The public gameplay path always requires an actual launch-verified SlashBlade sword.
+   */
+  private static void finishEclipse(ServerPlayer p, SoulAnchorEntity c) {
+    if (c.eclipse()) {
+      for (int star = 0; star < SoulEclipseGeometry.STARS; star++) {
+        advance(p.serverLevel(), 1);
+        check(SoulAnchorService.fixtureEclipseHit(p, c, star),
+            "ordered constellation star " + star + " accepted");
+        check(c.chainProgress() == star + 1 && c.burstUntil == 0,
+            "stars cannot grant premature high-damage recovery");
+      }
+      advance(p.serverLevel(), 1);
+    }
+    aim(p, c);
+    p.attack(c);
   }
 
   private static void aim(ServerPlayer p, SoulAnchorEntity c) {

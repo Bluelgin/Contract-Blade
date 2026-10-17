@@ -43,10 +43,12 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
     double time = e.tickCount + partial;
     float shake = e.shakeAmount(partial);
     pose.pushPose();
+    // Eclipse hit regions are fixed in world space, not camera billboards:
+    // remove ornamental bob/shake so client stars coincide with server boxes.
     pose.translate(
-        Math.sin(time * 3.1) * shake * .1,
-        .85 + Math.sin(time * .09) * .08,
-        Math.cos(time * 2.7) * shake * .1);
+        e.eclipse() ? 0 : Math.sin(time * 3.1) * shake * .1,
+        .85 + (e.eclipse() ? 0 : Math.sin(time * .09) * .08),
+        e.eclipse() ? 0 : Math.cos(time * 2.7) * shake * .1);
     pose.scale(.72f, .85f, .72f);
     var b = buffers.getBuffer(SoulRenderTypes.SHARDS);
     int quality = AkatsukiDomainConfig.QUALITY.get(),
@@ -63,11 +65,12 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
     float pulse = (float) (.12 + Math.sin(time * .17) * .025);
     shard(b, pose.last().pose(), 0, pulse, .25, 0xE33245, .9f);
     shard(b, pose.last().pose(), 0, .028, .18, 0xFFE1D5, .9f);
-    // Purely client-side constellation: the target remains the original single hitbox.
+    // The same fixed yaw, server time and geometry define renderer and hit regions.
     if (e.eclipse()) {
       pose.pushPose();
-      pose.mulPose(entityRenderDispatcher.cameraOrientation());
-      SoulEclipseGlyph.idle(b, pose.last().pose(), time, quality);
+      pose.mulPose(Axis.YP.rotationDegrees(-e.eclipseYaw()));
+      SoulEclipseGlyph.idle(b, pose.last().pose(),
+          e.level().getGameTime() + partial, quality, e.chainProgress());
       pose.popPose();
     }
     if ((e.tickCount < 12 || shake > 0) && quality > 0) {
@@ -84,7 +87,7 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
             shake > 0 ? shake * .6f : (12 - e.tickCount) / 20f);
       }
     }
-    if (owned(e)) {
+    if (owned(e) && (!e.eclipse() || e.chainProgress() == 3)) {
       // The attack must land on the entity's real hitbox; this reticle is centered
       // on that hitbox, unlike the short decorative burst at its spawn position.
       var marker = buffers.getBuffer(SoulRenderTypes.OWNER_MARKER);

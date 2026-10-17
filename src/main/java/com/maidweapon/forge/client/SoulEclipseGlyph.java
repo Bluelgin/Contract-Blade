@@ -16,14 +16,23 @@ final class SoulEclipseGlyph {
   private static final int RED_LIGHT = 0xF3506C;
   private static final int STAR = 0xFFF4E9;
 
-  static void idle(VertexConsumer out, Matrix4f matrix, double tick, int quality) {
+  static void idle(VertexConsumer out, Matrix4f matrix, double tick, int quality,
+      int progress) {
     double opacity = .48 + .10 * Math.sin(tick * .09);
+    if (progress < 0) opacity = .15; // Shattered chain, before short despawn.
     orbit(out, matrix, tick, quality == 0 ? 16 : quality == 1 ? 28 : 40, (float) opacity);
     for (int i = 0; i < SoulEclipseGeometry.STARS; i++) {
+      if (i < progress) continue;
       var point = SoulEclipseGeometry.star(i, tick);
-      star(out, matrix, point, quality == 0 ? .07 : .09, STAR, .88f);
+      boolean next = progress == i;
+      float pulse = (float) (.76 + .22 * Math.sin(tick * .22));
+      star(out, matrix, point, next ? .14 : quality == 0 ? .07 : .09,
+          next ? STAR : RED_LIGHT,
+          progress < 0 ? .1f : next ? pulse : .36f);
     }
-    moon(out, matrix, tick, .85f, false);
+    // After all three separate sword hits, only the center may finish the chain.
+    moon(out, matrix, tick, progress == 3 ? .98f : progress < 0 ? .2f : .5f,
+        progress == 3);
   }
 
   static void stage(VertexConsumer out, Matrix4f matrix, double tick, int stage,

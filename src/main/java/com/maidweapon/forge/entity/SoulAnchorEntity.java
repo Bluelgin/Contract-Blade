@@ -20,6 +20,10 @@ public final class SoulAnchorEntity extends Entity {
   /** Display mode only: 0 = stable single-core critical, 1 = verified-limit constellation. */
   private static final EntityDataAccessor<Boolean> ECLIPSE =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.BOOLEAN);
+  private static final EntityDataAccessor<Integer> ECLIPSE_PROGRESS =
+      SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.INT);
+  private static final EntityDataAccessor<Float> ECLIPSE_YAW =
+      SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.FLOAT);
   private static final EntityDataAccessor<Optional<UUID>> OWNER =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.OPTIONAL_UUID);
   public UUID owner, original;
@@ -43,7 +47,25 @@ public final class SoulAnchorEntity extends Entity {
 
   public String binding = "";
   public String targetPhase = "";
+  /** Ephemeral server-only chain clock, never item NBT or persisted data. */
+  public long chainDeadline;
   public long expires, burstUntil;
+
+  public int chainProgress() {
+    return entityData.get(ECLIPSE_PROGRESS);
+  }
+
+  public void chainProgress(int value) {
+    entityData.set(ECLIPSE_PROGRESS, value);
+  }
+
+  public float eclipseYaw() {
+    return entityData.get(ECLIPSE_YAW);
+  }
+
+  public void eclipseYaw(float value) {
+    entityData.set(ECLIPSE_YAW, value);
+  }
 
   public SoulAnchorEntity(EntityType<? extends SoulAnchorEntity> type, Level level) {
     super(type, level);
@@ -57,6 +79,8 @@ public final class SoulAnchorEntity extends Entity {
     entityData.define(TARGET, -1);
     entityData.define(SHAKE, -100);
     entityData.define(ECLIPSE, false);
+    entityData.define(ECLIPSE_PROGRESS, 0);
+    entityData.define(ECLIPSE_YAW, 0f);
   }
 
   public void targetId(int id) {
