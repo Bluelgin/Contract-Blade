@@ -1,7 +1,7 @@
 package com.maidweapon.forge.system.akatsuki.soul;
 
 public final class SoulRecoveryPolicy {
-  private static final double[] CUT = {.10, .12, .15, .18, .22, .26, .30, .35, .40, .45},
+  private static final double[] CUT = {.02, .03, .04, .05, .06, .07, .08, .09, .10, .12},
       AIR = {0, .30, .35, .40, .50, .60, .70, .80, .90, 1};
 
   public static double cut(int level) {

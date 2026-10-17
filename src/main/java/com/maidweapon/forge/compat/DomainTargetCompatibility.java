@@ -174,14 +174,23 @@ public final class DomainTargetCompatibility {
         new Adapter() {
           public boolean supports(LivingEntity t) {
             return version("cataclysm", "3.31")
-                && family(
-                    t,
-                    "com.github.L_Ender.cataclysm.entity.AnimationMonster.BossMonsters.LLibrary_Boss_Monster");
+                && (family(t,
+                      "com.github.L_Ender.cataclysm.entity.AnimationMonster.BossMonsters.LLibrary_Boss_Monster")
+                    || family(t,
+                      "com.github.L_Ender.cataclysm.entity.InternalAnimationMonster.IABossMonsters.IABoss_monster"));
           }
 
           public State inspect(LivingEntity t) throws ReflectiveOperationException {
             boolean protectedPhase = t.isInvulnerable();
             String phase = "cataclysm";
+            if (t.getClass().getName().equals(
+                "com.github.L_Ender.cataclysm.entity.InternalAnimationMonster.IABossMonsters"
+                    + ".NewNetherite_Monstrosity.Netherite_Monstrosity_Entity")) {
+              // Native rage transition: exact attack state 4 explicitly rejects damage.
+              int attackState = ((Number) read(t, "getAttackState")).intValue();
+              protectedPhase |= attackState == 4;
+              phase += ":monstrosity:" + (attackState == 4 ? "transition" : "normal");
+            }
             if (t.getClass().getSimpleName().equals("Ignis_Entity")) {
               Object animation = read(t, "getAnimation");
               for (String name : List.of("PHASE_2", "PHASE_3", "STRIKE", "ULTIMATE_ATTACK"))
@@ -360,9 +369,10 @@ public final class DomainTargetCompatibility {
     }
     if (AkatsukiDomainConfig.BOSS_ADAPTERS.get()
         && version("cataclysm", "3.31")
-        && family(
-            target,
-            "com.github.L_Ender.cataclysm.entity.AnimationMonster.BossMonsters.LLibrary_Boss_Monster"))
+        && (family(target,
+                "com.github.L_Ender.cataclysm.entity.AnimationMonster.BossMonsters.LLibrary_Boss_Monster")
+            || family(target,
+                "com.github.L_Ender.cataclysm.entity.InternalAnimationMonster.IABossMonsters.IABoss_monster")))
       names.add("damageBucket");
     if (AkatsukiDomainConfig.BOSS_ADAPTERS.get()
         && com.maidweapon.common.SoulDamageConfig.KNOWN_ADAPTERS.get()

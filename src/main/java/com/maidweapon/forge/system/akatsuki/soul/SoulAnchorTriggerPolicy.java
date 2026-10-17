@@ -4,7 +4,8 @@ package com.maidweapon.forge.system.akatsuki.soul;
 public final class SoulAnchorTriggerPolicy {
   public static boolean eligible(boolean issued, boolean currentCarrier, double raw, String kind) {
     return issued && currentCarrier && Double.isFinite(raw) && raw > 0
-        && kind != null && !kind.equals("UNSUPPORTED_SOURCE") && !kind.equals("PROTECTED_PHASE");
+        && kind != null && (kind.equals("VERIFIED_SPECIAL_CAP") || kind.equals("OBSERVED_SPECIAL_LIMIT")
+            || kind.equals("NORMAL_DEFENSE") || kind.equals("ABSORPTION"));
   }
 
   private SoulAnchorTriggerPolicy() {}

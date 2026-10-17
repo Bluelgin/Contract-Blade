@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 class SoulResonancePolicyTest {
   @Test
-  void scalesOnlyRealNativeDamageNeverTheBlockedTheoreticalPart() {
+  void coreCriticalOnlyUsesRealNativeDamageNeverTheBlockedTheoreticalPart() {
     assertEquals(2.5, SoulResonancePolicy.requested(5, .5), .00001);
     assertEquals(50, SoulResonancePolicy.requested(100, .5), .00001);
     assertEquals(0, SoulResonancePolicy.requested(0, .5));
@@ -15,16 +15,15 @@ class SoulResonancePolicyTest {
     assertEquals(0, SoulResonancePolicy.requested(100, 1.0));
   }
   @Test
-  void tenLevelsRemainMonotoneAndDatapackDefaultsMatch() {
-    double previous = 0;
-    for (int level = 1; level <= 10; level++) {
+  void coreCriticalIsFiftyPercentOnceUnlocked() {
+    assertEquals(0d, AkatsukiDomainGrowth.parameters(1)
+        .get(AkatsukiDomainGrowth.id("resonance_hit_ratio")), 1e-9);
+    for (int level = 2; level <= 10; level++) {
       var values = AkatsukiDomainGrowth.parameters(level);
       double ratio = values.get(AkatsukiDomainGrowth.id("resonance_hit_ratio"));
-      assertTrue(ratio > previous);
-      assertTrue(ratio <= .5);
+      assertEquals(.5, ratio, .00001);
       assertEquals(ratio, AkatsukiDomainGrowth.fallback()
           .resolve(level).parameters().get(AkatsukiDomainGrowth.id("resonance_hit_ratio")), .00001);
-      previous = ratio;
     }
   }
 }

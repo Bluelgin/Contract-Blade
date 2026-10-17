@@ -18,5 +18,12 @@ public final class SoulNormalCutPolicy {
     return levelCap == 0 ? scaled : Math.min(scaled, levelCap);
   }
 
+  /** A deliberately weaker unknown-target probe; no flat HP upper limit. */
+  public static double unknownPressure(double requested, double levelRate) {
+    if (!Double.isFinite(requested) || requested <= 0
+        || !Double.isFinite(levelRate) || levelRate <= 0) return 0;
+    return Math.min(requested, Math.max(1, requested * Math.min(.12, levelRate)));
+  }
+
   private SoulNormalCutPolicy() {}
 }

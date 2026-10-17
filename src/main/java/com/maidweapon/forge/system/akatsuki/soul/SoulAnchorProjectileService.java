@@ -81,7 +81,7 @@ public final class SoulAnchorProjectileService {
       var hit = SoulAnchorProjectileGeometry.firstHit(
           core.getBoundingBox(), sword.position(), delta);
       if (hit == null || !clear(level, sword.position(), hit, owner)) continue;
-      if (SoulAnchorService.projectileHit(owner, core)) {
+      if (SoulAnchorService.projectileHit(owner, core, sword.getUUID())) {
         // Do not leave a penetrating sword free to hit another soul core.
         sword.discard();
         if (com.maidweapon.common.SoulDamageConfig.DIAGNOSTICS.get()

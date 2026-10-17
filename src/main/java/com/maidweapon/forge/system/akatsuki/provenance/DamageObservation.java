@@ -45,11 +45,13 @@ public record DamageObservation(
 
   public enum Confidence {
     VERIFIED_NATIVE_LIMIT,
+    OBSERVED_NATIVE_LIMIT,
     UNKNOWN
   }
 
   public enum Classification {
     VERIFIED_SPECIAL_CAP,
+    OBSERVED_SPECIAL_LIMIT,
     NORMAL_DEFENSE,
     ABSORPTION,
     PROTECTED_PHASE,

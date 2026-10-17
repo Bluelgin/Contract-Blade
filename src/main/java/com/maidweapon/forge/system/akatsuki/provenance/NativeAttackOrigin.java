@@ -15,9 +15,11 @@ public final class NativeAttackOrigin implements AutoCloseable {
   private final String binding, maid, kind;
   private final DamageSource source;
   private final Entity victim;
+  private final float offered;
   private boolean closed, claimed;
 
-  private NativeAttackOrigin(Entity actor, String kind, DamageSource source, Entity victim) {
+  private NativeAttackOrigin(Entity actor, String kind, DamageSource source, Entity victim,
+      float offered) {
     previous = CURRENT.get();
     ServerPlayer candidate =
         actor instanceof ServerPlayer p && p.getServer() != null && p.getServer().isSameThread()
@@ -42,12 +44,20 @@ public final class NativeAttackOrigin implements AutoCloseable {
     this.kind = kind;
     this.source = source;
     this.victim = victim;
+    this.offered = offered;
     if (player != null) CURRENT.set(this);
+  }
+
+  /** Exact damaged entity, or one of its Forge multipart hitboxes. */
+  private boolean sameVictim(Entity candidate) {
+    return victim == candidate
+        || victim instanceof net.minecraftforge.entity.PartEntity<?> part
+            && part.getParent() == candidate;
   }
 
   /** Native melee calculation scope: alone it cannot authorize any observation. */
   public static NativeAttackOrigin open(Entity actor, String kind) {
-    return new NativeAttackOrigin(actor, kind, null, null);
+    return new NativeAttackOrigin(actor, kind, null, null, Float.NaN);
   }
 
   /**
@@ -55,14 +65,30 @@ public final class NativeAttackOrigin implements AutoCloseable {
    */
   public static NativeAttackOrigin strike(
       Entity actor, String kind, DamageSource source, Entity victim) {
-    return new NativeAttackOrigin(actor, kind, source, victim);
+    return strike(actor, kind, source, victim, Float.NaN);
+  }
+
+  public static NativeAttackOrigin strike(
+      Entity actor, String kind, DamageSource source, Entity victim, float offered) {
+    return new NativeAttackOrigin(actor, kind, source, victim, offered);
+  }
+
+  /** Exact native attack amount captured before an unfamiliar target's hurt() override. */
+  public static float offered(DamageSource source, Entity victim) {
+    var c = CURRENT.get();
+    return c != null && c.carrierValid() && c.source == source && c.sameVictim(victim)
+        && Float.isFinite(c.offered) && c.offered > 0 ? c.offered : Float.NaN;
   }
 
   public static NativeAttackOrigin narrow(DamageSource source, Entity victim) {
+    return narrow(source, victim, Float.NaN);
+  }
+
+  public static NativeAttackOrigin narrow(DamageSource source, Entity victim, float offered) {
     try {
       var c = CURRENT.get();
       if (c != null && c.carrierValid() && c.source == null && source.getEntity() == c.player)
-        return strike(c.player, c.kind, source, victim);
+        return strike(c.player, c.kind, source, victim, offered);
     } catch (RuntimeException | LinkageError failure) {
       com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("native-origin-narrow", failure);
     }
@@ -86,7 +112,7 @@ public final class NativeAttackOrigin implements AutoCloseable {
         || c.player != p
         || c.carrier != carrier
         || c.source != source
-        || c.victim != target) return false;
+        || !c.sameVictim(target)) return false;
     c.claimed = true;
     return true;
   }

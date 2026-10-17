@@ -14,8 +14,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * One independent skill plus optional verified debt per target, 3–5 stages.
- * Extra swings cannot restart or duplicate a running burst or its recovery.
+ * One verified recovery OR native-hit critical bonus per target, 3–5 stages.
+ * Extra swings cannot restart or duplicate a running burst or its accounting.
  */
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class SoulBurstService {
@@ -26,6 +26,7 @@ public final class SoulBurstService {
     final double[] allocations;
     final double[] baseAllocations;
     final int stages, duration;
+    final boolean eclipse;
     final long start;
     long next, last = Long.MIN_VALUE;
     int stage;
@@ -34,6 +35,7 @@ public final class SoulBurstService {
       player = p;
       core = c;
       reservation = plan.recovery();
+      eclipse = reservation != null;
       start = now;
       next = now;
       stages = SoulDamageConfig.BURST_STAGES.get();
@@ -60,7 +62,7 @@ public final class SoulBurstService {
     ACTIVE.put(core.original, new Burst(p, core, total, now));
     if (SoulDamageConfig.DIAGNOSTICS.get())
       com.mojang.logging.LogUtils.getLogger().info(
-          "SOUL_BURST_STARTED owner={} target={} core={} baseHP={} verifiedRecoveryHP={}",
+          "SOUL_BURST_STARTED owner={} target={} core={} criticalBonusHP={} verifiedRecoveryHP={}",
           p.getUUID(), t.getUUID(), core.getId(), total.base(),
           total.recovery() == null ? 0 : total.recovery().total());
     return true;
@@ -112,7 +114,8 @@ public final class SoulBurstService {
               result == null ? -1 : result.sequence());
         }
         SoulBurstNetwork.send(p, b.core, t, stage, b.stages,
-            base != null && base.success() || result != null && result.success());
+            base != null && base.success() || result != null && result.success(),
+            b.eclipse);
       } catch (RuntimeException failure) {
         com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("soul-burst-stage", failure);
         done.add(entry.getKey());
