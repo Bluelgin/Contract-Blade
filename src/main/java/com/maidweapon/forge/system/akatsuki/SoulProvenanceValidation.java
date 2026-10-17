@@ -142,6 +142,7 @@ public final class SoulProvenanceValidation {
     interaction(server, p);
     summonedSwordInteraction(server, p);
     lateAndInvalidated(server, p);
+    noUncreditedSpaceCutBypass(server, p);
     highBudgets(server, p);
     bosses(server, p);
     benchmark(server, p);
@@ -698,6 +699,67 @@ public final class SoulProvenanceValidation {
         "phase change cancels remaining reserved stages");
     t.discard();
     LogUtils.getLogger().info("SOUL_NATIVE_PACKET_AND_LATE_BURST_PASS");
+  }
+
+  /**
+   * High attack stats must not turn an uncredited ambient space cut into an
+   * invulnerability/cap bypass. Native verified recovery remains a separate action.
+   */
+  private static void noUncreditedSpaceCutBypass(MinecraftServer server, ServerPlayer p) {
+    var l = p.serverLevel();
+    var attribute = p.getAttribute(Attributes.ATTACK_DAMAGE);
+    double originalAttack = attribute.getBaseValue();
+    var strategy = SoulDamageConfig.STRATEGY.get();
+    try {
+      SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.AGGRESSIVE);
+      setLevel(p, 10);
+      attribute.setBaseValue(1000);
+      advance(l, 240);
+      var capped = cap(l);
+      var session = AkatsukiDomainService.session(p);
+      session.contact(l.getGameTime(), capped.getUUID());
+      var cut = SoulDamageEngine.cut(p, capped, session);
+      check(cut != null && cut.requested() >= 500
+              && near(cut.loss(), 5)
+              && cut.cancellations() == 0 && cut.reductions() == 0
+              && !SoulDamageDebtService.hasDebt(p, capped),
+          "uncredited Lv10 space cut respects native Boss cap, feedback=" + cut);
+      capped.discard();
+
+      // Preserves scaling against ordinary mobs; no artificial HP ceiling introduced.
+      advance(l, 240);
+      var vanilla = zombie(l);
+      vanilla.getAttribute(Attributes.ARMOR).setBaseValue(0);
+      session.contact(l.getGameTime(), vanilla.getUUID());
+      var uncapped = SoulDamageEngine.cut(p, vanilla, session);
+      check(uncapped != null && uncapped.requested() >= 500 && uncapped.loss() > 500,
+          "normal Lv10 space cut retains real attribute scaling, feedback=" + uncapped);
+      vanilla.discard();
+
+      // A verified receipt allows ONE recovery call, but while it cools an ambient
+      // fallback can never regain the privileged anti-cap permission.
+      advance(l, 240);
+      var cooling = cap(l);
+      nativeHit(cooling, p, 100);
+      check(SoulDamageDebtService.hasDebt(p, cooling), "setup verified debt");
+      session.contact(l.getGameTime(), cooling.getUUID());
+      var recovered = SoulDamageEngine.cut(p, cooling, session);
+      check(recovered != null && recovered.loss() > 5,
+          "valid reserved debt is still recoverable, feedback=" + recovered);
+      advance(l, 5);
+      check(SoulDamageDebtService.cutDecision(p, cooling).state()
+              == SoulCutDecision.State.RECOVERY_LOCKED,
+          "followup uses the locked receipt branch");
+      var locked = SoulDamageEngine.cut(p, cooling, session);
+      check(locked != null && locked.loss() <= 5.025
+              && locked.cancellations() == 0 && locked.reductions() == 0,
+          "cooldown fallback cannot bypass the limit, feedback=" + locked);
+      cooling.discard();
+      LogUtils.getLogger().info("SOUL_NORMAL_CUT_NATIVE_LIMIT_PASS");
+    } finally {
+      attribute.setBaseValue(originalAttack);
+      SoulDamageConfig.STRATEGY.set(strategy);
+    }
   }
 
   /** Native Forge fixture: proved soul debt is NEVER clipped at legacy HP limits. */

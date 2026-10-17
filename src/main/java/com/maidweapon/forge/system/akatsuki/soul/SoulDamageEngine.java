@@ -234,8 +234,11 @@ public final class SoulDamageEngine {
             source,
             (float) amount,
             recovery,
-            aggressive && SoulDamageConfig.EVENT_OVERRIDE.get(),
-            aggressive,
+            // Ordinary cuts (including cooldown fallbacks) must never inherit
+            // privileged cap/phase overrides just because the strategy is aggressive.
+            SoulStrikePermissions.overrideEvents(recovery, aggressive,
+                SoulDamageConfig.EVENT_OVERRIDE.get()),
+            SoulStrikePermissions.strong(recovery, aggressive),
             recovery
                 && SoulDamageConfig.STRATEGY.get()
                     == SoulDamageConfig.Strategy.UNRESTRICTED_EXPERIMENTAL);

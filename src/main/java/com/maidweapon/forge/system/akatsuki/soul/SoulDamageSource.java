@@ -28,14 +28,15 @@ final class SoulDamageSource extends DamageSource {
     var id = tag.location();
     if (id.getNamespace().equals("minecraft")) {
       if (DEFENSE.contains(id.getPath()))
-        // Soul-core critical spends an already post-defense native HP-loss receipt.
-        // Re-running ordinary armor/resistance would apply the same defense twice.
-        return scoped && (context.recovery
-            || context.mode == SoulDamagePolicy.Mode.SOUL_BURST
-            || id.getPath().equals("bypasses_cooldown"));
-      if (id.getPath().equals("bypasses_invulnerability")) return scoped && context.strong;
+        return scoped && SoulStrikePermissions.bypassTag(
+            context.mode, context.recovery, context.strong, id.getPath());
+      if (id.getPath().equals("bypasses_invulnerability"))
+        return scoped && SoulStrikePermissions.bypassTag(
+            context.mode, context.recovery, context.strong, id.getPath());
     }
-    if (id.toString().equals("cataclysm:bypasses_hurt_time")) return scoped && context.strong;
+    if (id.toString().equals("cataclysm:bypasses_hurt_time"))
+      return scoped && SoulStrikePermissions.bypassTag(
+          context.mode, context.recovery, context.strong, "cataclysm:bypasses_hurt_time");
     return super.is(tag);
   }
 }
