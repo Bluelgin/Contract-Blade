@@ -92,6 +92,15 @@ public final class SoulDamageEngine {
     // Recovery only replays issued debt; ordinary cuts may run while that receipt
     // cools, but can never mint or reset damage entitlement.
     boolean recovery = decision.state() == SoulCutDecision.State.RECOVERABLE;
+    // Unknown modded hostiles get a low-frequency, low-strength experimental
+    // pressure cut only when no verified debt exists. Do not let the recovery
+    // cooldown turn into a second, unaccounted strong damage channel.
+    boolean unknownPressure = decision.state() == SoulCutDecision.State.NORMAL
+        && SoulStrikePermissions.unrecognizedHostile(
+            DomainTargetCompatibility.verified(t),
+            AkatsukiDomainService.hostile(p, t),
+            net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+                .getKey(t.getType()).getNamespace());
     double levelCap = AkatsukiDomainGrowth.parameter(p, "space_cut_level_cap");
     double requested =
         recovery
@@ -100,10 +109,15 @@ public final class SoulDamageEngine {
                 p.getAttributeValue(Attributes.ATTACK_DAMAGE),
                 AkatsukiDomainGrowth.parameter(p, "space_cut_multiplier"),
                 levelCap);
-    // No configurable HP-per-hit or cumulative ceiling. float is the Minecraft API limit.
+    if (unknownPressure)
+      requested = SoulNormalCutPolicy.unknownPressure(
+          requested, AkatsukiDomainGrowth.parameter(p, "soul_recovery_rate"));
+    // No fixed HP ceiling. Unknown probes cannot spam every four ticks.
     double amount = Double.isFinite(requested)
         ? HITS.reserveCut(p.getUUID(), t.getUUID(), now(p),
-            Math.min(requested, Float.MAX_VALUE), SoulDamageConfig.CUT_GAP.get())
+            Math.min(requested, Float.MAX_VALUE),
+            unknownPressure ? Math.max(20, SoulDamageConfig.CUT_GAP.get())
+                : SoulDamageConfig.CUT_GAP.get())
         : 0;
     if (amount <= 0) return null;
     if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
@@ -200,6 +214,7 @@ public final class SoulDamageEngine {
     if (enabled.isEmpty()) return null;
     boolean aggressive = SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
     boolean unrecognized = mode == SPACE_CUT
+        && SoulDamageDebtService.cutDecision(p, t).state() == SoulCutDecision.State.NORMAL
         && SoulStrikePermissions.unrecognizedHostile(
             DomainTargetCompatibility.verified(t),
             AkatsukiDomainService.hostile(p, t),

@@ -14,6 +14,17 @@ class UnknownSoulAggressionTest {
     assertFalse(SoulStrikePermissions.unrecognizedHostile(false, true, null));
   }
 
+  @Test void unknownPressureIsWeakButStillScalesInHighStatPacks() {
+    assertEquals(1, com.maidweapon.forge.system.akatsuki.soul.SoulNormalCutPolicy
+        .unknownPressure(3, .03), 1e-6);
+    assertEquals(66, com.maidweapon.forge.system.akatsuki.soul.SoulNormalCutPolicy
+        .unknownPressure(550, .12), 1e-6);
+    assertEquals(6600, com.maidweapon.forge.system.akatsuki.soul.SoulNormalCutPolicy
+        .unknownPressure(55000, .12), 1e-6);
+    assertEquals(0, com.maidweapon.forge.system.akatsuki.soul.SoulNormalCutPolicy
+        .unknownPressure(Double.NaN, .12), 1e-6);
+  }
+
   @Test void aggressionNeverMakesNonRecoveryCoreCriticalIntoBossBypass() {
     assertTrue(SoulStrikePermissions.overrideEvents(false, true, true, true));
     assertTrue(SoulStrikePermissions.strong(false, true, true));

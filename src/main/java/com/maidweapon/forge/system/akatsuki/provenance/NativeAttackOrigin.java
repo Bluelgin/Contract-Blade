@@ -48,6 +48,13 @@ public final class NativeAttackOrigin implements AutoCloseable {
     if (player != null) CURRENT.set(this);
   }
 
+  /** Exact damaged entity, or one of its Forge multipart hitboxes. */
+  private boolean sameVictim(Entity candidate) {
+    return victim == candidate
+        || victim instanceof net.minecraftforge.entity.PartEntity<?> part
+            && part.getParent() == candidate;
+  }
+
   /** Native melee calculation scope: alone it cannot authorize any observation. */
   public static NativeAttackOrigin open(Entity actor, String kind) {
     return new NativeAttackOrigin(actor, kind, null, null, Float.NaN);
@@ -69,7 +76,7 @@ public final class NativeAttackOrigin implements AutoCloseable {
   /** Exact native attack amount captured before an unfamiliar target's hurt() override. */
   public static float offered(DamageSource source, Entity victim) {
     var c = CURRENT.get();
-    return c != null && c.carrierValid() && c.source == source && c.victim == victim
+    return c != null && c.carrierValid() && c.source == source && c.sameVictim(victim)
         && Float.isFinite(c.offered) && c.offered > 0 ? c.offered : Float.NaN;
   }
 
@@ -105,7 +112,7 @@ public final class NativeAttackOrigin implements AutoCloseable {
         || c.player != p
         || c.carrier != carrier
         || c.source != source
-        || c.victim != target) return false;
+        || !c.sameVictim(target)) return false;
     c.claimed = true;
     return true;
   }

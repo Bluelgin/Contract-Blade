@@ -299,13 +299,13 @@ public final class DamageObservationService {
   }
 
   /**
-   * The exact player / SlashBlade strike scope spans the target's own hurt()
-   * and any super.hurt() it delegates to. Accept superclass observations only
-   * for that exact source/target/amount, never from a stray ambient damage event.
+   * Already source-/target-authenticated native provenance spans the target's
+   * own hurt() and any super.hurt() delegation. Do not require an extra offered
+   * amount: launched vanilla SlashBlade attacks sometimes have no such envelope.
    */
   private static boolean trustedNativeDelegation(LivingEntity target, String observedEntry,
-      float offeredRaw) {
-    if (!Float.isFinite(offeredRaw) || offeredRaw <= 0) return false;
+      DamageProvenanceResolver.Proof proof) {
+    if (proof == null || !proof.valid()) return false;
     for (Class<?> c = target.getClass().getSuperclass(); c != null; c = c.getSuperclass())
       if (c.getName().equals(observedEntry)) return true;
     return false;
@@ -326,7 +326,7 @@ public final class DamageObservationService {
     if (!valid || f.failed) kind = UNSUPPORTED_SOURCE;
     else if (!HURT_ENTRY.get(t.getClass()).equals(f.entry)
         && !nativeVanillaDelegation(t, f.entry)
-        && !trustedNativeDelegation(t, f.entry, f.offeredRaw)) kind = UNVERIFIED_REJECTION;
+        && !trustedNativeDelegation(t, f.entry, f.proof)) kind = UNVERIFIED_REJECTION;
     else if ((!VANILLA_DEFENSE.get(t.getClass())
             && !DomainTargetCompatibility.normalDefenseVerified(t, f.source))
         || f.source.getClass() != DamageSource.class) kind = CUSTOM_HEALTH_UNKNOWN;
