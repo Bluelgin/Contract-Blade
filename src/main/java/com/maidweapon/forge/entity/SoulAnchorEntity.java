@@ -17,6 +17,9 @@ public final class SoulAnchorEntity extends Entity {
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.INT);
   private static final EntityDataAccessor<Integer> SHAKE =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.INT);
+  /** Display mode only: 0 = stable single-core critical, 1 = verified-limit constellation. */
+  private static final EntityDataAccessor<Boolean> ECLIPSE =
+      SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.BOOLEAN);
   private static final EntityDataAccessor<Optional<UUID>> OWNER =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.OPTIONAL_UUID);
   public UUID owner, original;
@@ -28,6 +31,14 @@ public final class SoulAnchorEntity extends Entity {
 
   public Optional<UUID> ownerId() {
     return entityData.get(OWNER);
+  }
+
+  public void eclipse(boolean active) {
+    entityData.set(ECLIPSE, active);
+  }
+
+  public boolean eclipse() {
+    return entityData.get(ECLIPSE);
   }
 
   public String binding = "";
@@ -45,6 +56,7 @@ public final class SoulAnchorEntity extends Entity {
     entityData.define(OWNER, Optional.empty());
     entityData.define(TARGET, -1);
     entityData.define(SHAKE, -100);
+    entityData.define(ECLIPSE, false);
   }
 
   public void targetId(int id) {

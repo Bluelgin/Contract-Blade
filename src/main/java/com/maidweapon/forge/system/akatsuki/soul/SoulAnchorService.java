@@ -104,6 +104,7 @@ public final class SoulAnchorService {
             + SoulDamageConfig.ANCHOR_LIFETIME.get()
             + (long) AkatsukiDomainGrowth.parameter(p, "anchor_lifetime_bonus");
     c.targetId(t.getId());
+    c.eclipse(SoulDamageDebtService.hasDebt(p, t));
     c.moveTo(point.x, point.y, point.z, 0, 0);
     if (!p.serverLevel().addFreshEntity(c)) return rejected(p, t, "world_rejected_entity");
     ANCHORS.put(key, c);
@@ -138,6 +139,8 @@ public final class SoulAnchorService {
       c.discard();
       return;
     }
+    var owner = SoulAnchorBinding.owner(c);
+    if (owner != null) c.eclipse(SoulDamageDebtService.hasDebt(owner, living));
     var point = SoulAnchorPlacement.find(living);
     if (point == null) {
       if (diagnostics())

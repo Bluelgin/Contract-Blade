@@ -26,6 +26,7 @@ public final class SoulBurstService {
     final double[] allocations;
     final double[] baseAllocations;
     final int stages, duration;
+    final boolean eclipse;
     final long start;
     long next, last = Long.MIN_VALUE;
     int stage;
@@ -34,6 +35,7 @@ public final class SoulBurstService {
       player = p;
       core = c;
       reservation = plan.recovery();
+      eclipse = reservation != null;
       start = now;
       next = now;
       stages = SoulDamageConfig.BURST_STAGES.get();
@@ -112,7 +114,8 @@ public final class SoulBurstService {
               result == null ? -1 : result.sequence());
         }
         SoulBurstNetwork.send(p, b.core, t, stage, b.stages,
-            base != null && base.success() || result != null && result.success());
+            base != null && base.success() || result != null && result.success(),
+            b.eclipse);
       } catch (RuntimeException failure) {
         com.maidweapon.forge.compat.CompatDiagnostics.warnOnce("soul-burst-stage", failure);
         done.add(entry.getKey());
