@@ -15,16 +15,15 @@ class SoulResonancePolicyTest {
     assertEquals(0, SoulResonancePolicy.requested(100, 1.0));
   }
   @Test
-  void coreCriticalBonusReachesFiftyPercentAtMaxLevel() {
-    double previous = 0;
-    for (int level = 1; level <= 10; level++) {
+  void coreCriticalIsFiftyPercentOnceUnlocked() {
+    assertEquals(0, AkatsukiDomainGrowth.parameters(1)
+        .get(AkatsukiDomainGrowth.id("resonance_hit_ratio")));
+    for (int level = 2; level <= 10; level++) {
       var values = AkatsukiDomainGrowth.parameters(level);
       double ratio = values.get(AkatsukiDomainGrowth.id("resonance_hit_ratio"));
-      assertTrue(ratio > previous);
-      assertTrue(ratio <= .5);
+      assertEquals(.5, ratio, .00001);
       assertEquals(ratio, AkatsukiDomainGrowth.fallback()
           .resolve(level).parameters().get(AkatsukiDomainGrowth.id("resonance_hit_ratio")), .00001);
-      previous = ratio;
     }
   }
 }

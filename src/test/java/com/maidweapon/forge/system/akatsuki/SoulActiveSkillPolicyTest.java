@@ -21,17 +21,13 @@ class SoulActiveSkillPolicyTest {
   }
 
   @Test void observedNativeDamageOnlyProducesUpToFiftyPercentCriticalBonus() {
-    double previous = 0;
     for (int level = 2; level <= 10; level++) {
       double rate = AkatsukiDomainGrowth.parameters(level)
           .get(AkatsukiDomainGrowth.id("resonance_hit_ratio"));
       double bonus = SoulResonancePolicy.requested(100, rate);
-      assertTrue(bonus > previous);
-      assertTrue(bonus <= 50);
+      assertEquals(50, bonus, .00001);
       assertEquals(bonus, Arrays.stream(SoulStageAllocation.split(bonus, 4)).sum(), .00001);
-      previous = bonus;
     }
-    assertEquals(50, previous, .00001);
     assertEquals(0, SoulResonancePolicy.requested(0, .5));
     assertEquals(0, SoulResonancePolicy.requested(Double.NaN, .5));
   }

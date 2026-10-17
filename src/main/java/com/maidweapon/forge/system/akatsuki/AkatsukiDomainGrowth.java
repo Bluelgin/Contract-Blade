@@ -25,7 +25,8 @@ public final class AkatsukiDomainGrowth {
   }
 
   private static final double[] CUT_MULTIPLIERS = {0.10, 0.13, 0.17, 0.21, 0.25, 0.30, 0.35, 0.40, 0.46, 0.55};
-  private static final double[] RESONANCE_RATIOS = {0.12, 0.16, 0.20, 0.24, 0.28, 0.32, 0.36, 0.40, 0.44, 0.50};
+  // The native soul-core critical is a fixed vanilla-style +50% once unlocked at Lv.2.
+  private static final double[] RESONANCE_RATIOS = {0, .5, .5, .5, .5, .5, .5, .5, .5, .5};
   private static final double[] CUT_LEVEL_CAPS = {2, 3, 5, 8, 12, 20, 30, 50, 80, 0};
 
   public static Map<ResourceLocation, Double> parameters(int level) {
