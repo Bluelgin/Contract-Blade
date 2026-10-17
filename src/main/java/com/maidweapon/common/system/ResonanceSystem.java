@@ -7,6 +7,8 @@ import com.maidweapon.common.data.MaidWeaponData;
 public final class ResonanceSystem {
     private ResonanceSystem() {}
 
+    /** Legacy detached-data helper. Runtime abilities must use the server ResonanceService payment API. */
+    @Deprecated
     public static boolean spend(MaidWeaponData data, int amount) {
         int cost = Math.max(0, amount);
         if (data.getResonance() < cost) return false;

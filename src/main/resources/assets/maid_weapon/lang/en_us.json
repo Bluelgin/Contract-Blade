@@ -498,5 +498,16 @@
   "maid_weapon.tooltip.red.learned": "Learned: %s",
   "maid_weapon.tooltip.red.waiting_power": "Yet to learn: %s",
   "maid_weapon.tooltip.black.core_locked": "Sword core not yet awakened",
-  "maid_weapon.tooltip.white.name.locked": "Guarding not yet learned"
+  "maid_weapon.tooltip.white.name.locked": "Guarding not yet learned",
+  "item.maid_weapon.awakening_vein": "Awakening Spirit Vein",
+  "item.maid_weapon.flowing_vein": "Flowing Spirit Vein",
+  "item.maid_weapon.endless_vein": "Endless Spirit Vein",
+  "item.maid_weapon.endless_contract": "Endless Contract",
+  "maid_weapon.tooltip.vein": "Use to awaken spirit-vein stage %s. Stages must be unlocked in order.",
+  "maid_weapon.tooltip.vein.global": "Permanently improves natural resonance recovery for all your present and future contracts.",
+  "maid_weapon.tooltip.endless_contract": "In a maid bauble slot: her contract spends no resonance, even while she rests within a weapon.",
+  "maid_weapon.message.vein.success": "Spirit-vein stage %s awakened. Natural resonance recovery for all your contracts: ×%s.",
+  "maid_weapon.message.vein.already": "You have already awakened this spirit-vein stage.",
+  "maid_weapon.message.vein.skipped": "Awaken the preceding spirit-vein stage first.",
+  "maid_weapon.message.vein.unsupported": "Your spirit vein cannot be awakened right now. The item was kept."
 }

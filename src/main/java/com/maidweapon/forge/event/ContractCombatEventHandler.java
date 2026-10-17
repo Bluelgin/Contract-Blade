@@ -7,6 +7,7 @@ import com.maidweapon.common.compat.ModCompatManager;
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.common.system.MonsterTierRegistry;
 import com.maidweapon.common.system.ResonanceSystem;
+import com.maidweapon.forge.system.resonance.*;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.system.ChallengeTracker;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -41,9 +42,7 @@ public final class ContractCombatEventHandler {
             com.maidweapon.forge.system.mastery.ContractCombatCredits.invalidate(dead.getUUID());
             ItemStack weapon = dead.getMainHandItem();
             if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, dead)) {
-                var relation = MaidInfusion.data(weapon);
-                relation.reduceResonance(MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
-                ContractCarrierData.setMaidData(weapon, relation);
+                ResonanceService.drain(dead, weapon, MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
             }
             ModCompatManager.notifyChallengeFailed("maid_sword", "unknown");
             ChallengeTracker.clear(dead.getUUID());
@@ -57,9 +56,8 @@ public final class ContractCombatEventHandler {
         int tier = MonsterTierRegistry.getTier(targetId);
         if (tier <= 0) tier = MonsterTierRegistry.estimateTierFromHealth(event.getEntity().getMaxHealth());
         com.maidweapon.forge.system.mastery.ContractMasteryService.tryAdvance(player, tier, targetId);
-        MaidWeaponData relation = MaidInfusion.data(weapon);
-        relation.addResonance(com.maidweapon.common.ContractRulesConfig.KILL_REWARD.get());
-        ContractCarrierData.setMaidData(weapon, relation);
+        ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
+                com.maidweapon.common.ContractRulesConfig.KILL_REWARD.get());
         boolean boss = MonsterTierRegistry.isBoss(targetId)
                 || ModCompatManager.getExternalBosses().getOrDefault(targetId, false)
                 || MonsterTierRegistry.isBossFromHealth(event.getEntity().getMaxHealth());
@@ -76,6 +74,7 @@ public final class ContractCombatEventHandler {
             if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
         }
 
+        if (ResonanceContract.resolve(player, weapon, ContractCarrierData.getBindingId(weapon)) == null) return;
         com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weapon);
         UUID playerId = player.getUUID();
         MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
@@ -83,7 +82,8 @@ public final class ContractCombatEventHandler {
         Integer lastFood = ChallengeTracker.getLastFoodLevel(playerId);
         if (lastFood != null && food > lastFood) {
             ResonanceSystem.onEat(data, food - lastFood);
-            ContractCarrierData.setMaidData(weapon, data);
+            ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
+                    Math.max(0, data.getResonance() - MaidInfusion.data(weapon).getResonance()));
         }
         ChallengeTracker.setFoodLevel(playerId, food);
 
@@ -91,10 +91,12 @@ public final class ContractCombatEventHandler {
         Float lastHealth = ChallengeTracker.getLastHealth(playerId);
         if (lastHealth != null && health > lastHealth) {
             ResonanceSystem.onHeal(data, health - lastHealth);
-            ContractCarrierData.setMaidData(weapon, data);
+            ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
+                    Math.max(0, data.getResonance() - MaidInfusion.data(weapon).getResonance()));
         } else if (lastHealth != null && health < lastHealth) {
             ResonanceSystem.onOwnerHurt(data, lastHealth - health);
-            ContractCarrierData.setMaidData(weapon, data);
+            ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
+                    Math.max(0, data.getResonance() - MaidInfusion.data(weapon).getResonance()));
         }
         ChallengeTracker.setHealth(playerId, health);
     }
