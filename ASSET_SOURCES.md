@@ -1,5 +1,16 @@
 # Asset sources
 
+## Resonance spirit veins and Endless Contract — approved v2 motion (2026-10-18)
+
+The four icons were manually redrawn as pixel SVGs after a built-in imagegen
+concept referencing this mod's existing tassel, ribbon, Heartbound Knot and key.
+The final palette uses pink/cyan cords, honey-gold metal and lavender crystal.
+`tools/render_resonance_icons.py` renders original vector facets, traveling lights
+and integer-pixel silk-tip bends into native 40-frame Minecraft texture strips.
+No generated bitmap, external font, or runtime shader is included in the game
+textures. Editable sources, prompt and review previews are in `art/resonance/`.
+This update changes only art, animation metadata and their export/validation tools.
+
 ## Three-fox maid-pack cover (2026-10-10)
 
 The square pack cover/tab illustration is AI-assisted artwork generated with the

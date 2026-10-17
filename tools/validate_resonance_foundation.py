@@ -27,7 +27,10 @@ for name in ['awakening_vein','flowing_vein','endless_vein','endless_contract']:
         assert lang[f'item.maid_weapon.{name}']
     texture=(assets/f'textures/item/{name}.png').read_bytes()
     assert texture[:8] == b'\x89PNG\r\n\x1a\n'
-    assert struct.unpack('>II', texture[16:24]) == (32,32)
+    assert struct.unpack('>II', texture[16:24]) == (32,32 * 40)
+    animation=json.loads((assets/f'textures/item/{name}.png.mcmeta').read_text())['animation']
+    assert animation == {'frametime':2,'interpolate':False,'width':32,'height':32}
+    assert 40 * animation['frametime'] == 80  # Four seconds at 20 TPS.
     assert texture[24:26] == bytes([8,6]) and len(texture) > 200  # 8-bit RGBA
     ElementTree.parse(root/f'art/resonance/{name}.svg')
     model=json.loads((assets/f'models/item/{name}.json').read_text())

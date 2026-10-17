@@ -33,7 +33,7 @@ The old MaidBondCombatHandler idle +2 listener is removed. Combat upkeep, maid d
 
 The stages are 0/1/2/3 → ×1.00/×1.25/×1.60/×2.00. `spiritVeinMultipliers` is the ordered configuration definition; all item classes share one progression service. Repeated, skipped or unsupported stages do not change data or consume items. Creative use retains the item. Upgrades neither fill resonance nor increase its maximum.
 
-Awakening, Flowing and Endless Spirit Veins have progressively more costly six-ingredient TLM altar recipes; the last requires a nether star and netherite. Endless Contract upgrades Heartbound Knot with late-game vanilla materials. All ingredients are available without optional mods. All four items have creative entries, bilingual names/descriptions, models, 32×32 transparent PNGs and manually redrawn SVG source in `art/resonance`. `item-preview.png` also shows a 16×16 readability check. The generated concept is a design reference, not a resized final texture.
+Awakening, Flowing and Endless Spirit Veins have progressively more costly six-ingredient TLM altar recipes; the last requires a nether star and netherite. Endless Contract upgrades Heartbound Knot with late-game vanilla materials. All ingredients are available without optional mods. All four items have creative entries, bilingual names/descriptions, models, transparent 32×32 animation frames and manually redrawn SVG source in `art/resonance`. `item-preview.gif` shows the approved v2 motion, and `item-preview.png` includes a 16×16 readability check. Each native PNG is a 32×1280 strip: 40 frames × 2 ticks, a 4-second loop, with interpolation disabled. The generated concept is a design reference, not a resized final texture.
 
 ## Endless Contract
 
