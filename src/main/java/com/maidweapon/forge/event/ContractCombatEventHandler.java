@@ -74,8 +74,8 @@ public final class ContractCombatEventHandler {
             if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return;
         }
 
-        if (ResonanceContract.resolve(player, weapon, ContractCarrierData.getBindingId(weapon)) == null) return;
         com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weapon);
+        if (ResonanceContract.resolve(player, weapon, ContractCarrierData.getBindingId(weapon)) == null) return;
         UUID playerId = player.getUUID();
         MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
         int food = player.getFoodData().getFoodLevel();
