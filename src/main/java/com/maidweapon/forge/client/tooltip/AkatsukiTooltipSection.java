@@ -13,8 +13,6 @@ final class AkatsukiTooltipSection {
         Component cap = capValue <= 0
                 ? Component.translatable("maid_weapon.tooltip.compact.red.uncapped")
                 : Component.translatable("maid_weapon.tooltip.compact.red.cap", ContractTooltipFormat.decimal(capValue));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.domain")
-                .withStyle(ChatFormatting.DARK_RED));
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.red.cut",
                 ContractTooltipFormat.percent(ContractTooltipSnapshot.value(profile, "space_cut_multiplier")),
                 cap).withStyle(ChatFormatting.RED));
@@ -34,17 +32,12 @@ final class AkatsukiTooltipSection {
 
         if (!expanded) return;
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.cut_explain")
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.resonance_explain")
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.channel_explain")
-                .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.domain_story").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.resonance_story").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("maid_weapon.tooltip.red.soul_story").withStyle(ChatFormatting.GRAY));
         if (capValue <= 0)
             tooltip.add(Component.translatable("maid_weapon.tooltip.red.no_level_cap")
                     .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.red.debt_explain")
-                .withStyle(ChatFormatting.GRAY));
         if (aerial) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.red.anchor_spawn")
                     .withStyle(ChatFormatting.AQUA));
@@ -57,25 +50,27 @@ final class AkatsukiTooltipSection {
         if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_cloak"))
             tooltip.add(Component.translatable("maid_weapon.tooltip.red.rescue")
                     .withStyle(ChatFormatting.GRAY));
-        appendRedSkillGroup(tooltip, profile, 0, 4);
-        appendRedSkillGroup(tooltip, profile, 4, 8);
-        appendRedSkillGroup(tooltip, profile, 8, 10);
+        appendLearned(tooltip, profile);
     }
 
-    /** Three compact sections instead of ten redundant paragraphs at max mastery. */
-    private static void appendRedSkillGroup(List<Component> tooltip, CompoundTag profile,
-                                            int from, int to) {
-        var names = new ArrayList<String>();
-        for (int index = from; index < to; index++) {
-            String ability = AkatsukiDomainGrowth.ROUTE.get(index);
+    /** Three abilities per row, based on the actual synchronized feature flags. */
+    private static void appendLearned(List<Component> tooltip, CompoundTag profile) {
+        var learned = new ArrayList<String>();
+        String unlearned = null;
+        for (String ability : AkatsukiDomainGrowth.ROUTE) {
+            String label = Component.translatable("maid_weapon.tooltip.red.skill." + ability).getString();
             if (ContractTooltipSnapshot.unlocked(profile, "akatsuki_" + ability))
-                names.add(Component.translatable("maid_weapon.tooltip.red.skill." + ability).getString());
+                learned.add(label);
+            else if (unlearned == null) unlearned = label;
         }
-        if (!names.isEmpty())
-            tooltip.add(Component.translatable("maid_weapon.tooltip.red.skill_group",
-                    from + 1, to, String.join(" · ", names)).withStyle(ChatFormatting.DARK_GRAY));
+        for (int i = 0; i < learned.size(); i += 3)
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.learned",
+                    String.join(" · ", learned.subList(i, Math.min(i + 3, learned.size()))))
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        if (unlearned != null)
+            tooltip.add(Component.translatable("maid_weapon.tooltip.red.waiting_power", unlearned)
+                    .withStyle(ChatFormatting.DARK_GRAY));
     }
-
 
     private AkatsukiTooltipSection() {}
 }

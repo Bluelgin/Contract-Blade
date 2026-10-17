@@ -21,6 +21,13 @@ final class BlackFoxTooltipSection {
                 .withStyle(ChatFormatting.GRAY));
         if (expanded) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
+            tooltip.add(Component.translatable("maid_weapon.tooltip.black.core_story").withStyle(ChatFormatting.GRAY));
+            if (ContractTooltipSnapshot.unlocked(profile, "combo_mode"))
+                tooltip.add(Component.translatable("maid_weapon.tooltip.black.combo_story").withStyle(ChatFormatting.GRAY));
+            if (ContractTooltipSnapshot.unlocked(profile, "owner_follow"))
+                tooltip.add(Component.translatable("maid_weapon.tooltip.black.follow_story").withStyle(ChatFormatting.GRAY));
+            if (ContractTooltipSnapshot.unlocked(profile, "multi_hunter"))
+                tooltip.add(Component.translatable("maid_weapon.tooltip.black.multi_story").withStyle(ChatFormatting.GRAY));
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.black.area",
                     ContractTooltipFormat.decimal(ContractTooltipSnapshot.value(profile, "barrage_radius", 16)),
                     ContractTooltipFormat.decimal(ContractTooltipSnapshot.value(profile, "combo_radius", 8))));
