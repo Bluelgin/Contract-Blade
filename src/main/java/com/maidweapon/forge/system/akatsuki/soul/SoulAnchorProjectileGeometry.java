@@ -20,24 +20,6 @@ public final class SoulAnchorProjectileGeometry {
     return region.clip(start, start.add(velocity)).orElse(null);
   }
 
-  /** Deliberately smaller than the broad normal core's swept capture. */
-  public static Vec3 firstPreciseHit(AABB box, Vec3 start, Vec3 velocity) {
-    if (box == null || !finite(start) || !finite(velocity)
-        || velocity.lengthSqr() < MIN_SWEEP_SQR
-        || velocity.lengthSqr() > MAX_SWEEP * MAX_SWEEP) return null;
-    AABB region = box.inflate(.04);
-    return region.contains(start) ? start
-        : region.clip(start, start.add(velocity)).orElse(null);
-  }
-
-  public static boolean aimedAtPrecise(AABB box, Vec3 eye, Vec3 look) {
-    if (box == null || !finite(eye) || !finite(look)
-        || look.lengthSqr() < .9 || look.lengthSqr() > 1.1) return false;
-    AABB guide = box.inflate(.13);
-    return guide.contains(eye)
-        || guide.clip(eye, eye.add(look.scale(40))).isPresent();
-  }
-
   /** The owner's deliberate crosshair aim can override native boss lock-on. */
   public static boolean aimedAt(AABB core, Vec3 eye, Vec3 look) {
     if (core == null || !finite(eye) || !finite(look)

@@ -19,20 +19,24 @@ final class SoulEclipseGlyph {
   static void idle(VertexConsumer out, Matrix4f matrix, double tick, int quality,
       int progress) {
     double opacity = .48 + .10 * Math.sin(tick * .09);
-    if (progress < 0) opacity = .15; // Shattered chain, before short despawn.
+    if (progress < 0) opacity = .17;
     orbit(out, matrix, tick, quality == 0 ? 16 : quality == 1 ? 28 : 40, (float) opacity);
+    // The original three satellites are solely an atmospheric constellation.
+    // None of them are separate targets and they stay visible through all five hits.
     for (int i = 0; i < SoulEclipseGeometry.STARS; i++) {
-      if (i < progress) continue;
       var point = SoulEclipseGeometry.star(i, tick);
-      boolean next = progress == i;
-      float pulse = (float) (.76 + .22 * Math.sin(tick * .22));
-      star(out, matrix, point, next ? .14 : quality == 0 ? .07 : .09,
-          next ? STAR : RED_LIGHT,
-          progress < 0 ? .1f : next ? pulse : .36f);
+      star(out, matrix, point, quality == 0 ? .07 : .09, STAR,
+          progress < 0 ? .2f : .88f);
     }
-    // After all three separate sword hits, only the center may finish the chain.
-    moon(out, matrix, tick, progress == 3 ? .98f : progress < 0 ? .2f : .5f,
-        progress == 3);
+    moon(out, matrix, tick, progress < 0 ? .2f : .85f, progress >= 5);
+    // Each authenticated sword contact leaves a short additional crack on the moon.
+    // These lines are visual feedback only; the five-hit ledger stays server-side.
+    for (int i = 0; i < Math.max(0, Math.min(5, progress)); i++) {
+      double x = -.19 + i * .095;
+      ribbon(out, matrix, new Point(x - .04, -.17 + i * .025, .14),
+          new Point(x + .08, .09 + i * .015, .14), .014,
+          i == 4 ? STAR : RED_LIGHT, .9f);
+    }
   }
 
   static void stage(VertexConsumer out, Matrix4f matrix, double tick, int stage,
@@ -43,14 +47,36 @@ final class SoulEclipseGlyph {
     float alpha = fade * (hit ? 1 : .3f);
     orbit(out, matrix, tick, quality == 0 ? 16 : quality == 1 ? 28 : 40, alpha * (last ? .25f : .65f));
     if (!last) {
-      // Satellites are already shattered by real player sword hits.
-      // Recovery stages must not magically respawn and auto-break them again.
-      moon(out, matrix, tick, alpha * .75f, true);
-      double angle = stage * 1.7 + .42;
-      Point start = SoulEclipseGeometry.orbit(angle, tick);
-      Point end = new Point(-start.x() * .35, -start.y() * .35, .11);
-      ribbon(out, matrix, start, end, .024, STAR, alpha * .95f);
-      star(out, matrix, end, .055 + Math.min(.12, age * .03), RED_LIGHT, alpha);
+      int consumed = SoulEclipseGeometry.brokenStar(stage, stages);
+      for (int i = 0; i < SoulEclipseGeometry.STARS; i++) {
+        var origin = SoulEclipseGeometry.star(i, tick);
+        boolean broken = i == consumed;
+        double shift = broken ? Math.min(1, age / 3) : 0;
+        Point destination = switch (consumed) {
+          case 0 -> new Point(origin.x() * 1.6, origin.y() * 1.6, .03);
+          case 1 -> new Point(0, 0, .04); // The second star is dragged inward.
+          default -> SoulEclipseGeometry.orbit(5.46, tick); // A star falls into the track gap.
+        };
+        Point point = origin.lerp(destination, shift);
+        float brightness = alpha * (broken ? 1 - (float) shift * .7f : .35f);
+        star(out, matrix, point, broken ? .16 : .075, broken ? STAR : RED_LIGHT, brightness);
+        if (broken && consumed == 0 && quality > 0) {
+          for (int fleck = 0; fleck < 3; fleck++) {
+            double angle = fleck * 2 * Math.PI / 3 + .4;
+            star(out, matrix, new Point(point.x() + Math.cos(angle) * shift * .18,
+                point.y() + Math.sin(angle) * shift * .18, .09), .035,
+                RED_LIGHT, alpha * (1 - (float) shift));
+          }
+        }
+      }
+      moon(out, matrix, tick, alpha * .8f, false);
+      Point origin = SoulEclipseGeometry.star(consumed, tick);
+      // Only the second pulse drags material back toward the moon; the third breaks orbit.
+      if (consumed == 1)
+        ribbon(out, matrix, origin, new Point(0, 0, .08), .015, RED_LIGHT, alpha * .8f);
+      else if (consumed == 2)
+        ribbon(out, matrix, origin, SoulEclipseGeometry.orbit(5.46, tick),
+            .018, STAR, alpha * .65f);
     } else {
       // The last stage is the moon cleaving, not another explosion of random stars.
       moon(out, matrix, tick, alpha * .8f, true);

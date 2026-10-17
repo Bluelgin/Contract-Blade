@@ -22,8 +22,6 @@ public final class SoulAnchorEntity extends Entity {
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.BOOLEAN);
   private static final EntityDataAccessor<Integer> ECLIPSE_PROGRESS =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.INT);
-  private static final EntityDataAccessor<Float> ECLIPSE_YAW =
-      SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.FLOAT);
   private static final EntityDataAccessor<Optional<UUID>> OWNER =
       SynchedEntityData.defineId(SoulAnchorEntity.class, EntityDataSerializers.OPTIONAL_UUID);
   public UUID owner, original;
@@ -59,14 +57,6 @@ public final class SoulAnchorEntity extends Entity {
     entityData.set(ECLIPSE_PROGRESS, value);
   }
 
-  public float eclipseYaw() {
-    return entityData.get(ECLIPSE_YAW);
-  }
-
-  public void eclipseYaw(float value) {
-    entityData.set(ECLIPSE_YAW, value);
-  }
-
   public SoulAnchorEntity(EntityType<? extends SoulAnchorEntity> type, Level level) {
     super(type, level);
     noPhysics = true;
@@ -80,7 +70,6 @@ public final class SoulAnchorEntity extends Entity {
     entityData.define(SHAKE, -100);
     entityData.define(ECLIPSE, false);
     entityData.define(ECLIPSE_PROGRESS, 0);
-    entityData.define(ECLIPSE_YAW, 0f);
   }
 
   public void targetId(int id) {

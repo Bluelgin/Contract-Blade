@@ -2,8 +2,7 @@ package com.maidweapon.forge.system.akatsuki.soul;
 
 /**
  * Deterministic, immutable geometry for Akatsuki's verified-cap soul-core constellation.
- * Single source of geometry for the client constellation and server sword hits.
- * Stars are virtual world-space strike regions, not additional network entities.
+ * Presentation only: stars are not server entities, hitboxes, damage sources or debts.
  */
 public final class SoulEclipseGeometry {
   public static final int STARS = 3;
@@ -31,16 +30,6 @@ public final class SoulEclipseGeometry {
     if (index < 0 || index >= STARS) throw new IllegalArgumentException("star index");
     double tremor = Math.sin(tick * .065 + index * 2.1) * .025;
     return orbit(STARS_AT[index] + tremor, tick);
-  }
-
-  /** World-space position. Yaw is frozen when a constellation appears. */
-  public static Point worldStar(Point core, float yawDegrees, int index, double tick) {
-    var p = star(index, tick);
-    double angle = Math.toRadians(yawDegrees);
-    double cs = Math.cos(angle), sn = Math.sin(angle);
-    return new Point(core.x() + (p.x() * cs - p.z() * sn) * .72,
-        core.y() + .85 + p.y() * .85,
-        core.z() + (p.x() * sn + p.z() * cs) * .72);
   }
 
   public static boolean onTrack(double angle) {

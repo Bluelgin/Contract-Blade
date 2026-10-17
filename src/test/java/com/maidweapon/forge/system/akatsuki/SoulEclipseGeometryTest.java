@@ -31,23 +31,6 @@ class SoulEclipseGeometryTest {
     }
   }
 
-  @Test void worldSpaceStarsMatchFixedYawAndRemainSeparateFromTheMoon() {
-    var base = new SoulEclipseGeometry.Point(12, 80, -5);
-    for (float yaw : new float[] {-180f, -90f, 0f, 45f, 180f}) {
-      for (int i = 0; i < SoulEclipseGeometry.STARS; i++) {
-        var p = SoulEclipseGeometry.worldStar(base, yaw, i, 200);
-        assertTrue(Double.isFinite(p.x()) && Double.isFinite(p.y()) && Double.isFinite(p.z()));
-        assertTrue(Math.hypot(p.x() - base.x(), p.y() - base.y() - .85) > .38);
-        assertNotEquals(base.x(), p.x(), 1e-4);
-      }
-    }
-    var origin = SoulEclipseGeometry.worldStar(base, 0, 0, 200);
-    var rotated = SoulEclipseGeometry.worldStar(base, 90, 0, 200);
-    assertEquals(-(origin.z() - base.z()), rotated.x() - base.x(), 1e-7);
-    assertEquals(origin.x() - base.x(), rotated.z() - base.z(), 1e-7);
-    assertEquals(origin.y(), rotated.y(), 1e-7);
-  }
-
   @Test void animationsExpireAndNeverProduceNonFinitePositions() {
     assertEquals(0, SoulEclipseGeometry.fade(-1, 5));
     assertEquals(0, SoulEclipseGeometry.fade(5, 5));

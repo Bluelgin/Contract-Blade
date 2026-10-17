@@ -182,6 +182,9 @@ public final class SoulAnchorService {
     if (!(e.getTarget() instanceof SoulAnchorEntity c)) return;
     e.setCanceled(true);
     if (!(e.getEntity() instanceof ServerPlayer p)) return;
+    // Eclipse mode is sword-only. A melee click never shortcuts five distinct
+    // launch-authenticated sword collisions or forfeits the challenge.
+    if (c.eclipse()) return;
     if (!precise(p, c)) {
       if (diagnostics())
         com.mojang.logging.LogUtils.getLogger().info(
@@ -205,35 +208,24 @@ public final class SoulAnchorService {
     }
   }
 
-  /** Called only after native projectile-launch provenance and swept LOS validation. */
-  static boolean projectileHit(ServerPlayer p, SoulAnchorEntity c) {
-    return projectileHit(p, c, -1);
-  }
-
-  /** Only called after original SlashBlade launch ownership and swept hit proof. */
-  static boolean projectileHit(ServerPlayer p, SoulAnchorEntity c, int star) {
+  /** Only called after native projectile launch and swept LOS proof. */
+  static boolean projectileHit(ServerPlayer p, SoulAnchorEntity c, UUID swordId) {
     if (!p.getUUID().equals(c.owner) || !valid(c)) return false;
-    if (!c.eclipse()) return star == -1 && activate(p, c);
-    if (LAST_HIT.getOrDefault(c.getUUID(), Long.MIN_VALUE) == SoulDamageEngine.now(p))
-      return false;
-    boolean success = SoulEclipseChallenge.hit(p, c, star);
-    if (success) LAST_HIT.put(c.getUUID(), SoulDamageEngine.now(p));
-    return success;
+    if (!c.eclipse()) return activate(p, c);
+    return SoulEclipseChallenge.swordHit(p, c, swordId);
   }
 
-  /** Test-only deterministic equivalent of a server-validated star hit. */
-  public static boolean fixtureEclipseHit(ServerPlayer p, SoulAnchorEntity c, int star) {
+  /** Dedicated-server fixture; real gameplay always requires a stamped native sword. */
+  public static boolean fixtureEclipseHit(ServerPlayer p, SoulAnchorEntity c, UUID swordId) {
     if (!Boolean.getBoolean("contractblade.soul.validation")) return false;
-    return projectileHit(p, c, star);
+    return projectileHit(p, c, swordId);
   }
 
   /** Shared single-activation gate; projectile hits never reset melee swing timing. */
   private static boolean activate(ServerPlayer p, SoulAnchorEntity c) {
     long now = SoulDamageEngine.now(p);
     if (LAST_HIT.getOrDefault(c.getUUID(), Long.MIN_VALUE) == now) return false;
-    if (!(c.eclipse()
-            ? SoulEclipseChallenge.hit(p, c, -1)
-            : SoulBurstService.strike(p, c))) return false;
+    if (c.eclipse() || !SoulBurstService.strike(p, c)) return false;
     LAST_HIT.put(c.getUUID(), now);
     c.shake();
     return true;
@@ -335,6 +327,7 @@ public final class SoulAnchorService {
     HOVER.clear();
     SoulAnchorBinding.clear();
     SoulBurstService.clear();
+    SoulEclipseChallenge.clear();
   }
 
   private SoulAnchorService() {}

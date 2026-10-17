@@ -32,19 +32,6 @@ class SoulAnchorProjectileGeometryTest {
   }
 
   @Test
-  void satellitesNeedRealSmallSweptHitsRatherThanGenerousCorePadding() {
-    var star = new AABB(1.0, 9, 0, 1.46, 9.5, .46);
-    assertNotNull(SoulAnchorProjectileGeometry.firstPreciseHit(
-        star, new Vec3(1.2, 9.25, -3), new Vec3(0, 0, 5)));
-    assertNull(SoulAnchorProjectileGeometry.firstPreciseHit(
-        star, new Vec3(.2, 9.25, -3), new Vec3(0, 0, 5)));
-    assertTrue(SoulAnchorProjectileGeometry.aimedAtPrecise(
-        star, new Vec3(1.2, 9.25, -4), new Vec3(0, 0, 1)));
-    assertFalse(SoulAnchorProjectileGeometry.aimedAtPrecise(
-        star, new Vec3(.2, 9.25, -4), new Vec3(0, 0, 1)));
-  }
-
-  @Test
   void stationaryTeleportAndInvalidVelocitiesDoNotPass() {
     assertNull(SoulAnchorProjectileGeometry.firstHit(
         CORE, new Vec3(0, 8.9, 0), Vec3.ZERO));
