@@ -496,5 +496,7 @@
   "maid_weapon.tooltip.red.resonance_story": "When your blade wounds a foe, Akatsuki can follow with another cut. Each target needs a brief interval.",
   "maid_weapon.tooltip.red.soul_story": "Some enemies suppress damage through special powers. Akatsuki can recover part of that loss; ordinary armor and resistance do not create such an opening.",
   "maid_weapon.tooltip.red.learned": "Learned: %s",
-  "maid_weapon.tooltip.red.waiting_power": "Yet to learn: %s"
+  "maid_weapon.tooltip.red.waiting_power": "Yet to learn: %s",
+  "maid_weapon.tooltip.black.core_locked": "Sword core not yet awakened",
+  "maid_weapon.tooltip.white.name.locked": "Guarding not yet learned"
 }

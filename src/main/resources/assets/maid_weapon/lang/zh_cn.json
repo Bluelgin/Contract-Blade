@@ -498,5 +498,7 @@
   "maid_weapon.tooltip.red.resonance_story": "刀锋真正伤及敌人时，赤月可能接续一记斩击。同一目标需要稍作间隔才能再次触发。",
   "maid_weapon.tooltip.red.soul_story": "有些强敌能以特殊力量压低所受伤害。赤月可以追回其中一部分；普通护甲与抗性不会留下这样的机会。",
   "maid_weapon.tooltip.red.learned": "已领悟：%s",
-  "maid_weapon.tooltip.red.waiting_power": "尚待领悟：%s"
+  "maid_weapon.tooltip.red.waiting_power": "尚待领悟：%s",
+  "maid_weapon.tooltip.black.core_locked": "剑核尚未觉醒",
+  "maid_weapon.tooltip.white.name.locked": "守护尚未领悟"
 }
