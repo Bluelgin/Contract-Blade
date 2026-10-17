@@ -53,7 +53,9 @@ public final class SoulAnchorProjectileService {
   private static List<Zone> zones(SoulAnchorEntity core) {
     var regions = new ArrayList<Zone>();
     if (core.eclipse()) {
-      for (int i = 0; i < SoulEclipseGeometry.STARS; i++)
+      // Shattered stars disappear from both the renderer AND server collision.
+      // A later sword may pass through an old star's location without false failure.
+      for (int i = Math.max(0, core.chainProgress()); i < SoulEclipseGeometry.STARS; i++)
         regions.add(new Zone(i, starBox(core, i)));
     }
     regions.add(new Zone(-1, core.getBoundingBox()));
