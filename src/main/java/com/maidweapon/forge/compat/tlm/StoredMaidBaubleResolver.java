@@ -9,8 +9,10 @@ import java.util.*;
 
 /** No entities instantiated. Cache compares the entire codec payload, not a CRC alone. */
 public final class StoredMaidBaubleResolver {
-    private record Entry(CompoundTag payload, boolean valid, boolean waived) { }
+    private record Entry(CompoundTag payload, boolean valid, boolean waived, long bytes) { }
     private static final Map<String, Entry> CACHE = new LinkedHashMap<>();
+    private static final long MAX_CACHE_BYTES = 32L * 1024 * 1024;
+    private static long cachedBytes;
     public static boolean valid(ResonanceContract context) { return resolve(context).valid; }
     public static boolean hasWaiver(ResonanceContract context) { return resolve(context).waived; }
     private static Entry resolve(ResonanceContract context) {
@@ -18,7 +20,7 @@ public final class StoredMaidBaubleResolver {
         boolean supported = ModList.get().getModContainerById("touhou_little_maid")
                 .map(mod -> java.util.Set.of("1.5.3", "1.5.3-forge+mc1.20.1").contains(mod.getModInfo().getVersion().toString())).orElse(false);
         var tag = context.channel();
-        if (!MaidEntityDataCodec.hasData(tag)) return new Entry(new CompoundTag(), false, false);
+        if (!MaidEntityDataCodec.hasData(tag)) return new Entry(new CompoundTag(), false, false, 0);
         var payload = new CompoundTag();
         for (String key : List.of(MaidEntityDataCodec.LEGACY_DATA, MaidEntityDataCodec.COMPRESSED_DATA,
                 MaidEntityDataCodec.FORMAT, MaidEntityDataCodec.UNCOMPRESSED_SIZE, MaidEntityDataCodec.CHECKSUM))
@@ -38,9 +40,14 @@ public final class StoredMaidBaubleResolver {
             valid = storedBinding.isEmpty() || storedBinding.equals(context.binding());
             waived = valid && supported && readNativeSlots(maid);
         }
-        if (CACHE.size() >= 256) CACHE.remove(CACHE.keySet().iterator().next());
-        var entry = new Entry(payload.copy(), valid, waived);
-        CACHE.put(key, entry);
+        long bytes = com.maidweapon.forge.system.ContractNbtGuard.serializedSize(payload);
+        var entry = new Entry(payload.copy(), valid, waived, bytes);
+        var previous = CACHE.remove(key);
+        if (previous != null) cachedBytes -= previous.bytes;
+        while (!CACHE.isEmpty() && (CACHE.size() >= 256 || bytes > MAX_CACHE_BYTES - cachedBytes)) {
+            var first = CACHE.keySet().iterator().next(); cachedBytes -= CACHE.remove(first).bytes;
+        }
+        if (bytes <= MAX_CACHE_BYTES) { CACHE.put(key, entry); cachedBytes += bytes; }
         return entry;
     }
     static boolean readNativeSlots(CompoundTag maid) {
@@ -60,7 +67,13 @@ public final class StoredMaidBaubleResolver {
         }
         return found;
     }
-    public static void clear(UUID owner) { CACHE.keySet().removeIf(key -> key.startsWith(owner + ":")); }
-    public static void clearAll() { CACHE.clear(); }
+    public static void clear(UUID owner) {
+        var entries = CACHE.entrySet().iterator();
+        while (entries.hasNext()) {
+            var entry = entries.next();
+            if (entry.getKey().startsWith(owner + ":")) { cachedBytes -= entry.getValue().bytes; entries.remove(); }
+        }
+    }
+    public static void clearAll() { CACHE.clear(); cachedBytes = 0; }
     private StoredMaidBaubleResolver() { }
 }

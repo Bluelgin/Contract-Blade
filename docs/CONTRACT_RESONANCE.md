@@ -41,7 +41,7 @@ Awakening, Flowing and Endless Spirit Veins have progressively more costly six-i
 
 Live maids are inspected through `getMaidBauble()`. Stored maids are read through `ContractMaidStorage` and its bounded, checksummed codec. UUID, owner and any stored binding are verified; the native saveWithoutId format is supported and a contradictory explicit entity ID is rejected; only `MaidBaubleInventory.Items` in the verified TLM 1.5.3 native layout grants waiver. Backpack items and the player's inventory are never interpreted as equipped baubles. Unsupported TLM versions/layouts fail closed for waiver; valid payload identity may still receive ordinary resource service.
 
-The bounded 256-entry session cache uses owner+maid+binding and an independent snapshot of **all** codec payload fields, including the compressed bytes. Equality checks do not trust a CRC alone. Any serialized slot change, capture, load, transfer or channel payload replacement causes a miss; live slots are always read directly. Logout and server stop clear caches. No full entity is instantiated or decompressed every tick. The cached snapshot also detects in-place payload mutations.
+The bounded 256-entry / 32 MiB session cache uses owner+maid+binding and an independent snapshot of **all** codec payload fields, including the compressed bytes. Equality checks do not trust a CRC alone. Any serialized slot change, capture, load, transfer or channel payload replacement causes a miss; live slots are always read directly. Logout and server stop clear caches. No full entity is instantiated or decompressed every tick. The cached snapshot also detects in-place payload mutations.
 
 ## Extension API
 
