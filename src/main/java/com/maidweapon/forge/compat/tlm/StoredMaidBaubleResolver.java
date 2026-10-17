@@ -33,7 +33,7 @@ public final class StoredMaidBaubleResolver {
         CompoundTag maid = ContractMaidStorage.read(context.owner(), view);
         if (maid != null && maid.hasUUID("UUID") && maid.getUUID("UUID").toString().equals(context.maid())
                 && maid.hasUUID("Owner") && maid.getUUID("Owner").equals(context.owner().getUUID())
-                && maid.getString("id").equals("touhou_little_maid:maid")) {
+                && (!maid.contains("id") || maid.getString("id").equals("touhou_little_maid:maid"))) {
             String storedBinding = maid.getCompound("ForgeData").getString(ContractMaidKeys.ENTITY_BINDING_ID);
             valid = storedBinding.isEmpty() || storedBinding.equals(context.binding());
             waived = valid && supported && readNativeSlots(maid);

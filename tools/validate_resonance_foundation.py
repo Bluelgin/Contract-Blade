@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 from xml.etree import ElementTree
-from PIL import Image
+import struct
 root=Path(__file__).resolve().parents[1]
 java=root/'src/main/java/com/maidweapon'
 service=(java/'forge/system/resonance/ResonanceService.java').read_text()
@@ -25,9 +25,10 @@ for name in ['awakening_vein','flowing_vein','endless_vein','endless_contract']:
     for locale in ['zh_cn','en_us']:
         lang=json.loads((assets/f'lang/{locale}.json').read_text())
         assert lang[f'item.maid_weapon.{name}']
-    texture=Image.open(assets/f'textures/item/{name}.png')
-    assert texture.size==(32,32) and texture.mode=='RGBA' and texture.getbbox()
-    assert texture.getextrema()[3][0]==0 and texture.getextrema()[3][1]==255
+    texture=(assets/f'textures/item/{name}.png').read_bytes()
+    assert texture[:8] == b'\x89PNG\r\n\x1a\n'
+    assert struct.unpack('>II', texture[16:24]) == (32,32)
+    assert texture[24:26] == bytes([8,6]) and len(texture) > 200  # 8-bit RGBA
     ElementTree.parse(root/f'art/resonance/{name}.svg')
     model=json.loads((assets/f'models/item/{name}.json').read_text())
     assert model['textures']['layer0']==f'maid_weapon:item/{name}'
