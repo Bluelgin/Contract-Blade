@@ -185,9 +185,10 @@ public final class SoulProvenanceValidation {
       s.contact(l.getGameTime(), t.getUUID());
       SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.AGGRESSIVE);
       var cut = SoulDamageEngine.cut(p, t, s);
-      check(cut != null && near(cut.loss(), 0) && !cut.compensated(),
-          "aggressive uncredited spatial cut must respect native weakness");
+      check(cut != null && cut.loss() > 0 && !cut.compensated(),
+          "unrecognized modded hostile may receive scoped aggressive soul damage");
       check(!weakness.getBoolean(t), "weakness flag untouched");
+      check(t.getKillCredit() == p, "native player attribution preserved");
       hp = t.getHealth();
       nativeHit(t, p, 10);
       check(near(hp, t.getHealth()), "ordinary hit still blocked after scope");
@@ -202,8 +203,8 @@ public final class SoulProvenanceValidation {
         core.discard();
       }
       LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NO_FREE_CORE_PASS");
-      // Extreme attack attributes do not authorize an unproved bypass of Wroughtnaut
-      // weakness, even at Lv10. Legitimate, verified recovery has its own fixture.
+      // This optional unrecognized boss tests deliberately strong scoped attacks.
+      // Its native death sequence must still play; never directly set its health.
       double attackBefore = p.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue();
       try {
         setLevel(p, 10);
@@ -212,12 +213,16 @@ public final class SoulProvenanceValidation {
         s = AkatsukiDomainService.session(p);
         s.contact(l.getGameTime(), t.getUUID());
         var finisher = SoulDamageEngine.cut(p, t, s);
-        check(finisher != null && near(finisher.loss(), 0) && t.getHealth() > 0,
-            "uncredited Lv10 cut cannot kill invulnerable native boss");
-        check(!weakness.getBoolean(t) && !t.isRemoved(),
-            "no native weakness or death-phase manipulation");
+        check(finisher != null && finisher.loss() > 0 && t.getHealth() <= 0,
+            "unrecognized scoped attack reaches native lethal hurt");
+        check(t.getClass().getMethod("getAnimation").invoke(t)
+            == t.getClass().getField("DIE_ANIMATION").get(null),
+            "native death animation entered");
+        check(!t.isRemoved(), "death sequence was not forcibly discarded");
+        for (int i = 0; i < 160 && !t.isRemoved(); i++) { advance(l, 1); t.tick(); }
+        check(t.isRemoved(), "native death animation completed");
         check(SoulStrikeContext.current() == null, "strong permission scope closed");
-        LogUtils.getLogger().info("SOUL_WROUGHTNAUT_UNVERIFIED_BYPASS_DENIED_PASS");
+        LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NATIVE_DEATH_PASS");
       } finally {
         p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(attackBefore);
       }
@@ -373,9 +378,12 @@ public final class SoulProvenanceValidation {
       if (mode.equals("event_canceled")) canceled = t;
       float hp = t.getHealth();
       nativeHit(t, p, 100);
-      check(
-          !SoulDamageDebtService.hasDebt(p, t),
-          "no invented debt " + mode);
+      check(mode.equals("event_reduced")
+          ? SoulDamageDebtService.hasDebt(p, t)
+              && DamageObservationService.latest(server).classification()
+                  == DamageObservation.Classification.OBSERVED_SPECIAL_LIMIT
+          : !SoulDamageDebtService.hasDebt(p, t),
+          "only directly observed, non-vanilla reductions may mint generic debt " + mode);
       LogUtils.getLogger()
           .info(
               "SOUL_PROVENANCE_NEGATIVE case={} before={} after={} observation={}",
@@ -407,7 +415,10 @@ public final class SoulProvenanceValidation {
     prepare(unknown);
     l.addFreshEntity(unknown);
     nativeHit(unknown, p, 100);
-    check(!SoulDamageDebtService.hasDebt(p, unknown), "unwrapped outer entry fail closed");
+    // Unknown wrappers are now accepted only with an exact native attack origin
+    // and intact vanilla downstream health/defense evidence.
+    check(SoulDamageDebtService.hasDebt(p, unknown),
+        "scoped unknown pre-cap delegates may reveal genuine constrained damage");
     unknown.discard();
     var nonlinear = new Nonlinear(l);
     prepare(nonlinear);
@@ -1008,7 +1019,7 @@ public final class SoulProvenanceValidation {
       boolean unknown = scenario < 0;
       advance(l, 240);
       p.moveTo(1, 150, .5, 0, 0);
-      Zombie t = unknown ? new UnknownPreCap(l) : EntityType.ZOMBIE.create(l);
+      Zombie t = unknown ? new Nonlinear(l) : EntityType.ZOMBIE.create(l);
       prepare(t);
       t.getAttribute(Attributes.ARMOR).setBaseValue(Math.max(0, scenario));
       l.addFreshEntity(t);

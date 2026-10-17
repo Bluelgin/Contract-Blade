@@ -199,6 +199,12 @@ public final class SoulDamageEngine {
             .toList();
     if (enabled.isEmpty()) return null;
     boolean aggressive = SoulDamageConfig.STRATEGY.get() != SoulDamageConfig.Strategy.STANDARD;
+    boolean unrecognized = mode == SPACE_CUT
+        && SoulStrikePermissions.unrecognizedHostile(
+            DomainTargetCompatibility.verified(t),
+            AkatsukiDomainService.hostile(p, t),
+            net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+                .getKey(t.getType()).getNamespace());
     Channel channel =
         preferred != null && enabled.contains(preferred)
             ? preferred
@@ -237,8 +243,8 @@ public final class SoulDamageEngine {
             // Ordinary cuts (including cooldown fallbacks) must never inherit
             // privileged cap/phase overrides just because the strategy is aggressive.
             SoulStrikePermissions.overrideEvents(recovery, aggressive,
-                SoulDamageConfig.EVENT_OVERRIDE.get()),
-            SoulStrikePermissions.strong(recovery, aggressive),
+                SoulDamageConfig.EVENT_OVERRIDE.get(), unrecognized),
+            SoulStrikePermissions.strong(recovery, aggressive, unrecognized),
             recovery
                 && SoulDamageConfig.STRATEGY.get()
                     == SoulDamageConfig.Strategy.UNRESTRICTED_EXPERIMENTAL);

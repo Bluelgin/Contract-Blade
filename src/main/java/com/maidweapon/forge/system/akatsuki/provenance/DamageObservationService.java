@@ -113,7 +113,7 @@ public final class DamageObservationService {
     final DamageProvenanceResolver.Proof proof;
     final String entry, phase;
     final double expectedLimit;
-    final float raw, before, absorption;
+    final float raw, before, absorption, offeredRaw;
     final DamageObservation.Defense defense;
     double children,
         capResult = Double.NaN,
@@ -137,6 +137,7 @@ public final class DamageObservationService {
       this.t = t;
       source = s;
       this.raw = raw;
+      this.offeredRaw = NativeAttackOrigin.offered(s, t);
       this.entry = entry;
       this.proof = proof;
       before = t.getHealth();
@@ -297,6 +298,19 @@ public final class DamageObservationService {
         && HURT_ENTRY.get(target.getClass()).startsWith("net.minecraft.world.entity.");
   }
 
+  /**
+   * The exact player / SlashBlade strike scope spans the target's own hurt()
+   * and any super.hurt() it delegates to. Accept superclass observations only
+   * for that exact source/target/amount, never from a stray ambient damage event.
+   */
+  private static boolean trustedNativeDelegation(LivingEntity target, String observedEntry,
+      float offeredRaw) {
+    if (!Float.isFinite(offeredRaw) || offeredRaw <= 0) return false;
+    for (Class<?> c = target.getClass().getSuperclass(); c != null; c = c.getSuperclass())
+      if (c.getName().equals(observedEntry)) return true;
+    return false;
+  }
+
   private static void finish(Frame f) {
     if (f.proof == null) return;
     var t = f.t;
@@ -311,7 +325,8 @@ public final class DamageObservationService {
             && p.serverLevel().getEntity(t.getUUID()) == t;
     if (!valid || f.failed) kind = UNSUPPORTED_SOURCE;
     else if (!HURT_ENTRY.get(t.getClass()).equals(f.entry)
-        && !nativeVanillaDelegation(t, f.entry)) kind = UNVERIFIED_REJECTION;
+        && !nativeVanillaDelegation(t, f.entry)
+        && !trustedNativeDelegation(t, f.entry, f.offeredRaw)) kind = UNVERIFIED_REJECTION;
     else if ((!VANILLA_DEFENSE.get(t.getClass())
             && !DomainTargetCompatibility.normalDefenseVerified(t, f.source))
         || f.source.getClass() != DamageSource.class) kind = CUSTOM_HEALTH_UNKNOWN;
@@ -321,8 +336,6 @@ public final class DamageObservationService {
     else if (!Float.isFinite(t.getHealth()) || actual > f.raw + .02) kind = AMBIGUOUS_CHANGE;
     else if (Double.isFinite(f.damageOut) && !same(actual, Math.min(f.before, f.damageOut)))
       kind = CUSTOM_HEALTH_UNKNOWN;
-    else if (!same(f.hurtIn, f.hurtOut) || !same(f.damageIn, f.damageOut))
-      kind = UNVERIFIED_REJECTION;
     else if (!same(f.armorOut, f.armor(f.armorIn)) || !same(f.magicOut, f.magic(f.magicIn)))
       kind = NORMAL_DEFENSE;
     else if (f.capEvidence
@@ -332,6 +345,18 @@ public final class DamageObservationService {
         && same(f.damageIn, Math.max(0, f.magicOut - f.absorption))) {
       effective = Math.min(f.before, Math.max(0, f.magic(f.armor(f.raw)) - f.absorption));
       kind = effective > actual + .015 ? VERIFIED_SPECIAL_CAP : NORMAL_DEFENSE;
+    } else if (GenericSoulLimitEvidence.confirmed(
+        Float.isFinite(f.offeredRaw) ? f.offeredRaw : f.raw, f.raw, f.hurtIn, f.hurtOut, f.armorIn,
+        f.armorOut, f.magicIn, f.magicOut, f.damageIn, f.damageOut, actual)) {
+      // This evidence comes from a real one-to-one native attack, not a boss-ID
+      // whitelist or speculative max-health multiplier. Recompute ordinary armor
+      // and resistance from the ORIGINAL uncut request.
+      effective = Math.min(f.before,
+          Math.max(0, f.magic(f.armor(Float.isFinite(f.offeredRaw)
+              ? Math.max(f.raw, f.offeredRaw) : f.raw)) - f.absorption));
+      kind = effective > actual + .015 ? OBSERVED_SPECIAL_LIMIT : NORMAL_DEFENSE;
+    } else if (!same(f.hurtIn, f.hurtOut) || !same(f.damageIn, f.damageOut)) {
+      kind = UNVERIFIED_REJECTION;
     } else if (Double.isFinite(f.damageOut)) {
       effective = actual;
       kind = f.absorption > 0 ? ABSORPTION : NORMAL_DEFENSE;
@@ -352,7 +377,9 @@ public final class DamageObservationService {
               actual,
               f.damageOut);
     boolean recover =
-        valid && t.isAlive() && kind == VERIFIED_SPECIAL_CAP && Double.isFinite(effective);
+        valid && t.isAlive()
+            && (kind == VERIFIED_SPECIAL_CAP || kind == OBSERVED_SPECIAL_LIMIT)
+            && Double.isFinite(effective);
     long now = p.getServer().overworld().getGameTime();
     long id = SEQUENCES.merge(p.getServer(), 1L, Long::sum);
     var o =
@@ -365,7 +392,8 @@ public final class DamageObservationService {
             f.source,
             p.getServer(),
             t.level().dimension(),
-            f.raw,
+            kind == OBSERVED_SPECIAL_LIMIT && Float.isFinite(f.offeredRaw)
+                ? Math.max(f.raw, f.offeredRaw) : f.raw,
             effective,
             actual,
             f.before,
@@ -380,10 +408,12 @@ public final class DamageObservationService {
             f.phase,
             state.phase(),
             kind,
-            f.capEvidence ? t.getClass().getName() : "unverified",
-            recover
-                ? DamageObservation.Confidence.VERIFIED_NATIVE_LIMIT
-                : DamageObservation.Confidence.UNKNOWN,
+            f.capEvidence ? t.getClass().getName()
+                : kind == OBSERVED_SPECIAL_LIMIT ? "native-observation" : "unverified",
+            kind == VERIFIED_SPECIAL_CAP ? DamageObservation.Confidence.VERIFIED_NATIVE_LIMIT
+                : kind == OBSERVED_SPECIAL_LIMIT
+                    ? DamageObservation.Confidence.OBSERVED_NATIVE_LIMIT
+                    : DamageObservation.Confidence.UNKNOWN,
             0,
             recover,
             f.returned,
