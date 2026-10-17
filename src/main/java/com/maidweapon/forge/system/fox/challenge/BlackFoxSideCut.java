@@ -8,7 +8,7 @@ final class BlackFoxSideCut {
         int age = actions.fight.age();
         if (age == 1) blink.request(player, true);
         if (age == 12) { actions.commit(player); BlackFoxEffects.tell(actions.boss(), true); }
-        if (age == 20) actions.cut(player, 9, 6, -55);
+        if (age == 20) actions.cut(player, BlackFoxDamageTuning.SIDE, 6, -55);
     }
     private BlackFoxSideCut() { }
 }

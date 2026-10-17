@@ -23,7 +23,7 @@ public final class BlackFoxCameraShake {
                 || strength >= 4 && !BlackFoxClientConfig.BOSS_IMPACT_SHAKE.get()) return;
         double time = mc.level.getGameTime() + mc.getPartialTick();
         float incoming = switch (strength) {
-            case 0 -> .35f; case 1 -> .7f; case 2 -> 1f;
+            case 0 -> .35f; case 1 -> .35f; case 2 -> 1f;
             case 3 -> 1.8f; case 4 -> .85f; default -> .75f;
         };
         // No amplitude stacking; a fifth-parry break can immediately override the ordinary pulse.

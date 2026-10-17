@@ -8,7 +8,8 @@ final class BlackFoxCrossCuts {
         int age = actions.fight.age();
         actions.stopHorizontal();
         if (age == 6 || age == 36) { actions.commit(player); BlackFoxEffects.tell(actions.boss(), true); }
-        if (age == 14 || age == 44) actions.cut(player, 8, 6, age == 14 ? 45 : -45);
+        if (age == 10 || age == 40) BlackFoxEffects.ready(actions.boss());
+        if (age == 14 || age == 44) actions.cut(player, BlackFoxDamageTuning.CROSS, 6, age == 14 ? 45 : -45);
     }
     private BlackFoxCrossCuts() { }
 }

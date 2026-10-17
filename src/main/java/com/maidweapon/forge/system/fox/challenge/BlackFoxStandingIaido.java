@@ -13,6 +13,7 @@ final class BlackFoxStandingIaido {
         if(age==1) boss.playSound(SoundEvents.BEACON_POWER_SELECT,.65f,.55f);
         if(age==16 || age==28) boss.playSound(SoundEvents.AMETHYST_BLOCK_RESONATE,.65f,age==16?.8f:1.2f);
         if(age==LOCK) boss.playSound(SoundEvents.AMETHYST_BLOCK_CHIME,.8f,1.6f);
+        if(age==HIT-4) BlackFoxEffects.ready(boss);
         if(age!=HIT) return;
         // A short bounded step, not a teleport onto the challenger; do not move through solid blocks.
         Vec3 destination=actions.bounded(boss.position().add(actions.committed.scale(.8)));
@@ -21,7 +22,7 @@ final class BlackFoxStandingIaido {
         boss.playSound(SoundEvents.PLAYER_ATTACK_SWEEP,1.3f,.6f);
         actions.markSlash();
         if(actions.protectedPlayer(player)) return;
-        if(!actions.parryArena(player)) player.hurt(boss.damageSources().mobAttack(boss),60);
+        if(!actions.parryArena(player)) player.hurt(boss.damageSources().mobAttack(boss),BlackFoxDamageTuning.IAIDO);
     }
     private BlackFoxStandingIaido() { }
 }

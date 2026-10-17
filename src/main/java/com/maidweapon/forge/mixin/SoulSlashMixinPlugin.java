@@ -7,8 +7,8 @@ import org.spongepowered.asm.mixin.extensibility.*;
 import org.spongepowered.asm.service.MixinService;
 
 /**
- * Gate only the new verified native melee invocation bridge; existing SlashBlade mixins retain
- * their policy.
+ * Version/shape gates for verified native SlashBlade bridges. Unrelated existing mixins retain
+ * their policy; guard eligibility itself always belongs to the provider.
  */
 public final class SoulSlashMixinPlugin implements IMixinConfigPlugin {
   public void onLoad(String pkg) {}
@@ -18,7 +18,20 @@ public final class SoulSlashMixinPlugin implements IMixinConfigPlugin {
   }
 
   public boolean shouldApplyMixin(String target, String mixin) {
-    if (!mixin.endsWith("SoulNativeMeleeMixin")&&!mixin.endsWith("SoulAttackHelperMixin")) return true;
+    if (mixin.endsWith("BlackFoxNativeGuardMixin")) {
+      try {
+        var mod = LoadingModList.get().getModFileById("slashblade");
+        return mod != null && mod.getMods().stream().anyMatch(m -> m.getVersion().toString().equals("1.9.65"))
+            && MixinService.getService().getBytecodeProvider().getClassNode(target).methods.stream()
+                .filter(m -> m.name.equals("onLivingAttack") && m.desc.equals("(Lnet/minecraftforge/event/entity/living/LivingAttackEvent;)V"))
+                .flatMap(m -> java.util.stream.StreamSupport.stream(m.instructions.spliterator(), false))
+                .anyMatch(i -> i instanceof org.objectweb.asm.tree.MethodInsnNode call
+                    && call.owner.equals("mods/flammpfeil/slashblade/ability/Untouchable")
+                    && call.name.equals("setUntouchable") && call.desc.equals("(Lnet/minecraft/world/entity/LivingEntity;I)V"));
+      } catch (Exception | LinkageError error) { return false; }
+    }
+    boolean attackHelper = mixin.endsWith("SoulAttackHelperMixin") || mixin.endsWith("BlackFoxNativeDamageMixin");
+    if (!mixin.endsWith("SoulNativeMeleeMixin") && !attackHelper) return true;
     try {
       var mod = LoadingModList.get().getModFileById("slashblade");
       return mod != null
@@ -26,9 +39,9 @@ public final class SoulSlashMixinPlugin implements IMixinConfigPlugin {
           && MixinService.getService().getBytecodeProvider().getClassNode(target).methods.stream()
               .anyMatch(
                   m ->
-                      m.name.equals(mixin.endsWith("SoulAttackHelperMixin")?"attack":"doMeleeAttack")
+                      m.name.equals(attackHelper?"attack":"doMeleeAttack")
                           && m.desc.equals(
-                              mixin.endsWith("SoulAttackHelperMixin")?"(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;F)V":"(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;ZZF)V"));
+                              attackHelper?"(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;F)V":"(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;ZZF)V"));
     } catch (Exception | LinkageError e) {
       return false;
     }

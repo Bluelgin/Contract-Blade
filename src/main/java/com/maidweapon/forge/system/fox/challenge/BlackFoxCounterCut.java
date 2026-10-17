@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 final class BlackFoxCounterCut {
     static void tick(BlackFoxActions actions, ServerPlayer player) {
         if (actions.fight.age() == 2) BlackFoxEffects.tell(actions.boss(), true);
-        if (actions.fight.age() == 10) actions.cut(player, 6, 6, -65);
+        if (actions.fight.age() == 10) actions.cut(player, BlackFoxDamageTuning.LIGHT, 6, -65);
     }
     private BlackFoxCounterCut() { }
 }

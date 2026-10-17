@@ -42,7 +42,7 @@ final class BlackFoxRifts {
                 }
                 if (age % 10 == 0 && player.position().add(0, 1, 0).distanceToSqr(rift.at()) < 2.5 * 2.5
                         && !actor.combat().protects(player))
-                    player.hurt(actor.body().damageSources().mobAttack(actor.body()), 7);
+                    player.hurt(actor.body().damageSources().mobAttack(actor.body()), BlackFoxDamageTuning.RIFT);
             }
         }
     }

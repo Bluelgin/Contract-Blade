@@ -17,7 +17,10 @@ public abstract class BlackFoxNativeTimelineMixin {
     @Inject(method = "accept(Lnet/minecraft/world/entity/LivingEntity;)V", at = @At("HEAD"), cancellable = true)
     private void contractBlade$sessionClock(LivingEntity entity, CallbackInfo ci) {
         if (!(entity instanceof BlackFoxCombatant) && !(entity instanceof com.maidweapon.forge.entity.BlackFoxSwordActorEntity)) return;
-        var action = timeLine.get((int) BlackFoxNativeCombo.elapsed(entity));
+        int elapsed = (int) BlackFoxNativeCombo.elapsed(entity);
+        if (entity instanceof BlackFoxCombatant boss)
+            boss.combat().nativeCombo().cue(timeLine.containsKey(elapsed + 4));
+        var action = timeLine.get(elapsed);
         if (action != null) action.accept(entity);
         ci.cancel();
     }

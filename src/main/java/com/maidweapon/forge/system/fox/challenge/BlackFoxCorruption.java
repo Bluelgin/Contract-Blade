@@ -170,9 +170,9 @@ public final class BlackFoxCorruption {
         if (fight.age() % 4 == 0) ((ServerLevel) actor.body().level()).sendParticles(ParticleTypes.REVERSE_PORTAL,
                 core.getX(), core.getY() + .75, core.getZ(), 12, 3, .6, 3, .08);
         if (fight.age() % 40 == 0) actor.body().playSound(SoundEvents.RESPAWN_ANCHOR_AMBIENT, .65f, .65f);
-        if (fight.age() % 10 == 0 && player.distanceToSqr(core) < 9) damage(player, 10);
+        if (fight.age() % 10 == 0 && player.distanceToSqr(core) < 9) damage(player, BlackFoxDamageTuning.CORE_CONTACT);
         if (fight.finished() && (fight.age()-BlackFoxFight.CORE_FALL_TICKS)%40==0) {
-            damage(player, 60);
+            damage(player, BlackFoxDamageTuning.CORE_TIMEOUT);
             ((ServerLevel) actor.body().level()).sendParticles(ParticleTypes.EXPLOSION_EMITTER,
                     center().x, center().y, center().z, 1, 0, 0, 0, 0);
         }

@@ -67,6 +67,7 @@ public final class BlackFoxDimensionStrike {
             actions.commit(player); yaw = boss.getYRot();
         }
         if (landed && heavy(globalAge) && age == lockAge(globalAge)) BlackFoxEffects.tell(boss, true);
+        if (landed && age == hitAge(globalAge) - 4) BlackFoxEffects.ready(boss, emerge);
         if (landed && age == hitAge(globalAge)) {
             actions.markSlash();
             if (heavy(globalAge)) {
@@ -78,7 +79,7 @@ public final class BlackFoxDimensionStrike {
             if (Math.abs(offset.y) > 2.8 || BlackFoxActions.horizontal(offset).lengthSqr() > 8.5*8.5
                     || actions.committed.dot(BlackFoxActions.horizontal(offset).normalize()) < .5
                     || actions.protectedPlayer(player)) return;
-            if (!actions.parry(player)) player.hurt(boss.damageSources().mobAttack(boss), 18);
+            if (!actions.parry(player)) player.hurt(boss.damageSources().mobAttack(boss), BlackFoxDamageTuning.DIMENSION);
         }
     }
 }

@@ -129,7 +129,7 @@ public final class BlackFoxDomainAttacks {
             if (age % 4 == 0) BlackFoxEffects.line(level, beam.from(), beam.to(), age < 24);
             if (age >= 24 && age % 10 == 0 && Math.abs(player.getY() - beam.from().y) < 2.4
                     && distance(player.position(), beam) < .75 && !actor.combat().protects(player))
-                player.hurt(actor.body().damageSources().mobAttack(actor.body()), 8);
+                player.hurt(actor.body().damageSources().mobAttack(actor.body()), BlackFoxDamageTuning.BEAM);
         }
     }
     private static double distance(Vec3 point, Beam beam) {

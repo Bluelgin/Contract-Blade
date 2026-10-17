@@ -99,6 +99,7 @@ public final class BlackFoxBossEntity extends Monster implements BlackFoxCombata
         setNoGravity(true);
         setItemSlot(EquipmentSlot.MAINHAND, BlackFoxSlashCompat.blade(level()));
         setDropChance(EquipmentSlot.MAINHAND, 0);
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(com.maidweapon.common.BlackFoxServerConfig.MAX_HEALTH.get());
         setHealth(getMaxHealth());
     }
     @Override public void tick() {

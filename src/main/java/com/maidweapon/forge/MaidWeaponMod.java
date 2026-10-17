@@ -28,6 +28,9 @@ public final class MaidWeaponMod {
   private static final Logger LOGGER = LogUtils.getLogger();
 
   public MaidWeaponMod() {
+    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+        net.minecraftforge.fml.config.ModConfig.Type.SERVER,
+        com.maidweapon.common.BlackFoxServerConfig.SPEC, "maid_weapon-black-fox-server.toml");
     net.minecraftforge.fml.ModLoadingContext.get()
         .registerConfig(
             net.minecraftforge.fml.config.ModConfig.Type.CLIENT,

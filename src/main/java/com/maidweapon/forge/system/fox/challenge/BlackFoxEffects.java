@@ -16,7 +16,25 @@ public final class BlackFoxEffects {
         var level = (ServerLevel) boss.level();
         level.sendParticles(flash ? ParticleTypes.END_ROD : POLLUTION, boss.getX(), boss.getY() + 1.25,
                 boss.getZ(), flash ? 5 : 9, .22, .15, .22, .025);
-        level.playSound(null, boss.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.HOSTILE, .55f, flash ? 1.5f : .7f);
+        level.playSound(null, boss.blockPosition(), SoundEvents.TRIDENT_RETURN, SoundSource.HOSTILE, .45f, .65f);
+    }
+    /** One clear directional cue at the skill's committed pre-hit node, never on packet arrival. */
+    public static void ready(LivingEntity boss, Vec3 at) {
+        var level = (ServerLevel) boss.level();
+        level.playSound(null, at.x, at.y + 1, at.z, SoundEvents.AMETHYST_BLOCK_CHIME,
+                SoundSource.HOSTILE, .85f, 1.65f);
+        level.sendParticles(ParticleTypes.END_ROD, at.x, at.y + 1.1, at.z, 4, .12, .12, .12, .015);
+    }
+    public static void ready(LivingEntity boss) { ready(boss, boss.position()); }
+    /** Collision feedback belongs at the player, including distant phantom swords. */
+    public static void parryContact(LivingEntity player, net.minecraft.world.entity.Entity incoming) {
+        var level = (ServerLevel) player.level();
+        Vec3 direction = incoming.position().subtract(player.position()).multiply(1, 0, 1).normalize();
+        if (direction.lengthSqr() < .01) direction = player.getLookAngle();
+        Vec3 at = player.getEyePosition().add(direction.scale(.65));
+        level.sendParticles(com.maidweapon.forge.compat.fox.BlackFoxBossCompat.parryParticle(), at.x, at.y, at.z, 1, 0, 0, 0, 0);
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 10, .12, .12, .12, .1);
+        level.playSound(null, at.x, at.y, at.z, SoundEvents.TRIDENT_HIT_GROUND, SoundSource.PLAYERS, .65f, 1.6f);
     }
     public static void contact(LivingEntity boss, LivingEntity attacker, boolean clash) {
         var level = (ServerLevel) boss.level();

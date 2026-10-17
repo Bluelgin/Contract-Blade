@@ -31,7 +31,11 @@ public final class BlackFoxPhantomCompat {
             entity.setOwner(owner); entity.setPos(at);
             if (owner instanceof com.maidweapon.forge.system.fox.challenge.BlackFoxCombatant boss)
                 com.maidweapon.forge.system.fox.challenge.BlackFoxAttackOrigin.stamp(entity, boss.combat().fight());
-            color.invoke(entity, 0xB04CE5); damage.invoke(entity, blade ? 8.0 : 5.0);
+            color.invoke(entity, 0xB04CE5);
+            damage.invoke(entity, owner instanceof com.maidweapon.forge.system.fox.challenge.BlackFoxCombatant
+                    ? blade ? com.maidweapon.forge.system.fox.challenge.BlackFoxDamageTuning.PHANTOM_BLADE
+                            : com.maidweapon.forge.system.fox.challenge.BlackFoxDamageTuning.PHANTOM_SWORD
+                    : blade ? 8.0 : 5.0);
             if (blade) {
                 entity.getClass().getMethod("setLifetime", float.class).invoke(entity, 60f);
                 entity.getClass().getMethod("setBaseSize", float.class).invoke(entity, 1.15f);

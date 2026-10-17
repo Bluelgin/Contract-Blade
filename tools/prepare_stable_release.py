@@ -17,6 +17,7 @@ def replace(text, old, new):
 
 def source(text, name):
     if name == 'MaidWeaponMod.java':
+        text = replace(text, '    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(\n        net.minecraftforge.fml.config.ModConfig.Type.SERVER,\n        com.maidweapon.common.BlackFoxServerConfig.SPEC, "maid_weapon-black-fox-server.toml");\n', '')
         text = re.sub(r'        net\.minecraftforge\.fml\.ModLoadingContext\.get\(\)\.registerConfig\(net\.minecraftforge\.fml\.config\.ModConfig\.Type\.CLIENT,\s*com\.maidweapon\.common\.BlackFoxClientConfig\.SPEC, "maid_weapon-client.toml"\);\n', '', text)
         for line in ['com.maidweapon.forge.compat.WhiteFoxSpecialEffectCompat.bootstrap(modBus);',
                      'com.maidweapon.forge.compat.fox.BlackFoxBossCompat.bootstrap(modBus);',

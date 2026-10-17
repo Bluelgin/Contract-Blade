@@ -24,7 +24,7 @@ final class BlackFoxPhaseOne {
     BlackFoxRiftCross riftCross() { return riftCross; }
     void close() { blink.cancel(); tripleCombo.cancel(); minorCuts.clear(); actions.ranged().cancelFormation(); actor.combat().corruption().clearCombatRifts(); }
     void pressured(long now) { tactics.pressured(now); }
-    void parried(long now, boolean comboClash) {
+    void parried(long now) {
         // Feedback/protection and the shared five-parry counter are owned by the controller.
         // Do not pause, relocate or cancel a skill for an individual parry.
         lastParriedSequence = actions.fight.sequence();
