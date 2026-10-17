@@ -139,8 +139,9 @@ public final class SoulAnchorService {
       c.discard();
       return;
     }
-    var owner = SoulAnchorBinding.owner(c);
-    if (owner != null) c.eclipse(SoulDamageDebtService.hasDebt(owner, living));
+    var bindingOwner = SoulAnchorBinding.owner(c);
+    if (bindingOwner != null)
+      c.eclipse(SoulDamageDebtService.hasDebt(bindingOwner, living));
     var point = SoulAnchorPlacement.find(living);
     if (point == null) {
       if (diagnostics())

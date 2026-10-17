@@ -39,15 +39,31 @@ final class SoulEclipseGlyph {
         var origin = SoulEclipseGeometry.star(i, tick);
         boolean broken = i == consumed;
         double shift = broken ? Math.min(1, age / 3) : 0;
-        Point point = origin.lerp(new Point(0, 0, .04), shift);
+        Point destination = switch (consumed) {
+          case 0 -> new Point(origin.x() * 1.6, origin.y() * 1.6, .03);
+          case 1 -> new Point(0, 0, .04); // The second star is dragged inward.
+          default -> SoulEclipseGeometry.orbit(5.46, tick); // A star falls into the track gap.
+        };
+        Point point = origin.lerp(destination, shift);
         float brightness = alpha * (broken ? 1 - (float) shift * .7f : .35f);
         star(out, matrix, point, broken ? .16 : .075, broken ? STAR : RED_LIGHT, brightness);
+        if (broken && consumed == 0 && quality > 0) {
+          for (int fleck = 0; fleck < 3; fleck++) {
+            double angle = fleck * 2 * Math.PI / 3 + .4;
+            star(out, matrix, new Point(point.x() + Math.cos(angle) * shift * .18,
+                point.y() + Math.sin(angle) * shift * .18, .09), .035,
+                RED_LIGHT, alpha * (1 - (float) shift));
+          }
+        }
       }
       moon(out, matrix, tick, alpha * .8f, false);
-      // Short luminous threads tie broken satellites back to the center.
       Point origin = SoulEclipseGeometry.star(consumed, tick);
-      ribbon(out, matrix, origin, new Point(0, 0, .08),
-          .015, RED_LIGHT, alpha * .8f);
+      // Only the second pulse drags material back toward the moon; the third breaks orbit.
+      if (consumed == 1)
+        ribbon(out, matrix, origin, new Point(0, 0, .08), .015, RED_LIGHT, alpha * .8f);
+      else if (consumed == 2)
+        ribbon(out, matrix, origin, SoulEclipseGeometry.orbit(5.46, tick),
+            .018, STAR, alpha * .65f);
     } else {
       // The last stage is the moon cleaving, not another explosion of random stars.
       moon(out, matrix, tick, alpha * .8f, true);
