@@ -16,8 +16,8 @@ class SoulResonancePolicyTest {
   }
   @Test
   void coreCriticalIsFiftyPercentOnceUnlocked() {
-    assertEquals(0, AkatsukiDomainGrowth.parameters(1)
-        .get(AkatsukiDomainGrowth.id("resonance_hit_ratio")));
+    assertEquals(0d, AkatsukiDomainGrowth.parameters(1)
+        .get(AkatsukiDomainGrowth.id("resonance_hit_ratio")), 1e-9);
     for (int level = 2; level <= 10; level++) {
       var values = AkatsukiDomainGrowth.parameters(level);
       double ratio = values.get(AkatsukiDomainGrowth.id("resonance_hit_ratio"));
