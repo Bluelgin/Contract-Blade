@@ -21,6 +21,8 @@ public final class BlackFoxRiftCross {
             BlackFoxEffects.tell(actions.boss(), false);
         }
         if (age == 16) { target = player.position().add(0,1,0); BlackFoxEffects.tell(actions.boss(), true); }
+        if (age == 20) BlackFoxEffects.ready(actions.boss(), left.add(0,-1,0));
+        if (age == 36) BlackFoxEffects.ready(actions.boss(), right.add(0,-1,0));
         if (age == 24) actions.ranged().crossCut(left, target.subtract(left));
         if (age == 40) actions.ranged().crossCut(right, target.subtract(right));
     }

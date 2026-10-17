@@ -17,8 +17,6 @@ public final class BlackFoxEncounters {
     private record Swing(ItemStack blade, long tick) { }
     private static final Map<MinecraftServer, Map<UUID, BlackFoxCombatant>> SESSIONS = new WeakHashMap<>();
     private static final Map<ServerPlayer, Swing> SWINGS = new WeakHashMap<>();
-    private static final Map<ServerPlayer, Swing> COMBO_B = new WeakHashMap<>();
-    private static final Map<ServerPlayer, Swing> PARRY = new WeakHashMap<>();
     private static final String WON = "MaidWeaponBlackFoxDefeated";
     public static void setup() { BlackFoxEncounterApi.setResolver(BlackFoxEncounters::resolve); }
     public static BlackFoxCombatant get(ServerPlayer player) {
@@ -42,8 +40,6 @@ public final class BlackFoxEncounters {
         if (returns.pending(player.getUUID())) returns.settle(player);
         BlackFoxAttackTrace.forget(player.getUUID());
         SWINGS.remove(player);
-        COMBO_B.remove(player);
-        PARRY.remove(player);
     }
     public static boolean registered(BlackFoxCombatant boss) {
         return !boss.body().isRemoved() && boss.body().level().dimension().equals(FoxChallengeService.LEVEL)
@@ -72,25 +68,10 @@ public final class BlackFoxEncounters {
         boolean weapon = SlashBladeCompat.isSlashBlade(blade) || blade.canPerformAction(net.minecraftforge.common.ToolActions.SWORD_SWEEP);
         if (!weapon || !nativeCombo && player.getAttackStrengthScale(.5f) < .8f) return;
         SWINGS.put(player, new Swing(blade, player.level().getGameTime()));
-        PARRY.put(player, new Swing(blade, player.level().getGameTime()));
         // Generic swings provide damage provenance only, never permission to interrupt Combo B.
     }
     public static void nativeSwing(ServerPlayer player, ItemStack blade, net.minecraft.resources.ResourceLocation combo) {
         swing(player, blade, true);
-        if (!SlashBladeCompat.isSlashBlade(blade) || !combo.getNamespace().equals("slashblade")
-                || !combo.getPath().matches("combo_b[1-7]")) return;
-        COMBO_B.put(player, new Swing(blade, player.level().getGameTime()));
-        var boss = get(player);
-        if (boss != null) boss.combat().tryClash(player);
-    }
-    public static boolean freshComboB(ServerPlayer player) {
-        return fresh(player, COMBO_B.get(player));
-    }
-    public static void consumeComboB(ServerPlayer player) { COMBO_B.remove(player); }
-    public static boolean consumeParry(ServerPlayer player) {
-        if (!fresh(player, PARRY.get(player))) return false;
-        PARRY.remove(player);
-        return true;
     }
     private static boolean fresh(ServerPlayer player, Swing swing) {
         return swing != null && player.level().getGameTime() - swing.tick() >= 0
@@ -137,7 +118,7 @@ public final class BlackFoxEncounters {
     public static void clear(MinecraftServer server) {
         var sessions = SESSIONS.remove(server);
         if (sessions != null) sessions.values().forEach(boss -> boss.combat().close());
-        SWINGS.clear(); COMBO_B.clear(); PARRY.clear(); BlackFoxAttackTrace.clear();
+        SWINGS.clear(); BlackFoxAttackTrace.clear();
     }
     private BlackFoxEncounters() { }
 }

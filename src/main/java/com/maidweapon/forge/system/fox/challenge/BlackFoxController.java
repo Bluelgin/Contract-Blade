@@ -50,17 +50,14 @@ public final class BlackFoxController {
     public BlackFoxDomainAttacks ranged() { return ranged; }
     public BlackFoxDimensionStrike dimensionStrike() { return dimensionStrike; }
     public BlackFoxRiftCross riftCross() { return phaseOne.riftCross(); }
-    void feedbackParry(ServerPlayer player, boolean comboClash) {
-        feedbackParry(player, comboClash, null);
-    }
-    void feedbackParry(ServerPlayer player, boolean comboClash, net.minecraft.world.entity.Entity incoming) {
+    void feedbackParry(ServerPlayer player, net.minecraft.world.entity.Entity incoming) {
         boolean credit = !corruption.finalStand() && !fight.offBalance()
                 && (incoming == null || incoming == boss() ? parryCredit.accept(fight.skill(), fight.sequence(), fight.parryRound())
                 : BlackFoxAttackOrigin.credit(incoming, parryCredit));
         if (credit) balance.parried(boss().level().getGameTime());
-        com.maidweapon.forge.compat.BlackFoxRankCompat.reward(player, comboClash);
-        com.maidweapon.forge.network.BlackFoxFeedbackNetwork.contact(actor, player, comboClash ? 2 : 1);
-        if (!fight.phaseTwo()) phaseOne.parried(boss().level().getGameTime(), comboClash);
+        // The real native Guard already awards rank, animation and its own invulnerability.
+        com.maidweapon.forge.network.BlackFoxFeedbackNetwork.contact(actor, player, 1);
+        if (!fight.phaseTwo()) phaseOne.parried(boss().level().getGameTime());
         else corruption.parried();
         updateBar(player, false);
     }
@@ -126,7 +123,6 @@ public final class BlackFoxController {
         if (!corruption.finalStand() && seals.begin(player)) { phaseOne.close(); ranged.clear(); nativeCombo.stop(); }
         seals.tick(player);
         if (!fight.nativeComboSkill()) nativeCombo.stop();
-        if (tryClash(player)) { actions.clamp(); return; }
         if (corruption.finalStand()) corruption.tick(player);
         else phaseOne.tick(player);
         if(fight.skill() != BlackFoxFight.Skill.SEAL_ARRAY && balance.take() && !corruption.finalStand()) {
@@ -146,29 +142,11 @@ public final class BlackFoxController {
         synchronize();
         actions.clamp();
     }
-    public boolean tryClash(ServerPlayer attacker) {
-        if (!engaged || !actor.challenger().equals(attacker.getUUID()) || attacker.level() != boss().level()
-                || !fight.clashWindow() || !BlackFoxEncounters.freshComboB(attacker)
-                || boss().distanceToSqr(attacker) > 4.8 * 4.8 || !actions.front(attacker) || !actions.facingBoss(attacker)) return false;
-        BlackFoxEncounters.consumeComboB(attacker);
-        BlackFoxEncounters.consumeParry(attacker);
-        protectParry();
-        feedbackParry(attacker, true);
-        fight.counter();
-        boss().setDeltaMovement(Vec3.ZERO);
-        BlackFoxEffects.contact(boss(), attacker, true);
-        attacker.displayClientMessage(Component.translatable("maid_weapon.fox.boss.clash"), true);
-        synchronize(); return true;
-    }
     public boolean parryNative(ServerPlayer player) {
         return actions.parry(player);
     }
     public boolean parryNative(ServerPlayer player, net.minecraft.world.entity.Entity incoming) {
-        if (!BlackFoxAttackOrigin.domainCross(incoming) && !BlackFoxAttackOrigin.sealPulse(incoming))
-            return actions.parryProjectile(player, incoming, false);
-        Vec3 direction = BlackFoxActions.horizontal(incoming.position().subtract(player.position())).normalize();
-        if (direction.lengthSqr() < .01) direction = BlackFoxActions.horizontal(incoming.getDeltaMovement().scale(-1)).normalize();
-        return BlackFoxActions.horizontal(player.getLookAngle()).normalize().dot(direction) >= .15 && actions.parryProjectile(player, incoming, true);
+        return actions.parryProjectile(player, incoming);
     }
     public boolean intercept(DamageSource source) {
         if(corruption.finalStand()) return true;
@@ -180,8 +158,6 @@ public final class BlackFoxController {
         }
         if (fight.skill() == BlackFoxFight.Skill.DIMENSION_STRIKE && BlackFoxDimensionTimeline.submerged(fight.age())) return true;
         if (fight.phaseTwo() && !BlackFoxDamagePolicy.bladeMelee(source, boss())) return true;
-        if (source.getEntity() instanceof ServerPlayer attacker && source.getDirectEntity() == attacker
-                && tryClash(attacker)) return true;
         // Both sides are protected during the clash itself, including already-emitted player slashes.
         if (parryGuarded() && !fight.offBalance()) return true;
         if (fight.skill() == BlackFoxFight.Skill.TRANSITION) return true;

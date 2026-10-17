@@ -44,21 +44,21 @@ final class BlackFoxActions {
                 .dot(horizontal(player.position().subtract(boss().position())).normalize()) < arc) return;
         if (actor.combat().protects(player)) return;
         if (parry(player)) return;
-        player.hurt(boss().damageSources().mobAttack(boss()), fight.phaseTwo() ? damage * 1.15f : damage);
+        player.hurt(boss().damageSources().mobAttack(boss()), damage);
     }
     void markSlash() { actor.markSlash(fight.skill(),fight.age()); }
     boolean parry(ServerPlayer player) {
-        return parry(player,false);
+        return parryProjectile(player, null);
     }
-    boolean parryArena(ServerPlayer player) { return parry(player,true); }
-    private boolean parry(ServerPlayer player,boolean arena) {
-        return parryProjectile(player, null, arena);
-    }
-    boolean parryProjectile(ServerPlayer player, net.minecraft.world.entity.Entity incoming, boolean arena) {
-        if ((!arena && (!front(player) || !facingBoss(player))) || !BlackFoxEncounters.consumeParry(player)) return false;
+    boolean parryArena(ServerPlayer player) { return parry(player); }
+    boolean parryProjectile(ServerPlayer player, net.minecraft.world.entity.Entity incoming) {
+        if (actor.combat().protects(player)) return true;
+        var result = com.maidweapon.forge.compat.BlackFoxGuardCompat.defend(player, actor, incoming);
+        if (result == com.maidweapon.forge.compat.BlackFoxGuardCompat.Result.NONE) return false;
+        if (result == com.maidweapon.forge.compat.BlackFoxGuardCompat.Result.BLOCK) return true;
         actor.combat().protectParry();
-        actor.combat().feedbackParry(player, false, incoming);
-        BlackFoxEffects.contact(boss(), player, false);
+        actor.combat().feedbackParry(player, incoming);
+        BlackFoxEffects.parryContact(player, incoming == null ? boss() : incoming);
         player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.boss.parry"), true);
         return true;
     }
@@ -66,9 +66,6 @@ final class BlackFoxActions {
     boolean front(net.minecraft.world.entity.Entity attacker) { return front(attacker.position()); }
     boolean front(Vec3 at) {
         return horizontal(boss().getLookAngle()).normalize().dot(horizontal(at.subtract(boss().position())).normalize()) >= .25;
-    }
-    boolean facingBoss(ServerPlayer player) {
-        return horizontal(player.getLookAngle()).normalize().dot(horizontal(boss().position().subtract(player.position())).normalize()) >= .25;
     }
     void face(Vec3 point) {
         Vec3 diff = point.subtract(boss().position());

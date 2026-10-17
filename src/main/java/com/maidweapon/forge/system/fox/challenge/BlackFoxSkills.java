@@ -34,7 +34,8 @@ final class BlackFoxSkills {
         Mob boss = actions.boss();
         if (age <= 7) actions.face(player.position());
         if (age == 8) { actions.commit(player); BlackFoxEffects.tell(boss, true); }
-        if (age == 22) actions.slash(player, 11, 6, 90);
+        if (age == 22) actions.slash(player, BlackFoxDamageTuning.SKY, 6, 90);
+        if (age == 18) BlackFoxEffects.ready(boss);
         if (age >= 26) actions.stopHorizontal();
 
     }
@@ -49,11 +50,12 @@ final class BlackFoxSkills {
             BlackFoxEffects.tell(boss, false);
         }
         if (age >= 8 && age <= 25 && age % 4 == 0) BlackFoxEffects.line((ServerLevel) boss.level(), actions.laneStart, actions.laneEnd, true);
+        if (age == 23) BlackFoxEffects.ready(boss);
         if (age == 27) {
             BlackFoxSlashCompat.slash(boss, 0);
             BlackFoxEffects.line((ServerLevel) boss.level(), actions.laneStart, actions.laneEnd, false);
             if (player.getY() - actions.laneStart.y < 2 && actions.distanceToLane(player.position()) < 1.1)
-                player.hurt(boss.damageSources().mobAttack(boss), 10);
+                player.hurt(boss.damageSources().mobAttack(boss), BlackFoxDamageTuning.SEAL);
         }
 
     }
@@ -78,11 +80,12 @@ final class BlackFoxSkills {
             }
             if (age >= start + 2 && age <= start + 12 && (age - start) % 3 == 0)
                 BlackFoxEffects.line((ServerLevel) boss.level(), actions.laneStart, actions.laneEnd, true);
+            if (age == start + 10) BlackFoxEffects.ready(boss);
             if (age == start + 14) {
                 BlackFoxSlashCompat.slash(boss, (wave - 1) * 55);
                 BlackFoxEffects.line((ServerLevel) boss.level(), actions.laneStart, actions.laneEnd, false);
                 if (Math.abs(player.getY() - actions.laneStart.y) < 2 && actions.distanceToLane(player.position()) < 1.1)
-                    player.hurt(boss.damageSources().mobAttack(boss), 12);
+                    player.hurt(boss.damageSources().mobAttack(boss), BlackFoxDamageTuning.UNSEAL);
             }
         }
     }

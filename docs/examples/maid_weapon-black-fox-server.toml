@@ -1,0 +1,10 @@
+# 复制到整合包 defaultconfigs/，作为新世界默认配置。
+# 已有世界请修改 saves/<世界名>/serverconfig/maid_weapon-black-fox-server.toml。
+# 专用服务器对应 <level-name>/serverconfig/maid_weapon-black-fox-server.toml。
+[blackFoxBoss]
+    # 本版降伤之后的统一伤害倍率：1.0=默认，0.75=再降低25%，1.5=增加50%。范围0～10。
+    # 包括原生连击B、幻影剑/刃、普通技能与最终核心；不影响玩家武器或奖励SA。
+    damageMultiplier = 1.0
+    # 新生成黑狐Boss的最大生命值，2点为1颗心。范围1～1024。
+    # 修改后重新开始挑战生效；不会重置当前Boss的血量。
+    maxHealth = 400.0

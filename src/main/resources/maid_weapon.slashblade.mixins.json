@@ -4,6 +4,8 @@
   "package": "com.maidweapon.forge.compat.fox.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "BlackFoxNativeGuardMixin",
+    "BlackFoxNativeDamageMixin",
     "SlashBladeIngredientProtectionMixin",
     "ShrineBladeStandMixin",
     "SlashBladeDurabilityMixin",

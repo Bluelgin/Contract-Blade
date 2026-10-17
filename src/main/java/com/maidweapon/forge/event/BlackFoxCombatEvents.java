@@ -16,6 +16,18 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class BlackFoxCombatEvents {
+    /** One pre-armor difficulty gate shared by direct damage, hazards and native projectiles. */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void difficulty(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)
+                || !(event.getSource().getEntity() instanceof BlackFoxCombatant boss)
+                || !BlackFoxEncounters.registered(boss) || player.level() != boss.body().level()
+                || !boss.challenger().equals(player.getUUID())) return;
+        float amount = BlackFoxDamageTuning.scaled(event.getAmount(),
+                com.maidweapon.common.BlackFoxServerConfig.DAMAGE_MULTIPLIER.get(),
+                BlackFoxDamageTuning.nativeComboHit(boss, player));
+        if (amount <= 0) event.setCanceled(true); else event.setAmount(amount);
+    }
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void phantomImpact(net.minecraftforge.event.entity.ProjectileImpactEvent event) {
         if (event.getProjectile().getOwner() instanceof BlackFoxCombatant owner
@@ -44,7 +56,8 @@ public final class BlackFoxCombatEvents {
             return;
         }
         if (event.getEntity() instanceof ServerPlayer player
-                && event.getSource().getEntity() instanceof BlackFoxCombatant boss && boss.combat().protects(player))
+                && event.getSource().getEntity() instanceof BlackFoxCombatant boss
+                && (boss.combat().protects(player) || boss.combat().parryNative(player, event.getSource().getDirectEntity())))
             event.setCanceled(true);
     }
     @SubscribeEvent(priority = EventPriority.LOWEST)

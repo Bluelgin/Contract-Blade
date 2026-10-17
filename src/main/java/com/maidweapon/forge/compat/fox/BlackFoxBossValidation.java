@@ -22,7 +22,7 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class BlackFoxBossValidation {
     @SubscribeEvent public static void started(ServerStartedEvent event) {
-        if (!Boolean.getBoolean("contractblade.blackFox.validation")) return;
+        if (!Boolean.getBoolean("contractblade.blackFox.validation") && !Boolean.getBoolean("contractblade.blackFox.guardValidation")) return;
         try { run(event.getServer()); LogUtils.getLogger().info("BLACK_FOX_BOSS_PASS"); }
         catch (Throwable failure) { LogUtils.getLogger().error("BLACK_FOX_BOSS_FAIL", failure); }
         finally { event.getServer().halt(false); }
@@ -93,6 +93,13 @@ public final class BlackFoxBossValidation {
             player.setPos(boss.getX(), boss.getY(), boss.getZ() - 3);
             player.setYRot(0); boss.setYRot(180);
             actor.combat().tick();
+            if (Boolean.getBoolean("contractblade.blackFox.guardValidation")) {
+                BlackFoxDifficultyValidation.run(actor, player);
+                BlackFoxGuardValidation.run(actor, player);
+                validateNativeB(actor, player);
+                BlackFoxDifficultyValidation.verifyNativeHits();
+                return;
+            }
             var fight = actor.combat().fight();
             fight.start(BlackFoxFight.Skill.RETURN_BLADE); for (int i = 0; i < 16; i++) fight.advance();
             float before = boss.getHealth();
@@ -111,10 +118,10 @@ public final class BlackFoxBossValidation {
             nativeMotion(player, "fake:combo_b1");
             check(fight.skill() == BlackFoxFight.Skill.RETURN_BLADE, "A, end states and foreign identifiers cannot counter");
             nativeMotion(player, "slashblade:combo_b1");
-            check(fight.skill() == BlackFoxFight.Skill.STAGGER, "real native Combo B motion counters without defense");
+            check(fight.skill() == BlackFoxFight.Skill.RETURN_BLADE, "native Combo B attacks no longer substitute for guard");
             float playerHealth = player.getHealth();
             for (int i = 0; i < BlackFoxController.PARRY_PROTECTION_TICKS + 1; i++) combatTick(actor);
-            check(player.getHealth() == playerHealth, "canceled finisher cannot land later");
+            check(!fight.offBalance(), "attacking never earns defensive break credit");
             boss.invulnerableTime = 0; fight.start(BlackFoxFight.Skill.STAGGER);
             before = boss.getHealth();
             check(boss.hurt(boss.damageSources().playerAttack(player), 20) && boss.getHealth() < before, "recovery takes ordinary damage");
@@ -148,7 +155,6 @@ public final class BlackFoxBossValidation {
             player.setPos(boss.getX(), boss.getY(), boss.getZ() - 10);
             nativeMotion(player, "slashblade:combo_b1");
             check(fight.skill() == BlackFoxFight.Skill.RETURN_BLADE, "distant swings cannot clash");
-            BlackFoxEncounters.consumeComboB(player);
             fight.start(BlackFoxFight.Skill.APPROACH);
             var other = FakePlayerFactory.get(server.overworld(), new GameProfile(UUID.randomUUID(), "Outsider"));
             check(!boss.hurt(boss.damageSources().playerAttack(other), 100), "outsider cannot damage private encounter");
@@ -252,22 +258,25 @@ public final class BlackFoxBossValidation {
             for(int tick=0;tick<30;tick++) advanceClock(player.serverLevel());
             boss.setPos(net.minecraft.world.phys.Vec3.atBottomCenterOf(actor.arenaOrigin()).add(0,1,0));
             player.setPos(boss.position().add(0,0,-4)); player.setYRot(0); boss.setYRot(180);
-            fight.start(BlackFoxFight.Skill.PROBE_CUT);
-            BlackFoxEncounters.swing(player,player.getMainHandItem(),true);
+            fight.start(BlackFoxFight.Skill.RETURN_BLADE);
+            player.getMainHandItem().enchant(net.minecraft.world.item.enchantment.Enchantments.THORNS,1);
+            BlackFoxGuardValidation.face(player,0);
+            BlackFoxGuardValidation.input(player,0,"SNEAK");
             check(actor.combat().parryNative(player), "balance counts actual fresh parries");
-            check(!actor.combat().parryNative(player), "one swing cannot count twice");
+            check(actor.combat().parryNative(player), "dense followup stays protected without another reward");
+            BlackFoxGuardValidation.input(player,30);
             combatTick(actor);
             check(fight.offBalance()==(i==4), "only fifth successful parry loses balance");
         }
-        check(fight.duration()==100, "balance loss lasts five seconds");
+        check(fight.duration()==BlackFoxBalance.RECOVERY_TICKS, "balance loss uses current recovery policy");
         for(int tick=0;tick<25;tick++) combatTick(actor);
         boss.invulnerableTime=0; int age=fight.age();
-        check(boss.hurt(boss.damageSources().playerAttack(player),1) && fight.age()==age+10,
-                "attacking during balance loss lands and shortens recovery by half a second");
-        for(int tick=fight.age();tick<99;tick++) combatTick(actor);
+        check(boss.hurt(boss.damageSources().playerAttack(player),1) && fight.age()==age,
+                "attacking during balance loss lands without changing the fixed recovery");
+        for(int tick=fight.age();tick<BlackFoxBalance.RECOVERY_TICKS-1;tick++) combatTick(actor);
         check(fight.offBalance(), "balance loss does not recover prematurely");
         combatTick(actor); check(!fight.offBalance(), "balance recovery completes after shortened duration");
-        LogUtils.getLogger().info("BLACK_FOX_BALANCE_PASS: five fresh parries, duplicate rejection, 100-tick recovery and hit acceleration");
+        LogUtils.getLogger().info("BLACK_FOX_BALANCE_PASS: five native guards, duplicate rejection and fixed 30-tick recovery");
     }
     private static void validateCorruption(BlackFoxCombatant actor, net.minecraft.server.level.ServerPlayer player) throws Exception {
         var boss = actor.body(); var fight = actor.combat().fight();
@@ -436,16 +445,14 @@ public final class BlackFoxBossValidation {
         actor.combat().nativeCombo().stop(); fight.start(BlackFoxFight.Skill.RETURN_BLADE);
         var stages = new java.util.LinkedHashSet<String>();
         var born = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<net.minecraft.world.entity.Entity, Boolean>());
-        for (int i = 0; i < 35; i++) {
+        for (int i = 0; i < 160; i++) {
             combatTick(actor); stages.add(stage(actor)); born.addAll(slashes(actor));
             validateComboSynchronization(actor);
             if (actor.combat().nativeCombo().finished()) break;
         }
-        for (int i = 1; i <= 3; i++) check(stages.contains("slashblade:combo_b" + i), "registered first-half B stage executes: " + i);
-        check(!stages.contains("slashblade:combo_b4") && !stages.contains("slashblade:combo_b7"), "phase one never enters second-half B or finisher");
-        check(stages.contains("slashblade:none") && born.stream().allMatch(net.minecraft.world.entity.Entity::isRemoved),
-                "B3 boundary returns to idle and clears all live native cuts");
-        check(born.size() >= 10, "first-half timelines still generate dense real native attacks: " + born.size());
+        for (int i = 1; i <= 7; i++) check(stages.contains("slashblade:combo_b" + i), "registered full B stage executes: " + i);
+        check(stages.contains("slashblade:none"), "full B reaches its native idle boundary");
+        check(born.size() >= 10, "full timelines generate dense real native attacks: " + born.size());
         int once = slashes(actor).size();
         actor.combat().nativeCombo().tick();
         check(slashes(actor).size() == once, "same world tick cannot execute native callbacks twice");
@@ -453,7 +460,7 @@ public final class BlackFoxBossValidation {
             check((int) shot.getClass().getMethod("getColor").invoke(shot)
                     == com.maidweapon.forge.compat.BlackFoxSlashColors.blade(false), "phase-one native B carries pale purple color");
             double ratio = (double) shot.getClass().getMethod("getDamage").invoke(shot);
-            check(ratio > .2 && ratio < .3, "native B damage ratio retained");
+            check(Double.isFinite(ratio) && ratio > 0, "native B damage ratios remain positive including the finisher");
         }
         actor.combat().nativeCombo().stop();
         validateComboSynchronization(actor);
@@ -473,17 +480,18 @@ public final class BlackFoxBossValidation {
         var rankApi = Class.forName("mods.flammpfeil.slashblade.capability.concentrationrank.IConcentrationRank");
         rankApi.getMethod("setRawRankPoint", long.class).invoke(rating, 0L);
         rankApi.getMethod("setLastUpdte", long.class).invoke(rating, boss.level().getGameTime());
-        long unit = (long) rankApi.getMethod("getUnitCapacity").invoke(rating);
-        nativeMotion(player, "slashblade:combo_a1");
+        player.getMainHandItem().enchant(net.minecraft.world.item.enchantment.Enchantments.THORNS,1);
+        BlackFoxGuardValidation.face(player,0);
+        BlackFoxGuardValidation.input(player,0,"SNEAK");
         var blocked = shots.get(0); blocked.tick(); blocked.tick();
         check(player.getHealth() == before && fight.skill() == BlackFoxFight.Skill.RETURN_BLADE,
-                "ordinary native swing parries one real native cut without canceling B");
-        check((long) rankApi.getMethod("getRawRankPoint").invoke(rating) == (long) (unit * .1), "real parry rewards native rating using the native capacity");
-        check(!BlackFoxEncounters.consumeParry(player), "native parry consumes one swing");
+                "native Just Guard parries one real native cut without canceling B");
+        long guardRank=(long) rankApi.getMethod("getRawRankPoint").invoke(rating);
+        check(guardRank > 0, "real Guard owns its native rank reward");
         check(blocked.getPersistentData().getBoolean("MaidWeaponBlackFoxParried"), "blocked native slash cannot hit on a later tick");
         blocked.tick(); blocked.tick(); check(player.getHealth() == before, "parried native slash stays harmless");
         var unblocked = shots.get(1); unblocked.tick(); unblocked.tick();
-        check((long) rankApi.getMethod("getRawRankPoint").invoke(rating) == (long) (unit * .1), "protected and previously parried cuts cannot duplicate rank rewards");
+        check((long) rankApi.getMethod("getRawRankPoint").invoke(rating) == guardRank, "protected and previously parried cuts cannot duplicate rank rewards");
         check(player.getHealth() == before && actor.combat().protects(player), "successful parry grants protection against dense native forceHit slashes");
         player.invulnerableTime = 0;
         check(!player.hurt(boss.damageSources().mobAttack(boss), 10) && player.getHealth() == before,
@@ -494,31 +502,28 @@ public final class BlackFoxBossValidation {
                 "player cannot damage Black Fox during the mutual clash window");
         for (int i = 0; i < BlackFoxController.PARRY_PROTECTION_TICKS; i++) advanceClock((net.minecraft.server.level.ServerLevel) boss.level());
         check(!actor.combat().protects(player), "short parry protection expires on world time, not native i-frames");
+        BlackFoxGuardValidation.input(player,30);
+        for (int i=0;i<12;i++) advanceClock(player.serverLevel());
         unblocked.tick(); unblocked.tick();
         check(player.getHealth() < before, "unblocked native B slash really damages challenger even with PvP disabled");
         var far = com.maidweapon.forge.compat.BlackFoxNativeCombo.targets(unblocked, new net.minecraft.world.phys.AABB(0, 0, 0, 1, 1, 1), 0);
         check(far.isEmpty(), "native B still respects its native attack bounds");
         float after = player.getHealth();
-        long priorRank = (long) rankApi.getMethod("getRankPoint", long.class).invoke(rating, boss.level().getGameTime());
         nativeMotion(player, "slashblade:combo_b1");
-        check((long) rankApi.getMethod("getRawRankPoint").invoke(rating) == Math.max(0, priorRank) + (long) (unit * .2),
-                "native B clash awards the larger rank bonus once");
-        check(fight.skill() == BlackFoxFight.Skill.STAGGER && shots.stream().allMatch(net.minecraft.world.entity.Entity::isRemoved),
-                "player's native B counter clears already-emitted native attacks");
-        check(actor.combat().protects(player), "native B counter also grants short player protection");
-        check(player.getHealth() == after, "native B cancellation has no manual duplicate hit");
+        check(!fight.offBalance() && !actor.combat().protects(player), "native B attacks cannot grant defensive break or protection");
+        check(player.getHealth() == after, "native B input alone has no manual duplicate hit");
         for (int i = 0; i < BlackFoxController.PARRY_PROTECTION_TICKS; i++) advanceClock((net.minecraft.server.level.ServerLevel) boss.level());
-        boss.invulnerableTime = 0;
+        fight.start(BlackFoxFight.Skill.STAGGER); boss.invulnerableTime = 0;
         check(boss.hurt(boss.damageSources().playerAttack(player), 1), "Black Fox becomes vulnerable during remaining stagger after clash protection expires");
         fight.start(BlackFoxFight.Skill.RETURN_BLADE); for (int i = 0; i < 7; i++) fight.advance();
         boss.invulnerableTime = 0; float contactHealth = boss.getHealth();
         nativeMotion(player, "slashblade:combo_a1");
         check(!boss.hurt(boss.damageSources().playerAttack(player), 20) && boss.getHealth() == contactHealth
-                        && actor.combat().protects(player) && fight.skill() == BlackFoxFight.Skill.RETURN_BLADE,
-                "offensive parry blocks player damage even when the player's hit arrives before the Boss slash");
+                        && !actor.combat().protects(player) && fight.skill() == BlackFoxFight.Skill.RETURN_BLADE,
+                "Boss front guard does not grant offensive-parry protection to the player");
         for (int i = 0; i < BlackFoxController.PARRY_PROTECTION_TICKS; i++) advanceClock((net.minecraft.server.level.ServerLevel) boss.level());
         player.setHealth(1000); player.invulnerableTime = 0;
-        LogUtils.getLogger().info("BLACK_FOX_NATIVE_B_PASS: stages {}, {} real native slashes, native damage, parry and cancellation", stages, born.size());
+        LogUtils.getLogger().info("BLACK_FOX_NATIVE_B_PASS: stages {}, {} real native slashes, native damage, Just Guard and no offensive parry", stages, born.size());
     }
     private static void nativeMotion(net.minecraft.server.level.ServerPlayer player, String combo) throws Exception {
         var event = (net.minecraftforge.eventbus.api.Event) Class.forName("mods.flammpfeil.slashblade.event.BladeMotionEvent")

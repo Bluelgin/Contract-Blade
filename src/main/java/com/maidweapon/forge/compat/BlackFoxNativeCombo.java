@@ -19,6 +19,15 @@ public final class BlackFoxNativeCombo {
     private boolean executing;
     private long lastTick = Long.MIN_VALUE;
     private long stageStartedAt;
+    private long lastCue = Long.MIN_VALUE;
+    /** Samples registered native callback times, never invents a second B damage timeline. */
+    public void cue(boolean upcoming) {
+        long now = actor.body().level().getGameTime();
+        if (upcoming && pursuing() && (lastCue == Long.MIN_VALUE || now - lastCue >= 6)) {
+            lastCue = now;
+            BlackFoxEffects.ready(actor.body());
+        }
+    }
     public BlackFoxNativeCombo(BlackFoxCombatant actor) { this.actor = actor; }
 
     public void tick() {
@@ -97,7 +106,7 @@ public final class BlackFoxNativeCombo {
             actor.body().getPersistentData().remove("sb_yrot");
             actor.body().getPersistentData().remove("sb_yrot_prev");
         }
-        stage = null; stageStartedAt = 0; lastTick = Long.MIN_VALUE;
+        stage = null; stageStartedAt = 0; lastTick = Long.MIN_VALUE; lastCue = Long.MIN_VALUE;
     }
 
     /** Null means vanilla/native selection; a Boss query has exactly one authorized candidate. */

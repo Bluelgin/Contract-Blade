@@ -120,6 +120,7 @@ minecraft {
             property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
             property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
             property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
+            property 'contractblade.blackFox.guardValidation', providers.gradleProperty('blackFoxGuardTest').orElse('false').get()
             property 'contractblade.blackFox.clientValidation', providers.gradleProperty('blackFoxClientTest').orElse('false').get()
             property 'forge.logging.console.level', 'debug'
             // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
