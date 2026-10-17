@@ -185,10 +185,9 @@ public final class SoulProvenanceValidation {
       s.contact(l.getGameTime(), t.getUUID());
       SoulDamageConfig.STRATEGY.set(SoulDamageConfig.Strategy.AGGRESSIVE);
       var cut = SoulDamageEngine.cut(p, t, s);
-      check(cut != null && cut.loss() > 0 && !cut.compensated(), "aggressive native cut really hurts");
+      check(cut != null && near(cut.loss(), 0) && !cut.compensated(),
+          "aggressive uncredited spatial cut must respect native weakness");
       check(!weakness.getBoolean(t), "weakness flag untouched");
-      check(t.getKillCredit() == p, "native player kill attribution retained");
-      check(((Mob) t).getTarget() == p, "native aggro retained");
       hp = t.getHealth();
       nativeHit(t, p, 10);
       check(near(hp, t.getHealth()), "ordinary hit still blocked after scope");
@@ -203,21 +202,25 @@ public final class SoulProvenanceValidation {
         core.discard();
       }
       LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NO_FREE_CORE_PASS");
-      // Native hurt() must initiate its normal death animation rather than remove the boss.
-      setLevel(p, 10);
-      p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(10000);
-      advance(l, 240);
-      s = AkatsukiDomainService.session(p);
-      s.contact(l.getGameTime(), t.getUUID());
-      var finisher = SoulDamageEngine.cut(p, t, s);
-      check(finisher != null && finisher.loss() > 0 && t.getHealth() <= 0, "native lethal damage");
-      check(t.getClass().getMethod("getAnimation").invoke(t)
-          == t.getClass().getField("DIE_ANIMATION").get(null), "native death animation entered");
-      check(!t.isRemoved(), "not forcibly discarded on lethal strike");
-      for (int i = 0; i < 160 && !t.isRemoved(); i++) { advance(l, 1); t.tick(); }
-      check(t.isRemoved(), "native death sequence finishes removal");
-      check(SoulStrikeContext.current() == null, "lethal scope closed");
-      LogUtils.getLogger().info("SOUL_WROUGHTNAUT_NATIVE_DEATH_PASS");
+      // Extreme attack attributes do not authorize an unproved bypass of Wroughtnaut
+      // weakness, even at Lv10. Legitimate, verified recovery has its own fixture.
+      double attackBefore = p.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue();
+      try {
+        setLevel(p, 10);
+        p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(10000);
+        advance(l, 240);
+        s = AkatsukiDomainService.session(p);
+        s.contact(l.getGameTime(), t.getUUID());
+        var finisher = SoulDamageEngine.cut(p, t, s);
+        check(finisher != null && near(finisher.loss(), 0) && t.getHealth() > 0,
+            "uncredited Lv10 cut cannot kill invulnerable native boss");
+        check(!weakness.getBoolean(t) && !t.isRemoved(),
+            "no native weakness or death-phase manipulation");
+        check(SoulStrikeContext.current() == null, "strong permission scope closed");
+        LogUtils.getLogger().info("SOUL_WROUGHTNAUT_UNVERIFIED_BYPASS_DENIED_PASS");
+      } finally {
+        p.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(attackBefore);
+      }
     } finally {
       SoulDamageConfig.STRATEGY.set(originalStrategy);
       if (!t.isRemoved()) t.discard();
