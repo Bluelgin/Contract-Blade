@@ -939,12 +939,13 @@ public final class SoulProvenanceValidation {
   private static void activeSkillWithoutDebt(MinecraftServer server, ServerPlayer p) {
     var l = p.serverLevel();
     setLevel(p, 2);
-    for (boolean unknown : new boolean[] {false, true}) {
+    for (int scenario : new int[] {0, 12, -1}) {
+      boolean unknown = scenario < 0;
       advance(l, 240);
       p.moveTo(1, 150, .5, 0, 0);
       Zombie t = unknown ? new UnknownPreCap(l) : EntityType.ZOMBIE.create(l);
       prepare(t);
-      t.getAttribute(Attributes.ARMOR).setBaseValue(0);
+      t.getAttribute(Attributes.ARMOR).setBaseValue(Math.max(0, scenario));
       l.addFreshEntity(t);
       AkatsukiDomainService.session(p).contact(l.getGameTime(), t.getUUID());
       float before = t.getHealth();
