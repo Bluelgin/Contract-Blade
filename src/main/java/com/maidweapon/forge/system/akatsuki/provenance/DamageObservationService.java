@@ -282,6 +282,21 @@ public final class DamageObservationService {
         && Math.abs(a - b) <= Math.max(.015, Math.abs(a) * .0001);
   }
 
+  /**
+   * Some unmodified vanilla mobs (notably Zombie) override hurt() and delegate
+   * to LivingEntity. The inner observation hook reports LivingEntity as its
+   * entrypoint although the declared outer entry is the exact vanilla mob.
+   * Admit that known vanilla delegation only; custom subclasses and modded
+   * entities remain excluded unless they supply their own verified adapter.
+   */
+  private static boolean nativeVanillaDelegation(LivingEntity target, String innerEntry) {
+    return innerEntry.equals(LivingEntity.class.getName())
+        && target.getClass().getName().startsWith("net.minecraft.world.entity.")
+        && net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE
+            .getKey(target.getType()).getNamespace().equals("minecraft")
+        && HURT_ENTRY.get(target.getClass()).startsWith("net.minecraft.world.entity.");
+  }
+
   private static void finish(Frame f) {
     if (f.proof == null) return;
     var t = f.t;
@@ -295,7 +310,8 @@ public final class DamageObservationService {
             && !t.isRemoved()
             && p.serverLevel().getEntity(t.getUUID()) == t;
     if (!valid || f.failed) kind = UNSUPPORTED_SOURCE;
-    else if (!HURT_ENTRY.get(t.getClass()).equals(f.entry)) kind = UNVERIFIED_REJECTION;
+    else if (!HURT_ENTRY.get(t.getClass()).equals(f.entry)
+        && !nativeVanillaDelegation(t, f.entry)) kind = UNVERIFIED_REJECTION;
     else if ((!VANILLA_DEFENSE.get(t.getClass())
             && !DomainTargetCompatibility.normalDefenseVerified(t, f.source))
         || f.source.getClass() != DamageSource.class) kind = CUSTOM_HEALTH_UNKNOWN;
