@@ -1,0 +1,33 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {
+    "type": "minecraft:item",
+    "nbt": {
+      "Item": {
+        "id": "maid_weapon:endless_vein",
+        "Count": 1
+      }
+    }
+  },
+  "power": 0.8,
+  "ingredients": [
+    {
+      "item": "maid_weapon:flowing_vein"
+    },
+    {
+      "item": "minecraft:nether_star"
+    },
+    {
+      "item": "minecraft:netherite_ingot"
+    },
+    {
+      "item": "minecraft:echo_shard"
+    },
+    {
+      "item": "minecraft:dragon_breath"
+    },
+    {
+      "item": "minecraft:totem_of_undying"
+    }
+  ]
+}

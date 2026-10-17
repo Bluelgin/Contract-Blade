@@ -1,0 +1,33 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {
+    "type": "minecraft:item",
+    "nbt": {
+      "Item": {
+        "id": "maid_weapon:flowing_vein",
+        "Count": 1
+      }
+    }
+  },
+  "power": 0.5,
+  "ingredients": [
+    {
+      "item": "maid_weapon:awakening_vein"
+    },
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:diamond"
+    },
+    {
+      "item": "minecraft:ghast_tear"
+    },
+    {
+      "item": "minecraft:ender_eye"
+    },
+    {
+      "item": "minecraft:echo_shard"
+    }
+  ]
+}

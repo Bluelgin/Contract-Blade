@@ -94,6 +94,8 @@ minecraft {
             property 'contractblade.home.nativeValidation', homeLifeTestMode.toString()
             property 'contractblade.stress.validation', providers.gradleProperty('contractStressTest').orElse('false').get()
             property 'contractblade.epicfight.validation', providers.gradleProperty('epicFightTest').orElse('false').get()
+            property 'contractblade.resonance.resume', providers.gradleProperty('resonanceResume').orElse('false').get()
+            property 'contractblade.resonance.validation', providers.gradleProperty('resonanceTest').orElse('false').get()
             property 'contractblade.projection.validation', providers.gradleProperty('projectionTest').orElse('false').get()
             property 'contractblade.companion.validation', providers.gradleProperty('companionTest').orElse('false').get()
             property 'contractblade.rebirth.validation', providers.gradleProperty('contractRebirthTest').orElse('false').get()

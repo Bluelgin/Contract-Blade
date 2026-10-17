@@ -98,7 +98,12 @@ public final class ContractCompanionValidation {
             com.maidweapon.forge.system.contract.ContractCarrierData.setMaidData(carrier, data);
             var ownerTick = new net.minecraftforge.event.TickEvent.PlayerTickEvent(
                     net.minecraftforge.event.TickEvent.Phase.END, owner);
-            com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
+            long recoveryTime = level.getGameTime();
+            var recoveryClock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
+            for (int recoveryTick = 1; recoveryTick <= 20; recoveryTick++) {
+                recoveryClock.setGameTime(recoveryTime + recoveryTick);
+                com.maidweapon.forge.system.resonance.ResonanceRecoveryEvents.tick(ownerTick);
+            }
             check(MaidInfusion.data(carrier).getResonance() == 20
                     + com.maidweapon.common.MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get(),
                     "switched-away companion still recovers resonance");
