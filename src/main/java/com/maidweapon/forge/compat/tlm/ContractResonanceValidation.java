@@ -62,25 +62,25 @@ public final class ContractResonanceValidation {
         var first = create(a, 0); var second = create(a, 1);
         String binding = ContractCarrierData.getBindingId(first);
         check(ResonanceService.recover(a, first, binding, 1), "new contracts inherit owner progression");
-        set(first, 0);
+        set(a, first, 0);
         advance(a, 20);
-        check(value(first) == 2 && value(second) == 2, "stored zero recovery global multiplier and separate contracts");
+        check(value(a, first) == 10 && value(a, second) == 10, "stored zero recovery global multiplier and separate contracts");
         ItemStack duplicate = first.copy(); a.getInventory().setItem(2, duplicate);
         check(ResonanceService.canPay(a, first, binding, 1) == UNAUTHORIZED, "duplicate binding rejected");
-        advance(a, 20); check(value(first) == 2, "duplicate reference cannot recover"); a.getInventory().setItem(2, ItemStack.EMPTY);
+        advance(a, 20); check(value(a, first) == 10, "duplicate reference cannot recover"); a.getInventory().setItem(2, ItemStack.EMPTY);
         check(ResonanceService.canPay(a, null, binding, 0) == UNAUTHORIZED && !ResonanceService.waived(null, null), "null/invalid contexts fail closed");
         check(ResonanceService.canPay(b, first, binding, 0) == UNAUTHORIZED, "foreign player rejected");
         check(ResonanceService.canPay(a, first.copy(), binding, 0) == UNAUTHORIZED, "detached copy rejected");
         check(ResonanceService.canPay(a, first, binding, 20) == INSUFFICIENT, "insufficient mock ability");
         var operation = ResonanceService.newAttempt();
         check(ResonanceService.pay(a, first, binding, 1, operation) == PAID, "normal mock ability");
-        check(ResonanceService.pay(a, first, binding, 1, operation) == ALREADY_PAID && value(first) == 1, "one operation once");
+        check(ResonanceService.pay(a, first, binding, 1, operation) == ALREADY_PAID && value(a, first) == 9, "one operation once");
         var payload = ContractMaidStorage.read(a, first);
         var inventory = new net.minecraftforge.items.ItemStackHandler(30);
         inventory.setStackInSlot(0, new ItemStack(ModItems.ENDLESS_CONTRACT.get()));
         payload.put("MaidBaubleInventory", inventory.serializeNBT());
         check(ContractMaidStorage.commit(a, first, payload), "commit equipped native slot");
-        set(first, 0);
+        set(a, first, 0);
         check(ResonanceService.waived(a, first), "stored waiver at zero");
         check(ResonanceService.pay(a, first, binding, 200, ResonanceService.newAttempt()) == WAIVED, "waived mock ability");
         check(!ResonanceService.waived(a, second), "another maid cannot borrow waiver");
@@ -88,15 +88,15 @@ public final class ContractResonanceValidation {
         check(ContractLifecycleService.manifest(a, first, false), "manifest waived zero contract");
         var maid = (Mob) ContractWeaponLocator.findManifestedMaid(a, ContractCarrierData.getBoundMaidUUID(first));
         check(maid != null && ResonanceService.waived(a, first), "live native waiver");
-        advance(a, 20); check(value(first) == 4, "manifested idle recovery times global multiplier");
-        set(first, 0);
+        advance(a, 20); check(value(a, first) == 20, "manifested idle recovery times global multiplier");
+        set(a, first, 0);
         // TLM reads ATTACK_TARGET from its Brain rather than Mob's legacy target field.
         maid.getBrain().setMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET,
                 new net.minecraft.world.entity.monster.Zombie(level));
         check(maid.getTarget() != null, "native brain has a real combat target");
-        advance(a, 20); check(value(first) == 1, "actual maid combat target reduces recovery");
-        maid.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET); set(first, 0);
-        ResonanceService.drain(a, first, 20); check(value(first) == 0, "zero live mandatory upkeep waived");
+        advance(a, 20); check(value(a, first) == 5, "actual maid combat target reduces recovery");
+        maid.getBrain().eraseMemory(net.minecraft.world.entity.ai.memory.MemoryModuleType.ATTACK_TARGET); set(a, first, 0);
+        ResonanceService.drain(a, first, 20); check(value(a, first) == 0, "zero live mandatory upkeep waived");
         check(TlmProjectionBaubles.mode(maid) == ContractProjectionMode.COMBINED, "ultimate inherits combined projection");
         var slots = (IItemHandlerModifiable) maid.getClass().getMethod("getMaidBauble").invoke(maid);
         check(slots.isItemValid(0, new ItemStack(ModItems.ENDLESS_CONTRACT.get())), "ultimate accepted by native bauble slot");
@@ -115,20 +115,21 @@ public final class ContractResonanceValidation {
         check(ResonanceService.canPay(a, second, archived.getString("MaidBindingId"), 0) == PAID, "independent archived channel");
         // Activity is deliberately reported by a mock ability, with no three-fox dependency.
         ResonanceRecoveryEvents.logout(new net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(a));
-        set(first, 0);
+        set(a, first, 0);
         check(ResonanceService.reportActivity(a, first, binding, "mock_domain", ResonanceActivity.ABILITY_ATTACKING, 100), "server activity report");
-        advance(a, 20); check(value(first) == 1, "combat ability recovers at half rate times global multiplier");
+        advance(a, 20); check(value(a, first) == 5, "combat ability recovers at half rate times global multiplier");
         ResonanceRecoveryEvents.logout(new net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(a));
-        set(first, 0);
+        set(a, first, 0);
         check(ResonanceService.reportActivity(a, first, binding, "mock_idle", ResonanceActivity.ABILITY_IDLE, 100), "idle domain report");
-        advance(a, 20); check(value(first) == 2, "idle ability natural recovery");
-        int oldMaximum = com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.get();
-        set(first, 100);
-        com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.set(80);
-        advance(a, 20); check(value(first) == 80 && first.getTag().getCompound("MaidData").getInt("ContractResonance") == 80, "lowered cap persisted");
+        advance(a, 20); check(value(a, first) == 10, "idle ability natural recovery");
+        int oldMaximum = com.maidweapon.common.ContractRulesConfig.POOL_MAX_RESONANCE.get();
+        set(a, first, 100);
+        com.maidweapon.common.ContractRulesConfig.POOL_MAX_RESONANCE.set(80);
+        advance(a, 20); check(value(a, first) == 80
+                && first.getTag().getCompound("MaidData").getInt("ContractResonance") != 80, "lowered cap persisted");
         com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.set(oldMaximum);
         advance(a, 1); // one actual tick never pays elapsed/offline time
-        check(value(first) <= 81, "no elapsed time catch-up");
+        check(value(a, first) <= 81, "no elapsed time catch-up");
         first.getTag().getCompound("MaidData").putInt("ContractSchema", 99);
         check(ResonanceService.canPay(a, first, binding, 0) == UNAUTHORIZED, "future contract schema read-only");
         first.getTag().getCompound("MaidData").putInt("ContractSchema", 2);
@@ -142,7 +143,7 @@ public final class ContractResonanceValidation {
         TlmEntityAdapter.tame(maid, owner); maid.moveTo(slot * 3, 100, 0, 0, 0);
         check(owner.level().addFreshEntity(maid), "spawn maid");
         var carrier = new ItemStack(ModItems.MAID_SWORD.get()); owner.getInventory().setItem(slot, carrier);
-        check(ContractLifecycleService.capture(owner, maid, carrier, false), "capture maid"); set(carrier, 0); return carrier;
+        check(ContractLifecycleService.capture(owner, maid, carrier, false), "capture maid"); set(owner, carrier, 0); return carrier;
     }
     private static void advance(Player owner, int ticks) {
         for (int tick = 0; tick < ticks; tick++) {
@@ -152,8 +153,15 @@ public final class ContractResonanceValidation {
             ResonanceRecoveryEvents.tick(event); ResonanceRecoveryEvents.tick(event);
         }
     }
-    private static int value(ItemStack carrier) { return ContractCarrierData.getMaidData(carrier).getResonance(); }
-    private static void set(ItemStack carrier, int amount) { var data = ContractCarrierData.getMaidData(carrier); data.setResonance(amount); ContractCarrierData.setMaidData(carrier, data); }
+    private static int value(Player owner, ItemStack carrier) {
+        return ResonancePoolSavedData.get(owner.getServer()).save(new CompoundTag())
+                .getCompound("Players").getCompound(owner.getUUID().toString())
+                .getCompound(ContractCarrierData.getBoundMaidUUID(carrier)).getInt("Current");
+    }
+    private static void set(Player owner, ItemStack carrier, int amount) {
+        check(ResonanceService.set(owner, carrier, ContractCarrierData.getBindingId(carrier), amount),
+                "server-owned pool adjustable");
+    }
     private static void check(boolean ok, String message) { if (!ok) throw new AssertionError(message); }
     private ContractResonanceValidation() { }
 }

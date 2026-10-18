@@ -35,6 +35,15 @@ class ResonancePolicyTest {
             assertEquals(current < 3 && requested == current + 1 ? requested : current,
                     ResonanceRecoveryPolicy.nextStage(current, requested, 3));
     }
+    @Test void legacyMigrationIsProportionalAndBounded() {
+        assertEquals(0, ResonancePoolSavedData.convertLegacy(0, 200, 1000));
+        assertEquals(375, ResonancePoolSavedData.convertLegacy(75, 200, 1000));
+        assertEquals(600, ResonancePoolSavedData.convertLegacy(120, 200, 1000));
+        assertEquals(1000, ResonancePoolSavedData.convertLegacy(200, 200, 1000));
+        assertEquals(1000, ResonancePoolSavedData.convertLegacy(999999, 200, 1000));
+        assertEquals(500, ResonancePoolSavedData.convertLegacy(200, 400, 1000));
+        assertThrows(IllegalArgumentException.class, () -> ResonancePoolSavedData.convertLegacy(1, 0, 1000));
+    }
     @Test void simulatedAbilityCostsNeverGrantAuthorization() {
         assertEquals(PAID, ResonanceCostPolicy.evaluate(true, false, 10, 10));
         assertEquals(INSUFFICIENT, ResonanceCostPolicy.evaluate(true, false, 9, 10));

@@ -33,7 +33,8 @@ public final class ResonanceRecoveryEvents {
                     case ABILITY_IDLE -> MaidWeaponConfig.RESONANCE_ABILITY_IDLE_RECOVERY.get();
                     case COMBAT, ABILITY_ATTACKING, BERSERK -> MaidWeaponConfig.RESONANCE_COMBAT_RECOVERY.get();
                 };
-                long units = ResonanceRecoveryPolicy.perTick(rate, ResonanceProgressService.multiplier(owner)) * 20;
+                long units = ResonanceRecoveryPolicy.perTick(rate * ResonanceService.legacyScale(),
+                        ResonanceProgressService.multiplier(owner)) * 20;
                 var pools = ResonancePoolSavedData.get(owner.getServer());
                 int previous = pools.current(context);
                 if (previous < 0) continue;

@@ -27,11 +27,15 @@ public final class ResonanceService {
         com.maidweapon.forge.network.ResonanceNetwork.sendIfChanged(context.owner(), context.maid(),
                 pool(context).current(context), maximum());
     }
-    /** Scale pre-pool costs to preserve the old 200-point gameplay balance. */
+    /** Old config remains the migration denominator; new pools are independently configurable. */
+    public static double legacyScale() {
+        return (double) maximum() / Math.max(1,
+                com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.get());
+    }
+    /** Scale old costs to preserve the pre-pool gameplay balance. */
     public static int legacyUnits(int cost) {
         if (cost <= 0) return 0;
-        return (int) Math.min(Integer.MAX_VALUE, Math.round((double) cost * maximum()
-                / Math.max(1, com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.get())));
+        return (int) Math.min(Integer.MAX_VALUE, Math.round(cost * legacyScale()));
     }
     public static double recoveryMultiplier(Player owner) {
         return owner != null && owner.getServer() != null && !owner.level().isClientSide && owner.getServer().isSameThread()
