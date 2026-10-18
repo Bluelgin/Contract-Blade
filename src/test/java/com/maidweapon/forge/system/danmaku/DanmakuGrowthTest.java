@@ -20,8 +20,10 @@ class DanmakuGrowthTest {
     @Test void lateActiveFormsStayLocked() {
         assertFalse(DanmakuForm.NEEDLE.unlocked(4));
         assertTrue(DanmakuForm.NEEDLE.unlocked(5));
-        assertFalse(DanmakuForm.GUARD.unlocked(5));
+        assertTrue(DanmakuForm.GUARD.unlocked(5));
         assertTrue(DanmakuForm.GUARD.unlocked(6));
+        assertEquals(5, DanmakuGrowth.count(DanmakuForm.GUARD, 5));
+        assertEquals(8, DanmakuGrowth.count(DanmakuForm.GUARD, 6));
         assertFalse(DanmakuForm.FANTASY.unlocked(9));
         assertTrue(DanmakuForm.FANTASY.unlocked(10));
     }

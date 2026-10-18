@@ -14,7 +14,7 @@ public final class DanmakuGrowth {
         return switch (form) {
             case NEEDLE -> 0.20;
             case FLOWER -> mastery >= 9 ? 0.28 : 0.20;
-            case GUARD -> 0.12;
+            case GUARD -> mastery >= 6 ? 0.12 : 0.08;
             case FANTASY -> 0.55;
         };
     }
@@ -22,7 +22,7 @@ public final class DanmakuGrowth {
         return switch (form) {
             case NEEDLE -> 5;
             case FLOWER -> mastery >= 9 ? 12 : mastery >= 7 ? 9 : 7;
-            case GUARD -> 8;
+            case GUARD -> mastery >= 6 ? 8 : 5;
             case FANTASY -> 24;
         };
     }

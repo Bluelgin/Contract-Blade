@@ -13,8 +13,8 @@ native codec/cached effects resolver used by Endless Contract.
 - Lv.2: three pellets, splitting the same bonus-damage budget.
 - Lv.3: visual spread fundamentals.
 - Lv.4: more accurate aimed follow-up.
-- Lv.5: unlock active NEEDLE and FLOWER spell forms and wheel selection.
-- Lv.6: unlock GUARD circular screen.
+- Lv.5: unlock all three active forms (NEEDLE, FLOWER, GUARD) and wheel selection.
+- Lv.6: empower GUARD with a denser circular screen.
 - Lv.7: spread gains two-stage density.
 - Lv.8: a recent second hit on the same entity increases a salvo to four pellets.
 - Lv.9: denser FLOWER spell.
