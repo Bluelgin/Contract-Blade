@@ -509,5 +509,6 @@
   "maid_weapon.message.vein.success": "Spirit-vein stage %s awakened. Natural resonance recovery for all your contracts: ×%s.",
   "maid_weapon.message.vein.already": "You have already awakened this spirit-vein stage.",
   "maid_weapon.message.vein.skipped": "Awaken the preceding spirit-vein stage first.",
-  "maid_weapon.message.vein.unsupported": "Your spirit vein cannot be awakened right now. The item was kept."
+  "maid_weapon.message.vein.unsupported": "Your spirit vein cannot be awakened right now. The item was kept.",
+  "maid_weapon.tooltip.resonance.waiting": "Resonance: syncing…"
 }

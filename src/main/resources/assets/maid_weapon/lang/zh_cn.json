@@ -511,5 +511,6 @@
   "maid_weapon.message.vein.success": "灵脉已达第 %s 阶，所有契约的自然共鸣恢复为 ×%s。",
   "maid_weapon.message.vein.already": "你已拥有这一阶段的灵脉，无需再次使用。",
   "maid_weapon.message.vein.skipped": "灵脉需依次唤醒，请先完成前一阶段。",
-  "maid_weapon.message.vein.unsupported": "灵脉暂时无法唤醒，物品已保留。"
+  "maid_weapon.message.vein.unsupported": "灵脉暂时无法唤醒，物品已保留。",
+  "maid_weapon.tooltip.resonance.waiting": "共鸣：同步中…"
 }
