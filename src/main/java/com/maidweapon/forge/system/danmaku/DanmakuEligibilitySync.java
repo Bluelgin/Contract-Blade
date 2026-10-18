@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 public final class DanmakuEligibilitySync {
     @SubscribeEvent public static void tick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer owner)
-                || owner.tickCount % 10 != 0) return;
+                || owner.tickCount % 20 != 0) return;
         var contract = DanmakuEligibility.context(owner);
         int level = ContractMasteryService.getLevel(owner);
         DanmakuNetwork.sync(owner, contract == null ? "" : contract.binding(),
@@ -22,6 +22,15 @@ public final class DanmakuEligibilitySync {
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         DanmakuNetwork.forget(event.getEntity().getUUID());
+    }
+    /** Respawning changes the client Player instance even when the UUID is unchanged. */
+    @SubscribeEvent public static void respawn(PlayerEvent.PlayerRespawnEvent event) {
+        if (event.getEntity() instanceof ServerPlayer)
+            DanmakuNetwork.forget(event.getEntity().getUUID());
+    }
+    @SubscribeEvent public static void changedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer)
+            DanmakuNetwork.forget(event.getEntity().getUUID());
     }
     @SubscribeEvent public static void stop(ServerStoppedEvent event) { DanmakuNetwork.clearAll(); }
     private DanmakuEligibilitySync() { }

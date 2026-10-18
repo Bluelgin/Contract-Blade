@@ -8,6 +8,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.TickEvent;
@@ -21,7 +23,8 @@ import java.util.*;
 public final class DanmakuCombatService {
     private static final Map<String, Long> COOLDOWNS = new HashMap<>();
     private record RecentHit(UUID target, long tick) { }
-    private record PendingFantasy(String maid, int mastery, float basis, int nextWave, long due) { }
+    private record PendingFantasy(String maid, ResourceKey<Level> dimension,
+                                  int mastery, float basis, int nextWave, long due) { }
     private static final Map<String, RecentHit> RECENT_HITS = new HashMap<>();
     private static final Map<String, PendingFantasy> PENDING = new HashMap<>();
 
@@ -61,7 +64,7 @@ public final class DanmakuCombatService {
         DanmakuProjectilePatterns.cast(player, form, target, mastery, basis);
         if (form == DanmakuForm.FANTASY)
             PENDING.put(key(player, contract.maid(), "fantasy_waves"),
-                    new PendingFantasy(contract.maid(), mastery, basis, 1, now + 8));
+                    new PendingFantasy(contract.maid(), player.level().dimension(), mastery, basis, 1, now + 8));
         return true;
     }
 
@@ -77,13 +80,14 @@ public final class DanmakuCombatService {
             PendingFantasy pending = entry.getValue();
             if (now < pending.due()) continue;
             var context = DanmakuEligibility.context(player);
-            if (context == null || !pending.maid().equals(context.maid())) {
+            if (context == null || !pending.maid().equals(context.maid())
+                    || !pending.dimension().equals(player.level().dimension())) {
                 iterator.remove();
                 continue;
             }
             DanmakuProjectilePatterns.fantasyWave(player, pending.nextWave(), pending.mastery(), pending.basis());
             if (pending.nextWave() >= 2) iterator.remove();
-            else entry.setValue(new PendingFantasy(pending.maid(), pending.mastery(), pending.basis(),
+            else entry.setValue(new PendingFantasy(pending.maid(), pending.dimension(), pending.mastery(), pending.basis(),
                     pending.nextWave() + 1, now + 8));
         }
     }
