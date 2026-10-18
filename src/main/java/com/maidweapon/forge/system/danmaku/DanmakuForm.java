@@ -1,8 +1,8 @@
 package com.maidweapon.forge.system.danmaku;
 
-/** Declarative unlock/cooldown data. Costs deliberately deferred to a future balancing PR. */
+/** Four distinct roles; cooldowns deliberately separate from projectile count. */
 public enum DanmakuForm {
-    NEEDLE(5, 160), FLOWER(5, 160), GUARD(5, 240), FANTASY(10, 900);
+    NEEDLE(5, 120), FLOWER(5, 180), GUARD(5, 320), FANTASY(10, 800);
     private final int requiredLevel;
     private final int cooldownTicks;
     DanmakuForm(int requiredLevel, int cooldownTicks) {
