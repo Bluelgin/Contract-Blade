@@ -512,5 +512,17 @@
   "maid_weapon.message.vein.already": "你已拥有这一阶段的灵脉，无需再次使用。",
   "maid_weapon.message.vein.skipped": "灵脉需依次唤醒，请先完成前一阶段。",
   "maid_weapon.message.vein.unsupported": "灵脉暂时无法唤醒，物品已保留。",
-  "maid_weapon.tooltip.resonance.waiting": "共鸣：同步中…"
+  "maid_weapon.tooltip.resonance.waiting": "共鸣：同步中…",
+  "item.maid_weapon.manka_talisman": "万华御札",
+  "maid_weapon.tooltip.manka_talisman.lore": "以符为契，借万华之光，伴君挥剑。",
+  "maid_weapon.tooltip.manka_talisman.effect": "佩戴于普通契约女仆饰品槽：挥剑后协同释放东方弹幕",
+  "maid_weapon.tooltip.manka_talisman.controls": "契约熟练度 Lv.5 起：短按中键施符，长按中键选择符式",
+  "maid_weapon.tooltip.manka_talisman.restriction": "仅限当前普通女仆契约；不强化内置剑灵。此版本暂不消耗共鸣。",
+  "key.maid_weapon.danmaku": "施放／选择符卡",
+  "maid_weapon.gui.danmaku.title": "万华御札 · 符式",
+  "maid_weapon.gui.danmaku.release": "松开按键确认选择 · 再短按施放",
+  "maid_weapon.danmaku.form.needle": "灵针",
+  "maid_weapon.danmaku.form.flower": "散华",
+  "maid_weapon.danmaku.form.guard": "护身",
+  "maid_weapon.danmaku.form.fantasy": "幻想万华"
 }

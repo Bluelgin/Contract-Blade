@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<title>万华御札 / Manka Talisman</title>
+<g stroke-linejoin="round" stroke-linecap="round">
+<path d="M56 38 L93 46 L82 118 L39 105 Z" fill="#352b48" stroke="#30243f" stroke-width="8"/>
+<path d="M55 38 L91 47 L80 113 L41 102 Z" fill="#f0bc8e" stroke="#cb876d" stroke-width="3"/>
+<path d="M57 45 L84 51 L76 104 L47 96 Z" fill="#fff2e4"/>
+<path d="M63 52 L79 55 L73 95 L53 90 Z" fill="#ffcfda" opacity=".5"/>
+<path d="M57 38 L92 46 L89 58 L55 50 Z" fill="#cf944f" stroke="#77523c" stroke-width="3"/>
+<path d="M61 39 L88 46 L87 51 L60 45 Z" fill="#ffdfa0"/>
+<path d="M76 103 L84 105 L82 115 L73 113Z" fill="#b36b50"/>
+<path d="M63 61 L73 63 M67 58 L61 82 M56 71 L76 75 M59 87 L73 83 M70 69 L75 90" fill="none" stroke="#b94360" stroke-width="3.8"/>
+<path d="M52 53 L57 56 M78 92 L72 97" fill="none" stroke="#cc7892" stroke-width="2"/>
+<path d="M60 41 L58 29" stroke="#6f324a" stroke-width="8"/>
+<path d="M60 39 L58 26" stroke="#c33f5e" stroke-width="4"/>
+<path d="M59 29 C41 8 19 19 26 35 C34 43 50 37 59 29Z" fill="#ab3551" stroke="#3d2b48" stroke-width="5"/>
+<path d="M57 28 C75 8 104 18 93 36 C85 44 70 37 57 28Z" fill="#cc4264" stroke="#3d2b48" stroke-width="5"/>
+<path d="M49 27 L32 26 L43 32 Z" fill="#ff94a8"/>
+<path d="M69 27 L87 26 L74 33 Z" fill="#ff9cb4"/>
+<path d="M54 31 L40 54 L54 50 L63 34" fill="#ab3858" stroke="#4c2c4a" stroke-width="4"/>
+<path d="M64 34 L72 55 L82 48 L69 30" fill="#dc5476" stroke="#4c2c4a" stroke-width="4"/>
+<path d="M53 27 L65 25 L70 35 L58 39 L51 34 Z" fill="#ffc46e" stroke="#704d46" stroke-width="3"/>
+<path d="M55 27 L65 27 L65 32 L57 34 Z" fill="#ffedaa"/>
+<path d="M23 66 Q10 53 25 49 Q30 36 38 50 Q50 50 43 63 Q48 74 35 73 Q27 82 23 66Z" fill="#f5a6c8" stroke="#754363" stroke-width="3"/>
+<path d="M28 52 L34 69 M21 60 L41 61" stroke="#fff4e8" stroke-width="2"/>
+<circle cx="33" cy="61" r="4" fill="#fff7d7"/>
+<path d="M99 74 Q87 67 98 60 Q105 49 109 63 Q118 70 105 77 Z" fill="#f5b0cb" stroke="#79445f" stroke-width="2.5"/>
+<path d="M107 81 l5 7 -7 4 -4 -7 Z" fill="#83cee9" stroke="#447a9b" stroke-width="2"/>
+<path d="M33 91 l4 -7 5 8 -5 5Z" fill="#93d9e5" stroke="#507e8d" stroke-width="2"/>
+</g></svg>

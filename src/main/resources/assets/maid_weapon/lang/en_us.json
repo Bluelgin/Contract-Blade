@@ -510,5 +510,17 @@
   "maid_weapon.message.vein.already": "You have already awakened this spirit-vein stage.",
   "maid_weapon.message.vein.skipped": "Awaken the preceding spirit-vein stage first.",
   "maid_weapon.message.vein.unsupported": "Your spirit vein cannot be awakened right now. The item was kept.",
-  "maid_weapon.tooltip.resonance.waiting": "Resonance: syncing…"
+  "maid_weapon.tooltip.resonance.waiting": "Resonance: syncing…",
+  "item.maid_weapon.manka_talisman": "Manka Talisman",
+  "maid_weapon.tooltip.manka_talisman.lore": "By a paper charm, a thousand blossoms answer your blade.",
+  "maid_weapon.tooltip.manka_talisman.effect": "Equipped by an ordinary contracted maid: follow-up Touhou-style danmaku after melee hits",
+  "maid_weapon.tooltip.manka_talisman.controls": "Contract Mastery Lv.5+: tap middle mouse to cast, hold to select a spell",
+  "maid_weapon.tooltip.manka_talisman.restriction": "Ordinary maid contracts only, not innate blade spirits. No resonance charge yet.",
+  "key.maid_weapon.danmaku": "Cast / Select Danmaku Spell",
+  "maid_weapon.gui.danmaku.title": "Manka Talisman · Spell Forms",
+  "maid_weapon.gui.danmaku.release": "Release to select · Tap again to cast",
+  "maid_weapon.danmaku.form.needle": "Spirit Needle",
+  "maid_weapon.danmaku.form.flower": "Petal Spread",
+  "maid_weapon.danmaku.form.guard": "Guardian Ring",
+  "maid_weapon.danmaku.form.fantasy": "Fantasy Kaleidoscope"
 }
