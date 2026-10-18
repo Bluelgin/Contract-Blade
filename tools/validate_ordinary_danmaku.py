@@ -47,9 +47,36 @@ animations = svg.findall(".//svg:animate", svg_ns) + svg.findall(".//svg:animate
 assert animations and all(len(anim.attrib["values"].split(";")) == 40 for anim in animations)
 texture = root / "src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png"
 png = texture.read_bytes()
-assert png[:8] == b"\x89PNG\r\n\x1a\n"
-assert int.from_bytes(png[16:20], "big") == 32  # frame width
-assert int.from_bytes(png[20:24], "big") == 32 * 40  # vertical strip
+assert png.startswith(b"\x89PNG\r\n\x1a\n")
+assert int.from_bytes(png[16:20], "big") == 32
+assert int.from_bytes(png[20:24], "big") == 32 * 40
+# Check every PNG chunk and the compressed pixels, not just the 24-byte header.
+# This catches a truncated IDAT that otherwise appears to be a valid 32x1280 sprite.
+import zlib
+position = 8
+image_data = bytearray()
+saw_end = False
+while position < len(png):
+    assert position + 12 <= len(png), "truncated PNG chunk header"
+    length = int.from_bytes(png[position:position + 4], "big")
+    assert position + 12 + length <= len(png), "truncated PNG chunk body"
+    tag = png[position + 4:position + 8]
+    payload = png[position + 8:position + 8 + length]
+    checksum = int.from_bytes(png[position + 8 + length:position + 12 + length], "big")
+    assert zlib.crc32(tag + payload) == checksum, f"PNG CRC mismatch in {tag!r}"
+    if tag == b"IDAT":
+        image_data.extend(payload)
+    position += length + 12
+    if tag == b"IEND":
+        saw_end = True
+        break
+assert saw_end and position == len(png), "PNG must end with a complete IEND chunk"
+assert image_data, "PNG has no image data"
+assert png[28] == 0, "interlaced atlas texture not supported"
+channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[png[25]]
+bytes_per_row = (32 * channels * png[24] + 7) // 8
+pixels = zlib.decompress(image_data)
+assert len(pixels) == (bytes_per_row + 1) * 1280, "decoded animation data length mismatch"
 animation_meta = json.loads((root / (str(texture.relative_to(root)) + ".mcmeta")).read_text())
 assert animation_meta["animation"]["frametime"] == 2
 assert animation_meta["animation"]["interpolate"] is False
