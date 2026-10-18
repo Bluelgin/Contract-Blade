@@ -56,6 +56,7 @@ public final class ResonanceRecoveryEvents {
     }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) {
         ACCUMULATORS.clear(); ResonanceActivityTracker.clearAll(); StoredMaidBaubleResolver.clearAll();
+        com.maidweapon.forge.network.ResonanceNetwork.clearAll();
     }
     private ResonanceRecoveryEvents() { }
 }

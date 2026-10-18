@@ -75,7 +75,9 @@ public final class ContractCombatEventHandler {
         }
 
         com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weapon);
-        if (ResonanceContract.resolve(player, weapon, ContractCarrierData.getBindingId(weapon)) == null) return;
+        // Per-tick health/food observation only needs identity. Actual recovery revalidates
+        // the authoritative maid payload before importing or mutating any balance.
+        if (ResonanceContract.resolveIdentity(player, weapon, ContractCarrierData.getBindingId(weapon)) == null) return;
         UUID playerId = player.getUUID();
         String binding = ContractCarrierData.getBindingId(weapon);
         int food = player.getFoodData().getFoodLevel();

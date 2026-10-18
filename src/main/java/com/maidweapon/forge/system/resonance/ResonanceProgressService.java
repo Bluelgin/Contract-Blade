@@ -14,7 +14,9 @@ public final class ResonanceProgressService {
     public static double multiplier(Player player) {
         if (!server(player)) return 1;
         var values = MaidWeaponConfig.RESONANCE_PROGRESS_MULTIPLIERS.get();
-        return values.get(Math.min(stage(player), values.size() - 1)).doubleValue();
+        if (values == null || values.isEmpty()) return 1;
+        var result = values.get(Math.min(stage(player), values.size() - 1));
+        return result != null && Double.isFinite(result) && result > 0 ? result : 1;
     }
     public static Upgrade upgrade(Player player, int requested) {
         if (!server(player)) return Upgrade.UNSUPPORTED;

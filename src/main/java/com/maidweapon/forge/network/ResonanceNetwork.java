@@ -43,6 +43,7 @@ public final class ResonanceNetwork {
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> server), new Snapshot(maid, current, maximum));
     }
     public static void clear(UUID player) { SENT.remove(player); }
+    public static void clearAll() { SENT.clear(); }
     public static int clientCurrent(net.minecraft.world.entity.player.Player viewer, String maid) {
         return ClientView.current(viewer, maid);
     }

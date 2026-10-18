@@ -86,7 +86,9 @@ public final class ResonancePoolSavedData extends SavedData {
     }
     private void publish(ResonanceContract context, CompoundTag record) {
         var ownerKey = context.owner().getUUID().toString();
-        var account = players.getCompound(ownerKey).copy();
+        // The server thread owns this SavedData; updating one maid must not clone every
+        // other maid's record on every natural recovery pulse.
+        var account = players.getCompound(ownerKey);
         account.putInt("SchemaVersion", SCHEMA);
         account.put(context.maid(), record.copy());
         players.put(ownerKey, account);
