@@ -23,13 +23,16 @@ public final class DanmakuHitPolicy {
     public static int temporarilyRelaxVanillaFrames(LivingEntity target) {
         int original = target.invulnerableTime;
         // Standard post-hit vanilla iframe gate, not isInvulnerable or mod-specific flags.
-        if (original > 10) target.invulnerableTime = 0;
+        // Vanilla uses a 20-tick window. An unusually long window is likely
+        // a boss/mod-specific phase gate and must not be touched.
+        if (original > 10 && original <= 20) target.invulnerableTime = 0;
         return original;
     }
 
     public static void restoreFrames(LivingEntity target, int original) {
         // Preserve prior ordinary protection for all other attack sources.
-        if (original > 10) target.invulnerableTime = Math.max(original, target.invulnerableTime);
+        if (original > 10 && original <= 20)
+            target.invulnerableTime = Math.max(original, target.invulnerableTime);
     }
 
     public static void cleanup(long tick) {
