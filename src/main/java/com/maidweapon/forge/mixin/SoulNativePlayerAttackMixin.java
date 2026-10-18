@@ -22,7 +22,7 @@ public abstract class SoulNativePlayerAttackMixin {
   private boolean cb$attack(
       Entity target, DamageSource source, float amount, Operation<Boolean> original) {
     try (var origin =
-        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_ATTACK", source, target)) {
+        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_ATTACK", source, target, amount)) {
       return original.call(target, source, amount);
     }
   }
@@ -38,7 +38,7 @@ public abstract class SoulNativePlayerAttackMixin {
   private boolean cb$attackSrg(
       Entity target, DamageSource source, float amount, Operation<Boolean> original) {
     try (var origin =
-        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_ATTACK", source, target)) {
+        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_ATTACK", source, target, amount)) {
       return original.call(target, source, amount);
     }
   }
@@ -57,7 +57,7 @@ public abstract class SoulNativePlayerAttackMixin {
       float amount,
       Operation<Boolean> original) {
     try (var origin =
-        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_SWEEP", source, target)) {
+        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_SWEEP", source, target, amount)) {
       return original.call(target, source, amount);
     }
   }
@@ -76,7 +76,7 @@ public abstract class SoulNativePlayerAttackMixin {
       float amount,
       Operation<Boolean> original) {
     try (var origin =
-        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_SWEEP", source, target)) {
+        NativeAttackOrigin.strike((Entity) (Object) this, "PLAYER_SWEEP", source, target, amount)) {
       return original.call(target, source, amount);
     }
   }

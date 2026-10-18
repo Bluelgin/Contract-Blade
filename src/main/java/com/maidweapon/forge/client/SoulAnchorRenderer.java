@@ -63,6 +63,13 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
     float pulse = (float) (.12 + Math.sin(time * .17) * .025);
     shard(b, pose.last().pose(), 0, pulse, .25, 0xE33245, .9f);
     shard(b, pose.last().pose(), 0, .028, .18, 0xFFE1D5, .9f);
+    // Purely client-side constellation: the target remains the original single hitbox.
+    if (e.eclipse()) {
+      pose.pushPose();
+      pose.mulPose(entityRenderDispatcher.cameraOrientation());
+      SoulEclipseGlyph.idle(b, pose.last().pose(), time, quality, e.chainProgress());
+      pose.popPose();
+    }
     if ((e.tickCount < 12 || shake > 0) && quality > 0) {
       var target = e.level().getEntity(e.targetId());
       if (target != null && target.distanceToSqr(e) < 1024) {
@@ -185,6 +192,7 @@ public final class SoulAnchorRenderer extends EntityRenderer<SoulAnchorEntity> {
         || p.stage() >= p.stages()
         || !Double.isFinite(p.target().lengthSqr())
         || !Double.isFinite(p.core().lengthSqr())) return;
+    SoulEclipseVisuals.accept(p);
     AkatsukiDomainVisuals.soulBurst(p);
     if (mc.player != null && mc.player.distanceToSqr(p.target()) < 4096)
       mc.level.playLocalSound(

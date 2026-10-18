@@ -1,8 +1,8 @@
 package com.maidweapon.forge.system.akatsuki.soul;
 
 /**
- * Native-hit resonance uses observed actual HP loss only, never the denied
- * pre-cap theoretical amount. It is not a recoverable receipt and cannot refill debt.
+ * Core critical bonus uses observed actual native HP loss only, never the denied
+ * pre-cap theoretical amount. It is held until a valid core hit; cannot refill special-cap debt.
  */
 public final class SoulResonancePolicy {
   public static double requested(double actualHpLoss, double ratio) {

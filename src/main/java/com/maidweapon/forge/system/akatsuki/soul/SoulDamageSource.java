@@ -28,10 +28,15 @@ final class SoulDamageSource extends DamageSource {
     var id = tag.location();
     if (id.getNamespace().equals("minecraft")) {
       if (DEFENSE.contains(id.getPath()))
-        return scoped && (context.recovery || id.getPath().equals("bypasses_cooldown"));
-      if (id.getPath().equals("bypasses_invulnerability")) return scoped && context.strong;
+        return scoped && SoulStrikePermissions.bypassTag(
+            context.mode, context.recovery, context.strong, id.getPath());
+      if (id.getPath().equals("bypasses_invulnerability"))
+        return scoped && SoulStrikePermissions.bypassTag(
+            context.mode, context.recovery, context.strong, id.getPath());
     }
-    if (id.toString().equals("cataclysm:bypasses_hurt_time")) return scoped && context.strong;
+    if (id.toString().equals("cataclysm:bypasses_hurt_time"))
+      return scoped && SoulStrikePermissions.bypassTag(
+          context.mode, context.recovery, context.strong, "cataclysm:bypasses_hurt_time");
     return super.is(tag);
   }
 }

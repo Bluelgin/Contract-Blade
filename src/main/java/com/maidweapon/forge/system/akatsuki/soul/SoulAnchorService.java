@@ -104,6 +104,8 @@ public final class SoulAnchorService {
             + SoulDamageConfig.ANCHOR_LIFETIME.get()
             + (long) AkatsukiDomainGrowth.parameter(p, "anchor_lifetime_bonus");
     c.targetId(t.getId());
+    c.eclipse(SoulDamageDebtService.hasDebt(p, t));
+    if (c.eclipse()) SoulEclipseChallenge.prepare(p, c, now);
     c.moveTo(point.x, point.y, point.z, 0, 0);
     if (!p.serverLevel().addFreshEntity(c)) return rejected(p, t, "world_rejected_entity");
     ANCHORS.put(key, c);
@@ -125,6 +127,12 @@ public final class SoulAnchorService {
   }
 
   public static void follow(SoulAnchorEntity c) {
+    if (c.chainProgress() < 0) {
+      var owner = SoulAnchorBinding.owner(c);
+      if (owner == null || SoulDamageEngine.now(owner) >= c.chainDeadline)
+        c.discard();
+      return;
+    }
     if (!valid(c)) {
       if (diagnostics())
         com.mojang.logging.LogUtils.getLogger().info(
@@ -137,6 +145,16 @@ public final class SoulAnchorService {
     if (!(t instanceof LivingEntity living)) {
       c.discard();
       return;
+    }
+    var bindingOwner = SoulAnchorBinding.owner(c);
+    if (bindingOwner != null) {
+      boolean limited = SoulDamageDebtService.hasDebt(bindingOwner, living);
+      if (limited && !c.eclipse()) c.eclipse(true);
+      if (c.eclipse()) {
+        SoulEclipseChallenge.prepare(bindingOwner, c, SoulDamageEngine.now(bindingOwner));
+        if (SoulEclipseChallenge.expired(bindingOwner, c, SoulDamageEngine.now(bindingOwner)))
+          return;
+      }
     }
     var point = SoulAnchorPlacement.find(living);
     if (point == null) {
@@ -164,6 +182,9 @@ public final class SoulAnchorService {
     if (!(e.getTarget() instanceof SoulAnchorEntity c)) return;
     e.setCanceled(true);
     if (!(e.getEntity() instanceof ServerPlayer p)) return;
+    // Eclipse mode is sword-only. A melee click never shortcuts five distinct
+    // launch-authenticated sword collisions or forfeits the challenge.
+    if (c.eclipse()) return;
     if (!precise(p, c)) {
       if (diagnostics())
         com.mojang.logging.LogUtils.getLogger().info(
@@ -187,16 +208,24 @@ public final class SoulAnchorService {
     }
   }
 
-  /** Called only after native projectile-launch provenance and swept LOS validation. */
-  static boolean projectileHit(ServerPlayer p, SoulAnchorEntity c) {
-    return p.getUUID().equals(c.owner) && valid(c) && activate(p, c);
+  /** Only called after native projectile launch and swept LOS proof. */
+  static boolean projectileHit(ServerPlayer p, SoulAnchorEntity c, UUID swordId) {
+    if (!p.getUUID().equals(c.owner) || !valid(c)) return false;
+    if (!c.eclipse()) return activate(p, c);
+    return SoulEclipseChallenge.swordHit(p, c, swordId);
+  }
+
+  /** Dedicated-server fixture; real gameplay always requires a stamped native sword. */
+  public static boolean fixtureEclipseHit(ServerPlayer p, SoulAnchorEntity c, UUID swordId) {
+    if (!Boolean.getBoolean("contractblade.soul.validation")) return false;
+    return projectileHit(p, c, swordId);
   }
 
   /** Shared single-activation gate; projectile hits never reset melee swing timing. */
   private static boolean activate(ServerPlayer p, SoulAnchorEntity c) {
     long now = SoulDamageEngine.now(p);
     if (LAST_HIT.getOrDefault(c.getUUID(), Long.MIN_VALUE) == now) return false;
-    if (!SoulBurstService.strike(p, c)) return false;
+    if (c.eclipse() || !SoulBurstService.strike(p, c)) return false;
     LAST_HIT.put(c.getUUID(), now);
     c.shake();
     return true;
@@ -298,6 +327,7 @@ public final class SoulAnchorService {
     HOVER.clear();
     SoulAnchorBinding.clear();
     SoulBurstService.clear();
+    SoulEclipseChallenge.clear();
   }
 
   private SoulAnchorService() {}

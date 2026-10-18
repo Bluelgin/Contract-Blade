@@ -13,9 +13,10 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public final class SoulBurstNetwork {
   private static final SimpleChannel CHANNEL =
       NetworkRegistry.newSimpleChannel(
-          ResourceLocation.parse("maid_weapon:soul_burst"), () -> "2", "2"::equals, "2"::equals);
+          ResourceLocation.parse("maid_weapon:soul_burst"), () -> "3", "3"::equals, "3"::equals);
 
-  public record Cue(Vec3 core, Vec3 target, int stage, int stages, boolean success, long seed) {}
+  public record Cue(Vec3 core, Vec3 target, int stage, int stages, boolean success, long seed,
+      boolean eclipse) {}
 
   public static void register() {
     CHANNEL.registerMessage(
@@ -32,6 +33,7 @@ public final class SoulBurstNetwork {
           b.writeByte(p.stages);
           b.writeBoolean(p.success);
           b.writeLong(p.seed);
+          b.writeBoolean(p.eclipse);
         },
         b ->
             new Cue(
@@ -40,7 +42,8 @@ public final class SoulBurstNetwork {
                 b.readUnsignedByte(),
                 b.readUnsignedByte(),
                 b.readBoolean(),
-                b.readLong()),
+                b.readLong(),
+                b.readBoolean()),
         (p, c) -> {
           c.get()
               .enqueueWork(
@@ -59,7 +62,8 @@ public final class SoulBurstNetwork {
       LivingEntity target,
       int stage,
       int stages,
-      boolean success) {
+      boolean success,
+      boolean eclipse) {
     var cue =
         new Cue(
             core.getBoundingBox().getCenter(),
@@ -67,7 +71,8 @@ public final class SoulBurstNetwork {
             stage,
             stages,
             success,
-            core.getUUID().getLeastSignificantBits() + stage * 73856093L);
+            core.getUUID().getLeastSignificantBits() + stage * 73856093L,
+            eclipse);
     CHANNEL.send(
         PacketDistributor.NEAR.with(
             () ->
