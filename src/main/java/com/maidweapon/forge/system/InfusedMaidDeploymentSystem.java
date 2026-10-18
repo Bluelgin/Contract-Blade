@@ -301,7 +301,8 @@ public final class InfusedMaidDeploymentSystem {
                 && ContractCarrierData.isOwner(stack, player)
                 && !ContractCarrierData.isContractSuperseded(stack)
                 && !EmbeddedSpiritApi.isDormant(stack)
-                && (MaidInfusion.data(stack).getResonance() > 0
+                && (com.maidweapon.forge.system.resonance.ResonanceService.current(player, stack,
+                        ContractCarrierData.getBindingId(stack)) > 0
                     || com.maidweapon.forge.system.resonance.ResonanceService.waived(player, stack))
                 && !isCoolingDown(player, ContractCarrierData.getBoundMaidUUID(stack));
     }

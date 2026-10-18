@@ -42,7 +42,7 @@ public final class ContractCombatEventHandler {
             com.maidweapon.forge.system.mastery.ContractCombatCredits.invalidate(dead.getUUID());
             ItemStack weapon = dead.getMainHandItem();
             if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, dead)) {
-                ResonanceService.drain(dead, weapon, MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
+                ResonanceService.drainLegacy(dead, weapon, MaidWeaponConfig.RESONANCE_DEATH_PENALTY.get());
             }
             ModCompatManager.notifyChallengeFailed("maid_sword", "unknown");
             ChallengeTracker.clear(dead.getUUID());
@@ -56,7 +56,7 @@ public final class ContractCombatEventHandler {
         int tier = MonsterTierRegistry.getTier(targetId);
         if (tier <= 0) tier = MonsterTierRegistry.estimateTierFromHealth(event.getEntity().getMaxHealth());
         com.maidweapon.forge.system.mastery.ContractMasteryService.tryAdvance(player, tier, targetId);
-        ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
+        ResonanceService.recoverLegacy(player, weapon, ContractCarrierData.getBindingId(weapon),
                 com.maidweapon.common.ContractRulesConfig.KILL_REWARD.get());
         boolean boss = MonsterTierRegistry.isBoss(targetId)
                 || ModCompatManager.getExternalBosses().getOrDefault(targetId, false)

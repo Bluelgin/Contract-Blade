@@ -35,7 +35,7 @@ public final class ContractCompanionService {
                 || now(owner) < AUTO_NEXT.getOrDefault(owner.getUUID(), 0L)) return;
         ItemStack held = owner.getMainHandItem();
         if (InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)
-                && (MaidInfusion.data(held).getResonance() >= ContractRulesConfig.HURT_MIN_RESONANCE.get()
+                && (com.maidweapon.forge.system.resonance.ResonanceService.current(owner, held, ContractCarrierData.getBindingId(held)) >= ContractRulesConfig.HURT_MIN_RESONANCE.get()
                     || com.maidweapon.forge.system.resonance.ResonanceService.waived(owner, held))) {
             INJURIES.put(owner.getUUID(), new Injury(ContractCarrierData.ensureBindingId(held), owner.getHealth()));
         }
@@ -120,7 +120,7 @@ public final class ContractCompanionService {
             ContractCompanionState.mark(carrier, maid, mode, ContractCompanionState.until(carrier));
             InfusedMaidDeploymentSystem.maintainCompanion(owner, carrier, maid, resident);
             if (resident) continue;
-            if (MaidInfusion.data(carrier).getResonance() <= 0
+            if (com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier, ContractCarrierData.getBindingId(carrier)) <= 0
                     && !com.maidweapon.forge.system.resonance.ResonanceService.waived(owner, carrier)) {
                 InfusedMaidDeploymentSystem.forceRecall(owner, maid.getStringUUID(), 300);
                 continue;

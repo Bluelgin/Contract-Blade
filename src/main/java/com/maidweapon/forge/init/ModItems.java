@@ -87,12 +87,13 @@ public final class ModItems {
                         return InteractionResultHolder.fail(crystal);
                     }
                     MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
-                    if (data.getResonance() >= MaidWeaponData.maximumResonance()) {
+                    if (com.maidweapon.forge.system.resonance.ResonanceService.current(player, weapon,
+                            ContractCarrierData.getBindingId(weapon)) >= MaidWeaponData.maximumResonance()) {
                         player.displayClientMessage(
                                 Component.translatable("maid_weapon.message.resonance_full"), true);
                         return InteractionResultHolder.fail(crystal);
                     }
-                    if (!com.maidweapon.forge.system.resonance.ResonanceService.recover(player, weapon,
+                    if (!com.maidweapon.forge.system.resonance.ResonanceService.recoverLegacy(player, weapon,
                             ContractCarrierData.getBindingId(weapon), 50)) return InteractionResultHolder.fail(crystal);
                     if (!player.getAbilities().instabuild) crystal.shrink(1);
                     player.displayClientMessage(Component.translatable(

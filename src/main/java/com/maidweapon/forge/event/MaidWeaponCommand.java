@@ -55,7 +55,7 @@ public class MaidWeaponCommand {
                                         ctx.getSource(),
                                         IntegerArgumentType.getInteger(ctx, "value")))))
 
-                // /maidweapon resonance <0-200>
+                // /maidweapon resonance <0-pool maximum>
                 .then(Commands.literal("resonance")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("value", IntegerArgumentType.integer(
@@ -156,11 +156,16 @@ public class MaidWeaponCommand {
             ItemStack stack = editableContract(source);
             if (stack.isEmpty()) return 0;
 
-            MaidWeaponData data = MaidInfusion.data(stack);
-            data.setResonance(value);
-            ContractCarrierData.setMaidData(stack, data);
+            var player = source.getPlayerOrException();
+            if (!com.maidweapon.forge.system.resonance.ResonanceService.set(player, stack,
+                    ContractCarrierData.getBindingId(stack), value)) {
+                source.sendFailure(Component.literal("§c共鸣池不可写入：请检查契约归属和状态"));
+                return 0;
+            }
+            int current = com.maidweapon.forge.system.resonance.ResonanceService.current(player, stack,
+                    ContractCarrierData.getBindingId(stack));
             source.sendSuccess(() -> Component.literal(
-                    "§b已将契约共鸣设为 " + data.getResonance() + "/" + MaidWeaponData.maximumResonance()), true);
+                    "§b已将契约共鸣设为 " + current + "/" + MaidWeaponData.maximumResonance()), true);
             return 1;
         } catch (Exception e) {
             source.sendFailure(Component.literal("§c指令执行失败: " + e.getMessage()));

@@ -201,7 +201,8 @@ public final class TripleMagicCompat {
     private static boolean pay(Player owner, ItemStack weapon, int resonanceCost) {
         return com.maidweapon.forge.system.resonance.ResonanceService.succeeded(
                 com.maidweapon.forge.system.resonance.ResonanceService.pay(owner, weapon,
-                        ContractCarrierData.getBindingId(weapon), resonanceCost,
+                        ContractCarrierData.getBindingId(weapon),
+                        com.maidweapon.forge.system.resonance.ResonanceService.legacyUnits(resonanceCost),
                         com.maidweapon.forge.system.resonance.ResonanceService.newAttempt()));
     }
 
