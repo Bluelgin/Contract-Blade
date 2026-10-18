@@ -74,7 +74,7 @@ public final class DanmakuProjectilePatterns {
         var bullet = new ContractDanmakuProjectile(world, owner);
         Vec3 at = owner.getEyePosition().add(owner.getLookAngle().scale(.55));
         bullet.setPos(at.x, at.y, at.z);
-        bullet.setDanmakuColor(color);
+        bullet.setColor(color);
         bullet.setDanmakuType(type);
         bullet.setDamage(damage);
         bullet.setGravityVelocity(0);
