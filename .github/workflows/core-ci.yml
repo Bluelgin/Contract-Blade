@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - master
+      - codex/contract-resonance-foundation
       - codex/fox-native-sword-art
       - codex/black-fox-sword-core-growth
       - codex/contract-lifecycle-recovery
