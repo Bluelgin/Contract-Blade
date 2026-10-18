@@ -28,6 +28,12 @@ public final class DanmakuCombatService {
     private static final Map<String, Long> COOLDOWNS = new HashMap<>();
     private record Chain(UUID target, int count, long time) { }
     private static final Map<String, Chain> CHAINS = new HashMap<>();
+    // Delaying actual follow-up bullets until ordinary melee immunity subsides avoids
+    // a close-range salvo being swallowed in the same hurt frame.
+    private record PendingAuto(String maid, ResourceKey<Level> dimension,
+                               UUID target, int mastery, float observedDamage,
+                               boolean climax, long due) { }
+    private static final Map<String, PendingAuto> AUTOS = new HashMap<>();
 
     private record PendingSpell(String maid, ResourceKey<Level> dimension, DanmakuForm form,
                                 UUID target, int mastery, float basis, int nextWave,
@@ -93,7 +99,9 @@ public final class DanmakuCombatService {
         boolean climax = count >= 3;
         var profile = DanmakuGrowth.auto(mastery, climax);
         COOLDOWNS.put(autoKey, now + profile.cooldownTicks());
-        DanmakuProjectilePatterns.auto(player, victim, mastery, event.getAmount(), climax);
+        AUTOS.put(key(player, contract.maid(), "queued_auto"),
+                new PendingAuto(contract.maid(), player.level().dimension(),
+                        victim.getUUID(), mastery, event.getAmount(), climax, now + 11));
         if (climax) CHAINS.put(chainKey, new Chain(victim.getUUID(), 0, now));
     }
 
@@ -132,6 +140,24 @@ public final class DanmakuCombatService {
         if (player.tickCount % 40 == 0) DanmakuHitBudget.cleanup(now);
         var context = DanmakuEligibility.context(player);
         String prefix = player.getUUID() + ":";
+
+        var scheduledAuto = AUTOS.entrySet().iterator();
+        while (scheduledAuto.hasNext()) {
+            var entry = scheduledAuto.next();
+            if (!entry.getKey().startsWith(prefix)) continue;
+            PendingAuto queued = entry.getValue();
+            if (context == null || !queued.maid.equals(context.maid())
+                    || !queued.dimension.equals(player.level().dimension())) {
+                scheduledAuto.remove();
+                continue;
+            }
+            if (now < queued.due) continue;
+            scheduledAuto.remove();
+            LivingEntity victim = targetById(player, queued.target);
+            if (victim != null)
+                DanmakuProjectilePatterns.auto(player, victim, queued.mastery,
+                        queued.observedDamage, queued.climax);
+        }
 
         var spells = PENDING.entrySet().iterator();
         while (spells.hasNext()) {
@@ -235,11 +261,12 @@ public final class DanmakuCombatService {
         String prefix = id + ":";
         COOLDOWNS.keySet().removeIf(k -> k.startsWith(prefix));
         CHAINS.keySet().removeIf(k -> k.startsWith(prefix));
+        AUTOS.keySet().removeIf(k -> k.startsWith(prefix));
         PENDING.keySet().removeIf(k -> k.startsWith(prefix));
         GUARDS.remove(id);
     }
     @SubscribeEvent public static void stop(ServerStoppedEvent event) {
-        COOLDOWNS.clear(); CHAINS.clear(); PENDING.clear(); GUARDS.clear();
+        COOLDOWNS.clear(); CHAINS.clear(); AUTOS.clear(); PENDING.clear(); GUARDS.clear();
         DanmakuHitBudget.clear();
     }
     private DanmakuCombatService() { }
