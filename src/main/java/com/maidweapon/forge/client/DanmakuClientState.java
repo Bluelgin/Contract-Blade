@@ -30,12 +30,17 @@ public final class DanmakuClientState {
         enabled = allowed;
         mastery = level;
     }
-    public static boolean available() {
+    /** Automatic ordinary swings are unlocked at Lv.1, before active spells. */
+    public static boolean autoAvailable() {
         ensureSession();
         var player = Minecraft.getInstance().player;
-        if (player == null || player.isSpectator() || !enabled || mastery < 5) return false;
+        if (player == null || player.isSpectator() || !enabled || mastery < 1) return false;
         var held = ContractCarrierData.getBindingId(player.getMainHandItem());
         return held != null && held.equals(binding);
+    }
+    /** Active spell wheel remains gated at Lv.5. */
+    public static boolean available() {
+        return autoAvailable() && mastery >= 5;
     }
     public static int mastery() { ensureSession(); return mastery; }
     public static DanmakuForm selected() { ensureSession(); return selected; }
