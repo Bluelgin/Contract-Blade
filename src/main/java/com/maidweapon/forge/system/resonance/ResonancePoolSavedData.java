@@ -94,6 +94,10 @@ public final class ResonancePoolSavedData extends SavedData {
     }
     public static int maximum() { return ContractRulesConfig.maximumResonance(); }
 
+    /** Only previously validated and imported records can use lightweight identity resolution. */
+    public boolean hasRecord(ResonanceContract context) {
+        return writable(context) && existing(context).contains("Current", Tag.TAG_INT);
+    }
     /** Returns -1 for an unsupported future schema; callers must fail closed. */
     public int rawCurrent(ResonanceContract context) {
         var record = resolve(context);

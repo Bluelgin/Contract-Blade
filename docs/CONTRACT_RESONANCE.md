@@ -67,3 +67,40 @@ Other entry points: `current`, `maximum`, `recoveryMultiplier`, `waived`, `recov
 - Human client checks still required: actual inventory/JEI appearance, particles/audio, UI feel, optional combat-mod equipment projection and full multiplayer/dimension scenarios. A dedicated-server fixture is not a human client playtest.
 
 Execution results and any unavailable checks are reported in the PR. A fixture existing in source does not mean it has passed.
+
+## Server-owned resonance pools (migration revision)
+
+The authoritative short-term balance is now `data/maid_weapon_resonance_pools.dat`,
+keyed by owner UUID and maid UUID. The weapon still carries binding/identity and old
+`MaidData.ContractResonance` for historical archive compatibility only; runtime
+recovery, payment, command changes and mandatory combat deductions no longer write
+the weapon's resonance NBT. `maid_weapon_resonance_progress.dat` continues to own
+the independent player-wide spirit-vein upgrade stage.
+
+`ResonancePoolSavedData` lazily imports a validated legacy channel **once**,
+recording its old configured ceiling and converting proportionally:
+`round(old / legacyMaximum * poolMaximum)`. For example 120/200 becomes 600/1000.
+Records already imported can never be refreshed from old weapon NBT, so moving
+between the external and intrinsic archived channels does not replenish a pool.
+Old `Resonance.maximum` is retained as the migration denominator and for
+backward-compatible legacy tuning; new `Resonance.poolMaximum` defaults to 1000.
+Do not remove or change the old config file before importing a pre-existing world.
+Back up worlds before upgrading. Cross-server item transfers do not export SavedData.
+
+Pre-pool gameplay rewards and deductions are converted using the ratio of the two
+configured ceilings. New extension API `ResonanceService.pay` and `recover` work in
+native pool units; `recoverLegacy` / `drainLegacy` are for old call sites only.
+Natural recovery is settled once per second in exact fractional micro-units, without
+offline catch-up. The resolver still strictly validates identity on first import and
+on actual payments; already-verified balance readbacks may use the lighter
+`resolveIdentity` authorization path without repeatedly decoding stored maid NBT.
+
+Server-to-client `ResonanceNetwork` sends owner-only UUID/balance/cap snapshots only
+on change; client HUD and tooltips do not interpret old weapon NBT as live balance.
+While joining or switching to an uncached contract the tooltip displays a syncing
+placeholder. No clientbound snapshot is accepted as a server payment authorization.
+
+Future standalone improvements: use a lower-cost live contract-index cache when the
+holder's inventory contains many independent contracts, measure packet sizes and
+game-thread time with realistically large embedded maid data, and validate
+complete singleplayer/multiplayer interactions. No named fox skill costs are added.

@@ -15,6 +15,14 @@ import java.util.*;
 /** Re-resolves a channel on every operation; callers cannot retain a mutable authority token. */
 public record ResonanceContract(Player owner, ItemStack carrier, CompoundTag channel, String binding, String maid) {
     public static ResonanceContract resolve(Player owner, ItemStack carrier, String binding) {
+        return resolve(owner, carrier, binding, true);
+    }
+    /** Lightweight authority check for an already migrated balance: no entity-NBT decoding. */
+    public static ResonanceContract resolveIdentity(Player owner, ItemStack carrier, String binding) {
+        return resolve(owner, carrier, binding, false);
+    }
+    private static ResonanceContract resolve(Player owner, ItemStack carrier, String binding,
+                                             boolean validateStoredPayload) {
         if (owner == null || carrier == null || carrier.isEmpty() || carrier.getCount() != 1 || owner.getServer() == null
                 || owner.level().isClientSide || !owner.getServer().isSameThread()
                 || !com.maidweapon.forge.item.MaidInfusion.isWeapon(carrier)
@@ -67,7 +75,7 @@ public record ResonanceContract(Player owner, ItemStack carrier, CompoundTag cha
         Entity live = ContractWeaponLocator.findEntity(owner, maid);
         if (MaidEntityDataCodec.hasData(match)) {
             if (live != null || journal.isMaidPresent(maid)
-                    || !com.maidweapon.forge.compat.tlm.StoredMaidBaubleResolver.valid(result)) return null;
+                    || (validateStoredPayload && !com.maidweapon.forge.compat.tlm.StoredMaidBaubleResolver.valid(result))) return null;
         } else if (live == null || !live.isAlive() || !TlmEntityAdapter.isOwnedMaid(live, owner)
                 || !binding.equals(live.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID))) return null;
         return result;

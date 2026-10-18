@@ -16,7 +16,12 @@ public final class ResonanceService {
     public static PaymentAttempt newAttempt() { return new PaymentAttempt(); }
     public static boolean succeeded(Payment payment) { return payment == Payment.PAID || payment == Payment.WAIVED; }
     public static int current(Player owner, ItemStack carrier, String binding) {
-        var context = ResonanceContract.resolve(owner, carrier, binding);
+        var context = ResonanceContract.resolveIdentity(owner, carrier, binding);
+        if (context == null) return 0;
+        var data = pool(context);
+        // Never import from an unverified compressed entity. Full decoding is required
+        // only for the first legacy import; steady-state HUD/eligibility reads remain cheap.
+        if (!data.hasRecord(context)) context = ResonanceContract.resolve(owner, carrier, binding);
         return context == null ? 0 : Math.max(0, pool(context).current(context));
     }
     public static int maximum() { return ResonancePoolSavedData.maximum(); }
