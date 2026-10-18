@@ -16,7 +16,8 @@ public final class ResonanceRecoveryEvents {
     private static final Map<UUID, Map<String, ResonanceAccumulator>> ACCUMULATORS = new HashMap<>();
     @SubscribeEvent public static void tick(TickEvent.PlayerTickEvent event) {
         var owner = event.player;
-        if (event.phase != TickEvent.Phase.END || owner.level().isClientSide || !owner.isAlive()) return;
+        if (event.phase != TickEvent.Phase.END || owner.level().isClientSide || !owner.isAlive()
+                || owner.tickCount % 20 != 0) return;
         var accumulators = ACCUMULATORS.computeIfAbsent(owner.getUUID(), id -> new HashMap<>());
         var seen = new HashSet<String>();
         for (int slot = -1; slot < owner.getInventory().getContainerSize(); slot++) {
@@ -32,14 +33,16 @@ public final class ResonanceRecoveryEvents {
                     case ABILITY_IDLE -> MaidWeaponConfig.RESONANCE_ABILITY_IDLE_RECOVERY.get();
                     case COMBAT, ABILITY_ATTACKING, BERSERK -> MaidWeaponConfig.RESONANCE_COMBAT_RECOVERY.get();
                 };
-                long units = ResonanceRecoveryPolicy.perTick(rate, ResonanceProgressService.multiplier(owner));
-                var data = context.data();
-                int raw = context.channel().getCompound("MaidData").getInt("ContractResonance");
+                long units = ResonanceRecoveryPolicy.perTick(rate, ResonanceProgressService.multiplier(owner)) * 20;
+                int previous = ResonanceService.current(owner, carrier, context.binding());
+                if (previous < 0) continue;
                 int recovered = accumulators.computeIfAbsent(context.maid(), id -> new ResonanceAccumulator())
-                        .tick(owner.getServer().overworld().getGameTime(), units, data.getResonance(), ResonanceService.maximum());
-                if (recovered > 0 || raw > ResonanceService.maximum()) {
-                    data.addResonance(recovered); context.write(data);
-                }
+                        .tick(owner.getServer().overworld().getGameTime(), units, previous, ResonanceService.maximum());
+                if (recovered > 0 || previous > ResonanceService.maximum())
+                    ResonanceService.set(owner, carrier, context.binding(),
+                            (int) Math.min(ResonanceService.maximum(), (long) previous + recovered));
+                com.maidweapon.forge.network.ResonanceNetwork.sendIfChanged(owner, context.maid(),
+                        ResonanceService.current(owner, carrier, context.binding()), ResonanceService.maximum());
             }
         }
         // Keep fractions through item/channel switches, bounded per online owner.
@@ -48,6 +51,7 @@ public final class ResonanceRecoveryEvents {
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID id = event.getEntity().getUUID(); ACCUMULATORS.remove(id);
         ResonanceActivityTracker.clear(id); StoredMaidBaubleResolver.clear(id);
+        com.maidweapon.forge.network.ResonanceNetwork.clear(id);
     }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) {
         ACCUMULATORS.clear(); ResonanceActivityTracker.clearAll(); StoredMaidBaubleResolver.clearAll();

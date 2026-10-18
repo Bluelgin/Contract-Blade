@@ -16,9 +16,23 @@ public final class ResonanceService {
     public static PaymentAttempt newAttempt() { return new PaymentAttempt(); }
     public static boolean succeeded(Payment payment) { return payment == Payment.PAID || payment == Payment.WAIVED; }
     public static int current(Player owner, ItemStack carrier, String binding) {
-        var context = ResonanceContract.resolve(owner, carrier, binding); return context == null ? 0 : context.data().getResonance();
+        var context = ResonanceContract.resolve(owner, carrier, binding);
+        return context == null ? 0 : Math.max(0, pool(context).current(context));
     }
-    public static int maximum() { return MaidWeaponData.maximumResonance(); }
+    public static int maximum() { return ResonancePoolSavedData.maximum(); }
+    private static ResonancePoolSavedData pool(ResonanceContract context) {
+        return ResonancePoolSavedData.get(context.owner().getServer());
+    }
+    private static void sync(ResonanceContract context) {
+        com.maidweapon.forge.network.ResonanceNetwork.sendIfChanged(context.owner(), context.maid(),
+                pool(context).current(context), maximum());
+    }
+    /** Scale pre-pool costs to preserve the old 200-point gameplay balance. */
+    public static int legacyUnits(int cost) {
+        if (cost <= 0) return 0;
+        return (int) Math.min(Integer.MAX_VALUE, Math.round((double) cost * maximum()
+                / Math.max(1, com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.get())));
+    }
     public static double recoveryMultiplier(Player owner) {
         return owner != null && owner.getServer() != null && !owner.level().isClientSide && owner.getServer().isSameThread()
                 ? ResonanceProgressService.multiplier(owner) : 1;
@@ -36,7 +50,7 @@ public final class ResonanceService {
     }
     private static Payment decision(ResonanceContract context, int cost) {
         return ResonanceCostPolicy.evaluate(context != null, context != null && ContractBaubleEffects.hasWaiver(context),
-                context == null ? 0 : context.data().getResonance(), cost);
+                context == null ? 0 : pool(context).current(context), cost);
     }
     public static Payment pay(Player owner, ItemStack carrier, String binding, int cost, PaymentAttempt attempt) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
@@ -44,7 +58,9 @@ public final class ResonanceService {
         if (attempt.completed) return Payment.ALREADY_PAID;
         Payment result = decision(context, cost);
         if (result == Payment.PAID) {
-            var data = context.data(); data.reduceResonance(cost); context.write(data);
+            int before = pool(context).current(context);
+            if (before < 0 || !pool(context).set(context, before - cost)) return Payment.UNAUTHORIZED;
+            sync(context);
         }
         if (succeeded(result)) attempt.completed = true;
         return result;
@@ -54,12 +70,30 @@ public final class ResonanceService {
         if (carrier == null) return;
         var context = ResonanceContract.resolve(owner, carrier, ContractCarrierData.getBindingId(carrier));
         if (context == null || cost <= 0 || ContractBaubleEffects.hasWaiver(context)) return;
-        var data = context.data(); data.reduceResonance(cost); context.write(data);
+        int before = pool(context).current(context);
+        if (before >= 0 && pool(context).set(context, before - cost)) sync(context);
     }
     public static boolean recover(Player owner, ItemStack carrier, String binding, int amount) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
         if (context == null || amount <= 0) return false;
-        var data = context.data(); data.addResonance(Math.min(amount, maximum() - data.getResonance())); context.write(data); return true;
+        int before = pool(context).current(context);
+        if (before < 0 || !pool(context).set(context, (int) Math.min(maximum(), (long) before + amount))) return false;
+        sync(context);
+        return true;
+    }
+    /** Legacy gameplay events still specify costs in the old resource units. */
+    public static boolean recoverLegacy(Player owner, ItemStack carrier, String binding, int amount) {
+        return recover(owner, carrier, binding, legacyUnits(amount));
+    }
+    public static void drainLegacy(Player owner, ItemStack carrier, int amount) {
+        drain(owner, carrier, legacyUnits(amount));
+    }
+    /** Explicit operator/test adjustment; never changes the historical migration source. */
+    public static boolean set(Player owner, ItemStack carrier, String binding, int amount) {
+        var context = ResonanceContract.resolve(owner, carrier, binding);
+        if (context == null || !pool(context).set(context, amount)) return false;
+        sync(context);
+        return true;
     }
     public static ResonanceActivity activity(Player owner, ItemStack carrier, String binding) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
