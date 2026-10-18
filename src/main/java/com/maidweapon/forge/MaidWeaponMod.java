@@ -83,6 +83,7 @@ public final class MaidWeaponMod {
     com.maidweapon.forge.network.ContractCompanionNetwork.register();
     com.maidweapon.forge.network.ContractMasteryNetwork.register();
     com.maidweapon.forge.network.ResonanceNetwork.register();
+    com.maidweapon.forge.network.DanmakuNetwork.register();
     com.maidweapon.forge.api.ContractCombatCreditResolver.register(
         "maid_weapon:sword_actor",
         actor ->
