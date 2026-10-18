@@ -58,18 +58,20 @@ final class ContractMultiCompanionValidation {
             check(MaidInfusion.containsMaid(c), "third automatic summon respects the same limit");
             owner.setHealth(20); ContractRulesConfig.AUTO_MANIFEST.set(false);
             for (var carrier : new ItemStack[]{a, b}) {
-                var data = MaidInfusion.data(carrier); data.setResonance(10);
-                ContractCarrierData.setMaidData(carrier, data);
+                check(com.maidweapon.forge.system.resonance.ResonanceService.set(owner, carrier,
+                        ContractCarrierData.getBindingId(carrier), 50), "two independent pools seeded");
             }
             var reward = com.maidweapon.forge.event.MaidBondCombatHandler.class.getDeclaredMethod("rewardCooperation",
                     net.minecraft.world.entity.player.Player.class, long.class, ItemStack.class);
             reward.setAccessible(true);
             reward.invoke(null, owner, level.getGameTime(), a); reward.invoke(null, owner, level.getGameTime(), b);
-            int expected = 10 + com.maidweapon.common.MaidWeaponConfig.RESONANCE_COOP_REWARD.get();
-            check(MaidInfusion.data(a).getResonance() == expected && MaidInfusion.data(b).getResonance() == expected,
+            int expected = 50 + com.maidweapon.forge.system.resonance.ResonanceService.legacyUnits(
+                    com.maidweapon.common.MaidWeaponConfig.RESONANCE_COOP_REWARD.get());
+            check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, a, ContractCarrierData.getBindingId(a)) == expected
+                    && com.maidweapon.forge.system.resonance.ResonanceService.current(owner, b, ContractCarrierData.getBindingId(b)) == expected,
                     "cooperative rewards do not steal another contract's cooldown");
             reward.invoke(null, owner, level.getGameTime(), a);
-            check(MaidInfusion.data(a).getResonance() == expected, "same-contract cooperation remains throttled");
+            check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, a, ContractCarrierData.getBindingId(a)) == expected, "same-contract cooperation remains throttled");
             owner.getInventory().setItem(3, a.copy());
             check(ContractCompanionService.canFollow(owner, a), "duplicate carrier does not consume another slot");
             owner.getInventory().setItem(3, ItemStack.EMPTY);
