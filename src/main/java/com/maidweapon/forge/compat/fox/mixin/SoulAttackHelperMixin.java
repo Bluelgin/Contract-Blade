@@ -13,7 +13,7 @@ public abstract class SoulAttackHelperMixin {
  @WrapMethod(method="attack(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/Entity;F)V",remap=false)
  private static void cb$calculation(LivingEntity actor,Entity target,float ratio,Operation<Void> original){try(var origin=NativeAttackOrigin.open(actor,"SLASHBLADE_ATTACK_HELPER")){original.call(actor,target,ratio);}}
  @WrapOperation(method="attack",at=@At(value="INVOKE",target="Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"),require=0)
- private static boolean cb$hurt(Entity target,DamageSource source,float amount,Operation<Boolean> original){try(var origin=NativeAttackOrigin.narrow(source,target)){return original.call(target,source,amount);}}
+ private static boolean cb$hurt(Entity target,DamageSource source,float amount,Operation<Boolean> original){try(var origin=NativeAttackOrigin.narrow(source,target,amount)){return original.call(target,source,amount);}}
  @WrapOperation(method="attack",at=@At(value="INVOKE",target="Lnet/minecraft/world/entity/Entity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"),require=0)
- private static boolean cb$hurtSrg(Entity target,DamageSource source,float amount,Operation<Boolean> original){try(var origin=NativeAttackOrigin.narrow(source,target)){return original.call(target,source,amount);}}
+ private static boolean cb$hurtSrg(Entity target,DamageSource source,float amount,Operation<Boolean> original){try(var origin=NativeAttackOrigin.narrow(source,target,amount)){return original.call(target,source,amount);}}
 }

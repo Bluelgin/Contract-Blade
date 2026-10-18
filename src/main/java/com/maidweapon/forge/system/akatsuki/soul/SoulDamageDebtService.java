@@ -119,6 +119,11 @@ public final class SoulDamageDebtService {
     return !entries(p, t).isEmpty();
   }
 
+  /** A failed constellation cannot reclaim the same native damage receipt. */
+  public static void forfeitAerial(ServerPlayer p, LivingEntity t) {
+    for (var e : entries(p, t)) e.debt.forfeitAerial();
+  }
+
   public static double available(ServerPlayer p, LivingEntity t, boolean aerial) {
     if (!aerial && now(p) < state(p.getServer()).ready.getOrDefault(t.getUUID(), 0L)) return 0;
     double rate =

@@ -9,7 +9,7 @@
         "maid_weapon:akatsuki_garden"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.1,
+        "maid_weapon:soul_recovery_rate": 0.02,
         "maid_weapon:soul_aerial_rate": 0,
         "maid_weapon:anchor_lifetime_bonus": 0,
         "maid_weapon:precision_tolerance": 0.04,
@@ -17,7 +17,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.1,
         "maid_weapon:space_cut_level_cap": 2,
-        "maid_weapon:resonance_hit_ratio": 0.12
+        "maid_weapon:resonance_hit_ratio": 0
       }
     },
     {
@@ -26,7 +26,7 @@
         "maid_weapon:akatsuki_swords"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.12,
+        "maid_weapon:soul_recovery_rate": 0.03,
         "maid_weapon:soul_aerial_rate": 0.3,
         "maid_weapon:anchor_lifetime_bonus": 0,
         "maid_weapon:precision_tolerance": 0.04,
@@ -34,7 +34,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.13,
         "maid_weapon:space_cut_level_cap": 3,
-        "maid_weapon:resonance_hit_ratio": 0.16
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -43,7 +43,7 @@
         "maid_weapon:akatsuki_ring"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.15,
+        "maid_weapon:soul_recovery_rate": 0.04,
         "maid_weapon:soul_aerial_rate": 0.35,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.04,
@@ -51,7 +51,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.17,
         "maid_weapon:space_cut_level_cap": 5,
-        "maid_weapon:resonance_hit_ratio": 0.2
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -60,7 +60,7 @@
         "maid_weapon:akatsuki_tracking"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.18,
+        "maid_weapon:soul_recovery_rate": 0.05,
         "maid_weapon:soul_aerial_rate": 0.4,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
@@ -68,7 +68,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.21,
         "maid_weapon:space_cut_level_cap": 8,
-        "maid_weapon:resonance_hit_ratio": 0.24
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -77,7 +77,7 @@
         "maid_weapon:akatsuki_adaptation"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.22,
+        "maid_weapon:soul_recovery_rate": 0.06,
         "maid_weapon:soul_aerial_rate": 0.5,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
@@ -85,7 +85,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.25,
         "maid_weapon:space_cut_level_cap": 12,
-        "maid_weapon:resonance_hit_ratio": 0.28
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -94,7 +94,7 @@
         "maid_weapon:akatsuki_counter"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.26,
+        "maid_weapon:soul_recovery_rate": 0.07,
         "maid_weapon:soul_aerial_rate": 0.6,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
@@ -102,7 +102,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.3,
         "maid_weapon:space_cut_level_cap": 20,
-        "maid_weapon:resonance_hit_ratio": 0.32
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -111,7 +111,7 @@
         "maid_weapon:akatsuki_chain"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.3,
+        "maid_weapon:soul_recovery_rate": 0.08,
         "maid_weapon:soul_aerial_rate": 0.7,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
@@ -119,7 +119,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.35,
         "maid_weapon:space_cut_level_cap": 30,
-        "maid_weapon:resonance_hit_ratio": 0.36
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -128,7 +128,7 @@
         "maid_weapon:akatsuki_cloak"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.35,
+        "maid_weapon:soul_recovery_rate": 0.09,
         "maid_weapon:soul_aerial_rate": 0.8,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
@@ -136,7 +136,7 @@
         "maid_weapon:debt_lifetime": 120,
         "maid_weapon:space_cut_multiplier": 0.4,
         "maid_weapon:space_cut_level_cap": 50,
-        "maid_weapon:resonance_hit_ratio": 0.4
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -145,7 +145,7 @@
         "maid_weapon:akatsuki_rain"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.4,
+        "maid_weapon:soul_recovery_rate": 0.1,
         "maid_weapon:soul_aerial_rate": 0.9,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,
@@ -153,7 +153,7 @@
         "maid_weapon:debt_lifetime": 200,
         "maid_weapon:space_cut_multiplier": 0.46,
         "maid_weapon:space_cut_level_cap": 80,
-        "maid_weapon:resonance_hit_ratio": 0.44
+        "maid_weapon:resonance_hit_ratio": 0.5
       }
     },
     {
@@ -162,7 +162,7 @@
         "maid_weapon:akatsuki_complete"
       ],
       "parameters": {
-        "maid_weapon:soul_recovery_rate": 0.45,
+        "maid_weapon:soul_recovery_rate": 0.12,
         "maid_weapon:soul_aerial_rate": 1,
         "maid_weapon:anchor_lifetime_bonus": 10,
         "maid_weapon:precision_tolerance": 0.12,

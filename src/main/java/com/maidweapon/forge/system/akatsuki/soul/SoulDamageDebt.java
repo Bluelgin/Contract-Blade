@@ -33,6 +33,13 @@ public final class SoulDamageDebt {
     return n;
   }
 
+  /** One failed star-chain permanently forfeits aerial recovery from this receipt.
+   *  The ordinary small cut claim remains independent.
+   */
+  public void forfeitAerial() {
+    aerialClaimed = true;
+  }
+
   public void settle(double allocation, double actual, boolean dispatched) {
     if (!Double.isFinite(allocation)
         || !Double.isFinite(actual)

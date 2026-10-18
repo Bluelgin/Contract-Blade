@@ -9,6 +9,7 @@
     "SoulCloudTimerMixin",
     "SoulApostleTimerMixin",
     "ObservationCatBaseMixin",
+    "ObservationCatInternalBaseMixin",
     "ObservationIgnisMixin",
     "ObservationLegendaryBaseMixin",
     "ObservationCloudMixin",

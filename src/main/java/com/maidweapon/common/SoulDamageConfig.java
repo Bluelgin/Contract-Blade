@@ -75,8 +75,10 @@ public final class SoulDamageConfig {
     PLAYER_WINDOW = b.comment("Deprecated compatibility key; no longer limits live Akatsuki HP.")
         .defineInRange("playerPer200TicksHP", 2048d, 1, 65536);
     CUT_GAP = b.defineInRange("sharedTargetSpaceCutGapTicks", 4, 1, 40);
-    BURST_MULTIPLIER = b.defineInRange("soulBurstAttackMultiplier", 5d, 1, 32);
-    BURST_HEALTH_FRACTION = b.defineInRange("soulBurstMaxHealthFraction", .005, 0, .05);
+    BURST_MULTIPLIER = b.comment("Deprecated: no longer adds independent soul-core damage.")
+        .defineInRange("soulBurstAttackMultiplier", 5d, 1, 32);
+    BURST_HEALTH_FRACTION = b.comment("Deprecated: no longer adds independent soul-core damage.")
+        .defineInRange("soulBurstMaxHealthFraction", .005, 0, .05);
     BURST_CEILING = b.comment("Deprecated compatibility key; no longer limits live Akatsuki HP.")
         .defineInRange("soulBurstTotalSafetyHP", 512d, 1, 8192);
     BURST_STAGES = b.defineInRange("soulBurstStages", 4, 3, 5);
