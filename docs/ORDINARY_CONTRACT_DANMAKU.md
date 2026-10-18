@@ -45,10 +45,17 @@ The existing resonance resource balance and recovery remain unchanged.
 
 ## Art
 
-A concept image was generated first to establish the crimson bow, ofuda paper,
-warm brass fitting and light pink sakura details. The committed SVG is a compact
-manual recreation with legible icon silhouette. Gameplay uses its exported
-32×32 transparent PNG, not a downscaled copy of the concept sheet.
+The final A design, **朱樱纸御札**, is authored entirely with SVG vector paths:
+cream paper, a crimson knot, a gold bell, a sakura crest and a restrained tassel.
+It replaces the original item icon. No generated-image files or bitmap layers
+are used to produce the art. The editor source is `art/danmaku/manka_talisman.svg`.
+
+The game sprite is a native 32x1280 PNG strip (40 frames of 32x32), played at
+2 ticks/frame without interpolation via `manka_talisman.png.mcmeta`.
+Motion consists of seal breathing, bell/knot glints, slow tassel motion and petal drift.
+To regenerate the PNG strip from SVG, install `Pillow` and `CairoSVG`,
+then run `python art/danmaku/export_manka_animation.py`.
+The exporter quantizes the final 32px sprite to a compact 256-color indexed PNG.
 
 ## Validation
 
