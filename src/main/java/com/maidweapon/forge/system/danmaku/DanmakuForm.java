@@ -1,10 +1,12 @@
 package com.maidweapon.forge.system.danmaku;
 
-/** Four distinct roles; cooldowns deliberately separate from projectile count. */
+/**
+ * Traditional ability cooldowns are removed. Network input is rate-limited by
+ * one server tick, server resonance and projectile/queue caps independently.
+ */
 public enum DanmakuForm {
-    NEEDLE(5, 120), FLOWER(5, 180), GUARD(5, 320), FANTASY(10, 800);
-    private final int requiredLevel;
-    private final int cooldownTicks;
+    NEEDLE(5, 0), FLOWER(5, 0), GUARD(5, 0), FANTASY(10, 0);
+    private final int requiredLevel, cooldownTicks;
     DanmakuForm(int requiredLevel, int cooldownTicks) {
         this.requiredLevel = requiredLevel;
         this.cooldownTicks = cooldownTicks;

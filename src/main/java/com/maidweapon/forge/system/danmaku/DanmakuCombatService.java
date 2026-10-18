@@ -2,6 +2,7 @@ package com.maidweapon.forge.system.danmaku;
 
 import com.maidweapon.forge.compat.tlm.danmaku.ContractDanmakuProjectile;
 import com.maidweapon.forge.compat.tlm.danmaku.DanmakuProjectilePatterns;
+import com.maidweapon.forge.compat.tlm.danmaku.DanmakuShotQueue;
 import com.maidweapon.forge.system.mastery.ContractMasteryService;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
@@ -16,6 +17,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,7 +27,9 @@ import java.util.*;
 /** Ordinary-maid support coordinator; all actual damage still requires projectile collision. */
 @Mod.EventBusSubscriber
 public final class DanmakuCombatService {
-    private static final Map<String, Long> COOLDOWNS = new HashMap<>();
+    // No ability cooldowns: only a one-tick anti-duplicate network/action gate.
+    private static final Map<UUID, Long> LAST_CAST_TICK = new HashMap<>();
+    private static final Map<UUID, Long> LAST_ATTACK_TICK = new HashMap<>();
     private record Chain(UUID target, int count, long time) { }
     private static final Map<String, Chain> CHAINS = new HashMap<>();
     // Delaying actual follow-up bullets until ordinary melee immunity subsides avoids
@@ -74,12 +78,6 @@ public final class DanmakuCombatService {
 
         int mastery = ContractMasteryService.getLevel(player);
         long now = player.level().getGameTime();
-        String chainKey = key(player, contract.maid(), "chain");
-        Chain previous = CHAINS.get(chainKey);
-        int count = previous != null && previous.target.equals(victim.getUUID())
-                && now >= previous.time && now - previous.time <= 100
-                ? Math.min(3, previous.count + 1) : 1;
-        CHAINS.put(chainKey, new Chain(victim.getUUID(), count, now));
 
         // A player landing a real sword hit during the ritual empowers only its final wave.
         String prefix = player.getUUID() + ":" + contract.maid() + ":";
@@ -94,15 +92,55 @@ public final class DanmakuCombatService {
             }
         }
 
-        String autoKey = key(player, contract.maid(), "auto");
-        if (!ready(autoKey, now)) return;
-        boolean climax = count >= 3;
-        var profile = DanmakuGrowth.auto(mastery, climax);
-        COOLDOWNS.put(autoKey, now + profile.cooldownTicks());
-        AUTOS.put(key(player, contract.maid(), "queued_auto"),
-                new PendingAuto(contract.maid(), player.level().dimension(),
-                        victim.getUUID(), mastery, event.getAmount(), climax, now + 11));
-        if (climax) CHAINS.put(chainKey, new Chain(victim.getUUID(), 0, now));
+        queueAuto(player, contract.maid(), victim, event.getAmount(), mastery, now);
+    }
+
+    /** Actual vanilla left click is observed before hurt(), including blocked damage. */
+    @SubscribeEvent public static void attackEntity(AttackEntityEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)
+                || !(event.getTarget() instanceof LivingEntity victim)
+                || player.level().isClientSide
+                || !ContractDanmakuProjectile.safeTarget(player, victim)) return;
+        var context = DanmakuEligibility.context(player);
+        if (context == null) return;
+        long now = player.level().getGameTime();
+        int mastery = ContractMasteryService.getLevel(player);
+        queueAuto(player, context.maid(), victim,
+                (float)Math.max(1.0, player.getAttributeValue(Attributes.ATTACK_DAMAGE)),
+                mastery, now);
+    }
+
+    /** Optional empty-air normal attack from a client left-click packet. */
+    public static void airSwing(ServerPlayer player) {
+        if (player == null || !player.isAlive()) return;
+        var context = DanmakuEligibility.context(player);
+        if (context == null) return;
+        long now = player.level().getGameTime();
+        if (LAST_ATTACK_TICK.getOrDefault(player.getUUID(), -1L) == now) return;
+        // Air swings can fire forward, but still obey exactly the same entity budget.
+        int mastery = ContractMasteryService.getLevel(player);
+        if (!DanmakuShotQueue.canCast(player, DanmakuGrowth.auto(mastery).count())) return;
+        LAST_ATTACK_TICK.put(player.getUUID(), now);
+        DanmakuProjectilePatterns.auto(player, null, mastery,
+                (float)Math.max(1.0, player.getAttributeValue(Attributes.ATTACK_DAMAGE)), false);
+    }
+
+    private static void queueAuto(ServerPlayer player, String maid, LivingEntity victim,
+                                  float observedDamage, int mastery, long now) {
+        if (LAST_ATTACK_TICK.getOrDefault(player.getUUID(), -1L) == now
+                || AUTOS.size() >= 128) return;
+        String chainKey = key(player, maid, "chain");
+        Chain previous = CHAINS.get(chainKey);
+        int count = previous != null && previous.target.equals(victim.getUUID())
+                && now >= previous.time && now - previous.time <= 100
+                ? Math.min(3, previous.count + 1) : 1;
+        boolean climax = mastery >= 8 && count >= 3;
+        if (!DanmakuShotQueue.canCast(player, DanmakuGrowth.auto(mastery, climax).count())) return;
+        LAST_ATTACK_TICK.put(player.getUUID(), now);
+        CHAINS.put(chainKey, new Chain(victim.getUUID(), climax ? 0 : count, now));
+        AUTOS.put(key(player, maid, "auto_" + UUID.randomUUID()),
+                new PendingAuto(maid, player.level().dimension(), victim.getUUID(),
+                        mastery, observedDamage, climax, now + 2));
     }
 
     /** Cast packets only indicate a form. Every right is re-established on the server. */
@@ -113,11 +151,18 @@ public final class DanmakuCombatService {
         int level = ContractMasteryService.getLevel(player);
         if (!form.unlocked(level)) return false;
         long now = player.level().getGameTime();
-        String cooldownKey = key(player, contract.maid(), "spell_" + form.name());
-        if (!ready(cooldownKey, now)) return false;
+        if (LAST_CAST_TICK.getOrDefault(player.getUUID(), -1L) == now) return false;
+        long outstanding = PENDING.keySet().stream()
+                .filter(k -> k.startsWith(player.getUUID() + ":")).count();
+        if (outstanding >= 6 || GUARDS.size() > 128) return false;
+        if (form != DanmakuForm.GUARD && !DanmakuShotQueue.canCast(player,
+                DanmakuGrowth.maxProjectilesPerCast(form, level))) return false;
+        // Charge the verified player/maid contract exactly once BEFORE any effect.
+        if (!DanmakuResonanceCostPolicy.charge(player, player.getMainHandItem(),
+                contract.binding(), form)) return false;
+        LAST_CAST_TICK.put(player.getUUID(), now);
         float basis = (float) Math.max(1, player.getAttributeValue(Attributes.ATTACK_DAMAGE));
         LivingEntity target = acquireTarget(player);
-        COOLDOWNS.put(cooldownKey, now + form.cooldownTicks());
 
         if (form == DanmakuForm.GUARD) {
             GUARDS.put(player.getUUID(), new GuardSession(contract.maid(), player.level().dimension(),
@@ -125,7 +170,7 @@ public final class DanmakuCombatService {
         } else {
             DanmakuProjectilePatterns.wave(player, form, target, level, basis, 0, false);
             if (form == DanmakuForm.FANTASY || form == DanmakuForm.NEEDLE || form == DanmakuForm.FLOWER) {
-                PENDING.put(key(player, contract.maid(), "wave_" + form.name()),
+                PENDING.put(key(player, contract.maid(), "wave_" + form.name() + "_" + UUID.randomUUID()),
                         new PendingSpell(contract.maid(), player.level().dimension(), form,
                                 target == null ? null : target.getUUID(),
                                 level, basis, 1, now + DanmakuGrowth.waveSpacing(form), false));
@@ -137,7 +182,10 @@ public final class DanmakuCombatService {
     @SubscribeEvent public static void tick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
         long now = player.level().getGameTime();
-        if (player.tickCount % 40 == 0) DanmakuHitBudget.cleanup(now);
+        if (player.tickCount % 40 == 0) {
+            DanmakuHitBudget.cleanup(now);
+            DanmakuHitPolicy.cleanup(now);
+        }
         var context = DanmakuEligibility.context(player);
         String prefix = player.getUUID() + ":";
 
@@ -174,7 +222,7 @@ public final class DanmakuCombatService {
             LivingEntity target = targetById(player, wave.target);
             DanmakuProjectilePatterns.wave(player, wave.form, target, wave.mastery,
                     wave.basis, wave.nextWave, wave.synchronizedStrike);
-            if (wave.nextWave >= (wave.form == DanmakuForm.FANTASY ? 2 : 1)) {
+            if (wave.nextWave >= (wave.form == DanmakuForm.FANTASY ? 3 : 1)) {
                 spells.remove();
             } else {
                 entry.setValue(new PendingSpell(wave.maid, wave.dimension, wave.form, wave.target,
@@ -249,25 +297,24 @@ public final class DanmakuCombatService {
         }
         return best;
     }
-    private static boolean ready(String key, long now) {
-        Long end = COOLDOWNS.get(key);
-        return end == null || now >= end;
-    }
     private static String key(ServerPlayer player, String maid, String suffix) {
         return player.getUUID() + ":" + maid + ":" + suffix;
     }
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID id = event.getEntity().getUUID();
         String prefix = id + ":";
-        COOLDOWNS.keySet().removeIf(k -> k.startsWith(prefix));
+        LAST_CAST_TICK.remove(id);
+        LAST_ATTACK_TICK.remove(id);
+        DanmakuShotQueue.remove(id);
         CHAINS.keySet().removeIf(k -> k.startsWith(prefix));
         AUTOS.keySet().removeIf(k -> k.startsWith(prefix));
         PENDING.keySet().removeIf(k -> k.startsWith(prefix));
         GUARDS.remove(id);
     }
     @SubscribeEvent public static void stop(ServerStoppedEvent event) {
-        COOLDOWNS.clear(); CHAINS.clear(); AUTOS.clear(); PENDING.clear(); GUARDS.clear();
-        DanmakuHitBudget.clear();
+        LAST_CAST_TICK.clear(); LAST_ATTACK_TICK.clear();
+        CHAINS.clear(); AUTOS.clear(); PENDING.clear(); GUARDS.clear();
+        DanmakuHitBudget.clear(); DanmakuHitPolicy.clear();
     }
     private DanmakuCombatService() { }
 }

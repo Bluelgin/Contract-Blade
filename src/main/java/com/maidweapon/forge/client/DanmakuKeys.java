@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -42,6 +43,16 @@ public final class DanmakuKeys {
                 pressed = false; ticks = 0;
                 DanmakuNetwork.cast(DanmakuClientState.selected());
             }
+        }
+
+        /**
+         * Air attacks do not generate a vanilla server-side AttackEntityEvent.
+         * The packet contains no target or damage and is always authenticated by the server.
+         */
+        @SubscribeEvent public static void emptyAirAttack(PlayerInteractEvent.LeftClickEmpty event) {
+            Minecraft client = Minecraft.getInstance();
+            if (client.screen == null && event.getEntity() == client.player
+                    && DanmakuClientState.available()) DanmakuNetwork.airSwing();
         }
 
         /** Pick-block stays vanilla unless this exact rebindable talisman key is active. */

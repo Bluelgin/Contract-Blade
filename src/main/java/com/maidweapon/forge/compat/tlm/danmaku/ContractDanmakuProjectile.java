@@ -1,6 +1,8 @@
 package com.maidweapon.forge.compat.tlm.danmaku;
 
 import com.maidweapon.forge.system.danmaku.DanmakuHitBudget;
+import com.maidweapon.forge.system.danmaku.DanmakuHitPolicy;
+import com.maidweapon.forge.system.danmaku.DanmakuEligibility;
 import com.github.tartaricacid.touhoulittlemaid.entity.projectile.EntityDanmaku;
 import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
 import net.minecraft.server.level.ServerLevel;
@@ -44,23 +46,33 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
     }
 
     @Override protected void onHitEntity(EntityHitResult hit) {
-        // Budget records exist on the logical server only; never discard client
-        // render entities because the client has no authority to settle a volley.
         if (level().isClientSide) return;
         var shooter = getOwner();
-        if (!(shooter instanceof Player player) || !(hit.getEntity() instanceof LivingEntity victim)
-                || !safeTarget(player, victim)) {
+        if (!(shooter instanceof net.minecraft.server.level.ServerPlayer player)
+                || !(hit.getEntity() instanceof LivingEntity victim)
+                || !safeTarget(player, victim)
+                || DanmakuEligibility.context(player) == null) {
             discard();
             return;
         }
-        if (volleyId != null) {
-            float award = DanmakuHitBudget.claim(volleyId, player.getUUID(),
-                    victim.getUUID(), level().getGameTime());
-            if (award <= 0) { discard(); return; }
-            setDamage(award);
+
+        long tick = level().getGameTime();
+        if (volleyId == null || !DanmakuHitPolicy.mayHit(victim.getUUID(), tick)) {
+            discard();
+            return;
         }
-        // Never write health directly or ignore target defenses, invulnerability or phases.
-        super.onHitEntity(hit);
+        float damage = DanmakuHitBudget.claim(volleyId, player.getUUID(), victim.getUUID(), tick);
+        if (damage <= 0) { discard(); return; }
+        setDamage(damage);
+        // This affects only the short duration of our own native projectile hurt()
+        // call, never the mob's global hurt state or other mods' incoming attacks.
+        DanmakuHitPolicy.record(victim.getUUID(), tick);
+        int existingFrames = DanmakuHitPolicy.temporarilyRelaxVanillaFrames(victim);
+        try {
+            super.onHitEntity(hit);
+        } finally {
+            DanmakuHitPolicy.restoreFrames(victim, existingFrames);
+        }
     }
 
     public static boolean safeTarget(Player owner, LivingEntity target) {

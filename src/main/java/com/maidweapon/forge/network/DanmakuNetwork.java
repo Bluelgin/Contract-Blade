@@ -10,12 +10,13 @@ import java.util.*;
 
 /**
  * Client transmits selected spell ID only. The server resolves the equipped
- * contract, native bauble, mastery, target, cooldown and damage itself.
+ * contract, native bauble, mastery, target, resonance payment, performance cap and damage itself.
  */
 public final class DanmakuNetwork {
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation("maid_weapon:danmaku"), () -> "1", "1"::equals, "1"::equals);
     public record Cast(int form) { }
+    public record AirSwing() { }
     public record Eligibility(String binding, boolean enabled, int mastery) { }
     private static final Map<UUID, Eligibility> LAST = new HashMap<>();
     private static final Map<UUID, Long> LAST_INPUT = new HashMap<>();
@@ -37,6 +38,18 @@ public final class DanmakuNetwork {
                     }
                     ctx.setPacketHandled(true);
                 }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        // Un-targeted left clicks are client-only in vanilla; authority, item,
+        // funding and one-per-tick physical budget are all rechecked server-side.
+        CHANNEL.registerMessage(2, AirSwing.class,
+                (packet, buf) -> { },
+                buf -> new AirSwing(),
+                (packet, context) -> {
+                    var ctx = context.get();
+                    ServerPlayer sender = ctx.getSender();
+                    if (sender != null)
+                        ctx.enqueueWork(() -> DanmakuCombatService.airSwing(sender));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(1, Eligibility.class,
                 (packet, buf) -> {
                     buf.writeUtf(packet.binding(), 48);
@@ -52,6 +65,7 @@ public final class DanmakuNetwork {
                     ctx.setPacketHandled(true);
                 }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
+    public static void airSwing() { CHANNEL.sendToServer(new AirSwing()); }
     public static void cast(DanmakuForm form) {
         if (form != null) CHANNEL.sendToServer(new Cast(form.ordinal()));
     }

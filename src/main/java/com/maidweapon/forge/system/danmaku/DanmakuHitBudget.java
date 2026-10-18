@@ -3,43 +3,42 @@ package com.maidweapon.forge.system.danmaku;
 import java.util.*;
 
 /**
- * Server-only, actual-hit volley settlement. A volley may pay each permitted target
- * once: many projectiles cannot multiply its intended damage. No damage is caused
- * here; the hitting TLM projectile still uses its normal hurt path.
+ * One server-owned array budget: each *different* real projectile collision can
+ * pay its per-shot amount, up to N shots per target and a bounded number of targets.
+ * Ordinary hurt/armor/boss protections are handled by the native projectile itself.
  */
 public final class DanmakuHitBudget {
-    private record Volley(UUID owner, UUID lock, float amount, int targetLimit,
-                          long expiresAt, Set<UUID> paid) { }
+    private record Volley(UUID owner, UUID lock, float each, int hitsPerTarget,
+                          int maxTargets, long expiry, Map<UUID, Integer> hits) { }
     private static final Map<UUID, Volley> ACTIVE = new LinkedHashMap<>();
-    private static final int MAX_ACTIVE = 256;
+    private static final int MAX_VOLLEYS = 512;
 
-    public static UUID open(UUID owner, UUID lockedTarget, float damage,
-                            int targets, long now, int lifetime) {
-        if (owner == null || !Float.isFinite(damage) || damage <= 0
-                || targets < 1 || targets > 4 || lifetime < 1 || lifetime > 120) return null;
+    public static UUID open(UUID owner, UUID lockedTarget, float each, int shots,
+                            int maxTargets, long now, int lifetime) {
+        if (owner == null || !Float.isFinite(each) || each <= 0 ||
+                shots < 1 || shots > 64 || maxTargets < 1 || maxTargets > 3 ||
+                lifetime < 1 || lifetime > 120) return null;
         cleanup(now);
-        while (ACTIVE.size() >= MAX_ACTIVE) ACTIVE.remove(ACTIVE.keySet().iterator().next());
+        while (ACTIVE.size() >= MAX_VOLLEYS) ACTIVE.remove(ACTIVE.keySet().iterator().next());
         UUID id = UUID.randomUUID();
-        ACTIVE.put(id, new Volley(owner, lockedTarget, damage, targets,
-                now + lifetime, new HashSet<>()));
+        ACTIVE.put(id, new Volley(owner, lockedTarget, each, shots, maxTargets,
+                now + lifetime, new HashMap<>()));
         return id;
     }
 
-    /** Called exclusively after a real safe projectile collision. */
-    public static float claim(UUID id, UUID owner, UUID victim, long now) {
-        Volley volley = ACTIVE.get(id);
-        if (volley == null || now > volley.expiresAt || !volley.owner.equals(owner)
-                || victim == null || volley.lock != null && !volley.lock.equals(victim)
-                || volley.paid.contains(victim) || volley.paid.size() >= volley.targetLimit)
-            return 0;
-        volley.paid.add(victim);
-        if (volley.paid.size() >= volley.targetLimit) ACTIVE.remove(id);
-        return volley.amount;
+    /** Never duplicates per-shot budget or pays a missed/unauthorized projectile. */
+    public static float claim(UUID volleyId, UUID owner, UUID victim, long now) {
+        Volley volley = ACTIVE.get(volleyId);
+        if (volley == null || now > volley.expiry || !volley.owner.equals(owner)
+                || victim == null || volley.lock != null && !volley.lock.equals(victim)) return 0;
+        Integer previous = volley.hits.get(victim);
+        if (previous == null && volley.hits.size() >= volley.maxTargets) return 0;
+        if (previous != null && previous >= volley.hitsPerTarget) return 0;
+        volley.hits.put(victim, previous == null ? 1 : previous + 1);
+        return volley.each;
     }
 
-    public static void cleanup(long now) {
-        ACTIVE.entrySet().removeIf(e -> now > e.getValue().expiresAt);
-    }
+    public static void cleanup(long now) { ACTIVE.entrySet().removeIf(e -> now > e.getValue().expiry); }
     public static void clear() { ACTIVE.clear(); }
     private DanmakuHitBudget() { }
 }

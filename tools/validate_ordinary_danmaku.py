@@ -25,8 +25,16 @@ assert "ResonanceContract.resolve" in policy and "FoxSpiritState.hasResident" in
 assert "Effect.DANMAKU_ART" in policy
 assert "ContractMasteryService.getLevel" in combat
 assert "getDirectEntity()" in combat and "LivingDamageEvent" in combat
-assert "resonanceCost(DanmakuForm form" in growth and "return 0;" in growth
-assert "ResonanceService.pay(" not in combat and "ResonanceService.drain(" not in combat
+assert "resonanceCost(DanmakuForm form" in growth and "DanmakuResonanceCostPolicy.cost(form)" in growth
+assert "DanmakuResonanceCostPolicy.charge(" in combat
+assert "ResonanceService.drain(" not in combat
+assert "ResonanceService.pay(" in source("system/danmaku/DanmakuResonanceCostPolicy.java")
+assert "MAX_ACTIVE_PER_OWNER" in source("system/danmaku/DanmakuPerformanceBudget.java")
+assert "MIN_TICKS = 2" in source("system/danmaku/DanmakuHitPolicy.java")
+assert "PlayerInteractEvent.LeftClickEmpty" in keys
+assert "AttackEntityEvent" in combat
+assert "DanmakuShotQueue" in source("compat/tlm/danmaku/DanmakuProjectilePatterns.java")
+assert "DanmakuHitPolicy.mayHit" in projectile
 assert "safeTarget" in projectile and "super.onHitEntity" in projectile
 assert "getSender()" in network and "enqueueWork" in network and "PLAY_TO_SERVER" in network
 assert "KeyMapping" in keys and "GLFW_MOUSE_BUTTON_MIDDLE" in keys
@@ -86,4 +94,4 @@ for locale in ("zh_cn", "en_us"):
     assert text["item.maid_weapon.manka_talisman"]
     for form in ("needle", "flower", "guard", "fantasy"):
         assert text[f"maid_weapon.danmaku.form.{form}"]
-print("ORDINARY_DANMAKU_STATIC_PASS: independent tiers, no resonance cost, native baubles, inputs and assets")
+print("ORDINARY_DANMAKU_STATIC_PASS: native baubles, per-shot damage, 2-tick spacing, resonance payment, inputs and assets")
