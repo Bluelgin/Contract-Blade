@@ -16,7 +16,7 @@ network = source("network/DanmakuNetwork.java")
 keys = source("client/DanmakuKeys.java")
 wheel = source("client/DanmakuWheelScreen.java")
 growth = source("system/danmaku/DanmakuGrowth.java")
-projectile = source("system/danmaku/ContractDanmakuProjectile.java")
+projectile = source("compat/tlm/danmaku/ContractDanmakuProjectile.java")
 
 assert "DANMAKU_ART" in effects
 assert "StoredMaidBaubleResolver.has" in effects

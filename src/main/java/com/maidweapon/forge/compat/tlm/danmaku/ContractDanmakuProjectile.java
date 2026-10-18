@@ -1,4 +1,7 @@
-package com.maidweapon.forge.system.danmaku;
+package com.maidweapon.forge.compat.tlm.danmaku;
+
+import com.maidweapon.forge.system.danmaku.DanmakuForm;
+import com.maidweapon.forge.system.danmaku.DanmakuGrowth;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.projectile.EntityDanmaku;
 import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
