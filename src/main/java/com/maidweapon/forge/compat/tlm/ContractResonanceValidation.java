@@ -127,7 +127,7 @@ public final class ContractResonanceValidation {
         com.maidweapon.common.ContractRulesConfig.POOL_MAX_RESONANCE.set(80);
         advance(a, 20); check(value(a, first) == 80
                 && first.getTag().getCompound("MaidData").getInt("ContractResonance") != 80, "lowered cap persisted");
-        com.maidweapon.common.ContractRulesConfig.MAX_RESONANCE.set(oldMaximum);
+        com.maidweapon.common.ContractRulesConfig.POOL_MAX_RESONANCE.set(oldMaximum);
         advance(a, 1); // one actual tick never pays elapsed/offline time
         check(value(a, first) <= 81, "no elapsed time catch-up");
         first.getTag().getCompound("MaidData").putInt("ContractSchema", 99);
