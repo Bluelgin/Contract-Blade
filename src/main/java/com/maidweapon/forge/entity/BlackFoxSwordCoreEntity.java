@@ -154,6 +154,17 @@ public final class BlackFoxSwordCoreEntity extends Entity {
         var level = (net.minecraft.server.level.ServerLevel)level();
         ServerPlayer player = owner == null ? null : level.getServer().getPlayerList().getPlayer(owner);
         if (player == null || !player.isAlive() || player.level() != level || credit(player) == null || tickCount >= BlackFoxSwordCoreTimeline.DURATION) { discard(); return; }
+        // An existing black-fox formation is maintained every five seconds, not
+        // charged for each native projectile or target hit.
+        if (tickCount % 100 == 0) {
+            var verified = credit(player);
+            if (verified == null || !com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.pay(
+                    player, verified.carrier(),
+                    com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.BLACK_UPKEEP)) {
+                discard();
+                return;
+            }
+        }
         if (positionMode() == PositionMode.OWNER_FOLLOW) {
             // Seven blocks is an invariant; horizontal lag gives inertia without dropping below tall bosses.
             Vec3 desired = player.position();

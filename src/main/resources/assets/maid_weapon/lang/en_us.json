@@ -511,11 +511,12 @@
   "maid_weapon.message.vein.skipped": "Awaken the preceding spirit-vein stage first.",
   "maid_weapon.message.vein.unsupported": "Your spirit vein cannot be awakened right now. The item was kept.",
   "maid_weapon.tooltip.resonance.waiting": "Resonance: syncing…",
+  "maid_weapon.fox.sa.resonance": "Not enough resonance to operate the Sealed Sword Core.",
   "item.maid_weapon.manka_talisman": "Manka Talisman",
   "maid_weapon.tooltip.manka_talisman.lore": "By a paper charm, a thousand blossoms answer your blade.",
-  "maid_weapon.tooltip.manka_talisman.effect": "Ordinary maids answer every eligible sword swing with independently damaging spell bullets",
+  "maid_weapon.tooltip.manka_talisman.effect": "Ordinary maid salvos emerge behind both shoulders; individual pellets use held-weapon attack damage",
   "maid_weapon.tooltip.manka_talisman.controls": "Contract Mastery Lv.5+: tap middle mouse to cast, hold to select a spell",
-  "maid_weapon.tooltip.manka_talisman.restriction": "Ordinary contracts only. Auto salvos are free; active forms cost resonance, with no fixed cooldown.",
+  "maid_weapon.tooltip.manka_talisman.restriction": "Ordinary contracts only. Auto salvos are free; spells cost resonance and have brief intervals.",
   "key.maid_weapon.danmaku": "Cast / Select Danmaku Spell",
   "maid_weapon.gui.danmaku.title": "Manka Talisman · Spell Forms",
   "maid_weapon.gui.danmaku.release": "Release to select · Tap again to cast",
@@ -524,6 +525,6 @@
   "maid_weapon.danmaku.form.guard": "Guardian Ring",
   "maid_weapon.danmaku.form.fantasy": "Fantasy Kaleidoscope",
   "patchouli.maid_weapon.entry.manka_talisman.name": "Manka Talisman: Ordinary Contract Spells",
-  "patchouli.maid_weapon.entry.manka_talisman.page.1": "Equip the Manka Talisman in an ordinary contracted maid's native bauble slot. Each eligible blade strike or empty swing calls companion spell bullets. Every spaced, valid hit independently deals ordinary damage. Innate sword spirits cannot use this ability.",
-  "patchouli.maid_weapon.entry.manka_talisman.page.2": "Needle, Flower and Guard unlock at Mastery Lv.5; Guard grows at Lv.6; Fantasy Kaleidoscope unlocks at Lv.10. Tap middle mouse to cast, hold ~0.3s to select, release to confirm. Active forms have no traditional cooldown and cost 8% / 14% / 22% / 45% of maximum resonance; automatic salvos are free."
+  "patchouli.maid_weapon.entry.manka_talisman.page.1": "Equip the Manka Talisman in an ordinary maid's bauble slot. Each eligible strike calls independently damaging companion shots from behind alternating shoulders (at least 5 ticks apart). Shots scale from the currently held weapon attack panel; innate sword spirits cannot use it.",
+  "patchouli.maid_weapon.entry.manka_talisman.page.2": "Needle, Flower and Guard unlock at Lv.5, Fantasy Kaleidoscope at Lv.10. Tap middle mouse to cast, hold ~0.3 seconds to select, then release to confirm. Spells cost 6% / 10% / 16% / 32% resonance with brief 8 / 12 / 10 / 20-tick intervals; automatic salvos are free."
 }

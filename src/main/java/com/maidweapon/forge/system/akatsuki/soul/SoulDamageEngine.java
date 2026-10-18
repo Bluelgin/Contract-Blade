@@ -113,6 +113,12 @@ public final class SoulDamageEngine {
       requested = SoulNormalCutPolicy.unknownPressure(
           requested, AkatsukiDomainGrowth.parameter(p, "soul_recovery_rate"));
     // No fixed HP ceiling. Unknown probes cannot spam every four ticks.
+    // Do not consume a scheduler slot when the current red-spirit pool cannot pay.
+    if (Double.isFinite(requested) && requested > 0
+        && !com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.affordable(
+            p, p.getMainHandItem(),
+            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT))
+      return null;
     double amount = Double.isFinite(requested)
         ? HITS.reserveCut(p.getUUID(), t.getUUID(), now(p),
             Math.min(requested, Float.MAX_VALUE),
@@ -120,6 +126,10 @@ public final class SoulDamageEngine {
                 : SoulDamageConfig.CUT_GAP.get())
         : 0;
     if (amount <= 0) return null;
+    if (!com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.pay(
+            p, p.getMainHandItem(),
+            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT))
+      return null;
     if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
     var reservation = SoulDamageDebtService.reserve(p, t, false, amount);
     if (reservation == null) return null;

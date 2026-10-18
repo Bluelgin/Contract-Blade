@@ -1,6 +1,6 @@
 package com.maidweapon.forge.system.danmaku;
 
-/** All per-level damage budgets, cooldowns and bullet caps live here. */
+/** Per-shot panel damage coefficients, pattern bounds and shot counts. */
 public final class DanmakuGrowth {
     public record AutoAttack(int count, double bonusFraction, int cooldownTicks) { }
 
@@ -8,16 +8,16 @@ public final class DanmakuGrowth {
     public static AutoAttack auto(int mastery, boolean consecutive) {
         int lv = Math.max(1, Math.min(10, mastery));
         int count = lv >= 8 && consecutive ? 6 : lv >= 2 ? 4 : 3;
-        return new AutoAttack(count, Math.min(.26, .12 + lv * .014), 0);
+        return new AutoAttack(count, count * .03, 5);
     }
 
-    /** Whole spell damage per TARGET, paid only for valid hits and spread into timed waves. */
+    /** Theoretical per-target fraction when every independent shot connects. */
     public static double fraction(DanmakuForm form, int mastery) {
         return switch (form) {
-            case NEEDLE -> .45;
-            case FLOWER -> .35;
-            case GUARD -> mastery >= 6 ? .20 : .12;
-            case FANTASY -> 1.20;
+            case NEEDLE -> .60;
+            case FLOWER -> DanmakuGrowth.count(DanmakuForm.FLOWER, mastery) * 2.0 * .035;
+            case GUARD -> mastery >= 6 ? .20 : .125;
+            case FANTASY -> 1.60;
         };
     }
 

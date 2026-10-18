@@ -104,3 +104,7 @@ Future standalone improvements: use a lower-cost live contract-index cache when 
 holder's inventory contains many independent contracts, measure packet sizes and
 game-thread time with realistically large embedded maid data, and validate
 complete singleplayer/multiplayer interactions. No named fox skill costs are added.
+
+## Spirit route ability costs after PR #27
+
+The original #26 PR implemented **foundation only** (as documented above). Subsequent PR #27 adds active expenditures for Black Fox, White Fox and Akatsuki and reduces Manka's talisman costs. Complete route costs and the source-of-truth recovery list are documented in [SPIRIT_RESONANCE_COSTS.md](SPIRIT_RESONANCE_COSTS.md). The black-fox native Proud Soul expense is preserved. White-fox oath's basic fatal-hit survival is still available at zero resonance, and Akatsuki's domain rescue remains independent of funded offensive pulses.

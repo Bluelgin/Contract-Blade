@@ -8,10 +8,10 @@ import net.minecraft.world.item.ItemStack;
 public final class DanmakuResonanceCostPolicy {
     public static int cost(DanmakuForm form) {
         return scaled(ResonanceService.maximum(), switch (form) {
-            case NEEDLE -> 8;
-            case FLOWER -> 14;
-            case GUARD -> 22;
-            case FANTASY -> 45;
+            case NEEDLE -> 6;
+            case FLOWER -> 10;
+            case GUARD -> 16;
+            case FANTASY -> 32;
         });
     }
 

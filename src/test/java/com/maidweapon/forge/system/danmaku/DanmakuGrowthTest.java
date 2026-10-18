@@ -9,20 +9,22 @@ class DanmakuGrowthTest {
         assertEquals(4, DanmakuGrowth.auto(2).count());
         assertEquals(4, DanmakuGrowth.auto(8).count());
         assertEquals(6, DanmakuGrowth.auto(8, true).count());
-        assertEquals(0, DanmakuGrowth.auto(10).cooldownTicks());
+        assertEquals(5, DanmakuGrowth.auto(10).cooldownTicks());
         for (int i = 1; i <= 10; i++) {
             assertTrue(DanmakuGrowth.auto(i).bonusFraction() > 0);
             assertTrue(DanmakuGrowth.auto(i).count() <= 6);
         }
     }
 
-    @Test void activeFormsHaveNoOldCooldownsButDistinctGrowth() {
+    @Test void activeFormsKeepBriefServerSideIntervals() {
         assertFalse(DanmakuForm.NEEDLE.unlocked(4));
         assertTrue(DanmakuForm.NEEDLE.unlocked(5));
         assertFalse(DanmakuForm.FANTASY.unlocked(9));
         assertTrue(DanmakuForm.FANTASY.unlocked(10));
-        for (DanmakuForm form : DanmakuForm.values())
-            assertEquals(0, form.cooldownTicks());
+        assertEquals(8, DanmakuForm.NEEDLE.cooldownTicks());
+        assertEquals(12, DanmakuForm.FLOWER.cooldownTicks());
+        assertEquals(10, DanmakuForm.GUARD.cooldownTicks());
+        assertEquals(20, DanmakuForm.FANTASY.cooldownTicks());
         assertEquals(12, DanmakuGrowth.count(DanmakuForm.NEEDLE, 5));
         assertEquals(9, DanmakuGrowth.count(DanmakuForm.FLOWER, 5));
         assertEquals(12, DanmakuGrowth.count(DanmakuForm.FLOWER, 7));
@@ -34,10 +36,10 @@ class DanmakuGrowthTest {
     }
 
     @Test void resonanceScalesSafelyWithPoolCapacity() {
-        assertEquals(80, DanmakuResonanceCostPolicy.scaled(1000, 8));
-        assertEquals(140, DanmakuResonanceCostPolicy.scaled(1000, 14));
-        assertEquals(220, DanmakuResonanceCostPolicy.scaled(1000, 22));
-        assertEquals(450, DanmakuResonanceCostPolicy.scaled(1000, 45));
+        assertEquals(60, DanmakuResonanceCostPolicy.scaled(1000, 6));
+        assertEquals(100, DanmakuResonanceCostPolicy.scaled(1000, 10));
+        assertEquals(160, DanmakuResonanceCostPolicy.scaled(1000, 16));
+        assertEquals(320, DanmakuResonanceCostPolicy.scaled(1000, 32));
         assertEquals(1, DanmakuResonanceCostPolicy.scaled(3, 8));
         assertEquals(Integer.MAX_VALUE, DanmakuResonanceCostPolicy.scaled(0, 45));
     }

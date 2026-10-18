@@ -82,6 +82,23 @@ public final class WhiteFoxBlessingService {
     return main != null ? main : handProfile(player, player.getOffhandItem());
   }
 
+  /** White fox may legitimately be in the offhand; never charge a different maid. */
+  private static ItemStack blessingCarrier(ServerPlayer player) {
+    ItemStack main = player.getMainHandItem();
+    if (handProfile(player, main) != null) return main;
+    ItemStack off = player.getOffhandItem();
+    return handProfile(player, off) != null ? off : ItemStack.EMPTY;
+  }
+  private static boolean affordable(ServerPlayer p,
+      com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action cost) {
+    return com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.affordable(
+        p, blessingCarrier(p), cost);
+  }
+  private static boolean charge(ServerPlayer p,
+      com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action cost) {
+    return com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.pay(
+        p, blessingCarrier(p), cost);
+  }
   private static long now(ServerPlayer player) {
     return player.getServer().overworld().getGameTime();
   }
@@ -205,7 +222,9 @@ public final class WhiteFoxBlessingService {
     long time = now(player);
     if (p.has("blessing_cleanse")
         && needsCleanse(player)
+        && affordable(player, com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_CLEANSE)
         && state.consume(CLEANSE, time, p.ticks("cleanse_cooldown"))
+        && charge(player, com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_CLEANSE)
         && cleanse(player)) WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.CLEANSE);
     crisis(player, p, player.getHealth(), time);
   }
@@ -215,8 +234,12 @@ public final class WhiteFoxBlessingService {
     if (!p.has("blessing_crisis")
         || health <= 0
         || health > player.getMaxHealth() * p.number("crisis_threshold")) return;
-    if (!WhiteFoxBlessingCooldownData.get(player.getServer())
-        .consumeCrisis(player.getUUID(), time, p.ticks("crisis_cooldown"))) return;
+    if (!affordable(player,
+            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_CRISIS)
+        || !WhiteFoxBlessingCooldownData.get(player.getServer())
+        .consumeCrisis(player.getUUID(), time, p.ticks("crisis_cooldown"))
+        || !charge(player,
+            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_CRISIS)) return;
     shield(player, p.ticks("crisis_shield_ticks"));
     cleanse(player);
     WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.CRISIS);
@@ -252,12 +275,16 @@ public final class WhiteFoxBlessingService {
           || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING)) return;
       if (!WhiteFoxBlessingCooldownData.get(player.getServer())
           .consume(player.getUUID(), time, p.ticks("oath_cooldown"))) return;
+      // Rescue is unconditional once the persistent oath cooldown is earned.
+      // Only the additional cleanse, absorption and reduction package costs resonance.
       event.setAmount(Math.max(0, player.getHealth() - 1));
-      cleanse(player);
-      // Upgrade our own Lv5 shield to the oath duration, without touching foreign absorption.
-      clearShield(player);
-      shield(player, p.ticks("oath_shield_ticks"));
-      state.protect(time, p.ticks("protection_ticks"));
+      if (charge(player,
+          com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_OATH)) {
+        cleanse(player);
+        clearShield(player);
+        shield(player, p.ticks("oath_shield_ticks"));
+        state.protect(time, p.ticks("protection_ticks"));
+      }
       WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.OATH);
       player.getServer().overworld().getDataStorage().save();
       player.displayClientMessage(
@@ -311,7 +338,8 @@ public final class WhiteFoxBlessingService {
             time,
             (int) p.number("heal_hits"),
             p.ticks("heal_interval"),
-            player.getHealth() < player.getMaxHealth())) {
+            player.getHealth() < player.getMaxHealth())
+        && charge(player, com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_HEAL)) {
       player.heal((float) p.number("heal_amount"));
       WhiteFoxVisualBridge.show(player, WhiteFoxVisualBridge.Cue.HEAL);
       if (p.has("blessing_domain")) healMaid(player, p);
@@ -344,8 +372,11 @@ public final class WhiteFoxBlessingService {
         .min(Comparator.comparingDouble(maid -> maid.distanceToSqr(player)))
         .ifPresent(
             maid -> {
-              maid.heal((float) p.number("ally_heal"));
-              WhiteFoxVisualBridge.show(maid, WhiteFoxVisualBridge.Cue.HEAL);
+              if (charge(player,
+                  com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.WHITE_MAID_HEAL)) {
+                maid.heal((float) p.number("ally_heal"));
+                WhiteFoxVisualBridge.show(maid, WhiteFoxVisualBridge.Cue.HEAL);
+              }
             });
   }
 

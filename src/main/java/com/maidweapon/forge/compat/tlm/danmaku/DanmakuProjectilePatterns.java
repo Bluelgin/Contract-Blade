@@ -19,16 +19,17 @@ public final class DanmakuProjectilePatterns {
         var profile = DanmakuGrowth.auto(mastery, consecutive);
         int count = profile.count();
         float total = (float) (Math.max(0, damage) * profile.bonusFraction());
-        UUID salvo = ledger(owner, target, Math.max(1.0f, total / count), count, 1, 120);
+        UUID salvo = ledger(owner, target, total / count, count, 1, 120);
         if (salvo == null) return;
         for (int i = 0; i < count; i++) {
             double side = i - (count - 1) / 2.0;
-            Vec3 start = shoulder(owner, side * .37);
+            double shoulderSide = (i % 2 == 0 ? -1 : 1) * (.80 + Math.abs(side) * .055);
+            Vec3 start = DanmakuLaunchGeometry.launch(owner, shoulderSide, .60);
             Vec3 forward = direction(owner, start, target, mastery >= 4)
                     .yRot((float) (side * (mastery >= 3 ? .08 : .035)));
             spawn(owner, start, forward, DanmakuColor.LIGHT_BLUE,
                     DanmakuType.PELLET, .82f, salvo,
-                    mastery >= 4 ? target : null, mastery >= 4 ? 16 : 0, i * 2);
+                    mastery >= 4 ? target : null, mastery >= 4 ? 16 : 0, i * 2, shoulderSide);
         }
     }
 
@@ -40,25 +41,25 @@ public final class DanmakuProjectilePatterns {
             case NEEDLE -> {
                 if (index > 1) return;
                 int perWaveCount = 6;
-                float each = (float) Math.max(1.0, baseAttack * DanmakuGrowth.fraction(form, mastery) / 12);
+                float each = (float) baseAttack * DanmakuGrowth.fraction(form, mastery) / 12.0;
                 UUID volley = ledger(owner, target, each, perWaveCount, 1, 120);
                 if (volley == null) return;
                 for (int i = 0; i < perWaveCount; i++) {
                     double lateral = i - (perWaveCount - 1) / 2.0;
-                    Vec3 start = shoulder(owner, lateral * .26 + (index == 0 ? -.24 : .24));
+                    double shoulderSide = (i % 2 == 0 ? -1 : 1) * (.80 + Math.abs(lateral) * .04);
+                    Vec3 start = DanmakuLaunchGeometry.launch(owner, shoulderSide, .60);
                     Vec3 vector = direction(owner, start, target, true).yRot((float)(lateral * .055));
                     spawn(owner, start, vector, DanmakuColor.CYAN, DanmakuType.PELLET,
-                            1.0f, volley, target, 18, i * 2);
+                            1.0f, volley, target, 18, i * 2, shoulderSide);
                 }
             }
             case FLOWER -> {
                 if (index > 1) return;
                 int count = DanmakuGrowth.count(form, mastery);
-                float each = (float) Math.max(1.0,
-                        baseAttack * DanmakuGrowth.fraction(form, mastery) / (count * 2));
+                float each = (float) baseAttack * DanmakuGrowth.fraction(form, mastery) / (count * 2.0);
                 UUID volley = ledger(owner, null, each, count, 3, 120);
                 if (volley == null) return;
-                Vec3 origin = shoulder(owner, index == 0 ? -.26 : .26);
+                Vec3 origin = DanmakuLaunchGeometry.launch(owner, index == 0 ? -.8 : .8, .60);
                 Vec3 forward = direction(owner, origin, target, mastery >= 9);
                 double spread = index == 0 ? .62 : (mastery >= 9 ? .22 : .37);
                 for (int i = 0; i < count; i++) {
@@ -66,16 +67,17 @@ public final class DanmakuProjectilePatterns {
                     Vec3 vector = forward.yRot((float) (normalized * spread));
                     float speed = index == 0 ? .68f : .90f;
                     if (mastery >= 7 && i % 2 == 0) speed *= .80f;
-                    spawn(owner, origin.add(sideVector(owner).scale(normalized * .30)),
+                    double shoulderSide = (i % 2 == 0 ? -1 : 1) * (.80 + Math.abs(normalized) * .06);
+                    Vec3 start = DanmakuLaunchGeometry.launch(owner, shoulderSide, .60);
+                    spawn(owner, start,
                             vector, i % 2 == 0 ? DanmakuColor.PINK : DanmakuColor.PURPLE,
                             DanmakuType.BALL, speed, volley,
-                            mastery >= 9 ? target : null, mastery >= 9 ? 9 : 0, i * 2);
+                            mastery >= 9 ? target : null, mastery >= 9 ? 9 : 0, i * 2, shoulderSide);
                 }
             }
             case FANTASY -> {
                 if (index > 3) return;
-                float each = (float) Math.max(1.0, baseAttack *
-                        DanmakuGrowth.fraction(form, mastery) / 32.0);
+                float each = (float) baseAttack * DanmakuGrowth.fraction(form, mastery) / 32.0;
                 if (index == 3 && finale) each *= 1.15f;
                 UUID volley = ledger(owner, target, each, 8, 1, 120);
                 if (volley == null) return;
@@ -107,16 +109,16 @@ public final class DanmakuProjectilePatterns {
     public static void guardCounter(ServerPlayer owner, LivingEntity target,
                                     int mastery, float baseAttack) {
         if (target == null || !ContractDanmakuProjectile.safeTarget(owner, target)) return;
-        float damage = (float) Math.max(1.0, baseAttack *
-                DanmakuGrowth.fraction(DanmakuForm.GUARD, mastery) / 8.0);
+        float damage = (float) baseAttack * DanmakuGrowth.fraction(DanmakuForm.GUARD, mastery) / 8.0;
         UUID volley = ledger(owner, target, damage, 8, 1, 120);
         if (volley == null) return;
         for (int i = 0; i < 8; i++) {
             double angle = i * Math.PI / 4;
-            Vec3 at = owner.position().add(Math.cos(angle) * 1.4, 1.15, Math.sin(angle) * 1.4);
+            double shoulderSide = (i % 2 == 0 ? -1 : 1) * (.80 + (i / 2) * .04);
+            Vec3 at = DanmakuLaunchGeometry.launch(owner, shoulderSide, .60);
             spawn(owner, at, target.getEyePosition().subtract(at),
                     DanmakuColor.LIGHT_GREEN, DanmakuType.ORBS, .79f,
-                    volley, target, 13, i * 2);
+                    volley, target, 13, i * 2, shoulderSide);
         }
     }
 
@@ -147,6 +149,12 @@ public final class DanmakuProjectilePatterns {
                               LivingEntity target, int seekingTicks, int delay) {
         DanmakuShotQueue.schedule(owner, at, movement, speed, color, type, volley,
                 target, seekingTicks, delay);
+    }
+    private static void spawn(ServerPlayer owner, Vec3 at, Vec3 movement,
+                              DanmakuColor color, DanmakuType type, float speed, UUID volley,
+                              LivingEntity target, int seekingTicks, int delay, double shoulderSide) {
+        DanmakuShotQueue.schedule(owner, at, movement, speed, color, type, volley,
+                target, seekingTicks, delay, shoulderSide);
     }
     private DanmakuProjectilePatterns() { }
 }

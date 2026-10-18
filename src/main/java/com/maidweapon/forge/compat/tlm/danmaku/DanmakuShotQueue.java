@@ -26,7 +26,7 @@ public final class DanmakuShotQueue {
     private record Shot(String maid, ResourceKey<Level> dimension, long tick,
                         Vec3 position, Vec3 direction, float speed,
                         DanmakuColor color, DanmakuType shape, UUID volley,
-                        UUID target, int homingTicks) {}
+                        UUID target, int homingTicks, double rearSide) {}
     private static final Map<UUID, List<Shot>> QUEUED = new HashMap<>();
     private static int pendingGlobal;
 
@@ -44,6 +44,12 @@ public final class DanmakuShotQueue {
                                 float speed, DanmakuColor color, DanmakuType type,
                                 UUID volley, LivingEntity target, int homingTicks,
                                 int delay) {
+        schedule(owner, position, direction, speed, color, type, volley, target, homingTicks, delay, Double.NaN);
+    }
+    public static void schedule(ServerPlayer owner, Vec3 position, Vec3 direction,
+                                float speed, DanmakuColor color, DanmakuType type,
+                                UUID volley, LivingEntity target, int homingTicks,
+                                int delay, double rearSide) {
         if (owner.level().isClientSide || volley == null || !Float.isFinite(speed)
                 || speed <= 0 || direction.lengthSqr() < .00001 || delay < 0 || delay > 80) return;
         var context = DanmakuEligibility.context(owner);
@@ -52,7 +58,7 @@ public final class DanmakuShotQueue {
         var shot = new Shot(context.maid(), owner.level().dimension(),
                 owner.level().getGameTime() + delay, position, direction.normalize(),
                 speed, color, type, volley, target == null ? null : target.getUUID(),
-                Math.max(0, homingTicks));
+                Math.max(0, homingTicks), rearSide);
         if (delay == 0) { fire(owner, shot, context.maid()); return; }
         QUEUED.computeIfAbsent(owner.getUUID(), k -> new ArrayList<>()).add(shot);
         pendingGlobal++;
@@ -90,7 +96,10 @@ public final class DanmakuShotQueue {
         var context = DanmakuEligibility.context(owner);
         if (context == null || !maid.equals(context.maid())) return;
         var bullet = new ContractDanmakuProjectile(owner.serverLevel(), owner);
-        bullet.setPos(shot.position.x, shot.position.y, shot.position.z);
+        Vec3 origin = Double.isFinite(shot.rearSide)
+                ? DanmakuLaunchGeometry.launch(owner, shot.rearSide, .60)
+                : shot.position;
+        bullet.setPos(origin.x, origin.y, origin.z);
         bullet.setColor(shot.color);
         bullet.setDanmakuType(shot.shape);
         bullet.setDamage(0);

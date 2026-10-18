@@ -513,11 +513,12 @@
   "maid_weapon.message.vein.skipped": "灵脉需依次唤醒，请先完成前一阶段。",
   "maid_weapon.message.vein.unsupported": "灵脉暂时无法唤醒，物品已保留。",
   "maid_weapon.tooltip.resonance.waiting": "共鸣：同步中…",
+  "maid_weapon.fox.sa.resonance": "共鸣不足，无法维持封界剑核。",
   "item.maid_weapon.manka_talisman": "万华御札",
   "maid_weapon.tooltip.manka_talisman.lore": "以符为契，借万华之光，伴君挥剑。",
-  "maid_weapon.tooltip.manka_talisman.effect": "普通契约女仆佩戴后，挥刀便有弹幕应和；每枚灵弹独立命中",
+  "maid_weapon.tooltip.manka_talisman.effect": "普通契约女仆装备后，弹幕自持刀者左右后肩展开；每颗灵弹独立命中",
   "maid_weapon.tooltip.manka_talisman.controls": "契约熟练度 Lv.5 起：短按中键施符，长按中键选择符式",
-  "maid_weapon.tooltip.manka_talisman.restriction": "仅限普通女仆契约。自动协奏免费；主动符式消耗共鸣，无固定冷却。",
+  "maid_weapon.tooltip.manka_talisman.restriction": "仅限普通女仆契约。自动协奏免费；主动符卡消耗共鸣并有短暂间隔。",
   "key.maid_weapon.danmaku": "施放／选择符卡",
   "maid_weapon.gui.danmaku.title": "万华御札 · 符式",
   "maid_weapon.gui.danmaku.release": "松开按键确认选择 · 再短按施放",
@@ -526,6 +527,6 @@
   "maid_weapon.danmaku.form.guard": "护身",
   "maid_weapon.danmaku.form.fantasy": "幻想万华",
   "patchouli.maid_weapon.entry.manka_talisman.name": "万华御札·普通契约的符卡",
-  "patchouli.maid_weapon.entry.manka_talisman.page.1": "将万华御札佩戴于普通契约女仆的饰品栏后，玩家每次有效挥刀（或空挥）都可唤出协奏弹幕。灵弹错峰出现，每枚有效命中都能造成独立伤害。剑灵专属武器不能使用。",
-  "patchouli.maid_weapon.entry.manka_talisman.page.2": "Lv.5 解锁灵针、散华、护身，Lv.6 强化护身，Lv.10 解锁幻想万华。短按中键释放当前符式，长按约0.3秒打开轮盘，松开确认。主动符式无传统冷却，分别消耗共鸣上限的8%／14%／22%／45%；自动协奏不消耗共鸣。"
+  "patchouli.maid_weapon.entry.manka_talisman.page.1": "将万华御札佩戴于普通契约女仆的饰品栏，持刀者挥剑便有灵弹从左右后肩飞出。每次有效普通攻击都可协奏，间隔至少5tick；独立弹幕错峰命中，伤害取玩家主手攻击面板，剑灵专属武器不可使用。",
+  "patchouli.maid_weapon.entry.manka_talisman.page.2": "Lv.5 解锁灵针、散华、护身；Lv.10 解锁幻想万华。短按中键施符，长按约0.3秒打开轮盘，松开确认。符式消耗共鸣上限的6%／10%／16%／32%，分别有8／12／10／20tick短间隔；自动协奏免费。"
 }

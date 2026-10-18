@@ -89,18 +89,21 @@ public final class ModItems {
                                 Component.translatable("maid_weapon.message.not_owner"), true);
                         return InteractionResultHolder.fail(crystal);
                     }
-                    MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
-                    if (com.maidweapon.forge.system.resonance.ResonanceService.current(player, weapon,
-                            ContractCarrierData.getBindingId(weapon)) >= MaidWeaponData.maximumResonance()) {
+                    String binding = ContractCarrierData.getBindingId(weapon);
+                    int before = com.maidweapon.forge.system.resonance.ResonanceService.current(player, weapon, binding);
+                    if (before >= com.maidweapon.forge.system.resonance.ResonanceService.maximum()) {
                         player.displayClientMessage(
                                 Component.translatable("maid_weapon.message.resonance_full"), true);
                         return InteractionResultHolder.fail(crystal);
                     }
-                    if (!com.maidweapon.forge.system.resonance.ResonanceService.recoverLegacy(player, weapon,
-                            ContractCarrierData.getBindingId(weapon), 50)) return InteractionResultHolder.fail(crystal);
+                    if (!com.maidweapon.forge.system.resonance.ResonanceService.recoverLegacy(
+                            player, weapon, binding, 50)) return InteractionResultHolder.fail(crystal);
+                    int recovered = com.maidweapon.forge.system.resonance.ResonanceService.current(
+                            player, weapon, binding) - before;
+                    if (recovered <= 0) return InteractionResultHolder.fail(crystal);
                     if (!player.getAbilities().instabuild) crystal.shrink(1);
                     player.displayClientMessage(Component.translatable(
-                            "maid_weapon.message.resonance_restored", 50), true);
+                            "maid_weapon.message.resonance_restored", recovered), true);
                     return InteractionResultHolder.success(crystal);
                 }
             });

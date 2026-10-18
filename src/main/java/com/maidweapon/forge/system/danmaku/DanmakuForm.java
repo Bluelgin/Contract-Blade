@@ -1,11 +1,11 @@
 package com.maidweapon.forge.system.danmaku;
 
 /**
- * Traditional ability cooldowns are removed. Network input is rate-limited by
+ * Brief server-side intervals prevent spam; network input is additionally rate-limited by
  * one server tick, server resonance and projectile/queue caps independently.
  */
 public enum DanmakuForm {
-    NEEDLE(5, 0), FLOWER(5, 0), GUARD(5, 0), FANTASY(10, 0);
+    NEEDLE(5, 8), FLOWER(5, 12), GUARD(5, 10), FANTASY(10, 20);
     private final int requiredLevel, cooldownTicks;
     DanmakuForm(int requiredLevel, int cooldownTicks) {
         this.requiredLevel = requiredLevel;
