@@ -42,15 +42,17 @@ public final class ResonanceService {
     }
     public static boolean waived(Player owner, ItemStack carrier, String binding) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
-        return context != null && ContractBaubleEffects.hasWaiver(context);
+        return context != null && pool(context).current(context) >= 0
+                && ContractBaubleEffects.hasWaiver(context);
     }
     public static Payment canPay(Player owner, ItemStack carrier, String binding, int cost) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
         return decision(context, cost);
     }
     private static Payment decision(ResonanceContract context, int cost) {
-        return ResonanceCostPolicy.evaluate(context != null, context != null && ContractBaubleEffects.hasWaiver(context),
-                context == null ? 0 : pool(context).current(context), cost);
+        int available = context == null ? -1 : pool(context).current(context);
+        return ResonanceCostPolicy.evaluate(available >= 0,
+                available >= 0 && ContractBaubleEffects.hasWaiver(context), available, cost);
     }
     public static Payment pay(Player owner, ItemStack carrier, String binding, int cost, PaymentAttempt attempt) {
         var context = ResonanceContract.resolve(owner, carrier, binding);

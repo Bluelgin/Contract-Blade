@@ -39,7 +39,7 @@ public final class ResonanceRecoveryEvents {
                 if (previous < 0) continue;
                 int recovered = accumulators.computeIfAbsent(context.maid(), id -> new ResonanceAccumulator())
                         .tick(owner.getServer().overworld().getGameTime(), units, previous, ResonanceService.maximum());
-                if (recovered > 0 || previous > ResonanceService.maximum())
+                if (recovered > 0 || pools.rawCurrent(context) > ResonanceService.maximum())
                     pools.set(context, (int) Math.min(ResonanceService.maximum(), (long) previous + recovered));
                 com.maidweapon.forge.network.ResonanceNetwork.sendIfChanged(owner, context.maid(),
                         pools.current(context), ResonanceService.maximum());

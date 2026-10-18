@@ -32,7 +32,7 @@ public final class ResonanceSystem {
         recover(data, scaled(healthLost, MaidWeaponConfig.RESONANCE_OWNER_HURT_MULTIPLIER.get()));
     }
 
-    private static int scaled(float value, double multiplier) {
+    public static int scaled(float value, double multiplier) {
         if (value <= 0 || multiplier <= 0) return 0;
         return Math.max(1, (int) Math.floor(value * multiplier));
     }

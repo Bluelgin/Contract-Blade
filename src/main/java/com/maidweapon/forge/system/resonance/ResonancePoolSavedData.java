@@ -95,9 +95,13 @@ public final class ResonancePoolSavedData extends SavedData {
     public static int maximum() { return ContractRulesConfig.maximumResonance(); }
 
     /** Returns -1 for an unsupported future schema; callers must fail closed. */
-    public int current(ResonanceContract context) {
+    public int rawCurrent(ResonanceContract context) {
         var record = resolve(context);
-        return record == null ? -1 : Math.max(0, Math.min(maximum(), record.getInt("Current")));
+        return record == null ? -1 : Math.max(0, record.getInt("Current"));
+    }
+    public int current(ResonanceContract context) {
+        int raw = rawCurrent(context);
+        return raw < 0 ? -1 : Math.min(maximum(), raw);
     }
     public boolean set(ResonanceContract context, int amount) {
         var record = resolve(context);

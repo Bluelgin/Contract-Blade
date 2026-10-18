@@ -77,27 +77,22 @@ public final class ContractCombatEventHandler {
         com.maidweapon.forge.system.mastery.ContractMasteryService.observe(player, weapon);
         if (ResonanceContract.resolve(player, weapon, ContractCarrierData.getBindingId(weapon)) == null) return;
         UUID playerId = player.getUUID();
-        MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
+        String binding = ContractCarrierData.getBindingId(weapon);
         int food = player.getFoodData().getFoodLevel();
         Integer lastFood = ChallengeTracker.getLastFoodLevel(playerId);
-        if (lastFood != null && food > lastFood) {
-            ResonanceSystem.onEat(data, food - lastFood);
-            ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
-                    Math.max(0, data.getResonance() - MaidInfusion.data(weapon).getResonance()));
-        }
+        if (lastFood != null && food > lastFood)
+            ResonanceService.recoverLegacy(player, weapon, binding,
+                    ResonanceSystem.scaled(food - lastFood, MaidWeaponConfig.RESONANCE_FOOD_MULTIPLIER.get()));
         ChallengeTracker.setFoodLevel(playerId, food);
 
         float health = player.getHealth();
         Float lastHealth = ChallengeTracker.getLastHealth(playerId);
-        if (lastHealth != null && health > lastHealth) {
-            ResonanceSystem.onHeal(data, health - lastHealth);
-            ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
-                    Math.max(0, data.getResonance() - MaidInfusion.data(weapon).getResonance()));
-        } else if (lastHealth != null && health < lastHealth) {
-            ResonanceSystem.onOwnerHurt(data, lastHealth - health);
-            ResonanceService.recover(player, weapon, ContractCarrierData.getBindingId(weapon),
-                    Math.max(0, data.getResonance() - MaidInfusion.data(weapon).getResonance()));
-        }
+        if (lastHealth != null && health > lastHealth)
+            ResonanceService.recoverLegacy(player, weapon, binding,
+                    ResonanceSystem.scaled(health - lastHealth, MaidWeaponConfig.RESONANCE_HEAL_MULTIPLIER.get()));
+        else if (lastHealth != null && health < lastHealth)
+            ResonanceService.recoverLegacy(player, weapon, binding,
+                    ResonanceSystem.scaled(lastHealth - health, MaidWeaponConfig.RESONANCE_OWNER_HURT_MULTIPLIER.get()));
         ChallengeTracker.setHealth(playerId, health);
     }
 

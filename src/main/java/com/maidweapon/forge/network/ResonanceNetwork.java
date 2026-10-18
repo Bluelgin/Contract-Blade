@@ -58,7 +58,7 @@ public final class ResonanceNetwork {
             if (player != null) snapshots.put(snapshot.maid(), snapshot);
         }
         static Snapshot get(net.minecraft.world.entity.player.Player viewer, String maid) {
-            if (viewer == null || viewer != net.minecraft.client.Minecraft.getInstance().player) return null;
+            if (viewer == null || maid == null || viewer != net.minecraft.client.Minecraft.getInstance().player) return null;
             if (activePlayer != viewer) { activePlayer = viewer; snapshots.clear(); }
             try { return snapshots.get(UUID.fromString(maid)); }
             catch (IllegalArgumentException malformed) { return null; }
