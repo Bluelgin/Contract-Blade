@@ -40,10 +40,20 @@ recipe = json.loads((root / "src/main/resources/data/maid_weapon/recipes/altar/m
 assert recipe["type"] == "touhou_little_maid:altar_crafting"
 assert recipe["output"]["nbt"]["Item"]["id"] == "maid_weapon:manka_talisman"
 assert len(recipe["ingredients"]) == 6
-ElementTree.parse(root / "art/danmaku/manka_talisman.svg")
-png = (root / "src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png").read_bytes()
-assert png[:8] == b"\x89PNG\r\n\x1a\n" and int.from_bytes(png[16:20], "big") == 32
-assert int.from_bytes(png[20:24], "big") == 32
+# Animated Manka Talisman: 40 hand-authored SVG animation samples at 32x32.
+svg = ElementTree.parse(root / "art/danmaku/manka_talisman.svg").getroot()
+svg_ns = {"svg": "http://www.w3.org/2000/svg"}
+animations = svg.findall(".//svg:animate", svg_ns) + svg.findall(".//svg:animateTransform", svg_ns)
+assert animations and all(len(anim.attrib["values"].split(";")) == 40 for anim in animations)
+texture = root / "src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png"
+png = texture.read_bytes()
+assert png[:8] == b"\x89PNG\r\n\x1a\n"
+assert int.from_bytes(png[16:20], "big") == 32  # frame width
+assert int.from_bytes(png[20:24], "big") == 32 * 40  # vertical strip
+animation_meta = json.loads((root / (str(texture.relative_to(root)) + ".mcmeta")).read_text())
+assert animation_meta["animation"]["frametime"] == 2
+assert animation_meta["animation"]["interpolate"] is False
+assert "frames" not in animation_meta["animation"]  # all 40 frames in order
 for locale in ("zh_cn", "en_us"):
     text = json.loads((root / f"src/main/resources/assets/maid_weapon/lang/{locale}.json").read_text())
     assert text["item.maid_weapon.manka_talisman"]
