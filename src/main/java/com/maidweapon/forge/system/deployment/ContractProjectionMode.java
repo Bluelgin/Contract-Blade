@@ -1,6 +1,6 @@
 package com.maidweapon.forge.system.deployment;
 
-/** One active bauble per maid; its capabilities may include either or both channels. */
+/** The first equipped projection bauble selects either or both channels; independent effects may coexist. */
 public enum ContractProjectionMode {
     NONE, WEAPON, ARMOR, COMBINED;
 

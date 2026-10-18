@@ -15,12 +15,15 @@ parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
 parser.add_argument('--output', type=Path, help='New disposable fixture directory')
 parser.add_argument('--compat', choices=['vanilla','slashblade'], default='slashblade')
-parser.add_argument('--fixture', choices=['recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider'])
+parser.add_argument('--fixture', choices=['projection','companion','resonance','recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider'])
 args = parser.parse_args()
 root = args.output or Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
 root.mkdir(parents=True, exist_ok=True)
 print(f'Disposable fixtures: {root}', flush=True)
 fixtures = [
+    ('projection', ['-PprojectionTest=true'], ['PROJECTION_VALIDATION_PASS']),
+    ('companion', ['-PcompanionTest=true'], ['COMPANION_VALIDATION_PASS']),
+    ('resonance', ['-PresonanceTest=true'], ['CONTRACT_RESONANCE_PASS']),
     ('akatsuki-domain', ['-PakatsukiDomainTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_NO_PROVIDER_PASS']),
     ('akatsuki-provider', ['-PakatsukiDomainTest=true','-PfoxBladeTetraTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_PROVIDER_PASS']),
     ('architecture', ['-ParchitectureTest=true'], ['CONTRACT_ARCHITECTURE_PASS']),
@@ -57,13 +60,13 @@ for name, flags, markers in fixtures:
             failed.append(name); print(f'{name}: FAIL missing={missing}; {log}',flush=True)
         else:
             print(f'{name}: PASS ({", ".join(markers)})',flush=True)
-            if name in ['recovery','blessing','akatsuki-provider']:
+            if name in ['resonance','recovery','blessing','akatsuki-provider']:
                 restart_log = root / f'{name}-restart.log'
                 with restart_log.open('w') as output:
-                    resumed = subprocess.run([*cmd, '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true' if name == 'blessing' else '-PakatsukiDomainResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
+                    resumed = subprocess.run([*cmd, '-PresonanceResume=true' if name == 'resonance' else '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true' if name == 'blessing' else '-PakatsukiDomainResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
                 resumed_text = restart_log.read_text()
                 if runtime_log.exists(): resumed_text += '\n' + runtime_log.read_text()
-                if resumed.returncode or ('CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS' if name == 'blessing' else 'AKATSUKI_RESCUE_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
+                if resumed.returncode or ('CONTRACT_RESONANCE_RESTART_PASS' if name == 'resonance' else 'CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS' if name == 'blessing' else 'AKATSUKI_RESCUE_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
                     failed.append(f'{name}-restart');print(f'{name}-restart: FAIL; {restart_log}',flush=True)
                 else:
                     print(f'{name}-restart: PASS',flush=True)

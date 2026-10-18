@@ -1,6 +1,5 @@
 package com.maidweapon.forge.compat.tlm;
 
-import com.maidweapon.forge.item.ContractProjectionBaubleItem;
 import com.maidweapon.forge.system.deployment.ContractProjectionMode;
 import net.minecraft.world.entity.Entity;
 import net.minecraftforge.items.IItemHandler;
@@ -14,9 +13,11 @@ public final class TlmProjectionBaubles {
             if (value instanceof IItemHandler slots) {
                 for (int slot = 0; slot < slots.getSlots(); slot++) {
                     var stack = slots.getStackInSlot(slot);
-                    if (!stack.isEmpty() && stack.getItem() instanceof ContractProjectionBaubleItem bauble) {
-                        return bauble.mode();
-                    }
+                    var effects = ContractBaubleEffects.effects(stack);
+                    boolean weapon = effects.contains(ContractBaubleEffects.Effect.WEAPON_PROJECTION);
+                    boolean armor = effects.contains(ContractBaubleEffects.Effect.ARMOR_PROJECTION);
+                    if (weapon || armor) return weapon && armor ? ContractProjectionMode.COMBINED
+                            : weapon ? ContractProjectionMode.WEAPON : ContractProjectionMode.ARMOR;
                 }
             }
         } catch (ReflectiveOperationException | LinkageError ignored) {

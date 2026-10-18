@@ -58,8 +58,7 @@ public final class ContractTooltipComposer {
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.waiting")
                     .withStyle(ChatFormatting.DARK_GRAY));
         } else {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
-                    data.getResonance(), MaidWeaponData.maximumResonance()));
+            appendResonance(stack, viewer, tooltip);
         }
 
         if (red && !stored) {
@@ -88,7 +87,7 @@ public final class ContractTooltipComposer {
                 : "maid_weapon.tooltip.shift.collapsed"));
 
         if (!expanded) return;
-        appendContractSection(stack, data, tooltip);
+        appendContractSection(stack, viewer, data, tooltip);
         appendGrowthSection(mastery, tooltip);
         if (FoxSpiritState.hasResident(stack) && !FoxSpiritState.isOriginalHome(stack)) {
             tooltip.add(Component.translatable(FoxSpiritState.BLACK.equals(spirit)
@@ -118,15 +117,25 @@ public final class ContractTooltipComposer {
                 && ItemStack.isSameItemSameTags(a, b);
     }
 
-    private static void appendContractSection(ItemStack stack, MaidWeaponData data, List<Component> tooltip) {
+    private static void appendContractSection(ItemStack stack, Player viewer, MaidWeaponData data, List<Component> tooltip) {
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.contract"));
         String owner = ContractCarrierData.getOwnerName(stack);
         if (owner != null) tooltip.add(Component.translatable("maid_weapon.tooltip.owner", owner));
         tooltip.add(Component.translatable("maid_weapon.tooltip.favorability",
                 data.getFavorability(), LoyaltySystem.getFavorabilityTitle(data.getFavorability())));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.resonance",
-                data.getResonance(), MaidWeaponData.maximumResonance()));
+        appendResonance(stack, viewer, tooltip);
+    }
+
+    /** Server-confirmed owner snapshot; stale item NBT is never shown as current. */
+    private static void appendResonance(ItemStack stack, Player viewer, List<Component> tooltip) {
+        String maid = ContractCarrierData.getBoundMaidUUID(stack);
+        int value = com.maidweapon.forge.network.ResonanceNetwork.clientCurrent(viewer, maid);
+        int ceiling = com.maidweapon.forge.network.ResonanceNetwork.clientMaximum(viewer, maid);
+        if (value < 0 || ceiling <= 0)
+            tooltip.add(Component.translatable("maid_weapon.tooltip.resonance.waiting")
+                    .withStyle(ChatFormatting.DARK_GRAY));
+        else tooltip.add(Component.translatable("maid_weapon.tooltip.resonance", value, ceiling));
     }
 
     private static void appendGrowthSection(com.maidweapon.common.data.ContractMasteryData mastery, List<Component> tooltip) {

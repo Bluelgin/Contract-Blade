@@ -1,0 +1,33 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {
+    "type": "minecraft:item",
+    "nbt": {
+      "Item": {
+        "id": "maid_weapon:endless_contract",
+        "Count": 1
+      }
+    }
+  },
+  "power": 1.0,
+  "ingredients": [
+    {
+      "item": "maid_weapon:heartbound_knot"
+    },
+    {
+      "item": "minecraft:nether_star"
+    },
+    {
+      "item": "minecraft:netherite_ingot"
+    },
+    {
+      "item": "minecraft:enchanted_golden_apple"
+    },
+    {
+      "item": "minecraft:dragon_breath"
+    },
+    {
+      "item": "minecraft:totem_of_undying"
+    }
+  ]
+}

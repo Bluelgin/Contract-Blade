@@ -8,7 +8,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 public final class ContractRulesConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.BooleanValue AUTO_MANIFEST, AUTO_COMBAT, AUTO_FEED;
-    public static final ForgeConfigSpec.IntValue HURT_COOLDOWN, HURT_MIN_RESONANCE, MAX_RESONANCE, KILL_REWARD, MAX_FOLLOWERS;
+    public static final ForgeConfigSpec.IntValue HURT_COOLDOWN, HURT_MIN_RESONANCE, MAX_RESONANCE, POOL_MAX_RESONANCE, KILL_REWARD, MAX_FOLLOWERS;
     public static final LevelRule[] LEVELS = new LevelRule[11];
 
     public record LevelRule(ForgeConfigSpec.ConfigValue<String> mode,
@@ -41,7 +41,9 @@ public final class ContractRulesConfig {
         MAX_RESONANCE = b.comment("共鸣上限。提高上限不会补满已有契约；旧存档缺失字段仍按 200 处理。",
                 "恢复/消耗倍率继续使用 config/maid_weapon-common.toml 的 ContractResonance 配置。")
                 .defineInRange("maximum", 200, 1, 1000000);
-        KILL_REWARD = b.comment("契约武器合格击杀后的共鸣恢复量；0 关闭击杀恢复。")
+        POOL_MAX_RESONANCE = b.comment("Server-owned maid resonance pool maximum. Legacy maximum remains unchanged for migration.")
+                 .defineInRange("poolMaximum", 1000, 1, 1000000);
+         KILL_REWARD = b.comment("契约武器合格击杀后的共鸣恢复量；0 关闭击杀恢复。")
                 .defineInRange("killRecovery", 5, 0, 1000000);
         b.pop().push("Growth");
         for (int level = 1; level <= 10; level++) {
@@ -65,7 +67,7 @@ public final class ContractRulesConfig {
     }
 
     public static int maximumResonance() {
-        return SPEC.isLoaded() ? MAX_RESONANCE.get() : 200;
+        return SPEC.isLoaded() ? POOL_MAX_RESONANCE.get() : 1000;
     }
     private ContractRulesConfig() { }
 }

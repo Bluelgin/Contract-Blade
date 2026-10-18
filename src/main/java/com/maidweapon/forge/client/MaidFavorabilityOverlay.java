@@ -39,10 +39,12 @@ public final class MaidFavorabilityOverlay {
         }
         if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, minecraft.player)) return;
 
-        MaidWeaponData data = MaidInfusion.data(weapon);
+        String maid = ContractCarrierData.getBoundMaidUUID(weapon);
+        int current = com.maidweapon.forge.network.ResonanceNetwork.clientCurrent(minecraft.player, maid);
+        int maximum = com.maidweapon.forge.network.ResonanceNetwork.clientMaximum(minecraft.player, maid);
+        if (current < 0 || maximum <= 0) return;
         int width = 81;
-        int filled = Math.round(width * data.getResonance()
-                / (float) MaidWeaponData.maximumResonance());
+        int filled = Math.round(width * current / (float) maximum);
         int x = screenWidth / 2 + 10;
         int y = screenHeight - 59 - MaidWeaponConfig.RESONANCE_HUD_OFFSET_Y.get();
 
@@ -60,7 +62,7 @@ public final class MaidFavorabilityOverlay {
         }
         graphics.drawCenteredString(minecraft.font,
                 Component.translatable("maid_weapon.hud.resonance",
-                        data.getResonance(), MaidWeaponData.maximumResonance()),
+                        current, maximum),
                 x + width / 2, y + 1, 0xFFFFFFFF);
     }
 

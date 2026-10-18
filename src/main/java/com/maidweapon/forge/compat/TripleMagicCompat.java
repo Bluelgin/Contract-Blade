@@ -199,15 +199,11 @@ public final class TripleMagicCompat {
     }
 
     private static boolean pay(Player owner, ItemStack weapon, int resonanceCost) {
-        if (MaidInfusion.isInfused(weapon) && ContractCarrierData.isOwner(weapon, owner)) {
-            var data = MaidInfusion.data(weapon);
-            if (data.getResonance() >= resonanceCost) {
-                data.reduceResonance(resonanceCost);
-                ContractCarrierData.setMaidData(weapon, data);
-                return true;
-            }
-        }
-        return false;
+        return com.maidweapon.forge.system.resonance.ResonanceService.succeeded(
+                com.maidweapon.forge.system.resonance.ResonanceService.pay(owner, weapon,
+                        ContractCarrierData.getBindingId(weapon),
+                        com.maidweapon.forge.system.resonance.ResonanceService.legacyUnits(resonanceCost),
+                        com.maidweapon.forge.system.resonance.ResonanceService.newAttempt()));
     }
 
     public static ItemStack createProjection(ItemStack original, Player owner) {

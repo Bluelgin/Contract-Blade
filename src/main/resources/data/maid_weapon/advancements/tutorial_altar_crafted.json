@@ -2,16 +2,56 @@
   "criteria": {
     "tassel": {
       "trigger": "touhou_little_maid:altar/altar_craft",
-      "conditions": {"recipe_id": "maid_weapon:altar/resonance_sword_tassel"}
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/resonance_sword_tassel"
+      }
     },
     "ribbon": {
       "trigger": "touhou_little_maid:altar/altar_craft",
-      "conditions": {"recipe_id": "maid_weapon:altar/guardian_ribbon"}
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/guardian_ribbon"
+      }
     },
     "knot": {
       "trigger": "touhou_little_maid:altar/altar_craft",
-      "conditions": {"recipe_id": "maid_weapon:altar/heartbound_knot"}
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/heartbound_knot"
+      }
+    },
+    "awakening_vein": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/awakening_vein"
+      }
+    },
+    "flowing_vein": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/flowing_vein"
+      }
+    },
+    "endless_vein": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/endless_vein"
+      }
+    },
+    "endless_contract": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/endless_contract"
+      }
     }
   },
-  "requirements": [["tassel", "ribbon", "knot"]]
+  "requirements": [
+    [
+      "tassel",
+      "ribbon",
+      "knot",
+      "awakening_vein",
+      "flowing_vein",
+      "endless_vein",
+      "endless_contract"
+    ]
+  ]
 }

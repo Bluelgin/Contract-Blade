@@ -93,14 +93,19 @@ public final class ContractCompanionValidation {
             owner.tickCount = 400;
             ContractCompanionService.tick(owner);
             check(level.getEntity(identity) == maid, "manual companion remains after switching items");
-            var data = MaidInfusion.data(carrier);
-            data.setResonance(20);
-            com.maidweapon.forge.system.contract.ContractCarrierData.setMaidData(carrier, data);
+            check(com.maidweapon.forge.system.resonance.ResonanceService.set(owner, carrier,
+                    ContractCarrierData.getBindingId(carrier), 100), "set pooled resonance");
             var ownerTick = new net.minecraftforge.event.TickEvent.PlayerTickEvent(
                     net.minecraftforge.event.TickEvent.Phase.END, owner);
-            com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
-            check(MaidInfusion.data(carrier).getResonance() == 20
-                    + com.maidweapon.common.MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get(),
+            long recoveryTime = level.getGameTime();
+            var recoveryClock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
+            for (int recoveryTick = 1; recoveryTick <= 20; recoveryTick++) {
+                recoveryClock.setGameTime(recoveryTime + recoveryTick);
+                com.maidweapon.forge.system.resonance.ResonanceRecoveryEvents.tick(ownerTick);
+            }
+            check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+                            ContractCarrierData.getBindingId(carrier)) == 100
+                    + com.maidweapon.common.MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get() * 5,
                     "switched-away companion still recovers resonance");
             long originalTime = level.getGameTime();
             int drainInterval = com.maidweapon.common.MaidWeaponConfig.RESONANCE_COMBAT_DRAIN_INTERVAL.get();
@@ -110,9 +115,12 @@ public final class ContractCompanionValidation {
             com.maidweapon.forge.event.MaidBondCombatHandler.onDamage(
                     new net.minecraftforge.event.entity.living.LivingDamageEvent(owner,
                             owner.damageSources().mobAttack(combatant), 2));
-            int beforeDrain = MaidInfusion.data(carrier).getResonance();
-            com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
-            check(MaidInfusion.data(carrier).getResonance() == beforeDrain - 1,
+            int beforeDrain = com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+                    ContractCarrierData.getBindingId(carrier));
+            for (int upkeep = 0; upkeep < Math.max(1, (drainInterval + 19) / 20); upkeep++)
+                com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
+            check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+                            ContractCarrierData.getBindingId(carrier)) == beforeDrain - 5,
                     "switched-away companion still drains combat resonance");
             com.maidweapon.forge.event.MaidBondCombatHandler.onLogout(new PlayerEvent.PlayerLoggedOutEvent(owner));
             clock.setGameTime(originalTime);
@@ -120,9 +128,11 @@ public final class ContractCompanionValidation {
             maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, true);
             ContractCompanionService.tick(owner);
             check(ContractCompanionState.mode(carrier) == ContractCompanionState.Mode.RESIDENT, "native home mode selects residence");
-            int residentResonance = MaidInfusion.data(carrier).getResonance();
+            int residentResonance = com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+                    ContractCarrierData.getBindingId(carrier));
             com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
-            check(MaidInfusion.data(carrier).getResonance() == residentResonance,
+            check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+                    ContractCarrierData.getBindingId(carrier)) == residentResonance,
                     "resident stays excluded from following resonance ticks");
             InfusedMaidDeploymentSystem.onLogout(new PlayerEvent.PlayerLoggedOutEvent(owner));
             check(level.getEntity(identity) == maid && !MaidInfusion.containsMaid(carrier), "resident survives owner logout");
@@ -216,9 +226,8 @@ public final class ContractCompanionValidation {
             ContractCompanionService.tick(owner);
             check(MaidInfusion.containsMaid(carrier), "automatic manifestation respects cooldown after recall");
             ContractCompanionService.disconnect(owner);
-            var emptyResonance = MaidInfusion.data(carrier);
-            emptyResonance.setResonance(0);
-            ContractCarrierData.setMaidData(carrier, emptyResonance);
+            check(com.maidweapon.forge.system.resonance.ResonanceService.set(owner, carrier,
+                    ContractCarrierData.getBindingId(carrier), 0), "empty pooled resonance");
             owner.setHealth(20);
             ContractCompanionService.attacked(owner, attacker, 2);
             owner.setHealth(18);

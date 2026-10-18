@@ -70,6 +70,7 @@ jobs:
           python tools/validate_contract_nbt_safety.py
           python tools/validate_contract_permissions.py
           python tools/validate_contract_resonance.py
+          python tools/validate_resonance_foundation.py
           python tools/validate_carrier_loss_recovery.py
           python tools/validate_patchouli.py
           python tools/validate_contract_interiors.py
@@ -90,6 +91,12 @@ jobs:
             -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
             -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+
+      - name: Native resonance, restart, projection and companion fixtures
+        run: |
+          python tools/run_stage_three_tests.py --fixture resonance --compat vanilla
+          python tools/run_stage_three_tests.py --fixture projection --compat vanilla
+          python tools/run_stage_three_tests.py --fixture companion --compat vanilla
 
       - name: Prepare optional BladeTetra provider runtime
         run: |

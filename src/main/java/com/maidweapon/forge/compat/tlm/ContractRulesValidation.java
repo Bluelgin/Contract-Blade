@@ -12,7 +12,7 @@ final class ContractRulesValidation {
         var rule = ContractRulesConfig.LEVELS[6];
         var oldMode = rule.mode().get();
         var oldIds = rule.entities().get();
-        int oldKills = rule.kills().get(), oldMaximum = ContractRulesConfig.MAX_RESONANCE.get();
+        int oldKills = rule.kills().get(), oldMaximum = ContractRulesConfig.POOL_MAX_RESONANCE.get();
         double oldDamage = rule.damage().get();
         try {
             check(!ContractRulesConfig.AUTO_MANIFEST.get(), "hurt auto-manifest defaults off");
@@ -22,7 +22,7 @@ final class ContractRulesValidation {
             mastery.setEnderDragonKills(2);
             mastery.setWitherKills(1);
             data.setResonance(120);
-            ContractRulesConfig.MAX_RESONANCE.set(400);
+            ContractRulesConfig.POOL_MAX_RESONANCE.set(400);
             var stack = new ItemStack(Items.IRON_SWORD);
             ContractCarrierData.setMaidData(stack, data);
             data = ContractCarrierData.getMaidData(stack);
@@ -33,7 +33,7 @@ final class ContractRulesValidation {
             stack.getOrCreateTag().getCompound("MaidData").remove("ContractResonance");
             check(ContractCarrierData.getMaidData(stack).getResonance() == 200,
                     "missing legacy field stays at 200 rather than refilling");
-            ContractRulesConfig.MAX_RESONANCE.set(80);
+            ContractRulesConfig.POOL_MAX_RESONANCE.set(80);
             check(data.getResonance() == 80, "lowered maximum bounds existing data");
             rule.mode().set("entities");
             rule.entities().set(java.util.List.of("minecraft:wither", "minecraft:warden"));
@@ -62,7 +62,7 @@ final class ContractRulesValidation {
             rule.entities().set(oldIds);
             rule.kills().set(oldKills);
             rule.damage().set(oldDamage);
-            ContractRulesConfig.MAX_RESONANCE.set(oldMaximum);
+            ContractRulesConfig.POOL_MAX_RESONANCE.set(oldMaximum);
         }
     }
     private static void check(boolean result, String label) {

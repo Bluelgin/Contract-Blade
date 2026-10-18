@@ -18,6 +18,10 @@ public class MaidWeaponConfig {
 
     // ==================== 契约共鸣 ====================
 
+    public static ForgeConfigSpec.DoubleValue RESONANCE_STORED_RECOVERY;
+    public static ForgeConfigSpec.DoubleValue RESONANCE_COMBAT_RECOVERY;
+    public static ForgeConfigSpec.DoubleValue RESONANCE_ABILITY_IDLE_RECOVERY;
+    public static ForgeConfigSpec.ConfigValue<java.util.List<? extends Double>> RESONANCE_PROGRESS_MULTIPLIERS;
     public static ForgeConfigSpec.IntValue RESONANCE_COMBAT_DRAIN_INTERVAL;
     public static ForgeConfigSpec.IntValue RESONANCE_RECOVERY_DELAY;
     public static ForgeConfigSpec.IntValue RESONANCE_PASSIVE_RECOVERY;
@@ -90,11 +94,17 @@ public class MaidWeaponConfig {
         builder.pop();
         builder.push("ContractResonance");
 
+        RESONANCE_STORED_RECOVERY = builder.defineInRange("storedRecoveryPerSecond", 1.0, 0.0, 200.0);
+        RESONANCE_COMBAT_RECOVERY = builder.defineInRange("combatRecoveryPerSecond", 0.5, 0.0, 200.0);
+        RESONANCE_ABILITY_IDLE_RECOVERY = builder.defineInRange("abilityIdleRecoveryPerSecond", 1.0, 0.0, 200.0);
+        RESONANCE_PROGRESS_MULTIPLIERS = builder.comment("Ordered global spirit-vein multipliers, including unupgraded stage 0")
+                .defineList("spiritVeinMultipliers", java.util.List.of(1.0, 1.25, 1.60, 2.0),
+                        value -> value instanceof Double d && Double.isFinite(d) && d >= 1 && d <= 100);
         RESONANCE_COMBAT_DRAIN_INTERVAL = builder
                 .comment("显现女仆处于战斗时每消耗 1 点共鸣的 tick 间隔")
                 .defineInRange("combatDrainInterval", 80, 20, 1200);
         RESONANCE_RECOVERY_DELAY = builder
-                .comment("脱离战斗后开始自然恢复所需 tick")
+                .comment("Combat activity timeout in ticks; recovery continues at the combat rate")
                 .defineInRange("recoveryDelay", 100, 0, 2400);
         RESONANCE_PASSIVE_RECOVERY = builder
                 .comment("脱战时每秒恢复的共鸣")
@@ -116,7 +126,7 @@ public class MaidWeaponConfig {
                 .defineInRange("healRecoveryMultiplier", 1.0, 0.0, 100.0);
         RESONANCE_OWNER_HURT_MULTIPLIER = builder
                 .comment("主人受伤时，共鸣恢复 = 失去血量 × 此倍率")
-                .defineInRange("ownerHurtRecoveryMultiplier", 0.3, 0.0, 10.0);
+                .defineInRange("ownerHurtRecoveryMultiplier", 0.0, 0.0, 10.0);
 
         builder.pop();
         builder.push("ContractManifestation");

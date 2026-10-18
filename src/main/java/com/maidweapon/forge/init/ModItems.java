@@ -36,6 +36,15 @@ public final class ModItems {
     public static final RegistryObject<Item> HEARTBOUND_KNOT = ITEMS.register(
             "heartbound_knot", () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED));
 
+    public static final RegistryObject<Item> AWAKENING_VEIN = ITEMS.register("awakening_vein",
+            () -> new com.maidweapon.forge.item.ResonanceUpgradeItem(1));
+    public static final RegistryObject<Item> FLOWING_VEIN = ITEMS.register("flowing_vein",
+            () -> new com.maidweapon.forge.item.ResonanceUpgradeItem(2));
+    public static final RegistryObject<Item> ENDLESS_VEIN = ITEMS.register("endless_vein",
+            () -> new com.maidweapon.forge.item.ResonanceUpgradeItem(3));
+    public static final RegistryObject<Item> ENDLESS_CONTRACT = ITEMS.register("endless_contract",
+            () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED, true));
+
     public static final RegistryObject<Item> MAID_SWORD = ITEMS.register(
             "maid_sword", () -> new MaidWeaponItem(new Item.Properties()
                     .stacksTo(1).durability(MaidWeaponData.MAX_FAVORABILITY + 1)));
@@ -78,14 +87,15 @@ public final class ModItems {
                         return InteractionResultHolder.fail(crystal);
                     }
                     MaidWeaponData data = ContractCarrierData.getMaidData(weapon);
-                    if (data.getResonance() >= MaidWeaponData.maximumResonance()) {
+                    if (com.maidweapon.forge.system.resonance.ResonanceService.current(player, weapon,
+                            ContractCarrierData.getBindingId(weapon)) >= MaidWeaponData.maximumResonance()) {
                         player.displayClientMessage(
                                 Component.translatable("maid_weapon.message.resonance_full"), true);
                         return InteractionResultHolder.fail(crystal);
                     }
-                    data.addResonance(50);
-                    ContractCarrierData.setMaidData(weapon, data);
-                    crystal.shrink(1);
+                    if (!com.maidweapon.forge.system.resonance.ResonanceService.recoverLegacy(player, weapon,
+                            ContractCarrierData.getBindingId(weapon), 50)) return InteractionResultHolder.fail(crystal);
+                    if (!player.getAbilities().instabuild) crystal.shrink(1);
                     player.displayClientMessage(Component.translatable(
                             "maid_weapon.message.resonance_restored", 50), true);
                     return InteractionResultHolder.success(crystal);
