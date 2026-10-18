@@ -44,6 +44,9 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
     }
 
     @Override protected void onHitEntity(EntityHitResult hit) {
+        // Budget records exist on the logical server only; never discard client
+        // render entities because the client has no authority to settle a volley.
+        if (level().isClientSide) return;
         var shooter = getOwner();
         if (!(shooter instanceof Player player) || !(hit.getEntity() instanceof LivingEntity victim)
                 || !safeTarget(player, victim)) {
