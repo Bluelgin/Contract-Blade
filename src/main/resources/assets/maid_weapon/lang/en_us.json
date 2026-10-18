@@ -522,5 +522,8 @@
   "maid_weapon.danmaku.form.needle": "Spirit Needle",
   "maid_weapon.danmaku.form.flower": "Petal Spread",
   "maid_weapon.danmaku.form.guard": "Guardian Ring",
-  "maid_weapon.danmaku.form.fantasy": "Fantasy Kaleidoscope"
+  "maid_weapon.danmaku.form.fantasy": "Fantasy Kaleidoscope",
+  "patchouli.maid_weapon.entry.manka_talisman.name": "Manka Talisman: Ordinary Contract Spells",
+  "patchouli.maid_weapon.entry.manka_talisman.page.1": "Place the Manka Talisman in an ordinary contracted maid's native bauble slot. A swing of your sword then summons Touhou-style companion danmaku, even while she rests inside the weapon. Intrinsic sword spirits cannot use it.",
+  "patchouli.maid_weapon.entry.manka_talisman.page.2": "Forms scale with the player's global Contract Mastery. At Lv.5, Needle, Flower and Guard become available; Guard strengthens at Lv.6. At Lv.10, Fantasy Kaleidoscope unlocks. Tap the rebindable middle-mouse key to cast, hold ~0.3s to select, then release to confirm. No resonance cost yet."
 }

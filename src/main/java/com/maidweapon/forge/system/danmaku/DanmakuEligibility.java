@@ -15,7 +15,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class DanmakuEligibility {
     public static ResonanceContract context(ServerPlayer owner) {
-        if (owner == null || !owner.isAlive() || owner.isSpectator()) return null;
+        if (owner == null || !owner.isAlive() || owner.isSpectator()
+                || !net.minecraftforge.fml.ModList.get().isLoaded("touhou_little_maid")) return null;
         ItemStack carrier = owner.getMainHandItem();
         if (!MaidInfusion.isInfused(carrier) || FoxSpiritState.hasResident(carrier)) return null;
         String binding = ContractCarrierData.getBindingId(carrier);

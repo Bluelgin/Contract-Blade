@@ -1,0 +1,15 @@
+{
+  "name": "patchouli.maid_weapon.entry.manka_talisman.name",
+  "category": "maid_weapon:basics",
+  "icon": "maid_weapon:manka_talisman",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.manka_talisman.page.1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.manka_talisman.page.2"
+    }
+  ]
+}

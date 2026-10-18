@@ -524,5 +524,8 @@
   "maid_weapon.danmaku.form.needle": "灵针",
   "maid_weapon.danmaku.form.flower": "散华",
   "maid_weapon.danmaku.form.guard": "护身",
-  "maid_weapon.danmaku.form.fantasy": "幻想万华"
+  "maid_weapon.danmaku.form.fantasy": "幻想万华",
+  "patchouli.maid_weapon.entry.manka_talisman.name": "万华御札·普通契约的符卡",
+  "patchouli.maid_weapon.entry.manka_talisman.page.1": "将万华御札佩戴于普通契约女仆的饰品栏后，玩家挥剑时，女仆会以东方弹幕协同进攻。即使女仆驻留武器内部，符札也会回应契约。剑灵专属武器无法获得此能力。",
+  "patchouli.maid_weapon.entry.manka_talisman.page.2": "符式随玩家的全局契约熟练度成长：Lv.5 解锁灵针、散华、护身三个主动符式；Lv.6 强化护身回轮；Lv.10 解锁「幻想万华」。短按中键释放当前符卡，长按约 0.3 秒打开符式轮盘，松开确认选择。此版本不消耗共鸣。"
 }

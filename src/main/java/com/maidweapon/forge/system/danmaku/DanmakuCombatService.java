@@ -29,9 +29,8 @@ public final class DanmakuCombatService {
         if (!(event.getSource().getDirectEntity() instanceof ServerPlayer player)
                 || event.getAmount() <= 0 || player.level().isClientSide) return;
         LivingEntity victim = event.getEntity();
-        if (!ContractDanmakuProjectile.safeTarget(player, victim)) return;
         var contract = DanmakuEligibility.context(player);
-        if (contract == null) return;
+        if (contract == null || !ContractDanmakuProjectile.safeTarget(player, victim)) return;
         int mastery = ContractMasteryService.getLevel(player);
         String key = key(player, contract.maid(), "auto");
         long now = player.level().getGameTime();

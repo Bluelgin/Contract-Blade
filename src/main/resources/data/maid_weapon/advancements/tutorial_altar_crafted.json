@@ -41,6 +41,12 @@
       "conditions": {
         "recipe_id": "maid_weapon:altar/endless_contract"
       }
+    },
+    "manka_talisman": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/manka_talisman"
+      }
     }
   },
   "requirements": [
@@ -51,7 +57,8 @@
       "awakening_vein",
       "flowing_vein",
       "endless_vein",
-      "endless_contract"
+      "endless_contract",
+      "manka_talisman"
     ]
   ]
 }
