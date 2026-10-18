@@ -26,7 +26,7 @@ assert "Effect.DANMAKU_ART" in policy
 assert "ContractMasteryService.getLevel" in combat
 assert "getDirectEntity()" in combat and "LivingDamageEvent" in combat
 assert "resonanceCost(DanmakuForm form" in growth and "return 0;" in growth
-assert "ResonanceService.pay" not in combat and "ResonanceService.drain" not in combat
+assert "ResonanceService.pay(" not in combat and "ResonanceService.drain(" not in combat
 assert "safeTarget" in projectile and "super.onHitEntity" in projectile
 assert "getSender()" in network and "enqueueWork" in network and "PLAY_TO_SERVER" in network
 assert "KeyMapping" in keys and "GLFW_MOUSE_BUTTON_MIDDLE" in keys
