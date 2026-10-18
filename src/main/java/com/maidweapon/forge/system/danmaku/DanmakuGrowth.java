@@ -3,9 +3,10 @@ package com.maidweapon.forge.system.danmaku;
 /** Global ContractMastery gates ordinary-contract talisman abilities, not the talisman ItemStack. */
 public final class DanmakuGrowth {
     public record AutoAttack(int count, double bonusFraction, int cooldownTicks) { }
-    public static AutoAttack auto(int mastery) {
+    public static AutoAttack auto(int mastery) { return auto(mastery, false); }
+    public static AutoAttack auto(int mastery, boolean consecutive) {
         int level = Math.max(1, Math.min(10, mastery));
-        return new AutoAttack(level >= 8 ? 4 : level >= 2 ? 3 : 2,
+        return new AutoAttack(level >= 8 && consecutive ? 4 : level >= 2 ? 3 : 2,
                 Math.min(0.20, 0.15 + (level - 1) * 0.005), 120);
     }
     /** Per array total, not per bullet. Bullets cannot bypass ordinary hit limitations. */

@@ -7,8 +7,11 @@ class DanmakuGrowthTest {
     @Test void progressiveAutoAndNoBulletCountDamageExplosion() {
         assertEquals(2, DanmakuGrowth.auto(1).count());
         assertEquals(3, DanmakuGrowth.auto(2).count());
-        assertEquals(4, DanmakuGrowth.auto(8).count());
+        assertEquals(3, DanmakuGrowth.auto(8).count());
+        assertEquals(4, DanmakuGrowth.auto(8, true).count());
+        assertEquals(3, DanmakuGrowth.auto(7, true).count());
         assertTrue(DanmakuGrowth.auto(10).bonusFraction() <= .20);
+        assertEquals(24, DanmakuGrowth.count(DanmakuForm.FANTASY, 10));
         for (int level = 1; level <= 10; level++) {
             var auto = DanmakuGrowth.auto(level);
             assertTrue(auto.count() * (auto.bonusFraction() / auto.count()) <= .201);

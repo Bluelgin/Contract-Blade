@@ -10,6 +10,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -19,6 +20,10 @@ import java.util.*;
 @Mod.EventBusSubscriber
 public final class DanmakuCombatService {
     private static final Map<String, Long> COOLDOWNS = new HashMap<>();
+    private record RecentHit(UUID target, long tick) { }
+    private record PendingFantasy(String maid, int mastery, float basis, int nextWave, long due) { }
+    private static final Map<String, RecentHit> RECENT_HITS = new HashMap<>();
+    private static final Map<String, PendingFantasy> PENDING = new HashMap<>();
 
     @SubscribeEvent public static void afterMelee(LivingDamageEvent event) {
         if (!(event.getSource().getDirectEntity() instanceof ServerPlayer player)
@@ -30,9 +35,13 @@ public final class DanmakuCombatService {
         int mastery = ContractMasteryService.getLevel(player);
         String key = key(player, contract.maid(), "auto");
         long now = player.level().getGameTime();
+        String recentKey = key(player, contract.maid(), "recent_hit");
+        RecentHit previous = RECENT_HITS.put(recentKey, new RecentHit(victim.getUUID(), now));
+        boolean consecutive = previous != null && previous.target().equals(victim.getUUID())
+                && now >= previous.tick() && now - previous.tick() <= 100;
         if (!ready(key, now)) return;
         COOLDOWNS.put(key, now + DanmakuGrowth.auto(mastery).cooldownTicks());
-        DanmakuProjectilePatterns.auto(player, victim, mastery, event.getAmount());
+        DanmakuProjectilePatterns.auto(player, victim, mastery, event.getAmount(), consecutive);
     }
 
     /** Returns false for invalid packet, missing bauble, level gate, or active cooldown. */
@@ -51,7 +60,33 @@ public final class DanmakuCombatService {
         float basis = (float) Math.max(1, player.getAttributeValue(Attributes.ATTACK_DAMAGE));
         COOLDOWNS.put(key, now + form.cooldownTicks());
         DanmakuProjectilePatterns.cast(player, form, target, mastery, basis);
+        if (form == DanmakuForm.FANTASY)
+            PENDING.put(key(player, contract.maid(), "fantasy_waves"),
+                    new PendingFantasy(contract.maid(), mastery, basis, 1, now + 8));
         return true;
+    }
+
+    /** Three discrete waves, cancelled immediately if the weapon, bauble or maid changes. */
+    @SubscribeEvent public static void pendingWave(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) return;
+        long now = player.level().getGameTime();
+        String prefix = player.getUUID() + ":";
+        var iterator = PENDING.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            if (!entry.getKey().startsWith(prefix)) continue;
+            PendingFantasy pending = entry.getValue();
+            if (now < pending.due()) continue;
+            var context = DanmakuEligibility.context(player);
+            if (context == null || !pending.maid().equals(context.maid())) {
+                iterator.remove();
+                continue;
+            }
+            DanmakuProjectilePatterns.fantasyWave(player, pending.nextWave(), pending.mastery(), pending.basis());
+            if (pending.nextWave() >= 2) iterator.remove();
+            else entry.setValue(new PendingFantasy(pending.maid(), pending.mastery(), pending.basis(),
+                    pending.nextWave() + 1, now + 8));
+        }
     }
 
     private static LivingEntity acquireTarget(ServerPlayer player) {
@@ -83,7 +118,11 @@ public final class DanmakuCombatService {
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         String prefix = event.getEntity().getUUID() + ":";
         COOLDOWNS.keySet().removeIf(key -> key.startsWith(prefix));
+        RECENT_HITS.keySet().removeIf(key -> key.startsWith(prefix));
+        PENDING.keySet().removeIf(key -> key.startsWith(prefix));
     }
-    @SubscribeEvent public static void stopped(ServerStoppedEvent event) { COOLDOWNS.clear(); }
+    @SubscribeEvent public static void stopped(ServerStoppedEvent event) {
+        COOLDOWNS.clear(); RECENT_HITS.clear(); PENDING.clear();
+    }
     private DanmakuCombatService() { }
 }

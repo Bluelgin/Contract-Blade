@@ -15,24 +15,29 @@ import net.minecraft.world.phys.Vec3;
  * among bullets, so level 10 never multiplies full sword damage by projectile count.
  */
 public final class DanmakuProjectilePatterns {
-    public static void auto(ServerPlayer owner, LivingEntity target, int mastery, float damage) {
-        var profile = DanmakuGrowth.auto(mastery);
+    public static void auto(ServerPlayer owner, LivingEntity target, int mastery,
+                            float damage, boolean consecutive) {
+        var profile = DanmakuGrowth.auto(mastery, consecutive);
         double total = Math.max(0, damage) * profile.bonusFraction();
         if (total <= 0) return;
-        Vec3 direction = direction(owner, target);
+        Vec3 direction = direction(owner, target, mastery >= 4);
         for (int i = 0; i < profile.count(); i++) {
             double offset = i - (profile.count() - 1) / 2.0;
-            spawn(owner, direction.yRot((float) (offset * .065)),
+            spawn(owner, direction.yRot((float) (offset * (mastery >= 3 ? .085 : .04))),
                     (float) (total / profile.count()), DanmakuColor.LIGHT_BLUE, DanmakuType.PELLET, 0.85f);
         }
     }
     public static void cast(ServerPlayer owner, DanmakuForm form, LivingEntity target,
                             int mastery, float baseAttack) {
         if (!form.unlocked(mastery)) return;
+        if (form == DanmakuForm.FANTASY) {
+            fantasyWave(owner, 0, mastery, baseAttack);
+            return;
+        }
         int count = DanmakuGrowth.count(form, mastery);
         float each = (float) (Math.max(0, baseAttack) * DanmakuGrowth.fraction(form, mastery) / count);
         if (each <= 0) return;
-        Vec3 forward = direction(owner, target);
+        Vec3 forward = direction(owner, target, mastery >= 4);
         for (int i = 0; i < count; i++) {
             Vec3 vector;
             DanmakuColor color;
@@ -54,21 +59,33 @@ public final class DanmakuProjectilePatterns {
                     color = DanmakuColor.LIGHT_GREEN;
                     shape = DanmakuType.ORBS;
                 }
-                case FANTASY -> {
-                    int ring = i / 8;
-                    double angle = (i % 8) * Math.PI / 4.0 + ring * .17;
-                    vector = new Vec3(Math.cos(angle), .15 + ring * .12, Math.sin(angle));
-                    color = ring == 0 ? DanmakuColor.PINK : ring == 1 ? DanmakuColor.CYAN : DanmakuColor.PURPLE;
-                    shape = DanmakuType.ORBS;
-                }
+                case FANTASY -> throw new IllegalStateException("Fantasy uses staged waves");
                 default -> throw new IllegalStateException();
             }
-            spawn(owner, vector, each, color, shape, form == DanmakuForm.FANTASY ? .5f : .8f);
+            float speed = form == DanmakuForm.FLOWER && mastery >= 7
+                    ? (i % 2 == 0 ? .64f : .87f) : .8f;
+            spawn(owner, vector, each, color, shape, speed);
         }
     }
-    private static Vec3 direction(ServerPlayer owner, LivingEntity target) {
+    /** One third of the final 24-bullet budget per 8-tick wave. */
+    public static void fantasyWave(ServerPlayer owner, int wave, int mastery, float baseAttack) {
+        if (wave < 0 || wave > 2 || !DanmakuForm.FANTASY.unlocked(mastery)) return;
+        int count = DanmakuGrowth.count(DanmakuForm.FANTASY, mastery);
+        float each = (float) (Math.max(0, baseAttack)
+                * DanmakuGrowth.fraction(DanmakuForm.FANTASY, mastery) / count);
+        DanmakuColor color = wave == 0 ? DanmakuColor.PINK
+                : wave == 1 ? DanmakuColor.CYAN : DanmakuColor.PURPLE;
+        for (int i = 0; i < 8; i++) {
+            double angle = i * Math.PI / 4.0 + wave * .17;
+            spawn(owner, new Vec3(Math.cos(angle), .15 + wave * .12, Math.sin(angle)),
+                    each, color, DanmakuType.ORBS, .5f + wave * .06f);
+        }
+    }
+    private static Vec3 direction(ServerPlayer owner, LivingEntity target, boolean lead) {
         Vec3 from = owner.getEyePosition().add(owner.getLookAngle().scale(.4));
-        Vec3 to = target == null ? owner.getLookAngle() : target.getEyePosition().subtract(from);
+        Vec3 end = target == null ? null : target.getEyePosition();
+        if (end != null && lead) end = end.add(target.getDeltaMovement().scale(.7));
+        Vec3 to = end == null ? owner.getLookAngle() : end.subtract(from);
         return to.lengthSqr() < 1.0e-5 ? owner.getLookAngle() : to.normalize();
     }
     private static void spawn(ServerPlayer owner, Vec3 direction, float damage,

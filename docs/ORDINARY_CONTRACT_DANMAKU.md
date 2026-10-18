@@ -16,9 +16,9 @@ native codec/cached effects resolver used by Endless Contract.
 - Lv.5: unlock active NEEDLE and FLOWER spell forms and wheel selection.
 - Lv.6: unlock GUARD circular screen.
 - Lv.7: spread gains two-stage density.
-- Lv.8: improve the repeat-hit salvo to four pellets.
+- Lv.8: a recent second hit on the same entity increases a salvo to four pellets.
 - Lv.9: denser FLOWER spell.
-- Lv.10: FANTASY three-colored circular spell card.
+- Lv.10: FANTASY three-colored circular spell card, resolved in three 8-tick-spaced waves.
 
 Player input: the rebindable middle-mouse key is a short tap to cast the last selected
 spell. Holding for six client ticks (~0.3s at 20 TPS) opens the four-direction
