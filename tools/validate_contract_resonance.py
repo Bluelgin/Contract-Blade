@@ -37,8 +37,10 @@ if 'defineInRange("favorabilityBaseMultiplierV2", 1.0' not in config:
     raise SystemExit("Zero favorability still weakens contract damage")
 if 'defineInRange("favorabilityMaxBonusV2", 0.25' not in config:
     raise SystemExit("Full-favorability reward is not the agreed +25%")
-if "getResonance()" not in overlay or "SHOW_RESONANCE_HUD" not in overlay:
-    raise SystemExit("HUD still displays favorability instead of contract resonance")
+if "SHOW_RESONANCE_HUD" not in overlay or "ResonanceNetwork.clientCurrent" not in overlay:
+    raise SystemExit("HUD must display the server-owned resonance pool snapshot")
+if "data.getResonance()" in overlay:
+    raise SystemExit("HUD must not display stale weapon NBT resonance")
 if "syncFavorabilityFromMaid" not in lifecycle:
     raise SystemExit("Manifested TLM favorability is not mirrored back to the weapon")
 
@@ -48,4 +50,4 @@ recall = lifecycle.split(
 if "TlmEntityAdapter.setFavorability(entity" in recall:
     raise SystemExit("Weapon data still overwrites TLM favorability before recall")
 
-print("Validated resonance migration, recovery/combat rules, favorability isolation, and HUD")
+print("Validated legacy resonance archive, pooled recovery/combat rules, favorability isolation, and server-owned HUD")
