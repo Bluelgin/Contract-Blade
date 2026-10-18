@@ -41,7 +41,7 @@ public final class DanmakuProjectilePatterns {
             case NEEDLE -> {
                 if (index > 1) return;
                 int perWaveCount = 6;
-                float each = (float) baseAttack * DanmakuGrowth.fraction(form, mastery) / 12.0;
+                float each = (float) (baseAttack * DanmakuGrowth.fraction(form, mastery) / 12.0);
                 UUID volley = ledger(owner, target, each, perWaveCount, 1, 120);
                 if (volley == null) return;
                 for (int i = 0; i < perWaveCount; i++) {
@@ -56,7 +56,7 @@ public final class DanmakuProjectilePatterns {
             case FLOWER -> {
                 if (index > 1) return;
                 int count = DanmakuGrowth.count(form, mastery);
-                float each = (float) baseAttack * DanmakuGrowth.fraction(form, mastery) / (count * 2.0);
+                float each = (float) (baseAttack * DanmakuGrowth.fraction(form, mastery) / (count * 2.0));
                 UUID volley = ledger(owner, null, each, count, 3, 120);
                 if (volley == null) return;
                 Vec3 origin = DanmakuLaunchGeometry.launch(owner, index == 0 ? -.8 : .8, .60);
@@ -77,7 +77,7 @@ public final class DanmakuProjectilePatterns {
             }
             case FANTASY -> {
                 if (index > 3) return;
-                float each = (float) baseAttack * DanmakuGrowth.fraction(form, mastery) / 32.0;
+                float each = (float) (baseAttack * DanmakuGrowth.fraction(form, mastery) / 32.0);
                 if (index == 3 && finale) each *= 1.15f;
                 UUID volley = ledger(owner, target, each, 8, 1, 120);
                 if (volley == null) return;
@@ -109,7 +109,7 @@ public final class DanmakuProjectilePatterns {
     public static void guardCounter(ServerPlayer owner, LivingEntity target,
                                     int mastery, float baseAttack) {
         if (target == null || !ContractDanmakuProjectile.safeTarget(owner, target)) return;
-        float damage = (float) baseAttack * DanmakuGrowth.fraction(DanmakuForm.GUARD, mastery) / 8.0;
+        float damage = (float) (baseAttack * DanmakuGrowth.fraction(DanmakuForm.GUARD, mastery) / 8.0);
         UUID volley = ledger(owner, target, damage, 8, 1, 120);
         if (volley == null) return;
         for (int i = 0; i < 8; i++) {
