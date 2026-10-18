@@ -52,7 +52,7 @@ public final class DanmakuKeys {
         @SubscribeEvent public static void emptyAirAttack(PlayerInteractEvent.LeftClickEmpty event) {
             Minecraft client = Minecraft.getInstance();
             if (client.screen == null && event.getEntity() == client.player
-                    && DanmakuClientState.available()) DanmakuNetwork.airSwing();
+                    && DanmakuClientState.autoAvailable()) DanmakuNetwork.airSwing();
         }
 
         /** Pick-block stays vanilla unless this exact rebindable talisman key is active. */
