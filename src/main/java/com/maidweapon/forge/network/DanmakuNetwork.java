@@ -19,7 +19,7 @@ public final class DanmakuNetwork {
     public record AirSwing() { }
     public record Eligibility(String binding, boolean enabled, int mastery) { }
     private static final Map<UUID, Eligibility> LAST = new HashMap<>();
-    private static final Map<UUID, Long> LAST_INPUT = new HashMap<>();
+    private static final DanmakuPacketLimiter INPUT = new DanmakuPacketLimiter();
 
     public static void register() {
         CHANNEL.registerMessage(0, Cast.class,
@@ -30,13 +30,10 @@ public final class DanmakuNetwork {
                     ServerPlayer sender = ctx.getSender();
                     if (sender != null) {
                         ctx.enqueueWork(() -> {
-                            // LAST_INPUT is shared with logout cleanup: main-thread ownership only.
+                            // INPUT is shared with logout cleanup: main-thread ownership only.
                             long now = System.nanoTime();
-                            Long last = LAST_INPUT.get(sender.getUUID());
-                            if (last == null || now - last >= 50_000_000L) {
-                                LAST_INPUT.put(sender.getUUID(), now);
+                            if (INPUT.allow(sender.getUUID(), now))
                                 DanmakuCombatService.cast(sender, DanmakuForm.safe(packet.form()));
-                            }
                         });
                     }
                     ctx.setPacketHandled(true);
@@ -79,8 +76,8 @@ public final class DanmakuNetwork {
         LAST.put(player.getUUID(), state);
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), state);
     }
-    public static void forget(UUID player) { LAST.remove(player); LAST_INPUT.remove(player); }
-    public static void clearAll() { LAST.clear(); LAST_INPUT.clear(); }
+    public static void forget(UUID player) { LAST.remove(player); INPUT.forget(player); }
+    public static void clearAll() { LAST.clear(); INPUT.clear(); }
     private static final class ClientReceiver {
         static void receive(Eligibility packet) {
             com.maidweapon.forge.client.DanmakuClientState.receive(
