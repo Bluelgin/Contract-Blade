@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.Locale;
 import java.util.UUID;
 import static com.maidweapon.forge.system.danmaku.DanmakuTargeting.panel;
+import static com.maidweapon.forge.system.danmaku.DanmakuTargeting.acquireTarget;
 
 /** Ordinary-maid support coordinator; all actual damage still requires projectile collision. */
 @Mod.EventBusSubscriber
