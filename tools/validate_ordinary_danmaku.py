@@ -34,9 +34,11 @@ assert "MIN_TICKS = 2" in source("system/danmaku/DanmakuHitPolicy.java")
 assert "PlayerInteractEvent.LeftClickEmpty" in keys
 assert "AttackEntityEvent" in combat
 assert "DanmakuShotQueue" in source("compat/tlm/danmaku/DanmakuProjectilePatterns.java")
-assert "DanmakuHitPolicy.mayHit" in projectile
+assert "DanmakuRuntimeApi.mayHit" in projectile
+assert "DanmakuHitPolicy.mayHit" in source("system/danmaku/DanmakuRuntimeRules.java")
 assert "DanmakuLaunchGeometry.launch" in source("compat/tlm/danmaku/DanmakuProjectilePatterns.java")
-assert "lastFormCast" in combat and "attackReady" in combat
+assert "LAST_FORM_CAST_TICK" in source("system/danmaku/DanmakuInputGate.java")
+assert "DanmakuInputGate.attackReady" in combat
 assert "SpiritAbilityResonanceCosts.pay" in source("compat/BlackFoxSwordArtCompat.java")
 assert "ResonanceAttackCosts.pay" in source("entity/BlackFoxSwordCoreEntity.java")
 assert "Action.WHITE_OATH" in source("system/fox/WhiteFoxBlessingService.java")
