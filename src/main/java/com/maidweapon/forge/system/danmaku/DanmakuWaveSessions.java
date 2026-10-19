@@ -1,5 +1,7 @@
 package com.maidweapon.forge.system.danmaku;
 
+import com.maidweapon.forge.system.mastery.ContractMasteryService;
+
 import com.maidweapon.forge.compat.tlm.danmaku.DanmakuShotQueue;
 import com.maidweapon.forge.compat.tlm.danmaku.DanmakuProjectilePatterns;
 import net.minecraft.resources.ResourceKey;
