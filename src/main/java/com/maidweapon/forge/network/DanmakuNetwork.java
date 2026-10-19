@@ -29,12 +29,15 @@ public final class DanmakuNetwork {
                     var ctx = context.get();
                     ServerPlayer sender = ctx.getSender();
                     if (sender != null) {
-                        long now = System.nanoTime();
-                        Long last = LAST_INPUT.get(sender.getUUID());
-                        if (last == null || now - last >= 50_000_000L) {
-                            LAST_INPUT.put(sender.getUUID(), now);
-                            ctx.enqueueWork(() -> DanmakuCombatService.cast(sender, DanmakuForm.safe(packet.form())));
-                        }
+                        ctx.enqueueWork(() -> {
+                            // LAST_INPUT is shared with logout cleanup: main-thread ownership only.
+                            long now = System.nanoTime();
+                            Long last = LAST_INPUT.get(sender.getUUID());
+                            if (last == null || now - last >= 50_000_000L) {
+                                LAST_INPUT.put(sender.getUUID(), now);
+                                DanmakuCombatService.cast(sender, DanmakuForm.safe(packet.form()));
+                            }
+                        });
                     }
                     ctx.setPacketHandled(true);
                 }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
