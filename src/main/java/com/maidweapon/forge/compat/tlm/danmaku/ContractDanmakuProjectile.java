@@ -1,8 +1,6 @@
 package com.maidweapon.forge.compat.tlm.danmaku;
 
-import com.maidweapon.forge.system.danmaku.DanmakuHitBudget;
-import com.maidweapon.forge.system.danmaku.DanmakuHitPolicy;
-import com.maidweapon.forge.system.danmaku.DanmakuEligibility;
+import com.maidweapon.forge.api.danmaku.DanmakuRuntimeApi;
 import com.github.tartaricacid.touhoulittlemaid.entity.projectile.EntityDanmaku;
 import com.maidweapon.forge.compat.tlm.TlmEntityAdapter;
 import net.minecraft.server.level.ServerLevel;
@@ -51,27 +49,27 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
         if (!(shooter instanceof net.minecraft.server.level.ServerPlayer player)
                 || !(hit.getEntity() instanceof LivingEntity victim)
                 || !safeTarget(player, victim)
-                || DanmakuEligibility.context(player) == null) {
+                || DanmakuRuntimeApi.authorizedMaid(player) == null) {
             discard();
             return;
         }
 
         long tick = level().getGameTime();
-        if (volleyId == null || !DanmakuHitPolicy.mayHit(victim.getUUID(), tick)) {
+        if (volleyId == null || !DanmakuRuntimeApi.mayHit(victim.getUUID(), tick)) {
             discard();
             return;
         }
-        float damage = DanmakuHitBudget.claim(volleyId, player.getUUID(), victim.getUUID(), tick);
+        float damage = DanmakuRuntimeApi.claim(volleyId, player.getUUID(), victim.getUUID(), tick);
         if (damage <= 0) { discard(); return; }
         setDamage(damage);
         // This affects only the short duration of our own native projectile hurt()
         // call, never the mob's global hurt state or other mods' incoming attacks.
-        DanmakuHitPolicy.record(victim.getUUID(), tick);
-        int existingFrames = DanmakuHitPolicy.temporarilyRelaxVanillaFrames(victim);
+        DanmakuRuntimeApi.record(victim.getUUID(), tick);
+        int existingFrames = DanmakuRuntimeApi.relaxFrames(victim);
         try {
             super.onHitEntity(hit);
         } finally {
-            DanmakuHitPolicy.restoreFrames(victim, existingFrames);
+            DanmakuRuntimeApi.restoreFrames(victim, existingFrames);
         }
     }
 
