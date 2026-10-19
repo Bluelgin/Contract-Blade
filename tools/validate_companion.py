@@ -39,13 +39,13 @@ assert 'ContractCompanionState.mode(maid)' in attention and 'Mode.GUARD' in atte
 voice = attention.split('private static void playPendingVoice', 1)[1].split('private static boolean isStoredOwnedContract', 1)[0]
 assert '!isSafeToNotify(owner)' in voice
 bond = read('event/MaidBondCombatHandler.java')
-bond_tick = bond.split('public static void onPlayerTick', 1)[1].split('private static void tickResonance', 1)[0]
-assert 'followingContracts(player)' in bond_tick and 'getMainHandItem' not in bond_tick
+assert 'drainLegacy' not in bond and 'RESONANCE_MAID_EMERGENCY_COST' not in bond
+assert 'forceRecall(owner, maid.getStringUUID(), 300)' not in policy, 'companion maintenance must not recall at zero'
 assert 'MAID_HITS.get(key + ":" + ContractCarrierData.ensureBindingId(weapon))' in bond
 assert 'LAST_COOP_REWARD.put(bindingKey, time)' in bond
 for case in ('switched-away companion still recovers resonance',
-             'switched-away companion still drains combat resonance',
-             'resident stays excluded from following resonance ticks',
+             'switched-away companion recovers during combat without upkeep',
+             'resident companion maintenance never drains resonance',
              'protective manifestation never queues attention idle voice'):
     assert case in fixture
 for case in ('holding a contract never auto manifests', 'resident survives owner logout',

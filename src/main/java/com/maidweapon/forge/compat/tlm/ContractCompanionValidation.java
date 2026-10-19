@@ -108,20 +108,20 @@ public final class ContractCompanionValidation {
                     + com.maidweapon.common.MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get() * 5,
                     "switched-away companion still recovers resonance");
             long originalTime = level.getGameTime();
-            int drainInterval = com.maidweapon.common.MaidWeaponConfig.RESONANCE_COMBAT_DRAIN_INTERVAL.get();
             var clock = (net.minecraft.world.level.storage.ServerLevelData) level.getLevelData();
-            clock.setGameTime(((originalTime / drainInterval) + 1) * drainInterval);
             var combatant = new Zombie(level);
             com.maidweapon.forge.event.MaidBondCombatHandler.onDamage(
                     new net.minecraftforge.event.entity.living.LivingDamageEvent(owner,
                             owner.damageSources().mobAttack(combatant), 2));
-            int beforeDrain = com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+            int beforeRecovery = com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
                     ContractCarrierData.getBindingId(carrier));
-            for (int upkeep = 0; upkeep < Math.max(1, (drainInterval + 19) / 20); upkeep++)
-                com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
+            for (int combatTick = 1; combatTick <= 20; combatTick++) {
+                clock.setGameTime(originalTime + combatTick);
+                com.maidweapon.forge.system.resonance.ResonanceRecoveryEvents.tick(ownerTick);
+            }
             check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
-                            ContractCarrierData.getBindingId(carrier)) == beforeDrain - 5,
-                    "switched-away companion still drains combat resonance");
+                            ContractCarrierData.getBindingId(carrier)) == beforeRecovery + 10,
+                    "switched-away companion recovers during combat without upkeep");
             com.maidweapon.forge.event.MaidBondCombatHandler.onLogout(new PlayerEvent.PlayerLoggedOutEvent(owner));
             clock.setGameTime(originalTime);
             owner.getInventory().selected = 0;
@@ -130,10 +130,10 @@ public final class ContractCompanionValidation {
             check(ContractCompanionState.mode(carrier) == ContractCompanionState.Mode.RESIDENT, "native home mode selects residence");
             int residentResonance = com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
                     ContractCarrierData.getBindingId(carrier));
-            com.maidweapon.forge.event.MaidBondCombatHandler.onPlayerTick(ownerTick);
+            ContractCompanionService.tick(owner);
             check(com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
                     ContractCarrierData.getBindingId(carrier)) == residentResonance,
-                    "resident stays excluded from following resonance ticks");
+                    "resident companion maintenance never drains resonance");
             InfusedMaidDeploymentSystem.onLogout(new PlayerEvent.PlayerLoggedOutEvent(owner));
             check(level.getEntity(identity) == maid && !MaidInfusion.containsMaid(carrier), "resident survives owner logout");
             owner.moveTo(100.5, 100, 0.5, 0, 0);
@@ -233,6 +233,16 @@ public final class ContractCompanionValidation {
             owner.setHealth(18);
             ContractCompanionService.tick(owner);
             check(MaidInfusion.containsMaid(carrier), "insufficient resonance never auto manifests");
+            call(owner);
+            maid = (Mob) level.getEntity(identity);
+            check(maid != null && !MaidInfusion.containsMaid(carrier), "manual call manifests at zero without waiver");
+            owner.tickCount = 600;
+            ContractCompanionService.tick(owner);
+            check(level.getEntity(identity) == maid, "zero resonance does not force recall");
+            call(owner);
+            check(MaidInfusion.containsMaid(carrier)
+                    && com.maidweapon.forge.system.resonance.ResonanceService.current(owner, carrier,
+                    ContractCarrierData.getBindingId(carrier)) == 0, "manual recall is free at zero");
         } finally {
             com.maidweapon.common.ContractRulesConfig.AUTO_MANIFEST.set(originalAuto);
             if (maid != null && !maid.isRemoved()) maid.discard();

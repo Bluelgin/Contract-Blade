@@ -57,7 +57,10 @@ public final class SoulBurstService {
     if (!(entity instanceof LivingEntity t)) return false;
     // Core activation pays once, never per native summoned sword or damage stage.
     // A five-sword verified eclipse finish carries both break and stellar surcharge.
-    int basisPoints = core.eclipse() ? 200 + 500 + 800 : 200;
+    int basisPoints = com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_CORE_BURST.basisPoints;
+    if (core.eclipse()) basisPoints +=
+        com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_LIMIT_BREAK.basisPoints
+        + com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_STELLAR_FINISH.basisPoints;
     if (!com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.affordable(
             p, p.getMainHandItem(), basisPoints)) return false;
     var total = SoulDamageEngine.reserveActiveBurst(p, t, AkatsukiDomainService.session(p));

@@ -8,17 +8,17 @@ class SpiritAbilityResonanceCostsTest {
         var A = SpiritAbilityResonanceCosts.Action.class;
         assertEquals(50, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.BLACK_SUMMON));
-        assertEquals(4, SpiritAbilityResonanceCosts.scaled(1000,
-                SpiritAbilityResonanceCosts.Action.BLACK_UPKEEP));
         assertEquals(10, SpiritAbilityResonanceCosts.scaled(1000,
+                SpiritAbilityResonanceCosts.Action.BLACK_UPKEEP));
+        assertEquals(0, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.BLACK_MODE));
         assertEquals(5, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.WHITE_CLEANSE));
         assertEquals(7, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.WHITE_HEAL));
-        assertEquals(50, SpiritAbilityResonanceCosts.scaled(1000,
+        assertEquals(20, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.RED_LIMIT_BREAK));
-        assertEquals(80, SpiritAbilityResonanceCosts.scaled(1000,
+        assertEquals(20, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.RED_STELLAR_FINISH));
         assertEquals(20, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.RED_CORE_BURST));
@@ -26,7 +26,11 @@ class SpiritAbilityResonanceCostsTest {
                 SpiritAbilityResonanceCosts.Action.RED_DOMAIN_NORMAL));
         assertEquals(4, SpiritAbilityResonanceCosts.scaled(1000,
                 SpiritAbilityResonanceCosts.Action.RED_DOMAIN_RAMPAGE));
-        assertEquals(150, SpiritAbilityResonanceCosts.scaledPoints(1000, 1500));
+        assertEquals(60, SpiritAbilityResonanceCosts.scaledPoints(1000,
+                SpiritAbilityResonanceCosts.Action.RED_CORE_BURST.basisPoints
+                + SpiritAbilityResonanceCosts.Action.RED_LIMIT_BREAK.basisPoints
+                + SpiritAbilityResonanceCosts.Action.RED_STELLAR_FINISH.basisPoints));
+        assertEquals(2, SpiritAbilityResonanceCosts.scaled(1000, SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT));
     }
     @Test void tinyServerPoolsNeverGetZeroCostAndInvalidCapFailsClosed() {
         assertEquals(1, SpiritAbilityResonanceCosts.scaledPoints(3, 15));

@@ -27,6 +27,11 @@
       "type": "patchouli:text",
       "title": "patchouli.maid_weapon.entry.growth_values.page.4.title",
       "text": "patchouli.maid_weapon.entry.growth_values.page.4"
+    },
+    {
+      "type": "patchouli:text",
+      "title": "patchouli.maid_weapon.entry.growth_values.page.5.title",
+      "text": "patchouli.maid_weapon.entry.growth_values.page.5"
     }
   ]
 }

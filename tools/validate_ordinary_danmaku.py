@@ -38,7 +38,7 @@ assert "DanmakuHitPolicy.mayHit" in projectile
 assert "DanmakuLaunchGeometry.launch" in source("compat/tlm/danmaku/DanmakuProjectilePatterns.java")
 assert "lastFormCast" in combat and "attackReady" in combat
 assert "SpiritAbilityResonanceCosts.pay" in source("compat/BlackFoxSwordArtCompat.java")
-assert "SpiritAbilityResonanceCosts.pay" in source("entity/BlackFoxSwordCoreEntity.java")
+assert "ResonanceAttackCosts.pay" in source("entity/BlackFoxSwordCoreEntity.java")
 assert "Action.WHITE_OATH" in source("system/fox/WhiteFoxBlessingService.java")
 assert "SpiritAbilityResonanceCosts.pay" in source("system/akatsuki/AkatsukiDomainService.java")
 assert "SpiritAbilityResonanceCosts.payPoints" in source("system/akatsuki/soul/SoulBurstService.java")

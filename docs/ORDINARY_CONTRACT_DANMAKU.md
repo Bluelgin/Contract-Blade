@@ -26,7 +26,7 @@ and damage protections remain enforced by native damage mechanics.
 Client key packets contain no damage or permission authority.
 Lost contract/weapon identity cancels all pending shots.
 
-**Resonance consumption intentionally unimplemented:** all skills cost zero in
+**Historical initial design (superseded by [SPIRIT_RESONANCE_COSTS.md](SPIRIT_RESONANCE_COSTS.md)):** all skills cost zero in
 this iteration; no further Sword Spirit cost policy has been adopted.
 
 ## Art

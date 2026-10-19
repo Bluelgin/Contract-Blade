@@ -12,20 +12,18 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class SpiritAbilityResonanceCosts {
     public enum Action {
-        BLACK_SUMMON(500), BLACK_UPKEEP(40), BLACK_MODE(100),
+        BLACK_SUMMON(500), BLACK_UPKEEP(100), BLACK_MODE(0),
         WHITE_CLEANSE(50), WHITE_HEAL(70), WHITE_MAID_HEAL(50),
         WHITE_CRISIS(300), WHITE_OATH(600),
         RED_DOMAIN_NORMAL(15), RED_DOMAIN_RAMPAGE(35),
-        RED_SPACE_CUT(100), RED_CORE_BURST(200),
-        RED_LIMIT_BREAK(500), RED_STELLAR_FINISH(800);
+        RED_SPACE_CUT(20), RED_CORE_BURST(200),
+        RED_LIMIT_BREAK(200), RED_STELLAR_FINISH(200);
         public final int basisPoints;
         Action(int basisPoints) { this.basisPoints = basisPoints; }
     }
 
     public static int scaled(int maximum, Action action) {
-        if (maximum <= 0) return Integer.MAX_VALUE;
-        return (int)Math.max(1L, Math.min(Integer.MAX_VALUE,
-                ((long)maximum * action.basisPoints + 9999L) / 10000L));
+        return scaledPoints(maximum, action.basisPoints);
     }
     public static int cost(Action action) { return scaled(ResonanceService.maximum(), action); }
 

@@ -154,17 +154,6 @@ public final class BlackFoxSwordCoreEntity extends Entity {
         var level = (net.minecraft.server.level.ServerLevel)level();
         ServerPlayer player = owner == null ? null : level.getServer().getPlayerList().getPlayer(owner);
         if (player == null || !player.isAlive() || player.level() != level || credit(player) == null || tickCount >= BlackFoxSwordCoreTimeline.DURATION) { discard(); return; }
-        // An existing black-fox formation is maintained every five seconds, not
-        // charged for each native projectile or target hit.
-        if (tickCount % 100 == 0) {
-            var verified = credit(player);
-            if (verified == null || !com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.pay(
-                    player, verified.carrier(),
-                    com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.BLACK_UPKEEP)) {
-                discard();
-                return;
-            }
-        }
         if (positionMode() == PositionMode.OWNER_FOLLOW) {
             // Seven blocks is an invariant; horizontal lag gives inertia without dropping below tall bosses.
             Vec3 desired = player.position();
@@ -196,7 +185,14 @@ public final class BlackFoxSwordCoreEntity extends Entity {
         if (tickCount % 10 == 0 && !marks.isEmpty()) for (var enemy : targets(player,AttackMode.BARRAGE))
             if (marked(enemy)) feedback(enemy.getEyePosition().add(0,.4,0),1);
     }
+    public boolean fundAttack(ServerPlayer player) {
+        var verified = credit(player);
+        return verified != null && com.maidweapon.forge.system.resonance.ResonanceAttackCosts.pay(
+                player, verified.carrier(),
+                com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.BLACK_UPKEEP, 20);
+    }
     private void allocateHunters(ServerPlayer player, List<LivingEntity> enemies) {
+        if (!enemies.isEmpty() && !fundAttack(player)) { clearHunters(); return; }
         // Keep a valid actor through its whole native B chain. Distance-order changes must not restart B1.
         hunters.entrySet().removeIf(entry -> {
             boolean remove = entry.getValue().isRemoved() || !entry.getValue().validVictim();
@@ -237,7 +233,7 @@ public final class BlackFoxSwordCoreEntity extends Entity {
         }
     }
     private void fire(ServerPlayer player, LivingEntity living, Vec3 from, int kind, boolean full, AttackMode scope) {
-        if (shots.size() >= 46 || !eligible(player,living,scope)) return;
+        if (shots.size() >= 46 || !eligible(player,living,scope) || !fundAttack(player)) return;
         var actor = scope == AttackMode.COMBO_B ? meleeEmitter : emitter;
         if (actor == null || actor.isRemoved()) {
             actor = com.maidweapon.forge.compat.fox.BlackFoxBossCompat.spawnSwordActor(this,player,null);

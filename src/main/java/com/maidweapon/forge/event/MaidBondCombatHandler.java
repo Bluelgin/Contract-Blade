@@ -3,20 +3,17 @@ package com.maidweapon.forge.event;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 
 import com.maidweapon.common.MaidWeaponConfig;
-import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.system.resonance.*;
 import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.maidweapon.forge.system.MaidCareTaskSystem;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -37,18 +34,14 @@ public final class MaidBondCombatHandler {
     private static final Map<String, Long> PLAYER_HITS = new HashMap<>();
     private static final Map<String, Long> MAID_HITS = new HashMap<>();
     private static final Map<String, Long> LAST_COOP_REWARD = new HashMap<>();
-    private static final Map<UUID, Long> LAST_COMBAT = new HashMap<>();
-    private static final Map<String, Integer> UPKEEP_TICKS = new HashMap<>();
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onDamage(LivingDamageEvent event) {
-        if (event.getEntity().level().isClientSide) return;
+        if (event.getEntity().level().isClientSide || event.getAmount() <= 0) return;
         Entity attacker = event.getSource().getEntity();
 
         if (event.getEntity() instanceof Player owner) {
-            if (!followingContracts(owner).isEmpty()) {
-                markCombat(owner, owner.level().getGameTime());
-            }
+            markCombat(owner, owner.level().getGameTime());
         }
         if (attacker instanceof Player player) recordPlayerHit(player, event.getEntity());
         if (TouhouLittleMaidHelper.isMaidEntity(attacker)) {
@@ -87,7 +80,6 @@ public final class MaidBondCombatHandler {
         try { recalled = InfusedMaidDeploymentSystem.forceRecall(owner, maid.getStringUUID(), weapon, 300); }
         catch (RuntimeException recallError) { recalled = false; }
         if (recalled) {
-            spend(owner, weapon, MaidWeaponConfig.RESONANCE_MAID_EMERGENCY_COST.get());
             carrier.publish(owner);
             return DeathProtection.RECALLED;
         }
@@ -95,55 +87,18 @@ public final class MaidBondCombatHandler {
     }
 
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide
-                || event.player.tickCount % 20 != 0) return;
-
-        Player player = event.player;
-        for (ItemStack weapon : followingContracts(player)) tickResonance(player, weapon);
-    }
-
-    private static void tickResonance(Player player, ItemStack weapon) {
-        long time = player.level().getGameTime();
-        long lastCombat = LAST_COMBAT.getOrDefault(player.getUUID(), Long.MIN_VALUE / 2);
-        boolean inCombat = time - lastCombat <= MaidWeaponConfig.RESONANCE_RECOVERY_DELAY.get();
-
-        if (inCombat) {
-            int interval = MaidWeaponConfig.RESONANCE_COMBAT_DRAIN_INTERVAL.get();
-            if (interval > 0) {
-                String key = player.getUUID() + ":" + ContractCarrierData.getBindingId(weapon);
-                int elapsed = UPKEEP_TICKS.getOrDefault(key, 0) + 20;
-                if (elapsed >= interval) {
-                    ResonanceService.drainLegacy(player, weapon, 1);
-                    elapsed %= interval;
-                }
-                UPKEEP_TICKS.put(key, elapsed);
-            }
-        }
-        if (ResonanceService.current(player, weapon, ContractCarrierData.getBindingId(weapon)) <= 0
-                && !ResonanceService.waived(player, weapon)) {
-            String maidId = ContractCarrierData.getBoundMaidUUID(weapon);
-            if (maidId != null) InfusedMaidDeploymentSystem.forceRecall(player, maidId, 300);
-            player.displayClientMessage(
-                    Component.translatable("maid_weapon.message.resonance_depleted"), true);
-        }
-    }
-
-    @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID player = event.getEntity().getUUID();
-        LAST_COMBAT.remove(player);
-        UPKEEP_TICKS.keySet().removeIf(key -> key.startsWith(player + ":"));
         LAST_COOP_REWARD.keySet().removeIf(key -> key.startsWith(player + ":"));
         PLAYER_HITS.keySet().removeIf(key -> key.startsWith(player + ":"));
         MAID_HITS.keySet().removeIf(key -> key.startsWith(player + ":"));
     }
 
     private static void recordPlayerHit(Player player, LivingEntity target) {
-        List<ItemStack> contracts = followingContracts(player);
-        if (contracts.isEmpty()) return;
         long time = player.level().getGameTime();
         markCombat(player, time);
+        List<ItemStack> contracts = followingContracts(player);
+        if (contracts.isEmpty()) return;
         String key = key(player.getUUID(), target.getUUID());
         PLAYER_HITS.put(key, time);
         for (ItemStack weapon : contracts) {
@@ -175,16 +130,11 @@ public final class MaidBondCombatHandler {
         if (!isActiveContract(owner, weapon)) return;
 
         markCombat(owner, owner.level().getGameTime());
-        int loss = Math.max(1, (int) Math.ceil(event.getAmount() / 4.0f));
-        spend(owner, weapon, loss);
-        int current = ResonanceService.current(owner, weapon, ContractCarrierData.getBindingId(weapon));
-        if (maid.getHealth() - event.getAmount() <= 1.0f || (current <= 0 && !ResonanceService.waived(owner, weapon))) {
+        if (maid.getHealth() - event.getAmount() <= 1.0f) {
             event.setCanceled(true);
-            maid.setHealth(Math.max(1.0f, maid.getHealth()));
-            if (maid.getHealth() - event.getAmount() <= 1.0f) {
-                spend(owner, weapon, MaidWeaponConfig.RESONANCE_MAID_EMERGENCY_COST.get());
-            }
-            InfusedMaidDeploymentSystem.forceRecall(owner, maid.getStringUUID(), 300);
+            // Preserve the injury and all recovered resonance; recall does not heal.
+            maid.setHealth(1.0f);
+            InfusedMaidDeploymentSystem.forceRecall(owner, maid.getStringUUID(), weapon, 300);
         }
     }
 
@@ -196,15 +146,17 @@ public final class MaidBondCombatHandler {
         LAST_COOP_REWARD.put(bindingKey, time);
     }
 
-    private static void spend(Player owner, ItemStack weapon, int amount) {
-        ResonanceService.drainLegacy(owner, weapon, amount);
-    }
-
     private static void markCombat(Player player, long time) {
-        LAST_COMBAT.put(player.getUUID(), time);
-        for (ItemStack weapon : followingContracts(player)) ResonanceService.reportActivity(player, weapon,
-                ContractCarrierData.getBindingId(weapon), "companion_combat", ResonanceActivity.COMBAT,
-                Math.max(1, Math.min(1200, MaidWeaponConfig.RESONANCE_RECOVERY_DELAY.get())));
+        var seen = new HashSet<String>();
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack weapon = player.getInventory().getItem(slot);
+            for (var channel : com.maidweapon.forge.system.contract.ContractChannelStorage.channels(weapon)) {
+                String binding = channel.getString("MaidBindingId");
+                if (seen.add(binding)) ResonanceService.reportActivity(player, weapon, binding,
+                        "owner_combat", ResonanceActivity.COMBAT,
+                        Math.max(1, Math.min(1200, MaidWeaponConfig.RESONANCE_RECOVERY_DELAY.get())));
+            }
+        }
         MaidCareTaskSystem.markDanger(player);
     }
 

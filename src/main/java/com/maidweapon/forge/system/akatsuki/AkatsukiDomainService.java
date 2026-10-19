@@ -189,6 +189,10 @@ public final class AkatsukiDomainService {
         && (player.getLastDamageSource() == null || rescuable(player.getLastDamageSource())))
       rescue(player, state, features);
     if (state.due("snapshot", now, 5)) cue(player, state, features, STATE, null);
+    if (!state.attacking() || now - state.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) {
+      CHAINS.remove(player);
+      return; // Idle domains do not scan, damage or make combat effects.
+    }
     // Ambient domain upkeep is one payment per second per verified contract,
     // NOT one payment per enemy pulse. Rescue remains possible at zero resonance.
     if (state.attacking()) {
@@ -202,10 +206,6 @@ public final class AkatsukiDomainService {
                     : com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_DOMAIN_NORMAL);
       }
       if (!state.resonanceFunded) { CHAINS.remove(player); return; }
-    }
-    if (!state.attacking() || now - state.lastContact > AkatsukiDomainConfig.CONTACT_GAP.get()) {
-      CHAINS.remove(player);
-      return; // Idle domains do not scan, damage or make combat effects.
     }
     if (now % 2 != 0) return;
     Entity found = state.target == null ? null : player.serverLevel().getEntity(state.target);

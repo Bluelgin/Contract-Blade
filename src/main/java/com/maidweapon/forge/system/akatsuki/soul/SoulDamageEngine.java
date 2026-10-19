@@ -115,7 +115,7 @@ public final class SoulDamageEngine {
     // No fixed HP ceiling. Unknown probes cannot spam every four ticks.
     // Do not consume a scheduler slot when the current red-spirit pool cannot pay.
     if (Double.isFinite(requested) && requested > 0
-        && !com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.affordable(
+        && !com.maidweapon.forge.system.resonance.ResonanceAttackCosts.affordable(
             p, p.getMainHandItem(),
             com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT))
       return null;
@@ -126,9 +126,9 @@ public final class SoulDamageEngine {
                 : SoulDamageConfig.CUT_GAP.get())
         : 0;
     if (amount <= 0) return null;
-    if (!com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.pay(
+    if (!com.maidweapon.forge.system.resonance.ResonanceAttackCosts.pay(
             p, p.getMainHandItem(),
-            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT))
+            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT, 10))
       return null;
     if (!recovery) return execute(p, t, session, SPACE_CUT, amount, null, false);
     var reservation = SoulDamageDebtService.reserve(p, t, false, amount);

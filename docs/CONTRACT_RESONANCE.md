@@ -1,5 +1,7 @@
 # Contract resonance foundation
 
+> Current gameplay: manifestation is the fast-recovery phase. Stored idle +2.5/s, stored combat 0/s; manifested idle +20/s, manifested combat +10/s at the default 1000 pool, before spirit-vein multipliers. Call/recall and maid injury/protective recall are free, including at zero resonance; protective recall preserves injury and cooldown. The foundation implementation notes below describe earlier revisions. Current costs, V2 configuration migration and behavior are in [SPIRIT_RESONANCE_COSTS.md](SPIRIT_RESONANCE_COSTS.md).
+
 ## Scope and baseline
 
 Built independently on master `3e2cf94007ba531d20150863fdb32e63f98648b2` (Tooltip PR #24). Open combat PR #25 was inspected at `64dffaefb10749661f422c3b987715dc572bfadd`; its branch is not modified or incorporated. There are no new Akatsuki, black-fox or white-fox skill costs and no changes to their damage, animation, frequency, cooldown or growth parameters. BladeTetra remains optional.
