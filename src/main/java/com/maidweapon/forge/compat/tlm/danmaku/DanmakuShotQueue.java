@@ -107,24 +107,35 @@ public final class DanmakuShotQueue {
         bullet.shoot(shot.direction.x, shot.direction.y, shot.direction.z, shot.speed, 0);
         if (shot.target != null && shot.homingTicks > 0)
             bullet.seek(shot.target, shot.homingTicks);
-        owner.serverLevel().addFreshEntity(bullet);
+        if (owner.serverLevel().addFreshEntity(bullet))
+            DanmakuActiveCounter.spawned(owner.getUUID(),
+                    owner.level().dimension().location().toString(), owner.level().getGameTime());
     }
 
     private static int countActive(ServerPlayer owner) {
-        return owner.serverLevel().getEntitiesOfClass(ContractDanmakuProjectile.class,
+        UUID id = owner.getUUID();
+        String dimension = owner.level().dimension().location().toString();
+        long tick = owner.level().getGameTime();
+        int cached = DanmakuActiveCounter.current(id, dimension, tick);
+        if (cached >= 0) return cached;
+        int count = owner.serverLevel().getEntitiesOfClass(ContractDanmakuProjectile.class,
                 owner.getBoundingBox().inflate(48),
                 p -> owner.equals(p.getOwner()) && !p.isRemoved()).size();
+        DanmakuActiveCounter.record(id, dimension, tick, count);
+        return count;
     }
 
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         remove(event.getEntity().getUUID());
     }
     public static void remove(UUID owner) {
+        DanmakuActiveCounter.forget(owner);
         List<Shot> pending = QUEUED.remove(owner);
         if (pending != null) pendingGlobal -= pending.size();
     }
     @SubscribeEvent public static void stopped(ServerStoppedEvent event) {
         QUEUED.clear();
+        DanmakuActiveCounter.clear();
         pendingGlobal = 0;
     }
     private DanmakuShotQueue() {}
