@@ -2,8 +2,7 @@ package com.maidweapon.forge.compat.tlm.danmaku;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.projectile.DanmakuColor;
 import com.github.tartaricacid.touhoulittlemaid.entity.projectile.DanmakuType;
-import com.maidweapon.forge.system.danmaku.DanmakuEligibility;
-import com.maidweapon.forge.system.danmaku.DanmakuPerformanceBudget;
+import com.maidweapon.forge.api.danmaku.DanmakuRuntimeApi;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -35,9 +34,9 @@ public final class DanmakuShotQueue {
     }
 
     public static boolean canCast(ServerPlayer player, int count) {
-        if (pendingGlobal + count > DanmakuPerformanceBudget.MAX_QUEUED_GLOBAL) return false;
+        if (pendingGlobal + count > DanmakuRuntimeApi.maximumGlobalQueue()) return false;
         int active = countActive(player);
-        return DanmakuPerformanceBudget.capacity(active, pending(player), count);
+        return DanmakuRuntimeApi.canAllocate(active, pending(player), count);
     }
 
     public static void schedule(ServerPlayer owner, Vec3 position, Vec3 direction,
@@ -52,14 +51,14 @@ public final class DanmakuShotQueue {
                                 int delay, double rearSide) {
         if (owner.level().isClientSide || volley == null || !Float.isFinite(speed)
                 || speed <= 0 || direction.lengthSqr() < .00001 || delay < 0 || delay > 80) return;
-        var context = DanmakuEligibility.context(owner);
-        if (context == null || pending(owner) >= DanmakuPerformanceBudget.MAX_QUEUED_PER_OWNER
-                || pendingGlobal >= DanmakuPerformanceBudget.MAX_QUEUED_GLOBAL) return;
-        var shot = new Shot(context.maid(), owner.level().dimension(),
+        var context = DanmakuRuntimeApi.authorizedMaid(owner);
+        if (context == null || pending(owner) >= DanmakuRuntimeApi.maximumOwnerQueue()
+                || pendingGlobal >= DanmakuRuntimeApi.maximumGlobalQueue()) return;
+        var shot = new Shot(context, owner.level().dimension(),
                 owner.level().getGameTime() + delay, position, direction.normalize(),
                 speed, color, type, volley, target == null ? null : target.getUUID(),
                 Math.max(0, homingTicks), rearSide);
-        if (delay == 0) { fire(owner, shot, context.maid()); return; }
+        if (delay == 0) { fire(owner, shot, context); return; }
         QUEUED.computeIfAbsent(owner.getUUID(), k -> new ArrayList<>()).add(shot);
         pendingGlobal++;
     }
@@ -68,8 +67,8 @@ public final class DanmakuShotQueue {
         if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer owner)) return;
         List<Shot> waiting = QUEUED.get(owner.getUUID());
         if (waiting == null) return;
-        var authorization = DanmakuEligibility.context(owner);
-        String maid = authorization == null ? null : authorization.maid();
+        var authorization = DanmakuRuntimeApi.authorizedMaid(owner);
+        String maid = authorization;
         long now = owner.level().getGameTime();
         int fired = 0;
         Iterator<Shot> iterator = waiting.iterator();
@@ -92,9 +91,9 @@ public final class DanmakuShotQueue {
 
     private static void fire(ServerPlayer owner, Shot shot, String maid) {
         if (!owner.isAlive() || !owner.level().dimension().equals(shot.dimension)
-                || countActive(owner) >= DanmakuPerformanceBudget.MAX_ACTIVE_PER_OWNER) return;
-        var context = DanmakuEligibility.context(owner);
-        if (context == null || !maid.equals(context.maid())) return;
+                || countActive(owner) >= DanmakuRuntimeApi.maximumActiveOwner()) return;
+        var context = DanmakuRuntimeApi.authorizedMaid(owner);
+        if (context == null || !maid.equals(context)) return;
         var bullet = new ContractDanmakuProjectile(owner.serverLevel(), owner);
         Vec3 origin = Double.isFinite(shot.rearSide)
                 ? DanmakuLaunchGeometry.launch(owner, shot.rearSide, .60)
