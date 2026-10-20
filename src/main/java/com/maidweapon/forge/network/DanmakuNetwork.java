@@ -17,6 +17,8 @@ public final class DanmakuNetwork {
             new ResourceLocation("maid_weapon:danmaku"), () -> "1", "1"::equals, "1"::equals);
     public record Cast(int form) { }
     public record AirSwing() { }
+    /** Server-confirmed declaration; not an ability to request a cast. */
+    public record VisualCue(int form) { }
     public record Eligibility(String binding, boolean enabled, int mastery) { }
     private static final Map<UUID, Eligibility> LAST = new HashMap<>();
     private static final DanmakuPacketLimiter INPUT = new DanmakuPacketLimiter();
@@ -38,6 +40,16 @@ public final class DanmakuNetwork {
                     }
                     ctx.setPacketHandled(true);
                 }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(3, VisualCue.class,
+                (packet, buf) -> buf.writeVarInt(packet.form()),
+                buf -> new VisualCue(buf.readVarInt()),
+                (packet, context) -> {
+                    var ctx = context.get();
+                    ctx.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                            net.minecraftforge.api.distmarker.Dist.CLIENT,
+                            () -> () -> ClientReceiver.visual(packet)));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         // Un-targeted left clicks are client-only in vanilla; authority, item,
         // funding and one-per-tick physical budget are all rechecked server-side.
         CHANNEL.registerMessage(2, AirSwing.class,
@@ -66,6 +78,10 @@ public final class DanmakuNetwork {
                 }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
     public static void airSwing() { CHANNEL.sendToServer(new AirSwing()); }
+    public static void declare(ServerPlayer player, DanmakuForm form) {
+        if (player.connection != null && !(player instanceof net.minecraftforge.common.util.FakePlayer))
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new VisualCue(form.ordinal()));
+    }
     public static void cast(DanmakuForm form) {
         if (form != null) CHANNEL.sendToServer(new Cast(form.ordinal()));
     }
@@ -82,6 +98,10 @@ public final class DanmakuNetwork {
         static void receive(Eligibility packet) {
             com.maidweapon.forge.client.DanmakuClientState.receive(
                     packet.binding(), packet.enabled(), packet.mastery());
+        }
+        static void visual(VisualCue packet) {
+            DanmakuForm form = DanmakuForm.safe(packet.form());
+            if (form != null) com.maidweapon.forge.client.DanmakuVisualController.show(form);
         }
     }
     private DanmakuNetwork() { }

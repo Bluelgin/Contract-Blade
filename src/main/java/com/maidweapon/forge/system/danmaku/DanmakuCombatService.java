@@ -98,6 +98,8 @@ public final class DanmakuCombatService {
                 DanmakuWaveSessions.scheduleWave(player, contract.maid(), form, target, level, basis, now);
             }
         }
+        DanmakuSpellEffects.cast(player, form, target);
+        com.maidweapon.forge.network.DanmakuNetwork.declare(player, form);
         return true;
     }
 
