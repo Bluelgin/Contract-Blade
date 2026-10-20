@@ -36,10 +36,9 @@ public final class DanmakuProjectilePatterns {
     /** Each timed wave is one budget, regardless of bullet count. */
     public static void wave(ServerPlayer owner, DanmakuForm form, LivingEntity target,
                             int mastery, float baseAttack, int index, boolean finale) {
-        if (!form.unlocked(mastery) || index < 0 || index > 2) return;
+        if (!DanmakuGrowth.waveAllowed(form, mastery, index)) return;
         switch (form) {
             case NEEDLE -> {
-                if (index > 1) return;
                 int perWaveCount = 6;
                 float each = (float) (baseAttack * DanmakuGrowth.fraction(form, mastery) / 12.0);
                 UUID volley = ledger(owner, target, each, perWaveCount, 1, 120);
@@ -54,20 +53,19 @@ public final class DanmakuProjectilePatterns {
                 }
             }
             case FLOWER -> {
-                if (index > 1) return;
                 int count = DanmakuGrowth.count(form, mastery);
                 float each = (float) (baseAttack * DanmakuGrowth.fraction(form, mastery) / (count * 2.0));
                 UUID volley = ledger(owner, null, each, count, 3, 120);
                 if (volley == null) return;
                 Vec3 origin = DanmakuLaunchGeometry.launch(owner, index == 0 ? -.8 : .8, .60);
                 Vec3 forward = direction(owner, origin, target, mastery >= 9);
-                double spread = index == 0 ? .62 : (mastery >= 9 ? .22 : .37);
                 for (int i = 0; i < count; i++) {
-                    double normalized = count == 1 ? 0 : (i - (count - 1) / 2.0) / ((count - 1) / 2.0);
-                    Vec3 vector = forward.yRot((float) (normalized * spread));
-                    float speed = index == 0 ? .68f : .90f;
-                    if (mastery >= 7 && i % 2 == 0) speed *= .80f;
-                    double shoulderSide = (i % 2 == 0 ? -1 : 1) * (.80 + Math.abs(normalized) * .06);
+                    var petal = DanmakuPatternPlanner.flower(i, count, index, mastery);
+                    Vec3 vector = forward.yRot((float) petal.yaw())
+                            .add(0, petal.rise(), 0).normalize();
+                    float speed = (float) petal.speed();
+                    double shoulderSide = (i % 2 == 0 ? -1 : 1)
+                            * (.80 + Math.abs(petal.yaw()) * .10);
                     Vec3 start = DanmakuLaunchGeometry.launch(owner, shoulderSide, .60);
                     spawn(owner, start,
                             vector, i % 2 == 0 ? DanmakuColor.PINK : DanmakuColor.PURPLE,
@@ -76,7 +74,6 @@ public final class DanmakuProjectilePatterns {
                 }
             }
             case FANTASY -> {
-                if (index > 3) return;
                 float each = (float) (baseAttack * DanmakuGrowth.fraction(form, mastery) / 32.0);
                 if (index == 3 && finale) each *= 1.15f;
                 UUID volley = ledger(owner, target, each, 8, 1, 120);
@@ -85,8 +82,8 @@ public final class DanmakuProjectilePatterns {
                         ? owner.getEyePosition().add(owner.getLookAngle().scale(7))
                         : target.getEyePosition();
                 for (int i = 0; i < 8; i++) {
-                    double angle = i * Math.PI / 4.0 + index * .34;
-                    double radius = index == 0 ? 4.2 : index == 1 ? 3.3 : index == 2 ? 2.6 : 1.9;
+                    double angle = DanmakuPatternPlanner.fantasyAngle(index, i);
+                    double radius = DanmakuPatternPlanner.fantasyRadius(index, i);
                     Vec3 at = center.add(Math.cos(angle) * radius, .25 + index * .2,
                             Math.sin(angle) * radius);
                     ServerLevel level = owner.serverLevel();

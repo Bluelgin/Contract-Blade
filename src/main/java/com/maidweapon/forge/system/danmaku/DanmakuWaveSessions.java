@@ -104,7 +104,7 @@ final class DanmakuWaveSessions {
             LivingEntity target = targetById(player, wave.target);
             DanmakuProjectilePatterns.wave(player, wave.form, target, wave.mastery,
                     wave.basis, wave.nextWave, wave.synchronizedStrike);
-            if (wave.nextWave >= (wave.form == DanmakuForm.FANTASY ? 3 : 1)) {
+            if (wave.nextWave + 1 >= DanmakuGrowth.waveCount(wave.form)) {
                 spells.remove();
             } else {
                 entry.setValue(new PendingSpell(wave.maid, wave.dimension, wave.form, wave.target,
