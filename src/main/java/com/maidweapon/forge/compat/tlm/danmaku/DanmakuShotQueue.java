@@ -103,6 +103,7 @@ public final class DanmakuShotQueue {
         bullet.setDanmakuType(shot.shape);
         bullet.setDamage(0);
         bullet.setVolley(shot.volley);
+        bullet.bindContractMaid(maid);
         bullet.setGravityVelocity(0);
         bullet.shoot(shot.direction.x, shot.direction.y, shot.direction.z, shot.speed, 0);
         if (shot.target != null && shot.homingTicks > 0)

@@ -15,6 +15,7 @@ import java.util.UUID;
 /** Native TLM visuals and ordinary damage, but with hit-based volley caps and gentle homing. */
 public final class ContractDanmakuProjectile extends EntityDanmaku {
     private UUID volleyId;
+    private String contractMaid;
     private UUID homingTarget;
     private int homingTicks;
 
@@ -23,6 +24,18 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
     }
 
     public void setVolley(UUID id) { volleyId = id; }
+    public void bindContractMaid(String maid) { contractMaid = maid; }
+
+    // If the world saves while a bullet is in flight, missing identity must fail closed.
+    @Override protected void addAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (contractMaid != null) tag.putString("ContractDanmakuMaid", contractMaid);
+    }
+    @Override protected void readAdditionalSaveData(net.minecraft.nbt.CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        contractMaid = tag.contains("ContractDanmakuMaid")
+                ? tag.getString("ContractDanmakuMaid") : null;
+    }
     public void seek(UUID target, int ticks) {
         homingTarget = target;
         homingTicks = Math.max(0, Math.min(ticks, 24));
@@ -49,7 +62,8 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
         if (!(shooter instanceof net.minecraft.server.level.ServerPlayer player)
                 || !(hit.getEntity() instanceof LivingEntity victim)
                 || !safeTarget(player, victim)
-                || DanmakuRuntimeApi.authorizedMaid(player) == null) {
+                || !DanmakuContractBinding.accepts(contractMaid,
+                        DanmakuRuntimeApi.authorizedMaid(player))) {
             discard();
             return;
         }
