@@ -48,6 +48,17 @@ class DanmakuGrowthTest {
         assertFalse(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 9, 3));
     }
 
+    /** Keep the 2-tick budget victim-global even with multiple owners: no stacking bypass. */
+    @Test void concurrentOwnersCannotBypassSharedVictimHitWindow() {
+        java.util.UUID victim = java.util.UUID.randomUUID();
+        DanmakuHitPolicy.clear();
+        assertTrue(DanmakuHitPolicy.mayHit(victim, 200));
+        DanmakuHitPolicy.record(victim, 200);
+        assertFalse(DanmakuHitPolicy.mayHit(victim, 201));
+        assertTrue(DanmakuHitPolicy.mayHit(victim, 202));
+        DanmakuHitPolicy.clear();
+    }
+
     @Test void resonanceScalesSafelyWithPoolCapacity() {
         assertEquals(60, DanmakuResonanceCostPolicy.scaled(1000, 6));
         assertEquals(100, DanmakuResonanceCostPolicy.scaled(1000, 10));
