@@ -34,7 +34,7 @@ public final class DanmakuClientState {
     public static boolean autoAvailable() {
         ensureSession();
         var player = Minecraft.getInstance().player;
-        if (player == null || player.isSpectator() || !enabled || mastery < 1) return false;
+        if (player == null || !player.isAlive() || player.isSpectator() || !enabled || mastery < 1) return false;
         var held = ContractCarrierData.getBindingId(player.getMainHandItem());
         return held != null && held.equals(binding);
     }
@@ -42,6 +42,7 @@ public final class DanmakuClientState {
     public static boolean available() {
         return autoAvailable() && DanmakuForm.NEEDLE.unlocked(mastery);
     }
+    public static String binding() { ensureSession(); return binding; }
     public static int mastery() { ensureSession(); return mastery; }
     public static DanmakuForm selected() { ensureSession(); return selected; }
     public static void select(DanmakuForm form) {

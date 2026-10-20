@@ -25,7 +25,10 @@ public final class MankaAcceptanceCommands {
     @SubscribeEvent public static void register(RegisterCommandsEvent event) {
         if (!Boolean.getBoolean("contractblade.danmaku.acceptance")) return;
         event.getDispatcher().register(Commands.literal("mankatest").requires(s -> s.hasPermission(2))
-                .then(Commands.literal("setup").executes(c -> { setup(c.getSource().getPlayerOrException()); return 1; }))
+                .then(Commands.literal("setup").executes(c -> {
+                    try { setup(c.getSource().getPlayerOrException()); return 1; }
+                    catch (Exception failure) { throw new IllegalStateException("Manka test scene setup failed", failure); }
+                }))
                 .then(Commands.literal("cast").then(Commands.argument("form",IntegerArgumentType.integer(0,3))
                     .executes(c -> DanmakuCombatService.cast(c.getSource().getPlayerOrException(),
                         DanmakuForm.safe(IntegerArgumentType.getInteger(c,"form"))) ? 1 : 0)))

@@ -9,6 +9,7 @@ import java.util.Objects;
 
 /** Non-pausing radial picker: only a short tap casts, holding and releasing changes form. */
 public final class DanmakuWheelScreen extends Screen {
+    private final String openedBinding = DanmakuClientState.binding();
     private int radius = DanmakuWheelGeometry.RADIUS;
 
     public DanmakuWheelScreen() {
@@ -37,7 +38,7 @@ public final class DanmakuWheelScreen extends Screen {
     }
 
     @Override public void tick() {
-        if (!DanmakuClientState.available()) onClose();
+        if (!DanmakuClientState.available() || !openedBinding.equals(DanmakuClientState.binding())) onClose();
     }
     @Override public void onClose() {
         DanmakuKeys.CAST.setDown(false);

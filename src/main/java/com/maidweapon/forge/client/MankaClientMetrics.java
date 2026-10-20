@@ -11,10 +11,16 @@ import java.util.*;
 @Mod.EventBusSubscriber(modid="maid_weapon", value=Dist.CLIENT)
 public final class MankaClientMetrics {
     private static long start, previous;
+    private static String screen = "";
     private static final List<Double> FRAMES=new ArrayList<>();
     @SubscribeEvent public static void frame(TickEvent.RenderTickEvent event) {
         if(!Boolean.getBoolean("contractblade.danmaku.acceptance") || event.phase!=TickEvent.Phase.END) return;
-        var mc=Minecraft.getInstance();if(mc.level==null){start=0;previous=0;FRAMES.clear();return;}
+        var mc=Minecraft.getInstance();
+        String next=mc.screen==null?"InGame":mc.screen.getClass().getSimpleName();
+        if(!screen.equals(next)) {
+            screen=next;org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info("MANKA_SCREEN {}",screen);
+        }
+        if(mc.level==null){start=0;previous=0;FRAMES.clear();return;}
         long now=System.nanoTime();if(start==0)start=now;
         if(previous!=0) FRAMES.add((now-previous)/1e6);previous=now;
         if(now-start<10_000_000_000L || FRAMES.isEmpty())return;
