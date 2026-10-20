@@ -28,9 +28,9 @@ public final class MankaClientMetrics {
         double p99=sorted.get(Math.min(sorted.size()-1,(int)(sorted.size()*.99)));
         var rt=Runtime.getRuntime();
         org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info(
-            "MANKA_CLIENT_METRICS averageFPS={} p99frameMs={} p99FPS={} heapMiB={} visualEntries={} particles={}",
+            "MANKA_CLIENT_METRICS averageFPS={} p99frameMs={} p99FPS={} heapMiB={} visualEntries={} particleCount={} particles={}",
             FRAMES.size()*1e9/(now-start),p99,1000/p99,(rt.totalMemory()-rt.freeMemory())/1048576,
-            DanmakuWorldVisuals.size(),mc.options.particles().get());
+            DanmakuWorldVisuals.size(),mc.particleEngine.countParticles(),mc.options.particles().get());
         start=now;FRAMES.clear();
     }
     private MankaClientMetrics() { }

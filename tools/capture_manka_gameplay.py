@@ -19,8 +19,8 @@ def wheel(direction,dwell=.7):
 command('/gamerule sendCommandFeedback false');command('/gamerule announceAdvancements false')
 command('/maidweapon resonance 1000');key('F3+d');wait(1)
 log=out.with_suffix('.capture.log').open('w')
-record=subprocess.Popen(['ffmpeg','-hide_banner','-nostdin','-y','-f','x11grab','-video_size','1280x720','-framerate','30','-i',os.environ['DISPLAY'],
- '-an','-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-movflags','+faststart',str(out)],stdout=log,stderr=subprocess.STDOUT)
+record=subprocess.Popen([__import__('sys').executable,str(Path(__file__).with_name('record_manka_live.py')),str(out)],
+ stdout=log,stderr=subprocess.STDOUT)
 start=time.monotonic()
 try:
  if a.mode=='full':
@@ -28,18 +28,18 @@ try:
   for direction in ['needle','flower','guard','fantasy']:wheel(direction,2)
   wait(2)
   for i in range(6):x('click',1);wait(.9)
-  key('F5');wheel('needle',1);tap();wait(5);tap();wait(5)
+  key('F5');command('/tp @s 0.5 65 0.5 0 15');wheel('needle',1);tap();wait(5);tap();wait(5)
   wheel('flower',1);tap();wait(6);tap();wait(6)
   wheel('guard',1);tap();wait(.6);command('/mankatest arrows');wait(6)
   wheel('fantasy',1);tap();wait(5)
   for i in range(3):x('mousemove_relative','--',40,0);wait(1.5)
-  command('/tp @s 0.5 65 0.5 0 0');wait(1);tap();wait(5)
-  key('F5');wait(1);key('F5');wait(1)
+  command('/tp @s 0.5 65 0.5 0 15');command('/maidweapon resonance 1000');wait(1);tap();wait(5)
+  key('F5');wait(1);key('F5');command('/tp @s 0.5 65 0.5 0 0');wait(1)
   command('/maidweapon resonance 1000');tap();wait(5)
   # Remains a running live game while the final frame timing sample completes.
   wait(max(0,135-(time.monotonic()-start)))
  elif a.mode=='fantasy':
-  wheel('fantasy',.7);tap();wait(5);key('F5');wait(2)
+  wheel('fantasy',.7);tap();wait(5);key('F5');command('/tp @s 0.5 65 0.5 0 15');wait(2)
   command('/maidweapon resonance 1000');tap();wait(5)
   x('mousemove_relative','--',55,-12);wait(3);key('F5');wait(.5);key('F5');wait(2)
  elif a.mode=='performance':

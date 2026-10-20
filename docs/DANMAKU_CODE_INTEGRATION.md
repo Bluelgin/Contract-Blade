@@ -34,10 +34,12 @@ python art/danmaku/export_spellcards.py --check
 python tools/run_manka_native_validation.py --output /tmp/manka-native
 python tools/run_manka_client.py --seed-world '/tmp/manka-native/server/Manka Native Validation' --output /tmp/manka-client
 DISPLAY=:0 bash tools/record_manka_client.sh /tmp/manka_full_gameplay.mp4 180
+# Already running fresh fixture client; records three genuine gameplay videos:
+python tools/run_manka_capture_validation.py --log /tmp/manka-client/client.log --output /tmp/manka-videos
 ```
 
-Java17、Gradle8.7、TLM1.5.3 与 SlashBlade1.9.65 的准备沿用现有 CI；不改生产依赖配置。真实客户端需要兼容 OpenGL 的显示环境。可选 `--skip-assets` 仅用于已准备好官方资源缓存的机器。
+Java17、Gradle8.7、TLM1.5.3 与 SlashBlade1.9.65 的准备沿用现有 CI；不改生产依赖配置。真实客户端需要兼容 OpenGL 的显示环境，以及 FFmpeg、xdotool、`nbtlib==2.0.4` 和 `mss==10.1.0`。录屏通过 MSS 的 X11 XGetImage 实时读取窗口，交由 FFmpeg 编码为 H.264；采用实际墙钟时间戳与 VFR 保持原速，并导出 `.capture.json` 记录。没有离线图像输入或生成帧。可选 `--skip-assets` 仅用于已准备好官方资源缓存的机器。
 
-`MankaAcceptanceCommands` 仅在 JVM 参数 `-Dcontractblade.danmaku.acceptance=true` 时注册，要求管理员权限2；`/mankatest setup` 只用于独立测试世界，会重建原点场地并创建真实原生饰品契约。`cast 0..3` 走正常服务端施法入口，`arrows` 创建有真实敌方所有者的箭，`bauble 0/1/2` 调整真实存储饰品槽，`metrics` 记录真实在线人数/MSPT/弹幕/队列。客户端每10秒记录实际帧时间、堆内存和视觉记录数。
+`MankaAcceptanceCommands` 仅在 JVM 参数 `-Dcontractblade.danmaku.acceptance=true` 时注册，要求管理员权限2；`/mankatest setup` 只用于独立测试世界，会重建原点场地并创建真实原生饰品契约。`second` 在第三个物品栏槽创建另一个真实普通契约供换手测试；`cast 0..3` 走正常服务端施法入口，`arrows` 创建有真实敌方所有者的箭，`bauble 0/1/2` 调整真实存储饰品槽，`metrics` 记录真实在线人数/MSPT/弹幕/队列。客户端每10秒记录实际帧时间、堆内存和视觉记录数。
 
 原生自动夹具明确使用 FakePlayer，覆盖十级×四式的服务器施放及扣费、实际32颗幻想实体、支付失败、无尽契约和背包饰品拒绝；它不能替代真人客户端操作、多人或性能测试。验收状态与真实录像另见客户端验收报告。

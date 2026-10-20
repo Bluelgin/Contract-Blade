@@ -29,6 +29,10 @@ public final class MankaAcceptanceCommands {
                     try { setup(c.getSource().getPlayerOrException()); return 1; }
                     catch (Exception failure) { throw new IllegalStateException("Manka test scene setup failed", failure); }
                 }))
+                .then(Commands.literal("second").executes(c -> {
+                    try { createCarrier(c.getSource().getPlayerOrException(),2); return 1; }
+                    catch (Exception failure) { throw new IllegalStateException("Second native contract failed", failure); }
+                }))
                 .then(Commands.literal("cast").then(Commands.argument("form",IntegerArgumentType.integer(0,3))
                     .executes(c -> DanmakuCombatService.cast(c.getSource().getPlayerOrException(),
                         DanmakuForm.safe(IntegerArgumentType.getInteger(c,"form"))) ? 1 : 0)))
@@ -57,12 +61,7 @@ public final class MankaAcceptanceCommands {
         if(p instanceof net.minecraftforge.common.util.FakePlayer) p.moveTo(.5,65,.5,0,0);
         else p.teleportTo(level,.5,65,.5,0,0);
         p.setGameMode(GameType.SURVIVAL);p.setHealth(20);p.getFoodData().setFoodLevel(20);
-        var maid=(Mob)TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);
-        TlmEntityAdapter.tame(maid,p);maid.moveTo(2.5,65,.5,0,0);level.addFreshEntity(maid);
-        var slots=(IItemHandlerModifiable)maid.getClass().getMethod("getMaidBauble").invoke(maid);
-        slots.setStackInSlot(0,new ItemStack(ModItems.MANKA_TALISMAN.get()));
-        var carrier=new ItemStack(ModItems.MAID_SWORD.get());p.getInventory().setItem(0,carrier);p.getInventory().selected=0;
-        if(!ContractLifecycleService.capture(p,maid,carrier,false)) throw new IllegalStateException("Normal capture denied");
+        var carrier=createCarrier(p,0);p.getInventory().selected=0;
         p.getInventory().setItem(1,new ItemStack(ModItems.MANKA_TALISMAN.get()));
         ContractMasteryService.setLevel(p.getServer().createCommandSourceStack(),p,10);
         ResonanceService.set(p,carrier,ContractCarrierData.getBindingId(carrier),1000);
@@ -72,10 +71,21 @@ public final class MankaAcceptanceCommands {
             var target=new Zombie(level);target.moveTo((i-1)*4+.5,65,9.5,180,0);target.setNoAi(true);
             target.setCustomName(net.minecraft.network.chat.Component.literal("Manka target "+i));
             target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(1000);
-            target.setHealth(1000);target.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,
-                    new ItemStack(net.minecraft.world.item.Items.IRON_HELMET));level.addFreshEntity(target);
+            target.setHealth(1000);
+            target.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,testHelmet());level.addFreshEntity(target);
         }
         org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info("MANKA_SCENE_READY nativeBauble=true survival=true level=10");
+    }
+    private static ItemStack createCarrier(ServerPlayer p,int slot) throws Exception {
+        var level=p.serverLevel();
+        var maid=(Mob)TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);
+        TlmEntityAdapter.tame(maid,p);maid.moveTo(p.getX()+2,p.getY(),p.getZ(),0,0);level.addFreshEntity(maid);
+        var slots=(IItemHandlerModifiable)maid.getClass().getMethod("getMaidBauble").invoke(maid);
+        slots.setStackInSlot(0,new ItemStack(ModItems.MANKA_TALISMAN.get()));
+        var carrier=new ItemStack(ModItems.MAID_SWORD.get());p.getInventory().setItem(slot,carrier);
+        if(!ContractLifecycleService.capture(p,maid,carrier,false)) throw new IllegalStateException("Normal capture denied");
+        ResonanceService.set(p,carrier,ContractCarrierData.getBindingId(carrier),1000);
+        return carrier;
     }
     public static void bauble(ServerPlayer p,int mode) {
         var carrier=p.getMainHandItem();var payload=ContractMaidStorage.read(p,carrier);
@@ -85,8 +95,13 @@ public final class MankaAcceptanceCommands {
         payload.put("MaidBaubleInventory",slots.serializeNBT());
         if(!ContractMaidStorage.commit(p,carrier,payload)) throw new IllegalStateException("Slot update refused");
     }
+    private static ItemStack testHelmet() {
+        var helmet=new ItemStack(net.minecraft.world.item.Items.IRON_HELMET);
+        helmet.getOrCreateTag().putBoolean("Unbreakable",true);return helmet;
+    }
     private static void arrows(ServerPlayer p) {
-        var level=p.serverLevel();var shooter=new Skeleton(level);shooter.setNoAi(true);
+        var level=p.serverLevel();var shooter=new Skeleton(net.minecraft.world.entity.EntityType.SKELETON,level);shooter.setNoAi(true);
+        shooter.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,testHelmet());
         shooter.moveTo(p.getX()+5,p.getY(),p.getZ()+4,0,0);level.addFreshEntity(shooter);
         for(int i=0;i<8;i++) {
             var arrow=new Arrow(level,shooter);arrow.setPos(shooter.getX(),shooter.getEyeY(),shooter.getZ()+i*.04);

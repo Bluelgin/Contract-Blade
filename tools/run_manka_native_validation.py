@@ -10,5 +10,7 @@ env=dict(os.environ,TZ='UTC');env['JAVA_TOOL_OPTIONS']=env.get('JAVA_TOOL_OPTION
 with (out/'server.log').open('w') as log:
  result=subprocess.run([a.gradle,'--no-daemon','runServer','-Pci=true','-PtlmRuntimeTest=true','-PcompatTest=slashblade',f'-PcompatRunDir={run}','-x','downloadAssets'],cwd=Path(__file__).resolve().parents[1],env=env,stdout=log,stderr=subprocess.STDOUT,timeout=900)
 text=(out/'server.log').read_text()
+runtime=run/'logs/latest.log'
+if runtime.exists():text+='\n'+runtime.read_text()
 if result.returncode or 'MANKA_NATIVE_PASS' not in text or 'MANKA_NATIVE_FAIL' in text: raise SystemExit('FAIL: '+str(out/'server.log'))
 print('PASS: '+str(out/'server.log'))

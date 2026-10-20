@@ -23,6 +23,7 @@ class DanmakuVisualEventTest {
         var event=cue(100,3,3,Vec3.ZERO);
         assertTrue(event.valid(WORLD,100));
         assertFalse(event.valid(new ResourceLocation("minecraft:the_nether"),100));
+        assertTrue(event.valid(WORLD,105));assertFalse(event.valid(WORLD,106));
         assertFalse(event.valid(WORLD,181));assertFalse(event.valid(WORLD,19));
     }
     @Test void invalidAtlasIndexAndNonFinitePositionAreRejected() {

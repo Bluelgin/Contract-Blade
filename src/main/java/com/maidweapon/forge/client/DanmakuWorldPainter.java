@@ -28,9 +28,9 @@ public final class DanmakuWorldPainter {
             if (owner == null) continue;
             float age = now - f.received() + partial;
             float alpha = Math.min(1, age / 5) * Math.min(1, (f.life() - age) / 8f) * .55f;
-            Vec3 center = owner.getPosition(partial).add(0, .12, 0);
+            Vec3 center = owner.getPosition(partial).add(0, .65, 0);
             glyph(pose, buffer, center, "seal_guard", 2.3f, age * .025f, alpha, 78, owner.getYRot(), -1);
-            glyph(pose, buffer, center.add(0,1.05,0), "seal_guard", 1.45f, -age*.02f, alpha*.5f, 18, owner.getYRot(), -1);
+            glyph(pose, buffer, center.add(0,.80,0), "seal_guard", 1.45f, -age*.02f, alpha*.5f, 18, owner.getYRot(), -1);
         }
         for (var f : DanmakuWorldVisuals.FRAMES) {
             var e = f.event(); float age = now - f.received() + partial;
@@ -45,7 +45,7 @@ public final class DanmakuWorldPainter {
                             "petal", .18f, (float)a, alpha*.65f, 0, e.yaw(), -1);
                 }
             } else if (e.kind() == DanmakuVisualEvent.Kind.GUARD_STOP) {
-                glyph(pose,buffer,e.position().add(0,.15,0),"seal_guard",2.3f+age*.035f,age*.02f,alpha*.4f,78,e.yaw(),-1);
+                glyph(pose,buffer,e.position().add(0,.65,0),"seal_guard",2.3f+age*.035f,age*.02f,alpha*.4f,78,e.yaw(),-1);
             } else if (e.kind() == DanmakuVisualEvent.Kind.WAVE) {
                 if (e.form()==0) {
                     Vec3 right = new Vec3(Math.cos(Math.toRadians(e.yaw())),0,Math.sin(Math.toRadians(e.yaw())));
@@ -66,7 +66,7 @@ public final class DanmakuWorldPainter {
                         float radius=(3.8f-layer*.58f)*(1-Math.max(0,stage-2)*.12f);
                         glyph(pose,buffer,e.position(),"fantasy_layers",radius,
                                 age*.017f*(layer%2==0?1:-1)+layer*.38f,
-                                alpha*.60f,62+layer*5,e.yaw(),layer);
+                                alpha*.65f,62+layer*5,e.yaw(),layer);
                     }
                     if(e.phase()==3) glyph(pose,buffer,e.position(),"final_seal",1.6f-age*.02f,
                             -age*.015f,alpha*.65f,55,e.yaw(),-1);

@@ -4,5 +4,4 @@ set -euo pipefail
 file=${1:?Absolute output MP4 path required}
 seconds=${2:-180}
 case "$file" in /*.mp4) ;; *) echo 'Use an absolute MP4 path' >&2; exit 2;; esac
-ffmpeg -hide_banner -nostdin -y -f x11grab -video_size 1280x720 -framerate 30 -i "$DISPLAY" \
-  -t "$seconds" -an -c:v libx264 -preset veryfast -crf 20 -pix_fmt yuv420p -movflags +faststart "$file"
+python3 "$(dirname "$0")/record_manka_live.py" "$file" --seconds "$seconds"

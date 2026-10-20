@@ -20,7 +20,7 @@ public record DanmakuVisualEvent(Kind kind, UUID owner, UUID subject, ResourceLo
                 new Vec3(b.readDouble(), b.readDouble(), b.readDouble()), b.readFloat());
     }
     public boolean valid(ResourceLocation world, long now) {
-        return dimension.equals(world) && tick <= now + 80 && tick >= now - 80
+        return dimension.equals(world) && tick <= now + 80 && tick >= now - 5
                 && form >= 0 && form < 4 && phase >= 0 && phase < 4
                 && Double.isFinite(position.x) && Double.isFinite(position.y)
                 && Double.isFinite(position.z) && Float.isFinite(yaw);
