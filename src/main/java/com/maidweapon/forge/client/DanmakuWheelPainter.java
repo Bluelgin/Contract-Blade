@@ -55,10 +55,10 @@ public final class DanmakuWheelPainter {
 
         int icon = Math.max(28, radius * 64 / 86);
         int offset = (int) (radius * .67);
-        symbol(gui, cx, cy - offset, DanmakuForm.NEEDLE, mastery >= 5, hovered == DanmakuForm.NEEDLE, icon);
-        symbol(gui, cx + offset, cy, DanmakuForm.FLOWER, mastery >= 5, hovered == DanmakuForm.FLOWER, icon);
-        symbol(gui, cx - offset, cy, DanmakuForm.GUARD, mastery >= 5, hovered == DanmakuForm.GUARD, icon);
-        symbol(gui, cx, cy + offset, DanmakuForm.FANTASY, mastery >= 10, hovered == DanmakuForm.FANTASY, icon);
+        symbol(gui, cx, cy - offset, DanmakuForm.NEEDLE, DanmakuForm.NEEDLE.unlocked(mastery), hovered == DanmakuForm.NEEDLE, icon);
+        symbol(gui, cx + offset, cy, DanmakuForm.FLOWER, DanmakuForm.FLOWER.unlocked(mastery), hovered == DanmakuForm.FLOWER, icon);
+        symbol(gui, cx - offset, cy, DanmakuForm.GUARD, DanmakuForm.GUARD.unlocked(mastery), hovered == DanmakuForm.GUARD, icon);
+        symbol(gui, cx, cy + offset, DanmakuForm.FANTASY, DanmakuForm.FANTASY.unlocked(mastery), hovered == DanmakuForm.FANTASY, icon);
 
         label(gui, font, cx, cy - offset + 20, DanmakuForm.NEEDLE, mastery, hovered, selected);
         label(gui, font, cx + offset, cy + 21, DanmakuForm.FLOWER, mastery, hovered, selected);

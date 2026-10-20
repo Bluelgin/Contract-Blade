@@ -16,7 +16,7 @@ public final class DanmakuGrowth {
         return switch (form) {
             case NEEDLE -> .60;
             case FLOWER -> DanmakuGrowth.count(DanmakuForm.FLOWER, mastery) * 2.0 * .035;
-            case GUARD -> mastery >= 6 ? .20 : .125;
+            case GUARD -> mastery >= 7 ? .20 : .125;
             case FANTASY -> 1.60;
         };
     }
@@ -25,9 +25,22 @@ public final class DanmakuGrowth {
         return switch (form) {
             case NEEDLE -> 12; // two volleys, six independently damaging needles each
             case FLOWER -> mastery >= 9 ? 15 : mastery >= 7 ? 12 : 9; // per wave
-            case GUARD -> mastery >= 6 ? 8 : 5; // intercept charges
+            case GUARD -> mastery >= 7 ? 8 : 5; // intercept charges
             case FANTASY -> 32; // four phases, eight per phase
         };
+    }
+
+    /** One source of truth for wave timing and legal phase indices. */
+    public static int waveCount(DanmakuForm form) {
+        return switch (form) {
+            case NEEDLE, FLOWER -> 2;
+            case GUARD -> 0;
+            case FANTASY -> 4;
+        };
+    }
+    public static boolean waveAllowed(DanmakuForm form, int mastery, int index) {
+        return form != null && form.unlocked(mastery) && index >= 0
+                && index < waveCount(form);
     }
 
     public static int waveSpacing(DanmakuForm form) {

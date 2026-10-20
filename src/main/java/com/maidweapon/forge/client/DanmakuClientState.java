@@ -38,9 +38,9 @@ public final class DanmakuClientState {
         var held = ContractCarrierData.getBindingId(player.getMainHandItem());
         return held != null && held.equals(binding);
     }
-    /** Active spell wheel remains gated at Lv.5. */
+    /** The first active form unlocks at Lv.3. */
     public static boolean available() {
-        return autoAvailable() && mastery >= 5;
+        return autoAvailable() && DanmakuForm.NEEDLE.unlocked(mastery);
     }
     public static int mastery() { ensureSession(); return mastery; }
     public static DanmakuForm selected() { ensureSession(); return selected; }

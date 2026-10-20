@@ -17,8 +17,12 @@ class DanmakuGrowthTest {
     }
 
     @Test void activeFormsKeepBriefServerSideIntervals() {
-        assertFalse(DanmakuForm.NEEDLE.unlocked(4));
-        assertTrue(DanmakuForm.NEEDLE.unlocked(5));
+        assertFalse(DanmakuForm.NEEDLE.unlocked(2));
+        assertTrue(DanmakuForm.NEEDLE.unlocked(3));
+        assertFalse(DanmakuForm.FLOWER.unlocked(4));
+        assertTrue(DanmakuForm.FLOWER.unlocked(5));
+        assertFalse(DanmakuForm.GUARD.unlocked(5));
+        assertTrue(DanmakuForm.GUARD.unlocked(6));
         assertFalse(DanmakuForm.FANTASY.unlocked(9));
         assertTrue(DanmakuForm.FANTASY.unlocked(10));
         assertEquals(8, DanmakuForm.NEEDLE.cooldownTicks());
@@ -30,9 +34,18 @@ class DanmakuGrowthTest {
         assertEquals(12, DanmakuGrowth.count(DanmakuForm.FLOWER, 7));
         assertEquals(15, DanmakuGrowth.count(DanmakuForm.FLOWER, 9));
         assertEquals(5, DanmakuGrowth.count(DanmakuForm.GUARD, 5));
-        assertEquals(8, DanmakuGrowth.count(DanmakuForm.GUARD, 6));
+        assertEquals(5, DanmakuGrowth.count(DanmakuForm.GUARD, 6));
+        assertEquals(8, DanmakuGrowth.count(DanmakuForm.GUARD, 7));
         assertEquals(32, DanmakuGrowth.count(DanmakuForm.FANTASY, 10));
         assertEquals(32, DanmakuGrowth.maxProjectilesPerCast(DanmakuForm.FANTASY, 10));
+        assertEquals(2, DanmakuGrowth.waveCount(DanmakuForm.NEEDLE));
+        assertEquals(2, DanmakuGrowth.waveCount(DanmakuForm.FLOWER));
+        assertEquals(0, DanmakuGrowth.waveCount(DanmakuForm.GUARD));
+        assertEquals(4, DanmakuGrowth.waveCount(DanmakuForm.FANTASY));
+        for (int index = 0; index < 4; index++)
+            assertTrue(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 10, index));
+        assertFalse(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 10, 4));
+        assertFalse(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 9, 3));
     }
 
     @Test void resonanceScalesSafelyWithPoolCapacity() {
