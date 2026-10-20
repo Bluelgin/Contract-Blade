@@ -14,6 +14,9 @@ import java.util.UUID;
 
 /** Native TLM visuals and ordinary damage, but with hit-based volley caps and gentle homing. */
 public final class ContractDanmakuProjectile extends EntityDanmaku {
+    private int visualForm;
+    public void visualForm(int form) { visualForm = form; }
+    public int visualForm() { return visualForm; }
     private UUID volleyId;
     private String contractMaid;
     private UUID homingTarget;
@@ -80,8 +83,11 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
         // call, never the mob's global hurt state or other mods' incoming attacks.
         DanmakuRuntimeApi.record(victim.getUUID(), tick);
         int existingFrames = DanmakuRuntimeApi.relaxFrames(victim);
+        float previousHealth = victim.getHealth() + victim.getAbsorptionAmount();
         try {
             super.onHitEntity(hit);
+            if (victim.getHealth() + victim.getAbsorptionAmount() < previousHealth)
+                DanmakuRuntimeApi.projectileVisual(player, this, visualForm, true, hit.getLocation());
         } finally {
             DanmakuRuntimeApi.restoreFrames(victim, existingFrames);
         }

@@ -14,7 +14,7 @@ import java.util.*;
  */
 public final class DanmakuNetwork {
     private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation("maid_weapon:danmaku"), () -> "1", "1"::equals, "1"::equals);
+            new ResourceLocation("maid_weapon:danmaku"), () -> "2", "2"::equals, "2"::equals);
     public record Cast(int form) { }
     public record AirSwing() { }
     /** Server-confirmed declaration; not an ability to request a cast. */
@@ -23,7 +23,21 @@ public final class DanmakuNetwork {
     private static final Map<UUID, Eligibility> LAST = new HashMap<>();
     private static final DanmakuPacketLimiter INPUT = new DanmakuPacketLimiter();
 
+    public static void world(net.minecraft.server.level.ServerLevel level,
+                             com.maidweapon.forge.api.danmaku.DanmakuVisualEvent event) {
+        CHANNEL.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
+                event.position().x, event.position().y, event.position().z, 48, level.dimension())), event);
+    }
     public static void register() {
+        CHANNEL.registerMessage(4, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.class,
+                (event, buf) -> event.encode(buf), com.maidweapon.forge.api.danmaku.DanmakuVisualEvent::decode,
+                (event, context) -> {
+                    var ctx = context.get();
+                    ctx.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                            net.minecraftforge.api.distmarker.Dist.CLIENT,
+                            () -> () -> ClientReceiver.world(event)));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(0, Cast.class,
                 (packet, buf) -> buf.writeVarInt(packet.form()),
                 buf -> new Cast(buf.readVarInt()),
@@ -95,6 +109,9 @@ public final class DanmakuNetwork {
     public static void forget(UUID player) { LAST.remove(player); INPUT.forget(player); }
     public static void clearAll() { LAST.clear(); INPUT.clear(); }
     private static final class ClientReceiver {
+        static void world(com.maidweapon.forge.api.danmaku.DanmakuVisualEvent event) {
+            com.maidweapon.forge.client.DanmakuWorldVisuals.accept(event);
+        }
         static void receive(Eligibility packet) {
             com.maidweapon.forge.client.DanmakuClientState.receive(
                     packet.binding(), packet.enabled(), packet.mastery());

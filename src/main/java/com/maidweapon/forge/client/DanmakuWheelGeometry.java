@@ -5,6 +5,10 @@ import com.maidweapon.forge.system.danmaku.DanmakuForm;
 /** Shared circular input geometry. The displayed wheel and input agree on bounds/sectors. */
 public final class DanmakuWheelGeometry {
     public static final int RADIUS = 86;
+    public static int iconOffset(int radius) { return radius * 72 / 119; }
+    public static int fitRadius(int width, int height) {
+        return Math.max(16, Math.min(RADIUS, Math.min((width - 18) / 2, (height - 64) / 2)));
+    }
     private DanmakuWheelGeometry() { }
 
     public static DanmakuForm pick(double dx, double dy, int radius) {

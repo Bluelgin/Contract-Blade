@@ -10,6 +10,10 @@
     {
       "type": "patchouli:text",
       "text": "patchouli.maid_weapon.entry.manka_talisman.page.2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.manka_talisman.page.3"
     }
   ]
 }

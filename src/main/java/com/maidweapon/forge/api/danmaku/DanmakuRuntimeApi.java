@@ -9,6 +9,8 @@ import java.util.UUID;
 public final class DanmakuRuntimeApi {
     public interface Rules {
         String authorizedMaid(ServerPlayer player);
+        default void projectileVisual(ServerPlayer owner, net.minecraft.world.entity.Entity bullet,
+                                      int form, boolean hit, net.minecraft.world.phys.Vec3 pos) { }
         boolean canAllocate(int active, int pending, int incoming);
         int maximumGlobalQueue();
         int maximumOwnerQueue();
@@ -18,6 +20,10 @@ public final class DanmakuRuntimeApi {
         void record(UUID victim, long tick);
         int relaxFrames(LivingEntity victim);
         void restoreFrames(LivingEntity victim, int previous);
+    }
+    public static void projectileVisual(ServerPlayer owner, net.minecraft.world.entity.Entity bullet,
+                                        int form, boolean hit, net.minecraft.world.phys.Vec3 pos) {
+        if (rules != null) rules.projectileVisual(owner, bullet, form, hit, pos);
     }
     private static Rules rules;
     public static void install(Rules authority) {

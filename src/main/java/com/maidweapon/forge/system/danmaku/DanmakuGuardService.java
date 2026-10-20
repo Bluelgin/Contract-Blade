@@ -50,10 +50,14 @@ final class DanmakuGuardService {
                 || !guard.dimension.equals(player.level().dimension())
                 || ContractMasteryService.getLevel(player) < DanmakuForm.GUARD.requiredLevel()) {
             GUARDS.remove(player.getUUID());
+            DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.GUARD_STOP,
+                    2, 0, player, player.position());
             return;
         }
         if (now >= guard.expires || guard.remaining <= 0) {
             GUARDS.remove(player.getUUID());
+            DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.GUARD_STOP,
+                    2, 0, player, player.position());
             LivingEntity retaliation = targetById(player, guard.aggressor);
             if (retaliation == null) retaliation = acquireTarget(player);
             DanmakuProjectilePatterns.guardCounter(player, retaliation, guard.mastery, guard.attack);
@@ -74,6 +78,8 @@ final class DanmakuGuardService {
             guard.aggressor = origin.getUUID();
             shot.discard();
             guard.remaining--;
+            DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.INTERCEPT,
+                    2, 0, shot, shot.position());
             ((ServerLevel) player.level()).sendParticles(ParticleTypes.ENCHANT,
                     shot.getX(), shot.getY(), shot.getZ(), 5, .15, .15, .15, .08);
         }

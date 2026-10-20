@@ -13,18 +13,23 @@ import java.util.Locale;
 /** Lightweight client-only declaration HUD. No resource is required before Astra assets arrive. */
 @Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT)
 public final class DanmakuVisualController {
+    private static Object world;
     private static DanmakuForm current;
     private static int remaining;
     private static final int DURATION_TICKS = 42;
 
     public static void show(DanmakuForm form) {
+        world = Minecraft.getInstance().level;
         current = form;
         remaining = DURATION_TICKS;
     }
 
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
         if (event.phase != TickEvent.Phase.END || remaining <= 0) return;
-        if (Minecraft.getInstance().level == null) { remaining = 0; return; }
+        var mc = Minecraft.getInstance();
+        if (world != mc.level || mc.player == null || !mc.player.isAlive()) {
+            world = mc.level; remaining = 0; return;
+        }
         remaining--;
     }
 

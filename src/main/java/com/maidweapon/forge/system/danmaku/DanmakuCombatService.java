@@ -22,6 +22,7 @@ import static com.maidweapon.forge.system.danmaku.DanmakuTargeting.acquireTarget
 /** Ordinary-maid support coordinator; all actual damage still requires projectile collision. */
 @Mod.EventBusSubscriber
 public final class DanmakuCombatService {
+    private static final java.util.Map<UUID, String> VISUAL_BINDINGS = new java.util.HashMap<>();
     @SubscribeEvent public static void afterMelee(LivingDamageEvent event) {
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)
                 || event.getAmount() <= 0 || player.level().isClientSide) return;
@@ -111,18 +112,25 @@ public final class DanmakuCombatService {
             DanmakuHitPolicy.cleanup(now);
         }
         var context = DanmakuEligibility.context(player);
+        String binding = context == null ? "" : context.maid();
+        String previous = VISUAL_BINDINGS.put(player.getUUID(), binding);
+        if (previous != null && !previous.equals(binding))
+            DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.CANCEL,
+                    0, 0, player, player.position());
         DanmakuWaveSessions.tick(player, context == null ? null : context.maid(), now);
         DanmakuGuardService.tick(player, context == null ? null : context.maid(), now);
     }
 
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID id = event.getEntity().getUUID();
+        VISUAL_BINDINGS.remove(id);
         DanmakuInputGate.forget(id);
         DanmakuWaveSessions.forget(id);
         DanmakuGuardService.forget(id);
         DanmakuShotQueue.remove(id);
     }
     @SubscribeEvent public static void stop(ServerStoppedEvent event) {
+        VISUAL_BINDINGS.clear();
         DanmakuInputGate.clear();
         DanmakuWaveSessions.clear();
         DanmakuGuardService.clear();

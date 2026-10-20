@@ -23,25 +23,18 @@ public final class DanmakuKeys {
 
     @Mod.EventBusSubscriber(modid = MaidWeaponConstants.MOD_ID, value = Dist.CLIENT)
     public static final class Input {
-        private static boolean pressed;
-        private static int ticks;
+        private static final DanmakuPressGesture GESTURE = new DanmakuPressGesture();
 
         @SubscribeEvent public static void handleTick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
             Minecraft client = Minecraft.getInstance();
-            while (CAST.consumeClick()) { } // Clear stale presses from previous screens.
-            if (client.screen instanceof DanmakuWheelScreen) { pressed = false; ticks = 0; return; }
-            if (client.screen != null || !DanmakuClientState.available()) {
-                pressed = false; ticks = 0; return;
-            }
-            boolean down = CAST.isDown();
-            if (down && !pressed) { pressed = true; ticks = 0; }
-            else if (down && ++ticks >= 6) {
-                pressed = false; ticks = 0;
-                client.setScreen(new DanmakuWheelScreen());
-            } else if (!down && pressed) {
-                pressed = false; ticks = 0;
-                DanmakuNetwork.cast(DanmakuClientState.selected());
+            boolean clicked = false;
+            while (CAST.consumeClick()) clicked = true;
+            if (client.screen != null || !DanmakuClientState.available()) { GESTURE.reset(); return; }
+            switch (GESTURE.sample(CAST.isDown(), clicked)) {
+                case CAST -> DanmakuNetwork.cast(DanmakuClientState.selected());
+                case OPEN_WHEEL -> client.setScreen(new DanmakuWheelScreen());
+                default -> { }
             }
         }
 

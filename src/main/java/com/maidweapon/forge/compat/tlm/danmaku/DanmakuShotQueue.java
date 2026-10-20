@@ -108,9 +108,18 @@ public final class DanmakuShotQueue {
         bullet.shoot(shot.direction.x, shot.direction.y, shot.direction.z, shot.speed, 0);
         if (shot.target != null && shot.homingTicks > 0)
             bullet.seek(shot.target, shot.homingTicks);
-        if (owner.serverLevel().addFreshEntity(bullet))
+        int form = shot.shape == DanmakuType.BALL ? 1 : shot.shape == DanmakuType.PELLET ? 0
+                : shot.color == DanmakuColor.LIGHT_GREEN ? 2 : 3;
+        bullet.visualForm(form);
+        if (owner.serverLevel().addFreshEntity(bullet)) {
             DanmakuActiveCounter.spawned(owner.getUUID(),
                     owner.level().dimension().location().toString(), owner.level().getGameTime());
+            DanmakuRuntimeApi.projectileVisual(owner, bullet, form, false, bullet.position());
+            if (Boolean.getBoolean("contractblade.danmaku.acceptance"))
+                org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info(
+                        "MANKA_SHOT owner={} volley={} form={} entity={} tick={}", owner.getUUID(),
+                        shot.volley, form, bullet.getId(), owner.level().getGameTime());
+        }
     }
 
     private static int countActive(ServerPlayer owner) {

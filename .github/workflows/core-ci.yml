@@ -31,7 +31,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,6 +73,7 @@ jobs:
           python tools/validate_contract_resonance.py
           python tools/validate_resonance_foundation.py
           python tools/validate_ordinary_danmaku.py
+          python tools/validate_danmaku_visuals.py
           python tools/validate_carrier_loss_recovery.py
           python tools/validate_patchouli.py
           python tools/validate_contract_interiors.py
@@ -93,6 +94,9 @@ jobs:
             -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
             -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+
+      - name: Native Manka growth, payment and four-wave fixture
+        run: python tools/run_manka_native_validation.py --output /tmp/contract-manka-native
 
       - name: Native resonance, restart, projection and companion fixtures
         run: |
@@ -135,4 +139,17 @@ jobs:
             build/test-results/test/*.xml
             /tmp/contract-stage-three-*/*.log
             /tmp/contract-soul-*/server.log
+            /tmp/contract-manka-native/server.log
+          retention-days: 14
           if-no-files-found: warn
+
+  spellcard-resources:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y inkscape
+      - run: pip install Pillow==12.3.0
+      - run: python art/danmaku/export_spellcards.py --check

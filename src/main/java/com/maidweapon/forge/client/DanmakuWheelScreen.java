@@ -23,17 +23,27 @@ public final class DanmakuWheelScreen extends Screen {
 
     @Override public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
         gui.fill(0, 0, width, height, 0x55091020);
-        radius = Math.min(DanmakuWheelGeometry.RADIUS, Math.max(42,
-                Math.min((width - 18) / 2, (height - 64) / 2)));
+        radius = DanmakuWheelGeometry.fitRadius(width, height);
         int cx = width / 2, cy = height / 2;
         gui.drawCenteredString(font, title, cx, cy - radius - 22, 0xFFFFE4C5);
         DanmakuWheelPainter.render(gui, font, cx, cy, radius, hover(mouseX, mouseY),
                 DanmakuClientState.selected(), DanmakuClientState.mastery(), delta);
+        var focus = hover(mouseX, mouseY);
+        if (focus != null) gui.drawCenteredString(font, Component.translatable("maid_weapon.danmaku.form." +
+                focus.name().toLowerCase(java.util.Locale.ROOT)), cx, cy + radius + 2, 0xFFFFE4C5);
         gui.drawCenteredString(font, Component.translatable("maid_weapon.gui.danmaku.release"),
                 cx, cy + radius + 13, 0xFFE1D1C4);
         super.render(gui, mouseX, mouseY, delta);
     }
 
+    @Override public void tick() {
+        if (!DanmakuClientState.available()) onClose();
+    }
+    @Override public void onClose() {
+        DanmakuKeys.CAST.setDown(false);
+        while (DanmakuKeys.CAST.consumeClick()) { }
+        super.onClose();
+    }
     private void commit(double x, double y) {
         DanmakuForm form = hover(x, y);
         if (form != null && form.unlocked(DanmakuClientState.mastery())) {

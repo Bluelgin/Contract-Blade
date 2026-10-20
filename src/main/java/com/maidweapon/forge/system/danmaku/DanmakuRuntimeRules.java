@@ -7,6 +7,11 @@ import java.util.UUID;
 
 /** Domain rules plugged into the neutral runtime API at bootstrap. */
 public final class DanmakuRuntimeRules implements DanmakuRuntimeApi.Rules {
+    @Override public void projectileVisual(ServerPlayer owner, net.minecraft.world.entity.Entity bullet,
+                                           int form, boolean hit, net.minecraft.world.phys.Vec3 pos) {
+        DanmakuWorldEvents.send(owner, hit ? com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.HIT
+                : com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.PROJECTILE, form, 0, bullet, pos);
+    }
     @Override public String authorizedMaid(ServerPlayer owner) {
         var context = DanmakuEligibility.context(owner);
         return context == null ? null : context.maid();

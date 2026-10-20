@@ -49,7 +49,7 @@ assert "safeTarget" in projectile and "super.onHitEntity" in projectile
 assert "getSender()" in network and "enqueueWork" in network and "PLAY_TO_SERVER" in network
 assert "KeyMapping" in keys and "GLFW_MOUSE_BUTTON_MIDDLE" in keys
 assert "InputEvent.InteractionKeyMappingTriggered" in keys and "setCanceled(true)" in keys
-assert "ticks >= 6" in keys and "DanmakuWheelScreen" in keys
+assert "ticks >= 6" in source("client/DanmakuPressGesture.java") and "DanmakuWheelScreen" in keys
 assert "mouseReleased" in wheel and "keyReleased" in wheel and "commit" in wheel
 
 model = json.loads((root / "src/main/resources/assets/maid_weapon/models/item/manka_talisman.json").read_text())

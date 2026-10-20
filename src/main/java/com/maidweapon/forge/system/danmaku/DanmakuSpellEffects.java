@@ -20,6 +20,8 @@ public final class DanmakuSpellEffects {
         level.playSound(null, owner.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE,
                 SoundSource.PLAYERS, .32f, form == DanmakuForm.FANTASY ? 1.18f : 1.65f);
         if (form == DanmakuForm.GUARD) {
+            DanmakuWorldEvents.send(owner, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.GUARD_START,
+                    2, 0, owner, owner.position());
             ring(level, owner.position().add(0, 1.15, 0), 2.0, 8, 0);
         } else {
             wave(owner, form, target, 0);
@@ -30,6 +32,11 @@ public final class DanmakuSpellEffects {
                             LivingEntity target, int phase) {
         ServerLevel level = owner.serverLevel();
         Vec3 origin = owner.getEyePosition();
+        Vec3 anchor = form == DanmakuForm.FANTASY
+                ? (target == null ? origin.add(owner.getLookAngle().scale(7)) : target.getEyePosition())
+                : owner.position().add(0, 1.1, 0);
+        DanmakuWorldEvents.send(owner, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.WAVE,
+                form.ordinal(), phase, owner, anchor);
         switch (form) {
             case NEEDLE -> {
                 if (phase > 1) return;
