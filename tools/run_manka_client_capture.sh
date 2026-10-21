@@ -4,6 +4,14 @@ set -euo pipefail
 seed_world="$1"
 output="$2"
 mkdir -p "$output"
+{
+  uname -a
+  lscpu
+  free -m
+  java -version
+  python --version
+  ffmpeg -version
+} > "$output/environment.txt" 2>&1
 python tools/run_manka_client.py --gradle gradle --seed-world "$seed_world" --output "$output" &
 client_pid=$!
 trap 'kill "$client_pid" 2>/dev/null || true' EXIT
@@ -11,6 +19,11 @@ python tools/run_manka_capture_validation.py --log "$output/client.log" --output
 qa_status=0
 python tools/run_manka_client_qa.py --client "$output/client" --output "$output/qa" || qa_status=$?
 python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --output "$output/metrics.json"
+python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --capture "$output/videos/manka_performance_test.capture.json" --output "$output/videos/performance-metrics.json"
+if [ -f "$output/qa/manka_two_clients.capture.json" ]; then
+  python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/host-two-client-metrics.json"
+  python tools/summarize_manka_metrics.py "$output/qa/observer/logs/latest.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/observer-two-client-metrics.json"
+fi
 # Save and quit through the native GUI at GUI scale 2, then close the title screen.
 xdotool key Escape
 sleep 1

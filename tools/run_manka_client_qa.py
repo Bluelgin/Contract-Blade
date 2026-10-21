@@ -99,6 +99,7 @@ finally:
  xvfb.terminate()
  # Leave the host alive for the wrapper's native Save and Quit.
  command('/mankatest bauble 1');command('/maidweapon resonance 1000')
+command('/item replace entity @s hotbar.4 with slashblade:slashblade');x('key','5');time.sleep(2);shot('native-slashblade-model');x('key','1');time.sleep(1)
 # Exercise fallback only in disposable build output. Approved source PNGs stay byte-identical.
 texture_dir=root/'build/resources/main/assets/maid_weapon/textures/gui/danmaku'
 backup={p:p.read_bytes() for p in [texture_dir/'wheel_base.png',texture_dir/'seal_needle.png']}

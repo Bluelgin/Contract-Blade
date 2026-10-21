@@ -182,6 +182,10 @@ jobs:
           curl -fL --retry 3 "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" -o libs/tacz-1.20.1-1.1.8-release.jar
           curl -fL --retry 3 "https://edge.forgecdn.net/files/8061/847/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar" -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+      - name: Exact requested wrapper build and tests
+        run: |
+          ./gradlew --no-daemon clean build
+          ./gradlew --no-daemon test
       - name: Create stopped native fixture world
         run: python tools/run_manka_native_validation.py --output /tmp/manka-capture-seed
       - name: Record actual Minecraft client at original speed
@@ -195,6 +199,7 @@ jobs:
             /tmp/manka-client-capture/videos/
             /tmp/manka-client-capture/qa/
             /tmp/manka-client-capture/metrics.json
+            /tmp/manka-client-capture/environment.txt
             /tmp/manka-client-capture/client.log
             /tmp/manka-client-capture/client/logs/
             /tmp/manka-capture-seed/server.log
