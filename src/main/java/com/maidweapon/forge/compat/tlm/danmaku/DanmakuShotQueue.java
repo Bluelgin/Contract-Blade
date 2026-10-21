@@ -117,8 +117,8 @@ public final class DanmakuShotQueue {
             DanmakuRuntimeApi.projectileVisual(owner, bullet, form, false, bullet.position());
             if (Boolean.getBoolean("contractblade.danmaku.acceptance"))
                 org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info(
-                        "MANKA_SHOT owner={} volley={} form={} entity={} tick={}", owner.getUUID(),
-                        shot.volley, form, bullet.getId(), owner.level().getGameTime());
+                        "MANKA_SHOT owner={} volley={} form={} entity={} tick={} homingTicks={} target={}", owner.getUUID(),
+                        shot.volley, form, bullet.getId(), owner.level().getGameTime(), shot.homingTicks, shot.target);
         }
     }
 

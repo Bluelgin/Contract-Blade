@@ -41,8 +41,15 @@ public final class MankaAcceptanceCommands {
                     catch (Exception failure) { throw new IllegalStateException("Second native contract failed", failure); }
                 }))
                 .then(Commands.literal("cast").then(Commands.argument("form",IntegerArgumentType.integer(0,3))
-                    .executes(c -> DanmakuCombatService.cast(c.getSource().getPlayerOrException(),
-                        DanmakuForm.safe(IntegerArgumentType.getInteger(c,"form"))) ? 1 : 0)))
+                    .executes(c -> {
+                        var player=c.getSource().getPlayerOrException();
+                        var form=DanmakuForm.safe(IntegerArgumentType.getInteger(c,"form"));
+                        boolean accepted=DanmakuCombatService.cast(player,form);
+                        org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info(
+                                "MANKA_CAST_REQUEST owner={} form={} accepted={} tick={}",
+                                player.getUUID(),form,accepted,player.level().getGameTime());
+                        return accepted ? 1 : 0;
+                    })))
                 .then(Commands.literal("bauble").then(Commands.argument("mode",IntegerArgumentType.integer(0,2))
                     .executes(c -> { bauble(c.getSource().getPlayerOrException(),IntegerArgumentType.getInteger(c,"mode")); return 1; })))
                 .then(Commands.literal("arrows").executes(c -> { arrows(c.getSource().getPlayerOrException()); return 1; }))

@@ -14,6 +14,8 @@ import java.util.UUID;
 
 /** Native TLM visuals and ordinary damage, but with hit-based volley caps and gentle homing. */
 public final class ContractDanmakuProjectile extends EntityDanmaku {
+    private static final boolean ACCEPTANCE = Boolean.getBoolean("contractblade.danmaku.acceptance");
+    private boolean acceptanceHomingLogged;
     private int visualForm;
     public void visualForm(int form) { visualForm = form; }
     public int visualForm() { return visualForm; }
@@ -57,6 +59,12 @@ public final class ContractDanmakuProjectile extends EntityDanmaku {
         var desired = delta.normalize().scale(speed);
         setDeltaMovement(previous.scale(.83).add(desired.scale(.17)));
         hasImpulse = true;
+        if (ACCEPTANCE && !acceptanceHomingLogged) {
+            acceptanceHomingLogged = true;
+            org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info(
+                    "MANKA_HOMING entity={} form={} target={} targetMotion={} before={} after={}",
+                    getId(), visualForm, target.getUUID(), target.getDeltaMovement(), previous, getDeltaMovement());
+        }
     }
 
     @Override protected void onHitEntity(EntityHitResult hit) {

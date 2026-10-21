@@ -22,7 +22,7 @@ python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --outpu
 python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --capture "$output/videos/manka_performance_test.capture.json" --output "$output/videos/performance-metrics.json"
 if [ -f "$output/qa/manka_two_clients.capture.json" ]; then
   python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/host-two-client-metrics.json"
-  python tools/summarize_manka_metrics.py "$output/qa/observer/logs/latest.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/observer-two-client-metrics.json"
+  python tools/summarize_manka_metrics.py "$output/qa/observer/observer.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/observer-two-client-metrics.json"
 fi
 # Save and quit through the native GUI at GUI scale 2, then close the title screen.
 xdotool key Escape

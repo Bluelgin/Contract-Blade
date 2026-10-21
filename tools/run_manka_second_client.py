@@ -28,4 +28,4 @@ for folder in ['config','defaultconfigs']:
  if (source/folder).exists():shutil.copytree(source/folder,out/folder)
 (out/'options.txt').write_text('version:3465\nrenderDistance:3\nsimulationDistance:5\nmaxFps:20\nenableVsync:false\nguiScale:1\nlang:zh_cn\nfullscreen:false\nsoundCategory_master:0.0\nautoJump:false\ntutorialStep:none\ngraphicsMode:0\nparticles:2\nkey_key.maid_weapon.danmaku:key.keyboard.g\n')
 env['DISPLAY']=a.display;env['LIBGL_ALWAYS_SOFTWARE']='1';env['JAVA_TOOL_OPTIONS']=env.get('JAVA_TOOL_OPTIONS','')+' -Dcontractblade.danmaku.acceptance=true'
-with (out/'observer.log').open('w') as log:raise SystemExit(subprocess.call(recipe,cwd=Path(__file__).resolve().parents[1],env=env,stdout=log,stderr=subprocess.STDOUT))
+with (out/'observer.log').open('w') as log:raise SystemExit(subprocess.call(recipe,cwd=out,env=env,stdout=log,stderr=subprocess.STDOUT))
