@@ -193,6 +193,8 @@ jobs:
           name: manka-client-gameplay
           path: |
             /tmp/manka-client-capture/videos/
+            /tmp/manka-client-capture/qa/
+            /tmp/manka-client-capture/metrics.json
             /tmp/manka-client-capture/client.log
             /tmp/manka-client-capture/client/logs/
             /tmp/manka-capture-seed/server.log

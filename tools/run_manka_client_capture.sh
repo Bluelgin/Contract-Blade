@@ -8,6 +8,8 @@ python tools/run_manka_client.py --gradle gradle --seed-world "$seed_world" --ou
 client_pid=$!
 trap 'kill "$client_pid" 2>/dev/null || true' EXIT
 python tools/run_manka_capture_validation.py --log "$output/client.log" --output "$output/videos"
+python tools/run_manka_client_qa.py --client "$output/client" --output "$output/qa"
+python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --output "$output/metrics.json"
 # Save and quit through the native GUI at GUI scale 2, then close the title screen.
 xdotool key Escape
 sleep 1

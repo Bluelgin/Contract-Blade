@@ -29,6 +29,13 @@ public final class MankaAcceptanceCommands {
                     try { setup(c.getSource().getPlayerOrException()); return 1; }
                     catch (Exception failure) { throw new IllegalStateException("Manka test scene setup failed", failure); }
                 }))
+                .then(Commands.literal("lan").executes(c -> {
+                    // Isolated opt-in developer LAN only; never changes a dedicated server's authentication.
+                    var server=c.getSource().getServer();
+                    if (!server.isSingleplayer()) return 0;
+                    server.setUsesAuthentication(false);
+                    return 1;
+                }))
                 .then(Commands.literal("second").executes(c -> {
                     try { createCarrier(c.getSource().getPlayerOrException(),2); return 1; }
                     catch (Exception failure) { throw new IllegalStateException("Second native contract failed", failure); }
