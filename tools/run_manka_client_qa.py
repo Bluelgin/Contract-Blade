@@ -82,6 +82,10 @@ try:
  # At GUI scale1 the up symbol is 52 physical pixels from the center.
  x('keydown','g',display=display);time.sleep(.7);x('mousemove',640,308,display=display);time.sleep(.5);x('keyup','g',display=display);time.sleep(.5)
  s=segment(lambda:x('key','g',display=display),4);save('G short cast sends native needle entities',count_shots(s)==12,{'shots':count_shots(s)})
+ command('/item replace entity @s hotbar.4 from entity Dev weapon.mainhand',display);x('key','5',display=display);time.sleep(1)
+ foreign=segment(lambda:command('/mankatest cast 0',display),3)
+ save('real foreign-owner contract copy cannot cast',count_shots(foreign)==0 and 'kind=WAVE' not in foreign,{'actualShots':count_shots(foreign),'scope':'real other online player item copied by vanilla admin command; server rejects owner mismatch'})
+ x('key','1',display=display);time.sleep(1)
  command('/maidweapon level 10',display);x('keydown','g',display=display);time.sleep(1);shot('observer-gui1-unlocked',display);x('keyup','g',display=display);time.sleep(.6)
  command('/tp @s 0.5 65 0.5 0 0');command('/maidweapon resonance 1000');command('/mankatest cast 3');time.sleep(1.65);shot('observer-sees-host-fantasy',display);time.sleep(4)
  command('/mankatest metrics');save('two independent real LAN clients connected','realPlayers=2' in read(hostlog),{'realPlayers2Logged':'realPlayers=2' in read(hostlog),'type':'two automated offline developer JVMs, not two human players'})
