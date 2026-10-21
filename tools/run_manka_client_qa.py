@@ -68,6 +68,24 @@ try:
   if i%3==0:command('/mankatest metrics')
  record.wait(timeout=60);save('two-client original-speed MP4 recorded',record.returncode==0,{'path':'manka_two_clients.mp4'})
  time.sleep(12);shot('observer-after-expiry',display);command('/mankatest metrics')
+ # One actual moving vanilla Boss, no zombie/skeleton targets; creative is only camera protection.
+ # Survival permissions/costs are checked separately above and by the dedicated fixture.
+ command('/gamemode creative');command('/gamemode creative',display)
+ command('/kill @e[type=minecraft:zombie]');command('/kill @e[type=minecraft:skeleton]')
+ command('/gamerule mobGriefing false')
+ command('/summon minecraft:wither 0.5 66 14.5 {Invul:0,Health:1000f,Attributes:[{Name:"minecraft:generic.max_health",Base:1000d}],Tags:["manka_boss"]}')
+ command('/tp @s 0.5 65 0.5 0 0');command('/tp @s 4.5 65 -3.5 12 0',display)
+ boss_start=len(read(hostlog))
+ boss_record=subprocess.Popen([sys.executable,str(root/'tools/record_manka_live.py'),str(out/'manka_boss_window_test.mp4'),'--seconds','40'],env=dict(os.environ,DISPLAY=display),stdout=(out/'boss-capture.log').open('w'),stderr=subprocess.STDOUT)
+ command('/data get entity @e[type=minecraft:wither,tag=manka_boss,limit=1] Health')
+ for i in range(8):
+  command('/mankatest cast 0');command('/mankatest cast 0',display);time.sleep(1)
+ command('/data get entity @e[type=minecraft:wither,tag=manka_boss,limit=1] Health')
+ boss_record.wait(timeout=60)
+ events=re.findall(r'kind=HIT, owner=([^,]+).*?tick=(\d+)',read(hostlog)[boss_start:])
+ ticks=sorted(int(t) for _,t in events);owners={owner:sum(1 for o,_ in events if o==owner) for owner,_ in events}
+ save('same vanilla Boss actual global two-tick hit window',len(ticks)>=2 and all(b-a>=2 for a,b in zip(ticks,ticks[1:])),{'actualHitEvents':len(ticks),'successfulHitsByOwner':owners,'minimumGapTicks':min((b-a for a,b in zip(ticks,ticks[1:])),default=None),'scope':'one moving vanilla Wither; not optional modded Boss phases or immunity matrix'})
+ command('/kill @e[type=minecraft:wither,tag=manka_boss]')
  save('low particle mode really loaded','particles=MINIMAL' in read(observerlog),{'minimalLogged':'particles=MINIMAL' in read(observerlog)})
 finally:
  # Disconnect observer via native pause menu; process termination is only an isolated observer fallback.
@@ -81,5 +99,18 @@ finally:
  xvfb.terminate()
  # Leave the host alive for the wrapper's native Save and Quit.
  command('/mankatest bauble 1');command('/maidweapon resonance 1000')
+# Exercise fallback only in disposable build output. Approved source PNGs stay byte-identical.
+texture_dir=root/'build/resources/main/assets/maid_weapon/textures/gui/danmaku'
+backup={p:p.read_bytes() for p in [texture_dir/'wheel_base.png',texture_dir/'seal_needle.png']}
+try:
+ for p in backup:p.unlink()
+ start=len(read(hostlog));x('keydown','F3');x('key','t');x('keyup','F3');time.sleep(12)
+ x('mousedown',2);time.sleep(1);shot('missing-texture-safe-wheel');x('mouseup',2);time.sleep(1)
+ command('/mankatest cast 0');time.sleep(3)
+ s=read(hostlog)[start:];save('missing wheel and needle texture safe fallback','MANKA_SCREEN DanmakuWheelScreen' in s and count_shots(s)==12,{'screenOpened':'DanmakuWheelScreen' in s,'actualNeedles':count_shots(s),'scope':'source files untouched; build output removed only during F3+T test'})
+finally:
+ for p,data in backup.items():p.write_bytes(data)
+ x('keydown','F3');x('key','t');x('keyup','F3');time.sleep(12)
+ x('mousedown',2);time.sleep(1);shot('restored-texture-wheel');x('mouseup',2);time.sleep(1)
 failures=[r for r in results if r['status']=='FAIL']
 if failures:raise SystemExit(str(len(failures))+' actual runtime assertions failed; see runtime-qa.json')
