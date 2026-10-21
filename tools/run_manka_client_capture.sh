@@ -24,6 +24,7 @@ if [ -f "$output/qa/manka_two_clients.capture.json" ]; then
   python tools/summarize_manka_metrics.py "$output/client/logs/latest.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/host-two-client-metrics.json"
   python tools/summarize_manka_metrics.py "$output/qa/observer/observer.log" --capture "$output/qa/manka_two_clients.capture.json" --output "$output/qa/observer-two-client-metrics.json"
 fi
+python tools/write_manka_acceptance_report.py --output "$output" --seed-world "$seed_world"
 # Save and quit through the native GUI at GUI scale 2, then close the title screen.
 xdotool key Escape
 sleep 1

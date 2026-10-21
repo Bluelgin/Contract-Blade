@@ -186,6 +186,7 @@ jobs:
         run: |
           ./gradlew --no-daemon clean build
           ./gradlew --no-daemon test
+          echo "MANKA_WRAPPER_BUILD_PASSED=true" >> "$GITHUB_ENV"
       - name: Create stopped native fixture world
         run: python tools/run_manka_native_validation.py --output /tmp/manka-capture-seed
       - name: Record actual Minecraft client at original speed
@@ -205,6 +206,7 @@ jobs:
             /tmp/manka-client-capture/qa/observer/logs/*.log
             /tmp/manka-client-capture/metrics.json
             /tmp/manka-client-capture/environment.txt
+            /tmp/manka-client-capture/acceptance-report.md
             /tmp/manka-client-capture/client.log
             /tmp/manka-client-capture/client/logs/
             /tmp/manka-capture-seed/server.log
