@@ -11,7 +11,7 @@ data['allowCommands']=nbtlib.Byte(1);data['GameType']=nbtlib.Int(1);data['DayTim
 for name in ['doMobSpawning','doDaylightCycle','doWeatherCycle']:
  data['GameRules'][name]=nbtlib.String('false')
 level.save()
-(run/'options.txt').write_text('renderDistance:3\nsimulationDistance:5\nmaxFps:30\nenableVsync:false\nguiScale:2\nlang:zh_cn\nfullscreen:false\nsoundCategory_master:0.0\nautoJump:false\ntutorialStep:none\n')
+(run/'options.txt').write_text('version:3465\nrenderDistance:3\nsimulationDistance:5\nmaxFps:30\nenableVsync:false\nguiScale:2\nlang:zh_cn\nfullscreen:false\nsoundCategory_master:0.0\nautoJump:false\ntutorialStep:none\n')
 init=out/'capture.init.gradle';init.write_text("allprojects { afterEvaluate { if (plugins.hasPlugin('net.minecraftforge.gradle')) { minecraft.runs.client { args '--width','1280','--height','720' } } } }\n")
 env=dict(os.environ,TZ='UTC');env['JAVA_TOOL_OPTIONS']=env.get('JAVA_TOOL_OPTIONS','')+' -Dcontractblade.danmaku.acceptance=true'
 cmd=[a.gradle,'--no-daemon','runClient','-Pci=true','-PtlmRuntimeTest=true','-PcompatTest=slashblade','-PakatsukiVisualWorld=manka_acceptance',f'-PcompatRunDir={run}','-I',str(init)]

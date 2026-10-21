@@ -153,3 +153,49 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y inkscape
       - run: pip install Pillow==12.3.0
       - run: python art/danmaku/export_spellcards.py --check
+
+  manka-real-client:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: Prepare real client dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool ffmpeg libgl1-mesa-dri libglx-mesa0 libopenal1
+          pip install nbtlib==2.0.4 mss==10.1.0
+          mkdir -p libs tmp/compat-test
+          curl -fL --retry 3 "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" -o libs/tacz-1.20.1-1.1.8-release.jar
+          curl -fL --retry 3 "https://edge.forgecdn.net/files/8061/847/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar" -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
+          curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+      - name: Create stopped native fixture world
+        run: python tools/run_manka_native_validation.py --output /tmp/manka-capture-seed
+      - name: Record actual Minecraft client at original speed
+        run: xvfb-run -a -s "-screen 0 1280x720x24 -extension MIT-SHM" bash tools/run_manka_client_capture.sh "/tmp/manka-capture-seed/server/Manka Native Validation" /tmp/manka-client-capture
+      - name: Preserve real recordings and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manka-client-gameplay
+          path: |
+            /tmp/manka-client-capture/videos/
+            /tmp/manka-client-capture/client.log
+            /tmp/manka-client-capture/client/logs/
+            /tmp/manka-capture-seed/server.log
+            /tmp/manka-capture-seed/server/logs/latest.log
+          retention-days: 14
+          if-no-files-found: warn
