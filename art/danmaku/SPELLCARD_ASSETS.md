@@ -58,11 +58,17 @@ SVG 全部为原创矢量路径，不含位图、文字、外部引用或第三�
 
 分镜顺序：护身显印 → 展开 → 局部拦截 → 淡出；幻想四阵展开 → 错位旋转 → 向内收束 → 终印消退。**分镜不定义战斗时序、伤害、次数或十级解锁规则。**
 
-## 原御札与动画
+## 物品御札与动画（2026-10-22 更新）
 
-保留 `art/danmaku/manka_talisman.svg`、原导出器和正式 `textures/item/manka_talisman.png` 及 mcmeta，全部字节未变。
-物品为 32×1280、40 帧、每帧 2 ticks、不插值、4 秒循环。没有新增游戏动画帧条。
-验证记录包括原物品 SHA-256、最后一帧到首帧的平均 RGBA 差，以及普通相邻帧最大差；接缝不大于普通帧间变化。
+用户确认采用「朱樱封札」像素第二稿：以长符纸、樱花契印、纵向符纹为主体，小绳结与侧铃为点缀。参考本模组像素轮廓及分级明暗，不复刻其他饰品的大蝴蝶结造型。
+
+- `manka_talisman.svg`：32×32整数网格原创矢量源，含40步离散SVG动画，无位图嵌入。
+- `export_manka_animation.py`：直接按32像素导出至正式游戏资源，无大图缩小、无平滑模糊；`--check`逐像素复现且不写正式文件。
+- `textures/item/manka_talisman.png`：32×1280、40帧；mcmeta仍为每帧2 game ticks、不插值，4秒循环。
+- 局部契印/纸光缓慢明暗变化，金铃及短流苏一像素轻摆；纸张主体不晃动。首帧与确认的第二稿像素一致。
+- [循环预览](previews/manka_item_pixel_loop.gif)：离线贴图动画预览，不是实机录像。
+
+正式物品路径与模型引用未变，物品栏和轮盘中央原生renderItem自动使用新动画，无需修改Java。资源清单记录本次批准的SHA-256；14张轮盘/符式特效贴图保持不变。验证接缝不大于普通帧间变化。
 
 ## 可复现导出与验证
 
@@ -70,6 +76,8 @@ SVG 全部为原创矢量路径，不含位图、文字、外部引用或第三�
 从仓库根目录运行：
 
 ```bash
+python art/danmaku/export_manka_animation.py --preview
+python art/danmaku/export_manka_animation.py --check
 python art/danmaku/export_spellcards.py
 python art/danmaku/export_spellcards.py --check
 python art/danmaku/preview_spellcards.py
@@ -77,10 +85,12 @@ python art/danmaku/preview_spellcards.py
 
 导出器将 SVG 渲染为目标原尺寸 PNG，统一 RGBA 并移除渲染器机器信息；检查模式在临时目录重新导出，与正式 PNG 逐像素比较，不写正式目录。
 `spellcard_assets.json` 为权威资源清单；`spellcard_validation.json` 为尺寸、路径与校验值记录。
-检查覆盖源稿禁用嵌图／文字／外链、清单完整性、透明通道、透明边距、图集四格边界、中心留空以及原御札动画约束。
+检查覆盖源稿禁用嵌图／文字／外链、清单完整性、透明通道、透明边距、图集四格边界、中心留空以及御札动画约束。
 导出器只允许写此清单中的静态 PNG 与本目录验证报告，不修改 Java 或原御札。
 
 ## 展示文件
+
+以下两张为原美术 PR 历史审稿，中央物品不代表本次重绘；当前物品以新循环预览为准。
 
 - `previews/manka_spellcards_review.png`：四式 32px 与 4× 对照、完整轮盘、选中／锁定、原御札配色和两套四阶段分镜。
 - `previews/manka_motion_study.gif`：40 帧／4 秒的一次性离线动态示意，展示护环与花阵组合及原御札动画。该演示不是循环技能，不设置 GIF 循环；原游戏物品自身循环不变。

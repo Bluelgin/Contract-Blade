@@ -11,7 +11,7 @@ hashes={Path(t['path']).name:t['sha256'] for t in approved['textures']}
 for p in textures.glob('*.png'):
  assert hashlib.sha256(p.read_bytes()).hexdigest()==hashes[p.name],p
 item=r/'src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png'
-assert hashlib.sha256(item.read_bytes()).hexdigest()=='4fe320c085c02f596f0b458d9ab95dd7ea8291f0b4105d36e33f0715a66c7c60'
+assert hashlib.sha256(item.read_bytes()).hexdigest()==manifest['item']['sha256']
 world=(j/'client/DanmakuWorldPainter.java').read_text();state=(j/'client/DanmakuWorldVisuals.java').read_text()
 assert 'tile%2' in world and 'tile/2' in world and 'span=tile<0?1:.5f' in world
 assert 'FRAMES.size() < 128' in state and 'PROJECTILES.size() < 256' in state

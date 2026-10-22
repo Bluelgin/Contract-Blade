@@ -17,7 +17,6 @@ from PIL import Image, ImageChops, ImageStat
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 NS = '{http://www.w3.org/2000/svg}'
-ITEM_SHA = '4fe320c085c02f596f0b458d9ab95dd7ea8291f0b4105d36e33f0715a66c7c60'
 
 
 def validate_source(path, size):
@@ -91,7 +90,7 @@ def main():
     assert actual == set(names), ('Unlisted/missing production PNG', actual ^ set(names))
     assert {p.stem for p in (HERE / 'spellcards').glob('*.svg')} == set(names)
     item_path = ROOT / 'src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png'
-    assert hashlib.sha256(item_path.read_bytes()).hexdigest() == ITEM_SHA, 'Original approved item was changed'
+    assert hashlib.sha256(item_path.read_bytes()).hexdigest() == manifest['item']['sha256'], 'Approved item differs from manifest'
     with Image.open(item_path) as item:
         item = item.convert('RGBA')
     assert item.size == (32, 1280)
@@ -105,13 +104,13 @@ def main():
     assert seam <= max(adjacent), 'Animation seam exceeds largest ordinary transition'
     result = {'approved_plan': 'C', 'baseline': manifest['baseline'],
               'renderer': subprocess.check_output(['inkscape', '--version'], text=True).strip(),
-              'item': {'unchanged_sha256': ITEM_SHA, 'size': item.size, 'frames': 40,
+              'item': {'sha256': manifest['item']['sha256'], 'size': item.size, 'frames': 40,
                        'ticks_per_frame': 2, 'interpolate': False,
                        'loop_seam_mean_rgba_delta': seam, 'max_adjacent_mean_rgba_delta': max(adjacent)},
               'textures': report}
     if not args.check:
         (HERE / 'spellcard_validation.json').write_text(json.dumps(result, indent=2) + '\n')
-    print(f'PASS: {len(report)} SVG/PNG pairs; RGBA, dimensions, padding, empty centres, original item and loop seam.'
+    print(f'PASS: {len(report)} SVG/PNG pairs; RGBA, dimensions, padding, empty centres, approved item and loop seam.'
           + (' Re-export matches every pixel.' if args.check else ''))
 
 

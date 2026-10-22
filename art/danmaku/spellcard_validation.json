@@ -3,7 +3,7 @@
   "baseline": "ffa0629613e509995e1265af6f7ff35c012cdee9",
   "renderer": "Inkscape 1.2.2 (b0a8486541, 2022-12-01)",
   "item": {
-    "unchanged_sha256": "4fe320c085c02f596f0b458d9ab95dd7ea8291f0b4105d36e33f0715a66c7c60",
+    "sha256": "f8ac1bbe7a96e632dbd9156f0f508b4d6a67d15747d65a102c5e690c25c55b20",
     "size": [
       32,
       1280
@@ -11,8 +11,8 @@
     "frames": 40,
     "ticks_per_frame": 2,
     "interpolate": false,
-    "loop_seam_mean_rgba_delta": 0.910400390625,
-    "max_adjacent_mean_rgba_delta": 1.12548828125
+    "loop_seam_mean_rgba_delta": 0.0,
+    "max_adjacent_mean_rgba_delta": 4.02392578125
   },
   "textures": [
     {

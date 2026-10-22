@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "baseline": "ffa0629613e509995e1265af6f7ff35c012cdee9",
   "approved_plan": "C",
   "texture_root": "src/main/resources/assets/maid_weapon/textures/gui/danmaku",
@@ -74,5 +74,16 @@
       "size": 64,
       "purpose": "终幕空心符印，保持中心可见"
     }
-  ]
+  ],
+  "item": {
+    "design": "朱樱封札 · 像素第二稿",
+    "approval": "2026-10-22 用户确认接入；小绳结、符纸主体，不沿用大蝴蝶结造型",
+    "source": "art/danmaku/manka_talisman.svg",
+    "texture": "src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png",
+    "sha256": "f8ac1bbe7a96e632dbd9156f0f508b4d6a67d15747d65a102c5e690c25c55b20",
+    "frames": 40,
+    "frame_size": 32,
+    "ticks_per_frame": 2,
+    "interpolate": false
+  }
 }

@@ -1,80 +1,70 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
-<title>万华御札｜朱樱纸御札 A · 手绘 SVG 循环动态稿</title>
-<desc>40帧/4秒循环。樱花契印呼吸、铃与结扣的微光、流苏轻摆和游离花瓣漂移。全部为 SVG 路径与渐变，不含嵌入图片。</desc><defs>
-  <linearGradient id="paper" x1="0" y1="0" x2=".9" y2="1">
-    <stop stop-color="#fff7e7" />
-    <stop offset=".58" stop-color="#ffe8c5" />
-    <stop offset="1" stop-color="#ecc694" />
-  </linearGradient>
-  <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
-    <stop stop-color="#ff7a73" />
-    <stop offset=".45" stop-color="#db3b56" />
-    <stop offset="1" stop-color="#971a40" />
-  </linearGradient>
-  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-    <stop stop-color="#fff1ab" />
-    <stop offset=".55" stop-color="#d8a44f" />
-    <stop offset="1" stop-color="#94603a" />
-  </linearGradient>
-</defs>
-<g stroke-linejoin="round" stroke-linecap="round">
-  <path d="M74 18 C64 7 68 3 79 4 C91 5 96 16 87 22" fill="none" stroke="#5c2238" stroke-width="7" />
-  <path d="M74 18 C64 7 68 3 79 4 C91 5 96 16 87 22" fill="none" stroke="#ef5f69" stroke-width="3.8" />
-  <g transform="rotate(-8 82 84)">
-    <path d="M49 28 L105 28 L109 133 Q107 139 100 143 L49 143 Q42 139 41 133 Z" fill="#7e2b3c" stroke="#4c1e30" stroke-width="6" />
-    <path d="M55 35 L101 35 L103 131 L99 136 L51 136 Z" fill="url(#paper)" stroke="#ddaa6d" stroke-width="3" />
-    <path d="M58 39 L98 39 L99 128 L54 128 Z" fill="none" stroke="#ba3348" stroke-width="2.4" />
-    <path d="M55 35 L101 35 L101 47 Q79 52 55 47Z" fill="#b12942" />
-    <path d="M54 116 Q78 111 103 118 L103 131 L51 131Z" fill="#ae3048" />
-    <path d="M55 118 Q79 115 102 120" fill="none" stroke="#efbe69" stroke-width="2.7" />
-    <path d="M79 50 L98 69 L79 88 L60 69 Z" fill="#f7d8b6" stroke="#b62942" stroke-width="3.6" />
-    <circle cx="79" cy="69" r="14" fill="#b92a47" />
-    <g fill="#fff1e0" stroke="#f4a5a7" stroke-width=".8">
-      <path d="M79 68 C72 62 74 58 77 57 L79 59 L81 57 C85 59 85 63 79 68Z" />
-      <path d="M79 68 C85 61 91 64 90 68 L87 69 L89 72 C86 75 82 74 79 68Z" />
-      <path d="M79 68 C88 72 85 80 81 81 L79 78 L77 81 C73 79 74 74 79 68Z" />
-      <path d="M79 68 C77 77 70 79 68 75 L70 72 L67 71 C67 67 73 65 79 68Z" />
-      <path d="M79 68 C69 69 66 64 69 61 L72 62 L72 59 C76 57 79 62 79 68Z" />
-    </g>
-    <circle cx="79" cy="69" r="3.7" fill="#e8b052" stroke="#a84951" stroke-width=".9" />
-    <circle cx="78" cy="68" r="1.1" fill="#fff6da" />
-    <path d="M59 54 Q65 52 68 57 M90 57 Q93 54 98 54" stroke="#dba269" stroke-width="2.2" fill="none" />
-    <path d="M61 115 Q66 112 70 115 M87 115 Q93 112 97 115" stroke="#f3c77c" stroke-width="2" fill="none" />
-    <path d="M69 96 H90 M71 103 H87 M75 110 H82" stroke="#b23249" stroke-width="4" />
-    <path d="M66 47 L69 43 L72 47 L69 51Z M88 94 L92 98 L88 102 L84 98Z" fill="#d79e47" />
-    <circle cx="63" cy="89" r="2.5" fill="#d57f64" />
-    <circle cx="94" cy="89" r="2.5" fill="#d57f64" />
-    <g id="seal-breath" opacity="0.080">
-      <path d="M63 57 Q79 42 95 57 M65 81 Q79 94 93 81" fill="none" stroke="#fff1a8" stroke-width="2.8" stroke-linecap="round" />
-      <path d="M63 57 Q79 42 95 57" fill="none" stroke="#fdb2a5" stroke-width="1.4" stroke-linecap="round" />
-    <animate attributeName="opacity" dur="4s" repeatCount="indefinite" calcMode="discrete" values="0.080;0.091;0.124;0.175;0.239;0.310;0.381;0.445;0.496;0.529;0.540;0.529;0.496;0.445;0.381;0.310;0.239;0.175;0.124;0.091;0.080;0.091;0.124;0.175;0.239;0.310;0.381;0.445;0.496;0.529;0.540;0.529;0.496;0.445;0.381;0.310;0.239;0.175;0.124;0.091" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" /></g>
-    <g id="seal-heart" opacity="0.160"><circle cx="78.2" cy="68.1" r="2.8" fill="#fff9cf" /><animate attributeName="opacity" dur="4s" repeatCount="indefinite" calcMode="discrete" values="0.160;0.170;0.199;0.245;0.302;0.365;0.428;0.485;0.531;0.560;0.570;0.560;0.531;0.485;0.428;0.365;0.302;0.245;0.199;0.170;0.160;0.170;0.199;0.245;0.302;0.365;0.428;0.485;0.531;0.560;0.570;0.560;0.531;0.485;0.428;0.365;0.302;0.245;0.199;0.170" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" /></g>
-    <g id="ink-charge" opacity="0.180"><path d="M78 91 L80 87 L82 91 L85 93 L82 95 L80 99 L78 95 L75 93Z" fill="#fff0aa" /><animate attributeName="opacity" dur="4s" repeatCount="indefinite" calcMode="discrete" values="0.180;0.193;0.232;0.291;0.367;0.450;0.533;0.609;0.668;0.707;0.720;0.707;0.668;0.609;0.533;0.450;0.367;0.291;0.232;0.193;0.180;0.193;0.232;0.291;0.367;0.450;0.533;0.609;0.668;0.707;0.720;0.707;0.668;0.609;0.533;0.450;0.367;0.291;0.232;0.193" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" /></g>
-    <g id="sakura-motes" opacity="0.054">
-      <path d="M93 91 L95 86 L97 91 L101 93 L97 95 L95 100 L93 95 L89 93Z" fill="#ffdad1" />
-      <circle cx="60" cy="82" r="2.5" fill="#ffe1bf" />
-    <animate attributeName="opacity" dur="4s" repeatCount="indefinite" calcMode="discrete" values="0.054;0.171;0.373;0.563;0.629;0.527;0.323;0.134;0.042;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.054;0.171;0.373;0.563;0.629;0.527;0.323;0.134;0.042;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030;0.030" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" /></g>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>万华御札 · 朱樱封札 · 像素循环正式稿</title>
+  <desc>用户确认的第二稿；32像素原创矢量御札。40帧、每帧2 ticks、无插值。符纸与樱花契印为主体，小结、金铃与流苏点缀。无嵌入位图。</desc>
+  <g id="cord-loop">
+    <path fill="#542c43" d="M14 1h4v1h2v4h-2v2h-5V6h-1V3h2z" />
+    <path fill="#b53e53" d="M14 2h4v1h1v3h-2v1h-3V5h-1V3h1z" />
+    <path fill="#f2959c" d="M14 2h3v1h-3v2h-1V3h1z" />
+    <path fill="#542c43" d="M15 3h2v3h-2z" />
   </g>
-  <path d="M74 22 C57 15 49 25 59 35 C67 41 78 31 79 27 C87 36 100 38 107 29 C111 19 95 16 84 24" fill="none" stroke="#5a2034" stroke-width="10" />
-  <path d="M74 22 C57 15 49 25 59 35 C67 41 78 31 79 27 C87 36 100 38 107 29 C111 19 95 16 84 24" fill="none" stroke="url(#red)" stroke-width="5.8" />
-  <path d="M72 34 C63 41 56 49 48 57 L45 51 C53 40 58 32 70 30Z" fill="url(#red)" stroke="#5a2034" stroke-width="3.2" />
-  <path d="M92 32 C103 37 110 42 116 52 L109 57 C103 47 97 41 89 37Z" fill="url(#red)" stroke="#5a2034" stroke-width="3.2" />
-  <path d="M75 22 Q81 18 87 24 Q90 31 83 35 Q77 32 75 22Z" fill="url(#gold)" stroke="#603844" stroke-width="3" />
-  <path d="M82 25 L85 28 L82 31 L79 28Z" fill="#b53047" />
-  <g id="tassel-sway" transform="rotate(-1.509 48 57)">
-    <path d="M48 57 Q43 71 43 80" stroke="#842747" stroke-width="4.5" fill="none" />
-    <circle cx="43" cy="80" r="8" fill="url(#gold)" stroke="#5f3a3f" stroke-width="2.6" />
-    <path d="M36 88 Q35 104 28 116 Q44 113 51 116 Q48 101 48 88Z" fill="url(#red)" stroke="#5a2034" stroke-width="3.2" />
-    <path d="M43 91 L40 111" stroke="#ff9a88" stroke-width="2.4" />
-    <path d="M37 80 Q43 84 49 80" fill="none" stroke="#875042" stroke-width="1.5" />
-    <circle cx="40" cy="77.4" r="1.4" fill="#fff5c4" />
-    <path id="bell-highlight" d="M39.5 77 Q40.2 74 43.3 74.6" fill="none" stroke="#fff6cf" stroke-width="2.5" stroke-linecap="round" opacity="0.151"><animate attributeName="opacity" dur="4s" repeatCount="indefinite" calcMode="discrete" values="0.151;0.190;0.379;0.713;0.926;0.798;0.464;0.223;0.154;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.151;0.190;0.379;0.713;0.926;0.798;0.464;0.223;0.154;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150;0.150" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" /></path>
-  <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" calcMode="discrete" values="-1.509 48 57;-0.844 48 57;-0.158 48 57;0.532 48 57;1.209 48 57;1.856 48 57;2.457 48 57;2.998 48 57;3.465 48 57;3.846 48 57;4.133 48 57;4.318 48 57;4.397 48 57;4.368 48 57;4.231 48 57;3.989 48 57;3.650 48 57;3.221 48 57;2.712 48 57;2.137 48 57;1.509 48 57;0.844 48 57;0.158 48 57;-0.532 48 57;-1.209 48 57;-1.856 48 57;-2.457 48 57;-2.998 48 57;-3.465 48 57;-3.846 48 57;-4.133 48 57;-4.318 48 57;-4.397 48 57;-4.368 48 57;-4.231 48 57;-3.989 48 57;-3.650 48 57;-3.221 48 57;-2.712 48 57;-2.137 48 57" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" type="rotate" /></g>
-  <g id="petal-drift" transform="translate(1.016 0.318)">
-    <path d="M112 82 Q120 79 123 71 Q127 81 118 88Z" fill="#f5a6af" stroke="#bd455b" stroke-width="2.2" />
-  <animateTransform attributeName="transform" dur="4s" repeatCount="indefinite" calcMode="discrete" values="1.016 0.318;1.236 0.069;1.426 -0.182;1.580 -0.429;1.695 -0.665;1.769 -0.884;1.799 -1.082;1.785 -1.253;1.727 -1.393;1.626 -1.499;1.486 -1.568;1.308 -1.599;1.099 -1.590;0.862 -1.542;0.604 -1.455;0.332 -1.334;0.051 -1.179;-0.231 -0.995;-0.508 -0.787;-0.771 -0.559;-1.016 -0.318;-1.236 -0.069;-1.426 0.182;-1.580 0.429;-1.695 0.665;-1.769 0.884;-1.799 1.082;-1.785 1.253;-1.727 1.393;-1.626 1.499;-1.486 1.568;-1.308 1.599;-1.099 1.590;-0.862 1.542;-0.604 1.455;-0.332 1.334;-0.051 1.179;0.231 0.995;0.508 0.787;0.771 0.559" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" type="translate" /></g>
-  <g id="knot-glimmer" opacity="0.131">
-    <path d="M79 23 L80 20 L81 23 L84 24 L81 25 L80 28 L79 25 L76 24Z" fill="#fff6cc" />
-  <animate attributeName="opacity" dur="4s" repeatCount="indefinite" calcMode="discrete" values="0.131;0.165;0.330;0.621;0.807;0.695;0.404;0.193;0.134;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.131;0.165;0.330;0.621;0.807;0.695;0.404;0.193;0.134;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130;0.130" keyTimes="0.000;0.025;0.050;0.075;0.100;0.125;0.150;0.175;0.200;0.225;0.250;0.275;0.300;0.325;0.350;0.375;0.400;0.425;0.450;0.475;0.500;0.525;0.550;0.575;0.600;0.625;0.650;0.675;0.700;0.725;0.750;0.775;0.800;0.825;0.850;0.875;0.900;0.925;0.950;0.975" /></g>
-</g>
+  <g id="backing-paper">
+    <path fill="#542c43" d="M7 7h13v18h-1v2H6V15h1z" />
+    <path fill="#a33b51" d="M8 8h11v16h-1v2H7V15h1z" />
+    <path fill="#e1ac78" d="M8 10h2v14H8zM8 25h9v1H8z" />
+  </g>
+  <g id="main-ofuda">
+    <path fill="#542c43" d="M11 5h11v1h2v19h-1v2h-2v2H10v-1H9V8h1V6h1z" />
+    <path fill="#b53e53" d="M11 6h11v1h1v17h-1v3h-2v1H10V9h1z" />
+    <path fill="#f0c68d" d="M12 8h9v1h1v15h-1v2h-1v1h-9V10h1z" />
+    <path fill="#fff0d0" d="M12 9h8v1h1v13h-1v2h-9V11h1z" />
+    <path fill="#fff9e7" d="M12 9h2v1h-2v13h-1V11h1z">
+      <animate attributeName="fill" values="#fff9e7;#fff9e7;#fff9e8;#fff9e8;#fffae9;#fffaeb;#fffaec;#fffbee;#fffbef;#fffcf1;#fffcf3;#fffcf5;#fffdf7;#fffdf8;#fffefa;#fffefb;#fffefd;#fffffe;#fffffe;#ffffff;#ffffff;#ffffff;#fffffe;#fffffe;#fffefd;#fffefb;#fffefa;#fffdf8;#fffdf7;#fffcf5;#fffcf3;#fffcf1;#fffbef;#fffbee;#fffaec;#fffaeb;#fffae9;#fff9e8;#fff9e8;#fff9e7" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+    </path>
+    <path fill="#d7a56e" d="M21 12h1v12h-1v2h-1v1h-8v-1h8v-3h1z" />
+    <path fill="#84324b" d="M20 25h2v1h-1v1h-1z" />
+    <path fill="#fff1d3" d="M20 24h2v1h-1v1h-1z" />
+  </g>
+  <g id="binding-knot">
+    <path fill="#80314a" d="M10 7h13v2H10zM7 8h4v2h-1v2H7v-1H6V9h1z" />
+    <path fill="#dc6275" d="M11 7h11v1H11zM7 9h3v1H8v1H7z" />
+    <path fill="#f5abae" d="M7 9h1v1H7zM12 7h5v1h-5z" />
+    <path fill="#80314a" d="M8 11h2v3H8v2H6v-3h2z" />
+    <path fill="#d45b70" d="M8 12h1v2H7v1H6v-1h1v-1h1z" />
+  </g>
+  <g id="sakura-contract-seal">
+    <path fill="#bc415c" d="M15 10h3v1h1v2h2v3h-2v2h-2v-1h-1v1h-2v-2h-2v-3h2v-2h1z" />
+    <path fill="#ed8b9d" d="M15 11h1v1h1v-1h1v2h-3zM13 14h2v1h-1v1h-1zM19 14h1v2h-2v-1h1zM15 16h1v1h-1zM17 16h1v1h-1z">
+      <animate attributeName="fill" values="#ed8b9d;#ed8b9d;#ed8d9e;#ee8fa0;#ef92a1;#f095a4;#f19aa7;#f29eaa;#f3a4ad;#f5a9b1;#f6aeb4;#f7b4b8;#f9b9bc;#fabfbf;#fbc3c2;#fcc8c5;#fdcbc8;#fecec9;#ffd0cb;#ffd2cc;#ffd2cc;#ffd2cc;#ffd0cb;#fecec9;#fdcbc8;#fcc8c5;#fbc3c2;#fabfbf;#f9b9bc;#f7b4b8;#f6aeb4;#f5a9b1;#f3a4ad;#f29eaa;#f19aa7;#f095a4;#ef92a1;#ee8fa0;#ed8d9e;#ed8b9d" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+    </path>
+    <path fill="#fff0d0" d="M16 13h1v1h1v1h-1v1h-1v-1h-1v-1h1z" />
+    <path fill="#e8b76a" d="M16 14h1v1h-1z" />
+  </g>
+  <g id="talisman-mark" transform="translate(0 1)" fill="#a83b51">
+    <path d="M16 18h1v1h2v1h-2v1h3v1h-3v2h-2v-1h1v-1h-3v-1h3v-1h-2v-1h2z" />
+    <path d="M13 23h1v1h-1zM19 23h1v1h-1z" />
+  </g>
+  <g id="footer">
+    <path fill="#a83b51" d="M11 25h8v1h-8z" />
+    <path fill="#f3d185" d="M12 26h6v1h-6z" />
+  </g>
+  <g id="bell-cord" transform="translate(0 -1)">
+    <path fill="#815139" d="M23 21h2v4h-1v1h-1v-2h1v-2h-1z" />
+    <path fill="#e7b55e" d="M23 21h1v1h-1zM24 23h1v1h-1z" />
+    <animateTransform attributeName="transform" type="translate" values="0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;0 -1;0 -1;0 -1;0 -1;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+  </g>
+  <g id="bell" transform="translate(0 -1)">
+    <path fill="#815139" d="M23 25h3v1h1v4h-5v-1h-1v-2h1v-1h1z" />
+    <path fill="#e7b55e" d="M23 26h2v1h1v2h-4v-2h1z" />
+    <path fill="#fff0b8" d="M23 26h1v1h-1v1h-1v-1h1z">
+      <animate attributeName="fill" values="#fff0b8;#fff0b8;#fff0ba;#fff1bc;#fff1bf;#fff2c2;#fff3c7;#fff4cb;#fff5d1;#fff6d6;#fff8dc;#fff9e1;#fffae6;#fffbec;#fffcf0;#fffdf5;#fffef8;#fffefb;#fffffd;#ffffff;#ffffff;#ffffff;#fffffd;#fffefb;#fffef8;#fffdf5;#fffcf0;#fffbec;#fffae6;#fff9e1;#fff8dc;#fff6d6;#fff5d1;#fff4cb;#fff3c7;#fff2c2;#fff1bf;#fff1bc;#fff0ba;#fff0b8" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+    </path>
+    <path fill="#815139" d="M24 28h1v1h-1z" />
+    <animateTransform attributeName="transform" type="translate" values="0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;0 -1;0 -1;0 -1;0 -1;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+  </g>
+  <g id="short-tassel" transform="translate(0 -1)">
+    <path fill="#542c43" d="M23 30h3v2h-4v-1h1z" />
+    <path fill="#d45b70" d="M23 30h2v1h-2z" />
+    <path fill="#f5abae" d="M23 30h1v1h-1z" />
+    <animateTransform attributeName="transform" type="translate" values="0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;0 -1;0 -1;0 -1;0 -1;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+  </g>
 </svg>

@@ -1,6 +1,6 @@
 # 万华御札：客户端美术整合接口
 
-整合基线：功能 PR #27 `2f8756e`，已确认美术 PR #28 `261b2c2`。美术提交通过双亲 merge 保留；正式 SVG、PNG、40 帧物品动画均保持原字节。完整资源表见 [SPELLCARD_ASSETS.md](../art/danmaku/SPELLCARD_ASSETS.md)。
+整合基线：功能 PR #27 `2f8756e`，已确认美术 PR #28 `261b2c2`。美术提交通过双亲 merge 保留；14 张符式 PNG/SVG 保持原字节；物品贴图于2026-10-22按用户确认的朱樱封札第二稿更新，40帧时序不变。完整资源表见 [SPELLCARD_ASSETS.md](../art/danmaku/SPELLCARD_ASSETS.md)。
 
 ## 模块和权限
 
