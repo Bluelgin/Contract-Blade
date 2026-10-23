@@ -20,21 +20,18 @@ public final class DanmakuWheelPainter {
         for (var form : DanmakuForm.values()) {
             int x = cx + (form == DanmakuForm.FLOWER ? offset : form == DanmakuForm.GUARD ? -offset : 0);
             int y = cy + (form == DanmakuForm.NEEDLE ? -offset : form == DanmakuForm.FANTASY ? offset : 0);
-            boolean unlocked = form.unlocked(mastery);
-            if (unlocked && (form == hovered || form == selected)) {
+            if (form == hovered || form == selected) {
                 gui.pose().pushPose(); gui.pose().translate(x, y, 0);
                 gui.pose().mulPose(com.mojang.math.Axis.ZP.rotation((float)(clock * .22)));
                 texture(gui, "selection", 0, 0, icon * 3 / 2,
                         (float)(.48 + .22 * Math.sin(clock * 2.4)));
                 gui.pose().popPose();
             }
-            texture(gui, "icon_" + form.name().toLowerCase(Locale.ROOT), x, y, icon, unlocked ? 1 : .28f);
-            if (!unlocked) texture(gui, "lock", x + icon / 3, y + icon / 3, Math.max(9, icon / 2), 1);
-            Component label = Component.translatable("maid_weapon.danmaku.short." + form.name().toLowerCase(Locale.ROOT))
-                    .append(" ").append(Component.translatable("maid_weapon.gui.danmaku.level", form.requiredLevel()));
+            texture(gui, "icon_" + form.name().toLowerCase(Locale.ROOT), x, y, icon, 1);
+            Component label = Component.translatable("maid_weapon.danmaku.short." + form.name().toLowerCase(Locale.ROOT));
             gui.pose().pushPose(); gui.pose().translate(x, y + icon / 2 + 4, 0);
             float scale = Math.min(.8f, Math.max(.5f, radius / 115f)); gui.pose().scale(scale, scale, 1);
-            gui.drawCenteredString(font, label, 0, 0, unlocked ? 0xFFEEDBC6 : 0xFF998898);
+            gui.drawCenteredString(font, label, 0, 0, 0xFFEEDBC6);
             gui.pose().popPose();
         }
         gui.pose().pushPose(); gui.pose().translate(cx, cy, 0);

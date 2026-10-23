@@ -25,11 +25,11 @@ public final class DanmakuProjectilePatterns {
             double side = i - (count - 1) / 2.0;
             double shoulderSide = (i % 2 == 0 ? -1 : 1) * (.80 + Math.abs(side) * .055);
             Vec3 start = DanmakuLaunchGeometry.launch(owner, shoulderSide, .60);
-            Vec3 forward = direction(owner, start, target, mastery >= 4)
-                    .yRot((float) (side * (mastery >= 3 ? .08 : .035)));
+            Vec3 forward = direction(owner, start, target, true)
+                    .yRot((float) (side * .08));
             spawn(owner, start, forward, DanmakuColor.LIGHT_BLUE,
                     DanmakuType.PELLET, .82f, salvo,
-                    mastery >= 4 ? target : null, mastery >= 4 ? 16 : 0, i * 2, shoulderSide);
+                    target, 16, i * 2, shoulderSide);
         }
     }
 
@@ -58,7 +58,7 @@ public final class DanmakuProjectilePatterns {
                 UUID volley = ledger(owner, null, each, count, 3, 120);
                 if (volley == null) return;
                 Vec3 origin = DanmakuLaunchGeometry.launch(owner, index == 0 ? -.8 : .8, .60);
-                Vec3 forward = direction(owner, origin, target, mastery >= 9);
+                Vec3 forward = direction(owner, origin, target, true);
                 for (int i = 0; i < count; i++) {
                     var petal = DanmakuPatternPlanner.flower(i, count, index, mastery);
                     Vec3 vector = forward.yRot((float) petal.yaw())
@@ -70,7 +70,7 @@ public final class DanmakuProjectilePatterns {
                     spawn(owner, start,
                             vector, i % 2 == 0 ? DanmakuColor.PINK : DanmakuColor.PURPLE,
                             DanmakuType.BALL, speed, volley,
-                            mastery >= 9 ? target : null, mastery >= 9 ? 9 : 0, i * 2, shoulderSide);
+                            target, 9, i * 2, shoulderSide);
                 }
             }
             case FANTASY -> {

@@ -11,9 +11,10 @@ public enum DanmakuForm {
         this.requiredLevel = requiredLevel;
         this.cooldownTicks = cooldownTicks;
     }
-    public int requiredLevel() { return requiredLevel; }
+    /** Legacy field retained only for compatibility; forms never have an unlock gate. */
+    public int requiredLevel() { return 0; }
     public int cooldownTicks() { return cooldownTicks; }
-    public boolean unlocked(int mastery) { return mastery >= requiredLevel; }
+    public boolean unlocked(int mastery) { return true; }
     public static DanmakuForm safe(int id) {
         return id < 0 || id >= values().length ? null : values()[id];
     }

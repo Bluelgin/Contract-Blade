@@ -30,15 +30,15 @@ public final class DanmakuClientState {
         enabled = allowed;
         mastery = level;
     }
-    /** Automatic ordinary swings are unlocked at Lv.1, before active spells. */
+    /** Available for authorized stored maids regardless of ContractMastery. */
     public static boolean autoAvailable() {
         ensureSession();
         var player = Minecraft.getInstance().player;
-        if (player == null || !player.isAlive() || player.isSpectator() || !enabled || mastery < 1) return false;
+        if (player == null || !player.isAlive() || player.isSpectator() || !enabled) return false;
         var held = ContractCarrierData.getBindingId(player.getMainHandItem());
         return held != null && held.equals(binding);
     }
-    /** The first active form unlocks at Lv.3. */
+    /** Every form is available immediately while the stored-maid weapon is eligible. */
     public static boolean available() {
         return autoAvailable() && DanmakuForm.NEEDLE.unlocked(mastery);
     }

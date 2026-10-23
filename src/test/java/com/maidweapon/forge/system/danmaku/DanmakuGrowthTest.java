@@ -4,48 +4,31 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DanmakuGrowthTest {
-    @Test void autosAlwaysAvailableAndGrowWithMastery() {
-        assertEquals(3, DanmakuGrowth.auto(1).count());
-        assertEquals(4, DanmakuGrowth.auto(2).count());
-        assertEquals(4, DanmakuGrowth.auto(8).count());
-        assertEquals(6, DanmakuGrowth.auto(8, true).count());
-        assertEquals(5, DanmakuGrowth.auto(10).cooldownTicks());
-        for (int i = 1; i <= 10; i++) {
-            assertTrue(DanmakuGrowth.auto(i).bonusFraction() > 0);
-            assertTrue(DanmakuGrowth.auto(i).count() <= 6);
+    @Test void fixedAutoSalvosAreMasteryIndependent() {
+        for (int level = 0; level <= 10; level++) {
+            assertEquals(4, DanmakuGrowth.auto(level).count());
+            assertEquals(6, DanmakuGrowth.auto(level, true).count());
+            assertEquals(.12, DanmakuGrowth.auto(level).bonusFraction(), 1e-9);
+            assertEquals(5, DanmakuGrowth.auto(level).cooldownTicks());
+            for (var form : DanmakuForm.values()) assertTrue(form.unlocked(level));
         }
     }
-
-    @Test void activeFormsKeepBriefServerSideIntervals() {
-        assertFalse(DanmakuForm.NEEDLE.unlocked(2));
-        assertTrue(DanmakuForm.NEEDLE.unlocked(3));
-        assertFalse(DanmakuForm.FLOWER.unlocked(4));
-        assertTrue(DanmakuForm.FLOWER.unlocked(5));
-        assertFalse(DanmakuForm.GUARD.unlocked(5));
-        assertTrue(DanmakuForm.GUARD.unlocked(6));
-        assertFalse(DanmakuForm.FANTASY.unlocked(9));
-        assertTrue(DanmakuForm.FANTASY.unlocked(10));
+    @Test void allFormsUseFixedStrengthAndKeepShortIntervals() {
         assertEquals(8, DanmakuForm.NEEDLE.cooldownTicks());
         assertEquals(12, DanmakuForm.FLOWER.cooldownTicks());
         assertEquals(10, DanmakuForm.GUARD.cooldownTicks());
         assertEquals(20, DanmakuForm.FANTASY.cooldownTicks());
-        assertEquals(12, DanmakuGrowth.count(DanmakuForm.NEEDLE, 5));
-        assertEquals(9, DanmakuGrowth.count(DanmakuForm.FLOWER, 5));
-        assertEquals(12, DanmakuGrowth.count(DanmakuForm.FLOWER, 7));
-        assertEquals(15, DanmakuGrowth.count(DanmakuForm.FLOWER, 9));
-        assertEquals(5, DanmakuGrowth.count(DanmakuForm.GUARD, 5));
-        assertEquals(5, DanmakuGrowth.count(DanmakuForm.GUARD, 6));
-        assertEquals(8, DanmakuGrowth.count(DanmakuForm.GUARD, 7));
-        assertEquals(32, DanmakuGrowth.count(DanmakuForm.FANTASY, 10));
-        assertEquals(32, DanmakuGrowth.maxProjectilesPerCast(DanmakuForm.FANTASY, 10));
-        assertEquals(2, DanmakuGrowth.waveCount(DanmakuForm.NEEDLE));
-        assertEquals(2, DanmakuGrowth.waveCount(DanmakuForm.FLOWER));
-        assertEquals(0, DanmakuGrowth.waveCount(DanmakuForm.GUARD));
-        assertEquals(4, DanmakuGrowth.waveCount(DanmakuForm.FANTASY));
-        for (int index = 0; index < 4; index++)
-            assertTrue(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 10, index));
-        assertFalse(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 10, 4));
-        assertFalse(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, 9, 3));
+        for (int level = 0; level <= 10; level++) {
+            assertEquals(12, DanmakuGrowth.count(DanmakuForm.NEEDLE, level));
+            assertEquals(12, DanmakuGrowth.count(DanmakuForm.FLOWER, level));
+            assertEquals(6, DanmakuGrowth.count(DanmakuForm.GUARD, level));
+            assertEquals(32, DanmakuGrowth.count(DanmakuForm.FANTASY, level));
+            assertEquals(.84, DanmakuGrowth.fraction(DanmakuForm.FLOWER, level), 1e-9);
+            assertEquals(.20, DanmakuGrowth.fraction(DanmakuForm.GUARD, level), 1e-9);
+            assertEquals(24, DanmakuGrowth.maxProjectilesPerCast(DanmakuForm.FLOWER, level));
+            assertTrue(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, level, 3));
+            assertFalse(DanmakuGrowth.waveAllowed(DanmakuForm.FANTASY, level, 4));
+        }
     }
 
     /** Keep the 2-tick budget victim-global even with multiple owners: no stacking bypass. */

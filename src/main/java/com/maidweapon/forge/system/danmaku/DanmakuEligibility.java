@@ -3,6 +3,7 @@ package com.maidweapon.forge.system.danmaku;
 import com.maidweapon.forge.api.EmbeddedSpiritApi;
 import com.maidweapon.forge.compat.tlm.ContractBaubleEffects;
 import com.maidweapon.forge.item.MaidInfusion;
+import com.maidweapon.forge.system.MaidEntityDataCodec;
 import com.maidweapon.forge.system.contract.ContractCarrierData;
 import com.maidweapon.forge.system.fox.FoxSpiritState;
 import com.maidweapon.forge.system.resonance.ResonanceContract;
@@ -22,7 +23,11 @@ public final class DanmakuEligibility {
         String binding = ContractCarrierData.getBindingId(carrier);
         if (binding == null || binding.isBlank()) return null;
         var context = ResonanceContract.resolve(owner, carrier, binding);
-        if (context == null || !context.channel().getString(EmbeddedSpiritApi.TAG_SPIRIT_ID).isBlank()) return null;
+        // This bauble enhances the captured maid's weapon only; live maids have no
+        // authorization. resolve() also guards owner, duplicate bindings and transit state.
+        if (context == null || !MaidEntityDataCodec.hasData(context.channel())
+                || context.liveMaid() != null
+                || !context.channel().getString(EmbeddedSpiritApi.TAG_SPIRIT_ID).isBlank()) return null;
         return ContractBaubleEffects.has(context, ContractBaubleEffects.Effect.DANMAKU_ART) ? context : null;
     }
     private DanmakuEligibility() { }

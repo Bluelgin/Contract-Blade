@@ -1,13 +1,12 @@
 package com.maidweapon.forge.system.danmaku;
 
-/** Per-shot panel damage coefficients, pattern bounds and shot counts. */
+/** Fixed-strength weapon enhancement; mastery arguments remain for binary/source compatibility only. */
 public final class DanmakuGrowth {
     public record AutoAttack(int count, double bonusFraction, int cooldownTicks) { }
 
     public static AutoAttack auto(int mastery) { return auto(mastery, false); }
     public static AutoAttack auto(int mastery, boolean consecutive) {
-        int lv = Math.max(1, Math.min(10, mastery));
-        int count = lv >= 8 && consecutive ? 6 : lv >= 2 ? 4 : 3;
+        int count = consecutive ? 6 : 4;
         return new AutoAttack(count, count * .03, 5);
     }
 
@@ -15,8 +14,8 @@ public final class DanmakuGrowth {
     public static double fraction(DanmakuForm form, int mastery) {
         return switch (form) {
             case NEEDLE -> .60;
-            case FLOWER -> DanmakuGrowth.count(DanmakuForm.FLOWER, mastery) * 2.0 * .035;
-            case GUARD -> mastery >= 7 ? .20 : .125;
+            case FLOWER -> 24.0 * .035;
+            case GUARD -> .20;
             case FANTASY -> 1.60;
         };
     }
@@ -24,8 +23,8 @@ public final class DanmakuGrowth {
     public static int count(DanmakuForm form, int mastery) {
         return switch (form) {
             case NEEDLE -> 12; // two volleys, six independently damaging needles each
-            case FLOWER -> mastery >= 9 ? 15 : mastery >= 7 ? 12 : 9; // per wave
-            case GUARD -> mastery >= 7 ? 8 : 5; // intercept charges
+            case FLOWER -> 12; // per wave: 24 shots total, fixed
+            case GUARD -> 6; // fixed interception charges
             case FANTASY -> 32; // four phases, eight per phase
         };
     }
@@ -39,7 +38,7 @@ public final class DanmakuGrowth {
         };
     }
     public static boolean waveAllowed(DanmakuForm form, int mastery, int index) {
-        return form != null && form.unlocked(mastery) && index >= 0
+        return form != null && index >= 0
                 && index < waveCount(form);
     }
 
