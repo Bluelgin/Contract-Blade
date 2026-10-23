@@ -9,10 +9,15 @@ import java.util.EnumSet;
 
 /** Capability composition shared by old projection items and the ultimate upgrade. */
 public final class ContractBaubleEffects {
-    public enum Effect { WEAPON_PROJECTION, ARMOR_PROJECTION, AUTO_WORK, RESONANCE_WAIVER }
+    public enum Effect { WEAPON_PROJECTION, ARMOR_PROJECTION, AUTO_WORK, RESONANCE_WAIVER, DANMAKU_ART }
     public static EnumSet<Effect> effects(ItemStack stack) {
         var result = EnumSet.noneOf(Effect.class);
-        if (stack.isEmpty() || !(stack.getItem() instanceof ContractProjectionBaubleItem item)) return result;
+        if (stack.isEmpty()) return result;
+        if (stack.getItem() instanceof com.maidweapon.forge.item.DanmakuTalismanItem) {
+            result.add(Effect.DANMAKU_ART);
+            return result;
+        }
+        if (!(stack.getItem() instanceof ContractProjectionBaubleItem item)) return result;
         if (item.mode().weapon()) { result.add(Effect.WEAPON_PROJECTION); result.add(Effect.AUTO_WORK); }
         if (item.mode().armor()) result.add(Effect.ARMOR_PROJECTION);
         if (item.resonanceWaiver()) result.add(Effect.RESONANCE_WAIVER);
@@ -29,9 +34,14 @@ public final class ContractBaubleEffects {
         } catch (ReflectiveOperationException | RuntimeException | LinkageError ignored) { }
         return false;
     }
-    public static boolean hasWaiver(ResonanceContract context) {
+    /** Validated native inventory of this exact bound maid, never a player inventory item. */
+    public static boolean has(ResonanceContract context, Effect effect) {
+        if (context == null || effect == null) return false;
         Entity maid = context.liveMaid();
-        return maid != null ? liveHas(maid, Effect.RESONANCE_WAIVER) : StoredMaidBaubleResolver.hasWaiver(context);
+        return maid != null ? liveHas(maid, effect) : StoredMaidBaubleResolver.has(context, effect);
+    }
+    public static boolean hasWaiver(ResonanceContract context) {
+        return has(context, Effect.RESONANCE_WAIVER);
     }
     private ContractBaubleEffects() { }
 }

@@ -27,12 +27,12 @@ public final class ResonanceRecoveryEvents {
                 var context = ResonanceContract.resolve(owner, carrier, channel.getString("MaidBindingId"));
                 if (context == null || !seen.add(context.maid())) continue;
                 var activity = ResonanceActivityTracker.current(context);
-                double rate = switch (activity) {
-                    case STORED -> MaidWeaponConfig.RESONANCE_STORED_RECOVERY.get();
-                    case MANIFESTED_IDLE -> MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get();
-                    case ABILITY_IDLE -> MaidWeaponConfig.RESONANCE_ABILITY_IDLE_RECOVERY.get();
-                    case COMBAT, ABILITY_ATTACKING, BERSERK -> MaidWeaponConfig.RESONANCE_COMBAT_RECOVERY.get();
-                };
+                double rate = ResonanceRecoveryPolicy.rate(context.liveMaid() != null, activity,
+                        MaidWeaponConfig.RESONANCE_STORED_RECOVERY.get(),
+                        MaidWeaponConfig.RESONANCE_PASSIVE_RECOVERY.get(),
+                        MaidWeaponConfig.RESONANCE_ABILITY_IDLE_RECOVERY.get(),
+                        MaidWeaponConfig.RESONANCE_COMBAT_RECOVERY.get(),
+                        MaidWeaponConfig.RESONANCE_MANIFESTED_COMBAT_RECOVERY.get());
                 long units = ResonanceRecoveryPolicy.perTick(rate * ResonanceService.legacyScale(),
                         ResonanceProgressService.multiplier(owner)) * 20;
                 var pools = ResonancePoolSavedData.get(owner.getServer());

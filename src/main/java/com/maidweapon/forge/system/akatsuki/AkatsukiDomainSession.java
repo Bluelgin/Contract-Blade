@@ -6,6 +6,8 @@ import java.util.*;
 public final class AkatsukiDomainSession {
   public final AkatsukiDomainState lifecycle = new AkatsukiDomainState();
   public long lastContact = Long.MIN_VALUE / 2, executionPulseUntil, protectionUntil;
+  public long resonanceDue;
+  public boolean resonanceFunded;
   public UUID target;
   public String binding = "";
   private long visualContact = Long.MIN_VALUE;
@@ -56,6 +58,8 @@ public final class AkatsukiDomainSession {
     lastContact = Long.MIN_VALUE / 2;
     visualContact = Long.MIN_VALUE;
     visualVictim = null;
+    resonanceDue = 0;
+    resonanceFunded = false;
     // Do not reset attack timers or the finite protection window on a hand/state change.
   }
 }

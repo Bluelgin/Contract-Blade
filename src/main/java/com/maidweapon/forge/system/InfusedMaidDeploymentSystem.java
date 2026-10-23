@@ -301,9 +301,6 @@ public final class InfusedMaidDeploymentSystem {
                 && ContractCarrierData.isOwner(stack, player)
                 && !ContractCarrierData.isContractSuperseded(stack)
                 && !EmbeddedSpiritApi.isDormant(stack)
-                && (com.maidweapon.forge.system.resonance.ResonanceService.current(player, stack,
-                        ContractCarrierData.getBindingId(stack)) > 0
-                    || com.maidweapon.forge.system.resonance.ResonanceService.waived(player, stack))
                 && !isCoolingDown(player, ContractCarrierData.getBoundMaidUUID(stack));
     }
     public static boolean forceRecall(Player player, String maidId, int cooldownTicks) {
@@ -316,13 +313,9 @@ public final class InfusedMaidDeploymentSystem {
         if (weapon.isEmpty() || !ContractCarrierData.isOwner(weapon, player)
                 || !maidId.equals(ContractCarrierData.getBoundMaidUUID(weapon))) return false;
         clearTransitions(player);
-        Entity deployed = findManifestedMaid(player, maidId);
-        float recoveryHealth = deployed instanceof LivingEntity living
-                ? Math.max(1.0f, living.getMaxHealth() * 0.25f) : 1.0f;
         boolean recalled = recallIntoStack(player, maidId, weapon);
         if (recalled) ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
         if (recalled && cooldownTicks > 0) {
-            TouhouLittleMaidHelper.setStoredMaidHealth(player, weapon, recoveryHealth);
             DEPLOY_COOLDOWNS.put(cooldownKey(player, maidId),
                     player.level().getGameTime() + cooldownTicks);
         }

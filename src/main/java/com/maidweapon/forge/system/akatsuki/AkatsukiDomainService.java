@@ -193,6 +193,20 @@ public final class AkatsukiDomainService {
       CHAINS.remove(player);
       return; // Idle domains do not scan, damage or make combat effects.
     }
+    // Ambient domain upkeep is one payment per second per verified contract,
+    // NOT one payment per enemy pulse. Rescue remains possible at zero resonance.
+    if (state.attacking()) {
+      if (now >= state.resonanceDue) {
+        state.resonanceDue = now + 20;
+        state.resonanceFunded =
+            com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.pay(
+                player, player.getMainHandItem(),
+                state.lifecycle.rampage()
+                    ? com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_DOMAIN_RAMPAGE
+                    : com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action.RED_DOMAIN_NORMAL);
+      }
+      if (!state.resonanceFunded) { CHAINS.remove(player); return; }
+    }
     if (now % 2 != 0) return;
     Entity found = state.target == null ? null : player.serverLevel().getEntity(state.target);
     LivingEntity target =

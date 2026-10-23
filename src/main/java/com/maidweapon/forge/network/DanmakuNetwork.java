@@ -1,0 +1,125 @@
+package com.maidweapon.forge.network;
+
+import com.maidweapon.forge.system.danmaku.DanmakuCombatService;
+import com.maidweapon.forge.system.danmaku.DanmakuForm;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.network.*;
+import net.minecraftforge.network.simple.SimpleChannel;
+import java.util.*;
+
+/**
+ * Client transmits selected spell ID only. The server resolves the equipped
+ * contract, native bauble, mastery, target, resonance payment, performance cap and damage itself.
+ */
+public final class DanmakuNetwork {
+    private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+            new ResourceLocation("maid_weapon:danmaku"), () -> "2", "2"::equals, "2"::equals);
+    public record Cast(int form) { }
+    public record AirSwing() { }
+    /** Server-confirmed declaration; not an ability to request a cast. */
+    public record VisualCue(int form) { }
+    public record Eligibility(String binding, boolean enabled, int mastery) { }
+    private static final Map<UUID, Eligibility> LAST = new HashMap<>();
+    private static final DanmakuPacketLimiter INPUT = new DanmakuPacketLimiter();
+
+    public static void world(net.minecraft.server.level.ServerLevel level,
+                             com.maidweapon.forge.api.danmaku.DanmakuVisualEvent event) {
+        CHANNEL.send(PacketDistributor.NEAR.with(() -> new PacketDistributor.TargetPoint(
+                event.position().x, event.position().y, event.position().z, 48, level.dimension())), event);
+    }
+    public static void register() {
+        CHANNEL.registerMessage(4, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.class,
+                (event, buf) -> event.encode(buf), com.maidweapon.forge.api.danmaku.DanmakuVisualEvent::decode,
+                (event, context) -> {
+                    var ctx = context.get();
+                    ctx.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                            net.minecraftforge.api.distmarker.Dist.CLIENT,
+                            () -> () -> ClientReceiver.world(event)));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(0, Cast.class,
+                (packet, buf) -> buf.writeVarInt(packet.form()),
+                buf -> new Cast(buf.readVarInt()),
+                (packet, context) -> {
+                    var ctx = context.get();
+                    ServerPlayer sender = ctx.getSender();
+                    if (sender != null) {
+                        ctx.enqueueWork(() -> {
+                            // INPUT is shared with logout cleanup: main-thread ownership only.
+                            long now = System.nanoTime();
+                            if (INPUT.allow(sender.getUUID(), now))
+                                DanmakuCombatService.cast(sender, DanmakuForm.safe(packet.form()));
+                        });
+                    }
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(3, VisualCue.class,
+                (packet, buf) -> buf.writeVarInt(packet.form()),
+                buf -> new VisualCue(buf.readVarInt()),
+                (packet, context) -> {
+                    var ctx = context.get();
+                    ctx.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                            net.minecraftforge.api.distmarker.Dist.CLIENT,
+                            () -> () -> ClientReceiver.visual(packet)));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // Un-targeted left clicks are client-only in vanilla; authority, item,
+        // funding and one-per-tick physical budget are all rechecked server-side.
+        CHANNEL.registerMessage(2, AirSwing.class,
+                (packet, buf) -> { },
+                buf -> new AirSwing(),
+                (packet, context) -> {
+                    var ctx = context.get();
+                    ServerPlayer sender = ctx.getSender();
+                    if (sender != null)
+                        ctx.enqueueWork(() -> DanmakuCombatService.airSwing(sender));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(1, Eligibility.class,
+                (packet, buf) -> {
+                    buf.writeUtf(packet.binding(), 48);
+                    buf.writeBoolean(packet.enabled());
+                    buf.writeVarInt(packet.mastery());
+                },
+                buf -> new Eligibility(buf.readUtf(48), buf.readBoolean(), buf.readVarInt()),
+                (packet, context) -> {
+                    var ctx = context.get();
+                    ctx.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                            net.minecraftforge.api.distmarker.Dist.CLIENT,
+                            () -> () -> ClientReceiver.receive(packet)));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+    }
+    public static void airSwing() { CHANNEL.sendToServer(new AirSwing()); }
+    public static void declare(ServerPlayer player, DanmakuForm form) {
+        if (player.connection != null && !(player instanceof net.minecraftforge.common.util.FakePlayer))
+            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new VisualCue(form.ordinal()));
+    }
+    public static void cast(DanmakuForm form) {
+        if (form != null) CHANNEL.sendToServer(new Cast(form.ordinal()));
+    }
+    public static void sync(ServerPlayer player, String binding, boolean enabled, int mastery) {
+        if (player.connection == null || player instanceof net.minecraftforge.common.util.FakePlayer) return;
+        Eligibility state = new Eligibility(binding == null ? "" : binding, enabled, mastery);
+        if (state.equals(LAST.get(player.getUUID()))) return;
+        LAST.put(player.getUUID(), state);
+        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), state);
+    }
+    public static void forget(UUID player) { LAST.remove(player); INPUT.forget(player); }
+    public static void clearAll() { LAST.clear(); INPUT.clear(); }
+    private static final class ClientReceiver {
+        static void world(com.maidweapon.forge.api.danmaku.DanmakuVisualEvent event) {
+            com.maidweapon.forge.client.DanmakuWorldVisuals.accept(event);
+        }
+        static void receive(Eligibility packet) {
+            com.maidweapon.forge.client.DanmakuClientState.receive(
+                    packet.binding(), packet.enabled(), packet.mastery());
+        }
+        static void visual(VisualCue packet) {
+            DanmakuForm form = DanmakuForm.safe(packet.form());
+            if (form != null) com.maidweapon.forge.client.DanmakuVisualController.show(form);
+        }
+    }
+    private DanmakuNetwork() { }
+}

@@ -1,5 +1,7 @@
 # Contract resonance foundation
 
+> Current gameplay: manifestation is the fast-recovery phase. Stored idle +2.5/s, stored combat 0/s; manifested idle +20/s, manifested combat +10/s at the default 1000 pool, before spirit-vein multipliers. Call/recall and maid injury/protective recall are free, including at zero resonance; protective recall preserves injury and cooldown. The foundation implementation notes below describe earlier revisions. Current costs, V2 configuration migration and behavior are in [SPIRIT_RESONANCE_COSTS.md](SPIRIT_RESONANCE_COSTS.md).
+
 ## Scope and baseline
 
 Built independently on master `3e2cf94007ba531d20150863fdb32e63f98648b2` (Tooltip PR #24). Open combat PR #25 was inspected at `64dffaefb10749661f422c3b987715dc572bfadd`; its branch is not modified or incorporated. There are no new Akatsuki, black-fox or white-fox skill costs and no changes to their damage, animation, frequency, cooldown or growth parameters. BladeTetra remains optional.
@@ -104,3 +106,7 @@ Future standalone improvements: use a lower-cost live contract-index cache when 
 holder's inventory contains many independent contracts, measure packet sizes and
 game-thread time with realistically large embedded maid data, and validate
 complete singleplayer/multiplayer interactions. No named fox skill costs are added.
+
+## Spirit route ability costs after PR #27
+
+The original #26 PR implemented **foundation only** (as documented above). Subsequent PR #27 adds active expenditures for Black Fox, White Fox and Akatsuki and reduces Manka's talisman costs. Complete route costs and the source-of-truth recovery list are documented in [SPIRIT_RESONANCE_COSTS.md](SPIRIT_RESONANCE_COSTS.md). The black-fox native Proud Soul expense is preserved. White-fox oath's basic fatal-hit survival is still available at zero resonance, and Akatsuki's domain rescue remains independent of funded offensive pulses.

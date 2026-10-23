@@ -112,4 +112,17 @@ for key in ("MaidData", "MaidUUID", "MaidBindingId", "OwnerUUID", "MaidInfusionO
 intrinsic = read(JAVA / "com/maidweapon/forge/api/IntrinsicSpiritApi.java")
 if "getMethod(" in intrinsic or len(intrinsic.splitlines()) > 500:
     raise SystemExit("Intrinsic spirit facade regained model reflection or payload implementation")
+# Contract danmaku may depend on TLM through compat, but native projectile
+# adapters must not compile against the gameplay state implementation.
+for name in ("DanmakuShotQueue.java", "ContractDanmakuProjectile.java"):
+    path = JAVA / "com/maidweapon/forge/compat/tlm/danmaku" / name
+    if "com.maidweapon.forge.system.danmaku" in read(path):
+        raise SystemExit(f"Danmaku adapter must depend only on stable API: {name}")
+api = read(JAVA / "com/maidweapon/forge/api/danmaku/DanmakuRuntimeApi.java")
+if "import com.maidweapon.forge.system" in api or "import com.github.tartaricacid" in api:
+    raise SystemExit("Danmaku runtime API leaked implementation details")
+network = read(JAVA / "com/maidweapon/forge/network/DanmakuNetwork.java")
+if "INPUT.allow(sender.getUUID(), now)" not in network or "ctx.enqueueWork(() -> {" not in network:
+    raise SystemExit("Danmaku packet limiter must run on the server main thread")
+
 print("Architecture boundaries validated.")

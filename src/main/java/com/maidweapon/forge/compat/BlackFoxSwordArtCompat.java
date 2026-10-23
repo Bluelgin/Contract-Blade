@@ -1,6 +1,8 @@
 package com.maidweapon.forge.compat;
 
 import com.maidweapon.forge.entity.BlackFoxSwordCoreEntity;
+import com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts;
+import static com.maidweapon.forge.system.resonance.SpiritAbilityResonanceCosts.Action;
 import com.maidweapon.forge.system.fox.FoxSpiritState;
 import com.maidweapon.forge.system.fox.BlackFoxSwordCoreTimeline;
 import com.maidweapon.forge.system.fox.BlackFoxSwordCoreGrowth;
@@ -119,6 +121,8 @@ public final class BlackFoxSwordArtCompat {
         if (core != null && !profile.has(BlackFoxSwordCoreGrowth.COMBO)) denied = "combo_locked";
         else if (core != null && !BlackFoxSwordCoreTimeline.canFollow(core.tickCount, core.following())) denied = "follow_unavailable";
         else if (!player.getAbilities().instabuild && souls(player.getMainHandItem()) < (core == null ? 20 : 30)) denied = "souls";
+        else if (!SpiritAbilityResonanceCosts.affordable(player, player.getMainHandItem(),
+                core == null ? Action.BLACK_SUMMON : Action.BLACK_MODE)) denied = "resonance";
         if (denied != null) player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.sa." + denied), true);
         if (denied == null) RELEASES.put(player, new Release(player.getMainHandItem(), core, profile, result.masteryLevel(), player.level().getGameTime()));
         return denied == null;
@@ -133,7 +137,8 @@ public final class BlackFoxSwordArtCompat {
         if (core != release.core()) return;
         RESOLUTIONS.put(player,new Resolution(release.mastery(),com.maidweapon.forge.api.ability.ContractAbilityRegistry.definition(ID)));
         if (follow) {
-            if (core == null) return;
+            if (core == null || !SpiritAbilityResonanceCosts.pay(player,
+                    player.getMainHandItem(), Action.BLACK_MODE)) return;
             if (!player.getAbilities().instabuild) {
                 var state = SlashBladeCompat.resolveBladeState(player.getMainHandItem());
                 try { state.getClass().getMethod("setProudSoulCount", int.class).invoke(state, souls(player.getMainHandItem()) - 10); }
@@ -144,7 +149,9 @@ public final class BlackFoxSwordArtCompat {
         } else {
             if (core != null) return;
             core = com.maidweapon.forge.compat.fox.BlackFoxBossCompat.spawnSwordCore(player, release.profile());
-            if (core != null) CORES.put(player, core);
+            if (core != null && SpiritAbilityResonanceCosts.pay(player,
+                    player.getMainHandItem(), Action.BLACK_SUMMON)) CORES.put(player, core);
+            else if (core != null) core.discard();
         }
     }
     public static net.minecraft.world.entity.Entity lock(ServerPlayer player) {

@@ -1,0 +1,89 @@
+{
+  "version": 2,
+  "baseline": "ffa0629613e509995e1265af6f7ff35c012cdee9",
+  "approved_plan": "C",
+  "texture_root": "src/main/resources/assets/maid_weapon/textures/gui/danmaku",
+  "entries": [
+    {
+      "name": "wheel_base",
+      "size": 256,
+      "purpose": "轮盘底图，中心真实物品由 renderItem 另画"
+    },
+    {
+      "name": "icon_needle",
+      "size": 32,
+      "purpose": "上方灵针图标"
+    },
+    {
+      "name": "icon_flower",
+      "size": 32,
+      "purpose": "右方散华图标"
+    },
+    {
+      "name": "icon_guard",
+      "size": 32,
+      "purpose": "左方护身图标"
+    },
+    {
+      "name": "icon_fantasy",
+      "size": 32,
+      "purpose": "下方幻想万华图标"
+    },
+    {
+      "name": "seal_needle",
+      "size": 64,
+      "purpose": "方向性灵针与细光尾"
+    },
+    {
+      "name": "seal_flower",
+      "size": 64,
+      "purpose": "五瓣花符，缩放复用"
+    },
+    {
+      "name": "seal_guard",
+      "size": 64,
+      "purpose": "空心御神结界，不含拦截闪光"
+    },
+    {
+      "name": "selection",
+      "size": 64,
+      "purpose": "通用选中金樱光环"
+    },
+    {
+      "name": "lock",
+      "size": 32,
+      "purpose": "锁定小标记"
+    },
+    {
+      "name": "fantasy_layers",
+      "size": 128,
+      "purpose": "四个64px花阵层：左上绯红、右上紫、左下金、右下粉；独立旋转缩放"
+    },
+    {
+      "name": "petal",
+      "size": 64,
+      "purpose": "散华花瓣，外绽和回收复用"
+    },
+    {
+      "name": "intercept_flash",
+      "size": 64,
+      "purpose": "局部拦截闪光、收束高光，禁止作为全屏遮罩"
+    },
+    {
+      "name": "final_seal",
+      "size": 64,
+      "purpose": "终幕空心符印，保持中心可见"
+    }
+  ],
+  "item": {
+    "design": "朱樱封札 · 像素第二稿",
+    "approval": "2026-10-22 用户确认接入；小绳结、符纸主体，不沿用大蝴蝶结造型",
+    "source": "art/danmaku/manka_talisman.svg",
+    "texture": "src/main/resources/assets/maid_weapon/textures/item/manka_talisman.png",
+    "sha256": "f8ac1bbe7a96e632dbd9156f0f508b4d6a67d15747d65a102c5e690c25c55b20",
+    "frames": 40,
+    "frame_size": 32,
+    "ticks_per_frame": 2,
+    "interpolate": false
+  }
+}

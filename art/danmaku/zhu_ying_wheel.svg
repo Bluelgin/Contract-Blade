@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-110 -110 220 220">
+<title>万华御札：朱樱四式轮盘 原创 SVG 设计源稿</title>
+<defs><linearGradient id="petal" x2="1" y2="1"><stop stop-color="#a65362"/><stop offset="1" stop-color="#4e2f49"/></linearGradient></defs>
+<circle r="106" fill="#201d2c" stroke="#583b49" stroke-width="5"/>
+<circle r="99" fill="none" stroke="#deba86" stroke-width="3"/>
+<g stroke="#cda77d" stroke-width="2">
+<path d="M-60-60 A85 85 0 0 1 60-60 L22-22 A32 32 0 0 0-22-22Z" fill="#393345"/>
+<path d="M60-60 A85 85 0 0 1 60 60 L22 22 A32 32 0 0 0 22-22Z" fill="url(#petal)"/>
+<path d="M60 60 A85 85 0 0 1-60 60 L-22 22 A32 32 0 0 0 22 22Z" fill="#292839"/>
+<path d="M-60 60 A85 85 0 0 1-60-60 L-22-22 A32 32 0 0 0-22 22Z" fill="#3b344b"/>
+</g>
+<circle r="32" fill="#241d2f" stroke="#deb985" stroke-width="3"/>
+<path d="M-12-19 L12-19 L12 21 L-12 21Z" fill="#fff0d5" stroke="#b5425b" stroke-width="3"/>
+<path d="M0-9 L9 1 L0 11 L-9 1Z" fill="#ba4a64"/>
+<g fill="#e6bc80"><circle cx="0" cy="-91" r="3"/><circle cx="91" cy="0" r="3"/><circle cy="91" r="3"/><circle cx="-91" cy="0" r="3"/></g>
+</svg>

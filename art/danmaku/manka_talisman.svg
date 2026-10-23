@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>万华御札 · 朱樱封札 · 像素循环正式稿</title>
+  <desc>用户确认的第二稿；32像素原创矢量御札。40帧、每帧2 ticks、无插值。符纸与樱花契印为主体，小结、金铃与流苏点缀。无嵌入位图。</desc>
+  <g id="cord-loop">
+    <path fill="#542c43" d="M14 1h4v1h2v4h-2v2h-5V6h-1V3h2z" />
+    <path fill="#b53e53" d="M14 2h4v1h1v3h-2v1h-3V5h-1V3h1z" />
+    <path fill="#f2959c" d="M14 2h3v1h-3v2h-1V3h1z" />
+    <path fill="#542c43" d="M15 3h2v3h-2z" />
+  </g>
+  <g id="backing-paper">
+    <path fill="#542c43" d="M7 7h13v18h-1v2H6V15h1z" />
+    <path fill="#a33b51" d="M8 8h11v16h-1v2H7V15h1z" />
+    <path fill="#e1ac78" d="M8 10h2v14H8zM8 25h9v1H8z" />
+  </g>
+  <g id="main-ofuda">
+    <path fill="#542c43" d="M11 5h11v1h2v19h-1v2h-2v2H10v-1H9V8h1V6h1z" />
+    <path fill="#b53e53" d="M11 6h11v1h1v17h-1v3h-2v1H10V9h1z" />
+    <path fill="#f0c68d" d="M12 8h9v1h1v15h-1v2h-1v1h-9V10h1z" />
+    <path fill="#fff0d0" d="M12 9h8v1h1v13h-1v2h-9V11h1z" />
+    <path fill="#fff9e7" d="M12 9h2v1h-2v13h-1V11h1z">
+      <animate attributeName="fill" values="#fff9e7;#fff9e7;#fff9e8;#fff9e8;#fffae9;#fffaeb;#fffaec;#fffbee;#fffbef;#fffcf1;#fffcf3;#fffcf5;#fffdf7;#fffdf8;#fffefa;#fffefb;#fffefd;#fffffe;#fffffe;#ffffff;#ffffff;#ffffff;#fffffe;#fffffe;#fffefd;#fffefb;#fffefa;#fffdf8;#fffdf7;#fffcf5;#fffcf3;#fffcf1;#fffbef;#fffbee;#fffaec;#fffaeb;#fffae9;#fff9e8;#fff9e8;#fff9e7" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+    </path>
+    <path fill="#d7a56e" d="M21 12h1v12h-1v2h-1v1h-8v-1h8v-3h1z" />
+    <path fill="#84324b" d="M20 25h2v1h-1v1h-1z" />
+    <path fill="#fff1d3" d="M20 24h2v1h-1v1h-1z" />
+  </g>
+  <g id="binding-knot">
+    <path fill="#80314a" d="M10 7h13v2H10zM7 8h4v2h-1v2H7v-1H6V9h1z" />
+    <path fill="#dc6275" d="M11 7h11v1H11zM7 9h3v1H8v1H7z" />
+    <path fill="#f5abae" d="M7 9h1v1H7zM12 7h5v1h-5z" />
+    <path fill="#80314a" d="M8 11h2v3H8v2H6v-3h2z" />
+    <path fill="#d45b70" d="M8 12h1v2H7v1H6v-1h1v-1h1z" />
+  </g>
+  <g id="sakura-contract-seal">
+    <path fill="#bc415c" d="M15 10h3v1h1v2h2v3h-2v2h-2v-1h-1v1h-2v-2h-2v-3h2v-2h1z" />
+    <path fill="#ed8b9d" d="M15 11h1v1h1v-1h1v2h-3zM13 14h2v1h-1v1h-1zM19 14h1v2h-2v-1h1zM15 16h1v1h-1zM17 16h1v1h-1z">
+      <animate attributeName="fill" values="#ed8b9d;#ed8b9d;#ed8d9e;#ee8fa0;#ef92a1;#f095a4;#f19aa7;#f29eaa;#f3a4ad;#f5a9b1;#f6aeb4;#f7b4b8;#f9b9bc;#fabfbf;#fbc3c2;#fcc8c5;#fdcbc8;#fecec9;#ffd0cb;#ffd2cc;#ffd2cc;#ffd2cc;#ffd0cb;#fecec9;#fdcbc8;#fcc8c5;#fbc3c2;#fabfbf;#f9b9bc;#f7b4b8;#f6aeb4;#f5a9b1;#f3a4ad;#f29eaa;#f19aa7;#f095a4;#ef92a1;#ee8fa0;#ed8d9e;#ed8b9d" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+    </path>
+    <path fill="#fff0d0" d="M16 13h1v1h1v1h-1v1h-1v-1h-1v-1h1z" />
+    <path fill="#e8b76a" d="M16 14h1v1h-1z" />
+  </g>
+  <g id="talisman-mark" transform="translate(0 1)" fill="#a83b51">
+    <path d="M16 18h1v1h2v1h-2v1h3v1h-3v2h-2v-1h1v-1h-3v-1h3v-1h-2v-1h2z" />
+    <path d="M13 23h1v1h-1zM19 23h1v1h-1z" />
+  </g>
+  <g id="footer">
+    <path fill="#a83b51" d="M11 25h8v1h-8z" />
+    <path fill="#f3d185" d="M12 26h6v1h-6z" />
+  </g>
+  <g id="bell-cord" transform="translate(0 -1)">
+    <path fill="#815139" d="M23 21h2v4h-1v1h-1v-2h1v-2h-1z" />
+    <path fill="#e7b55e" d="M23 21h1v1h-1zM24 23h1v1h-1z" />
+    <animateTransform attributeName="transform" type="translate" values="0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;0 -1;0 -1;0 -1;0 -1;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+  </g>
+  <g id="bell" transform="translate(0 -1)">
+    <path fill="#815139" d="M23 25h3v1h1v4h-5v-1h-1v-2h1v-1h1z" />
+    <path fill="#e7b55e" d="M23 26h2v1h1v2h-4v-2h1z" />
+    <path fill="#fff0b8" d="M23 26h1v1h-1v1h-1v-1h1z">
+      <animate attributeName="fill" values="#fff0b8;#fff0b8;#fff0ba;#fff1bc;#fff1bf;#fff2c2;#fff3c7;#fff4cb;#fff5d1;#fff6d6;#fff8dc;#fff9e1;#fffae6;#fffbec;#fffcf0;#fffdf5;#fffef8;#fffefb;#fffffd;#ffffff;#ffffff;#ffffff;#fffffd;#fffefb;#fffef8;#fffdf5;#fffcf0;#fffbec;#fffae6;#fff9e1;#fff8dc;#fff6d6;#fff5d1;#fff4cb;#fff3c7;#fff2c2;#fff1bf;#fff1bc;#fff0ba;#fff0b8" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+    </path>
+    <path fill="#815139" d="M24 28h1v1h-1z" />
+    <animateTransform attributeName="transform" type="translate" values="0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;0 -1;0 -1;0 -1;0 -1;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+  </g>
+  <g id="short-tassel" transform="translate(0 -1)">
+    <path fill="#542c43" d="M23 30h3v2h-4v-1h1z" />
+    <path fill="#d45b70" d="M23 30h2v1h-2z" />
+    <path fill="#f5abae" d="M23 30h1v1h-1z" />
+    <animateTransform attributeName="transform" type="translate" values="0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;1 -1;0 -1;0 -1;0 -1;0 -1;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -2;0 -1;0 -1;0 -1;0 -1;0 -1;0 -1" dur="4s" repeatCount="indefinite" calcMode="discrete" />
+  </g>
+</svg>

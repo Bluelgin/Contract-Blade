@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - master
+      - codex/contract-resonance-foundation
       - codex/fox-native-sword-art
       - codex/black-fox-sword-core-growth
       - codex/contract-lifecycle-recovery
@@ -30,7 +31,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -71,6 +72,8 @@ jobs:
           python tools/validate_contract_permissions.py
           python tools/validate_contract_resonance.py
           python tools/validate_resonance_foundation.py
+          python tools/validate_ordinary_danmaku.py
+          python tools/validate_danmaku_visuals.py
           python tools/validate_carrier_loss_recovery.py
           python tools/validate_patchouli.py
           python tools/validate_contract_interiors.py
@@ -91,6 +94,9 @@ jobs:
             -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
             -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+
+      - name: Native Manka growth, payment and four-wave fixture
+        run: python tools/run_manka_native_validation.py --output /tmp/contract-manka-native
 
       - name: Native resonance, restart, projection and companion fixtures
         run: |
@@ -133,4 +139,78 @@ jobs:
             build/test-results/test/*.xml
             /tmp/contract-stage-three-*/*.log
             /tmp/contract-soul-*/server.log
+            /tmp/contract-manka-native/server.log
+          retention-days: 14
+          if-no-files-found: warn
+
+  spellcard-resources:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y inkscape
+      - run: pip install Pillow==12.3.0
+      - run: python art/danmaku/export_manka_animation.py --check
+      - run: python art/danmaku/export_spellcards.py --check
+
+  manka-real-client:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: Prepare real client dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool ffmpeg libgl1-mesa-dri libglx-mesa0 libopenal1
+          pip install nbtlib==2.0.4 mss==10.1.0
+          mkdir -p libs tmp/compat-test
+          curl -fL --retry 3 "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" -o libs/tacz-1.20.1-1.1.8-release.jar
+          curl -fL --retry 3 "https://edge.forgecdn.net/files/8061/847/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar" -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
+          curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
+      - name: Exact requested wrapper build and tests
+        run: |
+          ./gradlew --no-daemon clean build
+          ./gradlew --no-daemon test
+          echo "MANKA_WRAPPER_BUILD_PASSED=true" >> "$GITHUB_ENV"
+      - name: Create stopped native fixture world
+        run: python tools/run_manka_native_validation.py --output /tmp/manka-capture-seed
+      - name: Record actual Minecraft client at original speed
+        run: xvfb-run -a -s "-screen 0 1280x720x24 -extension MIT-SHM" bash tools/run_manka_client_capture.sh "/tmp/manka-capture-seed/server/Manka Native Validation" /tmp/manka-client-capture
+      - name: Preserve real recordings and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manka-client-gameplay
+          path: |
+            /tmp/manka-client-capture/videos/
+            /tmp/manka-client-capture/qa/*.png
+            /tmp/manka-client-capture/qa/*.mp4
+            /tmp/manka-client-capture/qa/*.json
+            /tmp/manka-client-capture/qa/*.log
+            /tmp/manka-client-capture/qa/observer/observer.log
+            /tmp/manka-client-capture/qa/observer/logs/*.log
+            /tmp/manka-client-capture/metrics.json
+            /tmp/manka-client-capture/environment.txt
+            /tmp/manka-client-capture/acceptance-report.md
+            /tmp/manka-client-capture/client.log
+            /tmp/manka-client-capture/client/logs/
+            /tmp/manka-capture-seed/server.log
+            /tmp/manka-capture-seed/server/logs/latest.log
+          retention-days: 14
           if-no-files-found: warn

@@ -62,6 +62,7 @@ public final class BlackFoxSwordActorEntity extends PathfinderMob {
         if (core == null || core.isRemoved() || owner == null || !owner.isAlive()
                 || victim != null && !permits(victim)) { discard(); return; }
         if (victim == null) { setPos(core.position()); return; }
+        if (masteryCredit() == null || !core.fundAttack(owner)) { discard(); return; }
         Vec3 offset = new Vec3(Math.cos(getId() * 1.7), 0, Math.sin(getId() * 1.7)).scale(2);
         setPos(victim.position().add(offset)); setDeltaMovement(Vec3.ZERO);
         Vec3 aim = victim.getEyePosition().subtract(getEyePosition());

@@ -340,8 +340,22 @@ public final class SoulProvenanceValidation {
     return p;
   }
 
+  /**
+   * Soul-damage fixtures deliberately test level progression independently of the
+   * real-play resonance economy. Funding is a real authoritative server pool write,
+   * NOT a bypass in the production cost policy.
+   */
+  private static void fund(ServerPlayer p) {
+    var blade = p.getMainHandItem();
+    String binding = com.maidweapon.forge.system.contract.ContractCarrierData.getBindingId(blade);
+    if (binding != null && !binding.isBlank())
+      com.maidweapon.forge.system.resonance.ResonanceService.set(p, blade, binding,
+          com.maidweapon.forge.system.resonance.ResonanceService.maximum());
+  }
+
   private static void setLevel(ServerPlayer p, int n) {
     ContractMasteryService.setLevel(p.getServer().createCommandSourceStack(), p, n);
+    fund(p);
   }
 
   private static void negatives(MinecraftServer server, ServerPlayer p) {
@@ -969,6 +983,7 @@ public final class SoulProvenanceValidation {
     int delivered = 0;
     for (int i = 0; i < 220; i++) {
       advance(l, 20);
+      fund(p);
       t.setHealth(1000);
       t.invulnerableTime = 0;
       long start = System.nanoTime();
@@ -1021,6 +1036,10 @@ public final class SoulProvenanceValidation {
    * Production requires real SlashBlade swept collision and launch provenance.
    */
   private static void finishEclipse(ServerPlayer p, SoulAnchorEntity c) {
+    // The authenticated fifth summoned sword pays the full stellar cost now.
+    // Explicitly fund this isolated damage-mechanics fixture; production never
+    // waives the cost, and the normal resource policy is exercised for the charge.
+    fund(p);
     if (c.eclipse()) {
       for (int i = 0; i < SoulEclipseHitSequence.REQUIRED; i++) {
         if (i > 0) advance(p.serverLevel(), SoulEclipseHitSequence.MIN_GAP_TICKS);

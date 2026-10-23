@@ -20,6 +20,7 @@ public class MaidWeaponConfig {
 
     public static ForgeConfigSpec.DoubleValue RESONANCE_STORED_RECOVERY;
     public static ForgeConfigSpec.DoubleValue RESONANCE_COMBAT_RECOVERY;
+    public static ForgeConfigSpec.DoubleValue RESONANCE_MANIFESTED_COMBAT_RECOVERY;
     public static ForgeConfigSpec.DoubleValue RESONANCE_ABILITY_IDLE_RECOVERY;
     public static ForgeConfigSpec.ConfigValue<java.util.List<? extends Double>> RESONANCE_PROGRESS_MULTIPLIERS;
     public static ForgeConfigSpec.IntValue RESONANCE_COMBAT_DRAIN_INTERVAL;
@@ -94,21 +95,23 @@ public class MaidWeaponConfig {
         builder.pop();
         builder.push("ContractResonance");
 
-        RESONANCE_STORED_RECOVERY = builder.defineInRange("storedRecoveryPerSecond", 1.0, 0.0, 200.0);
-        RESONANCE_COMBAT_RECOVERY = builder.defineInRange("combatRecoveryPerSecond", 0.5, 0.0, 200.0);
-        RESONANCE_ABILITY_IDLE_RECOVERY = builder.defineInRange("abilityIdleRecoveryPerSecond", 1.0, 0.0, 200.0);
+        RESONANCE_STORED_RECOVERY = builder.defineInRange("storedRecoveryPerSecondV2", 0.5, 0.0, 200.0);
+        RESONANCE_COMBAT_RECOVERY = builder.defineInRange("combatRecoveryPerSecondV2", 0.0, 0.0, 200.0);
+        RESONANCE_ABILITY_IDLE_RECOVERY = builder.defineInRange("abilityIdleRecoveryPerSecondV2", 0.5, 0.0, 200.0);
+        RESONANCE_MANIFESTED_COMBAT_RECOVERY = builder.comment("Manifested combat recovery in legacy units/second; replaces stored combat recovery while live")
+                .defineInRange("manifestedCombatRecoveryPerSecond", 2.0, 0.0, 200.0);
         RESONANCE_PROGRESS_MULTIPLIERS = builder.comment("Ordered global spirit-vein multipliers, including unupgraded stage 0")
                 .defineList("spiritVeinMultipliers", java.util.List.of(1.0, 1.25, 1.60, 2.0),
                         value -> value instanceof Double d && Double.isFinite(d) && d >= 1 && d <= 100);
         RESONANCE_COMBAT_DRAIN_INTERVAL = builder
-                .comment("显现女仆处于战斗时每消耗 1 点共鸣的 tick 间隔")
+                .comment("Deprecated compatibility key; manifestation no longer drains resonance")
                 .defineInRange("combatDrainInterval", 80, 20, 1200);
         RESONANCE_RECOVERY_DELAY = builder
                 .comment("Combat activity timeout in ticks; recovery continues at the combat rate")
                 .defineInRange("recoveryDelay", 100, 0, 2400);
         RESONANCE_PASSIVE_RECOVERY = builder
-                .comment("脱战时每秒恢复的共鸣")
-                .defineInRange("passiveRecovery", 2, 0, 200);
+                .comment("Manifested idle recovery in legacy units/second; replaces stored recovery")
+                .defineInRange("manifestedIdleRecoveryV2", 4, 0, 200);
         RESONANCE_COOP_REWARD = builder
                 .comment("主人与女仆协同命中同一目标时恢复的共鸣，每秒至多一次")
                 .defineInRange("cooperationReward", 3, 0, 200);
@@ -116,7 +119,7 @@ public class MaidWeaponConfig {
                 .comment("主人在成长挑战中死亡时损失的共鸣")
                 .defineInRange("challengeDeathPenalty", 30, 0, 200);
         RESONANCE_MAID_EMERGENCY_COST = builder
-                .comment("女仆濒死时额外损失的共鸣并进入保护性收回")
+                .comment("Deprecated compatibility key; protective recall no longer spends resonance")
                 .defineInRange("maidEmergencyCost", 20, 0, 200);
         RESONANCE_FOOD_MULTIPLIER = builder
                 .comment("主人进食时，共鸣恢复 = 饱食度增量 × 此倍率")
