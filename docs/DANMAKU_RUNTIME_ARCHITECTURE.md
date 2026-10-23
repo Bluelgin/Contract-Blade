@@ -4,8 +4,8 @@
 
 This is a responsibility and performance refactor, **not a balance/content change**.
 
-- Keep the same four active forms, costs, level gates, timings, damage calculations, target protection, and normal-attack coordination.
-- The client submits only a form or air-swing request. The authoritative Minecraft server thread re-checks current carrier, contract owner/binding, original TLM accessory, mastery, funding, and targets.
+- Keep the same four active forms, costs, timings, damage calculations, target protection, and normal-attack coordination; all forms are now mastery-independent.
+- The client submits only a form or air-swing request. The authoritative Minecraft server thread re-checks current carrier, contract owner/binding, actually stored maid, original TLM accessory, funding, and targets.
 - Do not acquire a cross-tick authorization token. Deferred waves and real projectile collisions must reauthorize the currently equipped contract; failed or stale checks deny the effect.
 - Never weaken other mods' invulnerability windows, protected Boss stages, soul-damage proof requirements, or legitimate TLM maid inventory checks.
 

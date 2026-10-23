@@ -1,5 +1,7 @@
 # 万华御札：验收方法与证据入口
 
+> 2026-10-23：本 PR 后续调整为无等级、仅驻留生效。以下旧版 Lv1–10 用例、录像及性能结果属于**历史归档**，不能替代新提交的独立实机复验。
+
 最终逐项结果由同一HEAD的真实客户端任务生成 `acceptance-report.md`，随 `manka-client-gameplay` Artifact归档；其中每项使用PASS / FAIL / BLOCKED / NOT RUN，不把静态、JUnit、FakePlayer和真实客户端混为一类。运行入口：[Core CI](https://github.com/Bluelgin/Contract-Blade/actions/workflows/core-ci.yml)。Artifact保留14天，用户交付副本另行保存；MP4不进入Git历史。
 
 ## 已确认的正式资源与渲染

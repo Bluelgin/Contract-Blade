@@ -113,6 +113,9 @@ public final class DanmakuCombatService {
         }
         var context = DanmakuEligibility.context(player);
         String binding = context == null ? "" : context.maid();
+        // Push eligibility changes on the same server tick; sync deduplicates packets.
+        com.maidweapon.forge.network.DanmakuNetwork.sync(player,
+                context == null ? "" : context.binding(), context != null);
         String previous = VISUAL_BINDINGS.put(player.getUUID(), binding);
         if (previous != null && !previous.equals(binding))
             DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.CANCEL,

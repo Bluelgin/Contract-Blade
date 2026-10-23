@@ -1,23 +1,23 @@
 # 万华御札 / Manka Talisman
 
 Scope: ordinary, current active, owner-authorized contract maid channels, including
-maids captured with the contract altar and regular Contract Blade. Innate sword-spirit
+maids captured with the contract altar and regular Contract Blade, **only while the maid is stored in the held weapon**. Innate sword-spirit
 weapons are excluded. Dormant archive channels cannot trigger skills. The talisman
 must exist in the **maid's native TLM bauble slots**: the player's own inventory is
 not an alternative; stored maid snapshots are validated and read through the same
 native codec/cached effects resolver used by Endless Contract.
 
-## Combat progression (player-wide ContractMastery)
+## Fixed weapon enhancement (no ContractMastery dependency)
 
 Combat choreography and the precise new level table are maintained in
 [ORDINARY_CONTRACT_DANMAKU_REWORK.md](ORDINARY_CONTRACT_DANMAKU_REWORK.md).
 
-This rework replaces the old six-second, low-impact supplementary pellets with
-two-second **actual-hit** follow-up salvos (delayed 11 ticks after normal melee
-to let hurt immunity relax), target-leading needles, two-stage floral fans,
-a three-second real projectile interception guard, and a target-centered
-three-wave Fantasy Manka spell. Each active form still uses the existing
-middle-mouse tap-to-cast / six-tick hold-to-select controls.
+All four spells are available immediately: Needles (12 shots), Blossom (24),
+Guard (six real interceptions), and Fantasy Manka (four waves, 32 shots).
+Each eligible ordinary attack fires four tracking bullets; the third
+consecutive hit on one target fires six. No mastery or talisman XP is used,
+while held weapon attack damage and resonance remain authoritative.
+Middle-mouse tap-to-cast / six-tick hold-to-select controls remain unchanged.
 
 A server-only `DanmakuHitBudget` authorizes one ordinary TLM hit per
 target per wave, never damage from a miss. Multi-target FLOWER has a strict

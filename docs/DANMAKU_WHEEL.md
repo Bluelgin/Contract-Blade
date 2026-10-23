@@ -9,10 +9,11 @@ the talisman item palette.
 Controls: short press the configurable key (middle mouse by default) to cast
 the last selected form; hold six client ticks to open the wheel; move to a valid
 sector, release to select without casting. The cursor's central dead zone and
-outer boundary do not change the current choice. Locked Lv.10 FANTASY is dimmed,
-shows its unlock level, and never commits before the required mastery. Original
-pick-block interception remains conditional on authenticated eligibility.
-Server spell authorization remains unchanged.
+outer boundary do not change the current choice. All four spells are
+available immediately, without gray-out, mastery levels or lock overlays.
+The wheel only works with a server-authorized ordinary maid stored inside
+the currently held contract weapon. Pick-block interception stays conditional
+on that entitlement; the server rechecks every spell cast.
 
 Wheel design:
 - top: NEEDLE / 灵针

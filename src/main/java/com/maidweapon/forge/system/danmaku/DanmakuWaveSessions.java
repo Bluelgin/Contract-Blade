@@ -71,6 +71,7 @@ final class DanmakuWaveSessions {
     }
     static void tick(ServerPlayer player, String maid, long now) {
         String prefix = player.getUUID() + ":";
+        if (maid == null) CHAINS.keySet().removeIf(k -> k.startsWith(prefix));
         var scheduledAuto = AUTOS.entrySet().iterator();
         while (scheduledAuto.hasNext()) {
             var entry = scheduledAuto.next();
