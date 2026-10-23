@@ -1,4 +1,4 @@
-"""Lightweight integrity checks for ordinary maid danmaku; JUnit tests growth semantics."""
+"""Integrity checks for stored-maid-only fixed-strength ordinary danmaku."""
 import json
 from pathlib import Path
 from xml.etree import ElementTree
@@ -23,9 +23,13 @@ assert "StoredMaidBaubleResolver.has" in effects
 assert "MaidBaubleInventory" in stored and "readNativeEffects" in stored
 assert "ResonanceContract.resolve" in policy and "FoxSpiritState.hasResident" in policy
 assert "Effect.DANMAKU_ART" in policy
+assert "MaidEntityDataCodec.hasData(context.channel())" in policy
+assert "context.liveMaid() != null" in policy
 assert "ContractMasteryService.getLevel" in combat
 assert "getDirectEntity()" in combat and "LivingDamageEvent" in combat
 assert "resonanceCost(DanmakuForm form" in growth and "DanmakuResonanceCostPolicy.cost(form)" in growth
+assert "int count = consecutive ? 6 : 4" in growth and "case FLOWER -> 12" in growth
+assert "public boolean unlocked(int mastery) { return true; }" in source("system/danmaku/DanmakuForm.java")
 assert "DanmakuResonanceCostPolicy.charge(" in combat
 assert "ResonanceService.drain(" not in combat
 assert "ResonanceService.pay(" in source("system/danmaku/DanmakuResonanceCostPolicy.java")

@@ -77,7 +77,7 @@ public final class MankaAcceptanceCommands {
         p.setGameMode(GameType.SURVIVAL);p.setHealth(20);p.getFoodData().setFoodLevel(20);
         var carrier=createCarrier(p,0);p.getInventory().selected=0;
         p.getInventory().setItem(1,new ItemStack(ModItems.MANKA_TALISMAN.get()));
-        ContractMasteryService.setLevel(p.getServer().createCommandSourceStack(),p,10);
+        ContractMasteryService.setLevel(p.getServer().createCommandSourceStack(),p,1);
         ResonanceService.set(p,carrier,ContractCarrierData.getBindingId(carrier),1000);
         for(var old:level.getEntitiesOfClass(Zombie.class,p.getBoundingBox().inflate(24)))
             if(old.getName().getString().startsWith("Manka target ")) old.discard();
@@ -88,7 +88,7 @@ public final class MankaAcceptanceCommands {
             target.setHealth(1000);
             target.setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,testHelmet());level.addFreshEntity(target);
         }
-        org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info("MANKA_SCENE_READY nativeBauble=true survival=true level=10");
+        org.slf4j.LoggerFactory.getLogger("MankaAcceptance").info("MANKA_SCENE_READY nativeBauble=true survival=true level=1 mastery_independent=true");
     }
     private static ItemStack createCarrier(ServerPlayer p,int slot) throws Exception {
         var level=p.serverLevel();

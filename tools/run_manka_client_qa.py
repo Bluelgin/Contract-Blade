@@ -27,17 +27,17 @@ def segment(action,seconds=3):
  offset=len(read(hostlog));action();time.sleep(seconds);return read(hostlog)[offset:]
 def count_shots(s):return len(re.findall('MANKA_SHOT owner=',s))
 command('/mankatest setup');time.sleep(2)
-for lv,expected in [(1,3),(2,4)]:
- command('/maidweapon level '+str(lv));s=segment(lambda:x('click',1));n=count_shots(s);save('Lv'+str(lv)+' actual free auto entities',n==expected,{'actual':n,'expected':expected})
-command('/maidweapon level 1');s=segment(lambda:command('/mankatest cast 0'));save('Lv1 server denies needle',count_shots(s)==0 and 'kind=WAVE' not in s,{'shots':count_shots(s)})
+for lv in (1,2):
+ command('/maidweapon level '+str(lv));s=segment(lambda:x('click',1));n=count_shots(s);save('Lv'+str(lv)+' fixed four auto entities',n==4,{'actual':n,'expected':4})
+command('/maidweapon level 1');command('/maidweapon resonance 1000');s=segment(lambda:command('/mankatest cast 0'));save('Lv1 needle available without mastery gate',count_shots(s)==12,{'shots':count_shots(s)})
 command('/maidweapon level 10');time.sleep(1)
 s=segment(lambda:(x('mousedown',2),time.sleep(.7),x('mousemove',640,255),time.sleep(.8),shot('host-wheel-gui2'),x('mouseup',2)))
 save('middle hold opens wheel and release only selects','MANKA_SCREEN DanmakuWheelScreen' in s and count_shots(s)==0,{'screen': 'DanmakuWheelScreen' in s,'shots':count_shots(s)})
 s=segment(lambda:x('click',2));save('middle short cast uses real twelve needles',count_shots(s)==12,{'shots':count_shots(s)})
-for lv,expected in [(5,18),(7,24),(9,30)]:
+for lv,expected in [(1,24),(7,24),(10,24)]:
  command('/maidweapon level '+str(lv));command('/maidweapon resonance 1000');s=segment(lambda:command('/mankatest cast 1'),4);n=count_shots(s);save('Lv'+str(lv)+' flower actual two waves',n==expected,{'actual':n,'expected':expected,'phases':re.findall(r'kind=WAVE.*?phase=(\d+)',s)})
-save('Lv9 actual flower projectiles execute stronger tracking','MANKA_HOMING' in s,{'firstHomingUpdates':s.count('MANKA_HOMING'),'actualShotHomingTicks':sorted(set(re.findall(r'homingTicks=(\d+)',s)))})
-for lv,expected in [(6,5),(7,8)]:
+save('Fixed flower projectiles execute tracking','MANKA_HOMING' in s,{'firstHomingUpdates':s.count('MANKA_HOMING'),'actualShotHomingTicks':sorted(set(re.findall(r'homingTicks=(\d+)',s)))})
+for lv,expected in [(1,6),(10,6)]:
  command('/mankatest setup');command('/kill @e[type=minecraft:arrow]');command('/maidweapon level '+str(lv));s=segment(lambda:(command('/mankatest cast 2'),command('/mankatest arrows')),5);n=len(re.findall('kind=INTERCEPT',s));save('Lv'+str(lv)+' real hostile arrow interceptions',n==expected,{'actual':n,'expected':expected,'stopped':'kind=GUARD_STOP' in s})
 command('/mankatest setup');command('/mankatest bauble 0');s=segment(lambda:command('/mankatest cast 0'));save('inventory talisman without native bauble denied',count_shots(s)==0 and 'kind=WAVE' not in s,{'shots':count_shots(s)})
 command('/gamemode creative');command('/item replace entity @s hotbar.8 with minecraft:quartz_block')
@@ -47,7 +47,7 @@ save('invalid contract preserves native middle pick-block',any('[CHAT]' in line 
 x('key','1');command('/gamemode survival');command('/tp @s 0.5 65 0.5 0 0')
 command('/mankatest setup');command('/maidweapon level 4');command('/tp @s 0.5 65 7 0 0')
 s=segment(lambda:x('click',1))
-save('Lv4 actual auto projectiles execute homing',count_shots(s)==4 and 'MANKA_HOMING' in s,{'actualAutoShots':count_shots(s),'firstHomingUpdates':s.count('MANKA_HOMING'),'scope':'actual entity tick changed velocity toward a real target, not only planner settings'})
+save('Fixed auto projectiles execute homing',count_shots(s)==4 and 'MANKA_HOMING' in s,{'actualAutoShots':count_shots(s),'firstHomingUpdates':s.count('MANKA_HOMING'),'scope':'actual entity tick changed velocity toward a real target, not only planner settings'})
 command('/mankatest setup');command('/maidweapon level 8');command('/tp @s 0.5 65 7 0 0')
 start=len(read(hostlog))
 for i in range(3):
@@ -55,7 +55,7 @@ for i in range(3):
  x('click',1);time.sleep(1)
 s=read(hostlog)[start:];volleys={}
 for volley in re.findall(r'MANKA_SHOT owner=[^ ]+ volley=([^ ]+)',s):volleys[volley]=volleys.get(volley,0)+1
-save('Lv8 three actual melee attacks empower six-shot auto',list(volleys.values())==[4,4,6],{'nativeShotsByVolley':list(volleys.values()),'scope':'actual client melee packets against real living target'})
+save('Three actual melee attacks empower six-shot auto without mastery',list(volleys.values())==[4,4,6],{'nativeShotsByVolley':list(volleys.values()),'scope':'actual client melee packets against real living target'})
 command('/mankatest setup')
 command('/mankatest bauble 1');command('/mankatest second');s=segment(lambda:(command('/mankatest cast 3'),x('key','3')),4);save('switch carrier cancels remaining fantasy phases','kind=CANCEL' in s and not re.search(r'kind=WAVE.*?phase=3',s),{'cancel':'kind=CANCEL' in s,'phases':re.findall(r'kind=WAVE.*?phase=(\d+)',s)})
 x('key','1');command('/mankatest setup')
@@ -77,7 +77,7 @@ observerlog=observer_dir/'observer.log'
 try:
  wait_log(observerlog,lambda s:'MANKA_SCREEN InGame' in s,180)
  command('/op MankaObserver');command('/mankatest setup',display);command('/tp @s 4.5 65 -3.5 18 0',display);command('/maidweapon level 3',display)
- start=len(read(observerlog));x('keydown','g',display=display);time.sleep(1);shot('observer-gui1-locked',display);x('keyup','g',display=display);time.sleep(.5)
+ start=len(read(observerlog));x('keydown','g',display=display);time.sleep(1);shot('observer-gui1-all-forms',display);x('keyup','g',display=display);time.sleep(.5)
  s=read(observerlog)[start:];save('real observer G rebind opens GUI1 wheel','MANKA_SCREEN DanmakuWheelScreen' in s,{'screen':'DanmakuWheelScreen' in s})
  # At GUI scale1 the up symbol is 52 physical pixels from the center.
  x('keydown','g',display=display);time.sleep(.7);x('mousemove',640,308,display=display);time.sleep(.5);x('keyup','g',display=display);time.sleep(.5)
@@ -86,7 +86,7 @@ try:
  foreign=segment(lambda:command('/mankatest cast 0',display),3)
  save('real foreign-owner contract copy cannot cast',count_shots(foreign)==0 and 'kind=WAVE' not in foreign,{'actualShots':count_shots(foreign),'scope':'real other online player item copied by vanilla admin command; server rejects owner mismatch'})
  x('key','1',display=display);time.sleep(1)
- command('/maidweapon level 10',display);x('keydown','g',display=display);time.sleep(1);shot('observer-gui1-unlocked',display);x('keyup','g',display=display);time.sleep(.6)
+ command('/maidweapon level 10',display);x('keydown','g',display=display);time.sleep(1);shot('observer-gui1-all-forms-high-level',display);x('keyup','g',display=display);time.sleep(.6)
  command('/tp @s 0.5 65 0.5 0 0');command('/maidweapon resonance 1000');command('/mankatest cast 3');time.sleep(1.65);shot('observer-sees-host-fantasy',display);time.sleep(4)
  command('/mankatest metrics');save('two independent real LAN clients connected','realPlayers=2' in read(hostlog),{'realPlayers2Logged':'realPlayers=2' in read(hostlog),'type':'two automated offline developer JVMs, not two human players'})
  # Separate raw normal-speed live observer capture; never replace the solo original.
