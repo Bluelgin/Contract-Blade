@@ -8,7 +8,7 @@ The default branch contains the maintained Core addon only. The legacy Part camp
 
 ## 文档入口 / Start here
 
-- 更新内容 / Release notes: [中文](CHANGELOG.md) · [English](CHANGELOG.en.md)
+- 更新内容 / Release notes: [中文](docs/changelog/CHANGELOG.md) · [English](docs/changelog/CHANGELOG.en.md)
 - 玩家与服主 / Players and server owners: [文档导航](docs/README.md) · [配置](docs/CONTRACT_CONFIGURATION.md)
 - 黑白狐玩家外观 / YSM player models: [安装与打包](docs/YSM_MODELS.md). 独立于女仆模型；不含赤月外观。
 - 开发与发布 / Development: [仓库目录与归档约定](docs/REPOSITORY_GUIDE.md) · [构建与验收](docs/STABLE_RELEASE.md)

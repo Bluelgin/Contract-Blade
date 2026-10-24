@@ -5,8 +5,8 @@
 
 ## 玩家与服主 / Players and server owners
 
-- [更新日志（中文）](../CHANGELOG.md) · [Changelog (English)](../CHANGELOG.en.md)
-- [1.2.0 玩家向完整介绍](CHANGELOG_1.2.0_PLAYER.md)
+- [更新日志（中文）](changelog/CHANGELOG.md) · [Changelog (English)](changelog/CHANGELOG.en.md)
+- [1.2.0 玩家向完整介绍](changelog/CHANGELOG_1.2.0_PLAYER.md)
 - [配置：人数、成长、伤害与自动显现](CONTRACT_CONFIGURATION.md)
 - [共鸣恢复、灵脉及技能费用](SPIRIT_RESONANCE_COSTS.md)
 - [契约内景与日常生活](HOME_LIFE.md)
