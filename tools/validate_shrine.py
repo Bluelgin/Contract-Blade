@@ -51,7 +51,7 @@ for key in spoken - {'maid_weapon.fox.white.domain_sense', 'maid_weapon.fox.whit
                      'maid_weapon.fox.challenge.white.jump'}:
     assert '神域' not in zh[key], 'Early story must not presume the player knows Divine Domain'
 assert '别怕，我会陪着你' not in zh['maid_weapon.fox.challenge.white.jump'], 'Keep user-edited jump line'
-preview = (ROOT / 'docs/FOX_DIALOGUE.md').read_text(encoding='utf-8')
+preview = (ROOT / 'docs/archive/foxes/FOX_DIALOGUE.md').read_text(encoding='utf-8')
 assert all(zh[key] in preview for key in spoken), 'Dialogue preview must match every current spoken scene'
 source = (ROOT / 'src/main/java/com/maidweapon/forge/worldgen/ShinkitsuShrineStructure.java').read_text()
 assert 'if (!SlashBladeCompat.isLoaded()) return Optional.empty()' in source

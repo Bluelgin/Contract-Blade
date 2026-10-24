@@ -9,20 +9,20 @@ The default branch contains the maintained Core addon only. The legacy Part camp
 ## 文档入口 / Start here
 
 - 更新内容 / Release notes: [中文](docs/changelog/CHANGELOG.md) · [English](docs/changelog/CHANGELOG.en.md)
-- 玩家与服主 / Players and server owners: [文档导航](docs/README.md) · [配置](docs/CONTRACT_CONFIGURATION.md)
-- 黑白狐玩家外观 / YSM player models: [安装与打包](docs/YSM_MODELS.md). 独立于女仆模型；不含赤月外观。
-- 开发与发布 / Development: [仓库目录与归档约定](docs/REPOSITORY_GUIDE.md) · [构建与验收](docs/STABLE_RELEASE.md)
+- 玩家与服主 / Players and server owners: [文档导航](docs/README.md) · [配置](docs/player/CONTRACT_CONFIGURATION.md)
+- 黑白狐玩家外观 / YSM player models: [安装说明](docs/player/YSM_MODELS.md). 独立于女仆模型；不含赤月外观。
+- 开发与发布 / Development: [仓库目录与归档约定](docs/development/REPOSITORY_GUIDE.md) · [构建与验收](docs/development/STABLE_RELEASE.md)
 - 美术来源 / Asset sources: [署名及许可](ASSET_SOURCES.md) · [素材导航](art/README.md)
 
 Version 1.2.0 includes the Black Fox challenge, spirit growth, Akatsuki's domain,
 Manka Talisman, and Resonance progression. Akatsuki's unfinished appearance is
 not shipped. Source version numbers do not imply a published download.
 
-Architecture and extension boundaries are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Legacy seven-sins NBT from older worlds is preserved as archival metadata, but it no longer affects Core combat, resonance, deployment, or progression.
+Architecture and extension boundaries are documented in [docs/development/ARCHITECTURE.md](docs/development/ARCHITECTURE.md). Legacy seven-sins NBT from older worlds is preserved as archival metadata, but it no longer affects Core combat, resonance, deployment, or progression.
 
 Contract Blade is a Touhou Little Maid addon that lets maids form persistent contracts with supported weapons. Call companions manually or enable protective manifestation after enemy damage, build Contract Resonance, and strengthen their weapon through shared battles. Switching weapons does not dismiss a manually called companion. Versioned compressed storage preserves maid inventories, appearances, capabilities, and progression while reducing contract NBT size.
 
-契约配置说明见 [docs/CONTRACT_CONFIGURATION.md](docs/CONTRACT_CONFIGURATION.md)：跟随人数上限、受伤显现开关、共鸣上限，以及每级的击杀条件与攻击力加成。饰品不再自动选择工作，战斗、喂食和作息由玩家手动设置。新规则使用存档的 `serverconfig/maid_weapon-server.toml`，服务器自动同步客户端。将 `Manifestation.maxFollowingMaids` 设为 2 即可双召唤，默认仍为 1。升级与发布验收见 [1.2.0 清单](docs/RELEASE_1_2_0_CHECKLIST.md)。
+契约配置说明见 [docs/player/CONTRACT_CONFIGURATION.md](docs/player/CONTRACT_CONFIGURATION.md)：跟随人数上限、受伤显现开关、共鸣上限，以及每级的击杀条件与攻击力加成。饰品不再自动选择工作，战斗、喂食和作息由玩家手动设置。新规则使用存档的 `serverconfig/maid_weapon-server.toml`，服务器自动同步客户端。将 `Manifestation.maxFollowingMaids` 设为 2 即可双召唤，默认仍为 1。升级与发布验收见 [1.2.0 清单](docs/validation/RELEASE_1_2_0_CHECKLIST.md)。
 
 ## Features
 
