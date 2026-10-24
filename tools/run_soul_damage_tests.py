@@ -3,7 +3,7 @@
 Needs the existing TLM/SlashBlade/BladeTetra development runtimes. --bosses also
 needs tmp/compat-test/{cataclysm,legendary,lionfish,curios}-soul-test-1.jar;
 --goety needs {goety,revelation,ending,curios}-soul-test-1.jar. These are read-only
-local test inputs and are never bundled. See docs/AKATSUKI_SOUL_DAMAGE.md.
+local test inputs and are never bundled. See docs/archive/akatsuki/AKATSUKI_SOUL_DAMAGE.md.
 """
 import argparse
 import os

@@ -31,4 +31,4 @@
 
 Editable assets and historical experiments are not installable packs. Preserve
 credits and keep unfinished Akatsuki visuals and retired music out of releases.
-See [YSM packaging](../docs/YSM_MODELS.md) and the individual source notices.
+See [YSM packaging](../docs/development/YSM_PACKAGING.md) and the individual source notices.

@@ -105,7 +105,9 @@ for (const spec of specs.filter(spec => spec.id !== 'contract_akatsuki' || proce
     properties:{height_scale:0.7,width_scale:0.7,preview_animation:'idle',default_texture:'default',free:true},
     files:{player:{model:{main:'models/main.json',arm:'models/arm.json'},animation:files,texture:['textures/default.png']}}
   });
-  copy(path.join(root,'art/akatsuki/tlm-adaptation/RESOURCE_NOTES.md'),path.join(out,'AKATSUKI_SOURCE_NOTES.md'));
+  if(spec.id==='contract_akatsuki') {
+    copy(path.join(root,'art/akatsuki/tlm-adaptation/RESOURCE_NOTES.md'),path.join(out,'AKATSUKI_SOURCE_NOTES.md'));
+  }
   fs.copyFileSync(path.join(root,'art/ysm-test/RESOURCE_NOTES.md'),path.join(out,'RESOURCE_NOTES.md'));
   write(path.join(out,'TAISHO_FLIGHT_CREDITS.json'),{source:taisho.source,metadata:taisho.metadata,reused:'fly animation only; no controller, music or texture imported',adaptation:'三尾展开相位补偿；新增低优先级错拍尾巴动作'});
   copy(path.join(root,'tmp/ysm-test/fox-notices/LICENSE-CC-BY-NC-SA-4.0.txt'),path.join(out,'LICENSE-CC-BY-NC-SA-4.0.txt'));
