@@ -1,4 +1,9 @@
-# Resonance item art — approved v2 animation
+# Resonance item art — crystal growth revision
+
+Flowing Vein and Endless Vein now use the approved `redesign-v4` crystal-growth
+silhouettes: branching lavender crystal followed by a fuller crystal crown.
+They retain Awakening Vein's lavender/cream, warm gold and restrained cyan palette.
+Awakening Vein and Endless Contract runtime textures were deliberately left unchanged.
 
 Approved designs follow the mod's existing pink/cyan cordwork, warm gold fittings,
 plum/navy pixel outlines and lavender crystals. The four base SVGs were manually
@@ -9,8 +14,8 @@ game texture.
 ## Motion
 
 - Awakening Vein: gentle crystal-facet light and a small vein shimmer.
-- Flowing Vein: a traveling gold-rim highlight and a short cyan current.
-- Endless Vein: opposed pink/cyan orbit lights and phased seal glints.
+- Flowing Vein: a rising crystal highlight and a short cyan current.
+- Endless Vein: three staggered crystal highlights and a lower cyan current.
 - Endless Contract: a breathing crystal heart, upper gold-arc glint and slightly
   offset silk-tip bends. The knot and attachment points remain fixed.
 
@@ -32,3 +37,10 @@ render Chinese preview captions; without one the script uses English captions.
 Fonts affect only review graphics, not game textures. Optional `--export-svg`
 and `--individual` export standalone animated SVGs and individual GIFs; these
 large derived previews are not required in the repository or game resources.
+
+`resvg-py` may substitute for CairoSVG on platforms without Cairo. To update
+only the two revised runtime strips while refreshing the comparison preview:
+
+```sh
+python tools/render_resonance_icons.py --items flowing_vein endless_vein
+```

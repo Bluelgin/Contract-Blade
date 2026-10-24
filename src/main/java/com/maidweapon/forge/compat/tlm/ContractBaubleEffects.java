@@ -9,7 +9,7 @@ import java.util.EnumSet;
 
 /** Capability composition shared by old projection items and the ultimate upgrade. */
 public final class ContractBaubleEffects {
-    public enum Effect { WEAPON_PROJECTION, ARMOR_PROJECTION, AUTO_WORK, RESONANCE_WAIVER, DANMAKU_ART }
+    public enum Effect { WEAPON_PROJECTION, ARMOR_PROJECTION, RESONANCE_WAIVER, DANMAKU_ART }
     public static EnumSet<Effect> effects(ItemStack stack) {
         var result = EnumSet.noneOf(Effect.class);
         if (stack.isEmpty()) return result;
@@ -18,7 +18,7 @@ public final class ContractBaubleEffects {
             return result;
         }
         if (!(stack.getItem() instanceof ContractProjectionBaubleItem item)) return result;
-        if (item.mode().weapon()) { result.add(Effect.WEAPON_PROJECTION); result.add(Effect.AUTO_WORK); }
+        if (item.mode().weapon()) result.add(Effect.WEAPON_PROJECTION);
         if (item.mode().armor()) result.add(Effect.ARMOR_PROJECTION);
         if (item.resonanceWaiver()) result.add(Effect.RESONANCE_WAIVER);
         return result;

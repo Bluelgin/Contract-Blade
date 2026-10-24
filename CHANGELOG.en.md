@@ -1,19 +1,27 @@
 # Changelog
 
-## In development
+## 1.2.0
 
 - Refine the Black Fox encounter with full native Combo B chains, faster dimensional follow-ups, five eligible skill parries for stagger, four corner seals, and a non-lethal return / victory-collapse countdown.
 - Unlock Sword Core SA on the original victorious Black Fox blade: toggle native phantom barrages and repeating native B1–B7 pursuit without an additional cooldown; retain fixed lifetime, resource costs and friendly-target protection.
 - Simplify encounter entry and immediate story presentation; fix realm-entry and custom-SA crashes while retaining contract safety fixes.
-- Use a square trio portrait for maid-pack covers/tabs while retaining native 3D model thumbnails. Upgrade only byte-identical prior bundled archives with backups; preserve user-modified packs.
-- Bundle the current pink-white Akatsuki maid model with attribution and CC BY-NC-SA 4.0 licensing. BladeTetra awakening selects its matching appearance; migrate old default skins without overriding player-selected skins or the separate external contract.
+- Add ten-level progression for Black Fox's sword core, White Fox's protection and oath, and BladeTetra Akatsuki's Garden of No Return. Akatsuki gains aerial Soul Cores, precise soul strikes, Star-Orbit chains, and improvements for supported special damage caps.
+- Add Manka Talisman for ordinary contract maids residing in the current main-hand weapon: automatic homing shots and four immediately available spell forms. Tap middle mouse to cast, hold to select. It does not provide equipment projection or stack onto dedicated spirit routes.
+- Share contract growth per player while preserving independent maid favorability and Resonance. Default Resonance capacity is 1,000; old balances import proportionally. Manifestation accelerates recovery and pauses corresponding dedicated spirit enhancements; manual manifestation and recall are free.
+- Add three permanent Spirit Vein recovery upgrades, a complete Spirit Crystal altar recipe, and Endless Contract. Its Resonance waiver retains projection but does not waive Proud Soul, cooldowns, or unlock requirements.
 - Improve White/Black Fox companion tails with stable roots, delayed tips and smoother stopping/turning. Preserve existing activity, combat, flight and fox-form animations; YSM is not required.
-- Prepare standalone Akatsuki, White Fox and Black Fox YSM model packages with player-facing installation instructions, attribution and CC BY-NC-SA 4.0 licensing.
-- Withdraw Akatsuki's cosmetic katana and custom combat motions; restore native maid held-item rendering and attacks while preserving the character model, clothing and tail refinements.
+- Keep the dual-fox maid page and native 3D thumbnails, with a separate White/Black Fox YSM pack and attribution. Akatsuki's unfinished appearance is not shipped or forcibly selected; awakening and abilities remain available.
 - Add a configurable contract companion limit, including support for two simultaneous followers.
 - Restore residence when a native home/stay toggle would exceed the follower limit, without deleting a maid.
 - Track deployment and recovery per contract; recalling one maid no longer clears another's record. Recall all followers on death, logout and dimension changes while preserving residents.
 - Isolate cooperative resonance hit records and reward cooldowns per contract.
+- Projection baubles no longer select work or schedules. Configure companion limits, growth requirements, damage bonuses, and Black Fox difficulty; select maid work manually.
+- Redraw Spirit Vein item art, standardize flavor text / Shift details, and update the handbook and translations.
+- Fix interrupted meals and missing food records or wish progress with Maid's Dream, including held-item restoration during recall and projection removal.
+- Fix lost original gear after identical manual replacements, TACZ overwriting real gear or leaving projections behind, and stale spell loadouts.
+- Reduce distribution size and remove background music while retaining combat sounds and parry feedback.
+
+Back up the complete world and retain existing configs before upgrading. Growth and Resonance are world-saved, not exported by moving a blade to another server. Existing Akatsuki may need one normal manifestation/recall cycle to enable the new domain. Previously lost items cannot be recreated by these fixes. A changelog entry does not imply that downloads have been published.
 
 ## 1.1.1
 

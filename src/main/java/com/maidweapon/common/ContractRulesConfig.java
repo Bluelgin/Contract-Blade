@@ -33,10 +33,10 @@ public final class ContractRulesConfig {
         HURT_MIN_RESONANCE = b.comment("自动显现所需最低共鸣；仍须满足正常显现条件。")
                 .defineInRange("hurtMinimumResonance", 1, 0, 1000000);
         b.pop().push("AutomaticWork");
-        AUTO_COMBAT = b.comment("共鸣武器饰品允许自动切换战斗任务；不会关闭武器投影。")
-                .define("combatTask", true);
-        AUTO_FEED = b.comment("允许临时切换安全喂食任务；还需 common 配置 SafeFeeding.enabled 开启。")
-                .define("feedingTask", true);
+        AUTO_COMBAT = b.comment("Legacy compatibility key; ignored since 1.2.0. Projection baubles never select work or schedules.")
+                .define("combatTask", false);
+        AUTO_FEED = b.comment("Legacy compatibility key; ignored since 1.2.0. Choose feeding work manually in the maid UI.")
+                .define("feedingTask", false);
         b.pop().push("Resonance");
         MAX_RESONANCE = b.comment("共鸣上限。提高上限不会补满已有契约；旧存档缺失字段仍按 200 处理。",
                 "恢复/消耗倍率继续使用 config/maid_weapon-common.toml 的 ContractResonance 配置。")

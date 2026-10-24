@@ -11,7 +11,8 @@ public final class PresetSpiritModels {
     public static final String AKATSUKI = "blade_tetra:akatsuki";
 
     public static String modelFor(String spiritId) {
-        return AKATSUKI.equals(spiritId) ? AkatsukiModelPackBootstrap.MODEL : "";
+        // Akatsuki's appearance is deferred. Awakening retains the maid's native appearance.
+        return "";
     }
 
     public static boolean isAvailable(String modelId) {

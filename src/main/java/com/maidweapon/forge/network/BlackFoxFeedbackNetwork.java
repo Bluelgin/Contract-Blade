@@ -23,7 +23,6 @@ public final class BlackFoxFeedbackNetwork {
                     net.minecraftforge.api.distmarker.Dist.CLIENT,
                     () -> () -> {
                         com.maidweapon.forge.client.BlackFoxCameraShake.contact(packet.bossId(), packet.strength());
-                        com.maidweapon.forge.client.BlackFoxMusic.contact(packet.bossId(), packet.strength());
                     }));
             ctx.setPacketHandled(true);
         }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
@@ -38,19 +37,13 @@ public final class BlackFoxFeedbackNetwork {
         CHANNEL.registerMessage(1, Music.class, (packet, buffer) -> {
             buffer.writeVarInt(packet.bossId()); buffer.writeUUID(packet.identity()); buffer.writeBoolean(packet.active());
         }, buffer -> new Music(buffer.readVarInt(), buffer.readUUID(), buffer.readBoolean()), (packet, context) -> {
-            var ctx = context.get();
-            ctx.enqueueWork(() -> net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT,
-                    () -> () -> com.maidweapon.forge.client.BlackFoxMusic.session(packet.bossId(), packet.identity(), packet.active())));
-            ctx.setPacketHandled(true);
+            // Reserved legacy packet slot: decode and discard, never start or suppress music.
+            context.get().setPacketHandled(true);
         }, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
     }
     public static void contact(BlackFoxCombatant boss, ServerPlayer player, int strength) {
         if (!boss.challenger().equals(player.getUUID())) return;
         CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new Contact(boss.body().getId(), strength));
-    }
-    public static void music(BlackFoxCombatant boss, ServerPlayer player, boolean active) {
-        if (player != null && boss.challenger().equals(player.getUUID()))
-            CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new Music(boss.body().getId(), boss.body().getUUID(), active));
     }
     public static void bar(BlackFoxCombatant boss, ServerPlayer player, java.util.UUID id, int count, int style, boolean active) {
         bar(boss, player, id, count, style, active, 0);

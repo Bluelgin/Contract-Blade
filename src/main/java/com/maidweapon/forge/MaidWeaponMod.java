@@ -45,7 +45,6 @@ public final class MaidWeaponMod {
         "maid_weapon:fox_spirit",
         com.maidweapon.forge.system.fox.FoxSpiritTransferService::authorizesContract);
     com.maidweapon.forge.compat.fox.FoxModelPackBootstrap.install();
-    com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.install();
     var modBus = FMLJavaModLoadingContext.get().getModEventBus();
 
     net.minecraftforge.fml.ModLoadingContext.get()
@@ -118,7 +117,6 @@ public final class MaidWeaponMod {
           com.maidweapon.forge.system.fox.WhiteFoxBlessingService.register();
           com.maidweapon.forge.system.akatsuki.AkatsukiDomainGrowth.register();
           com.maidweapon.forge.compat.DomainTargetCompatibility.bootstrap();
-          com.maidweapon.forge.system.mastery.ContractMasteryValidation.registerAbilities();
           com.maidweapon.forge.compat.BlackFoxSlashCompat.bootstrap();
           LOGGER.info("[MaidWeapon] TLM compatibility: {}", TlmReflection.diagnostics());
           LOGGER.info("[MaidWeapon] SlashBlade compatibility: {}", SlashBladeCompat.diagnostics());

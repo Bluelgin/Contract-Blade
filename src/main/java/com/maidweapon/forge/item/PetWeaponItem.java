@@ -95,6 +95,6 @@ public final class PetWeaponItem extends SwordItem {
         } else {
             tooltip.add(Component.translatable("maid_weapon.pet.empty." + kind.id()));
         }
-        tooltip.add(Component.translatable("maid_weapon.pet.hint"));
+        // Partner state is always visible; the client layer owns lore and Shift usage.
     }
 }

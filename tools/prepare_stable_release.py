@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if not re.search(r'^mod_version=1\.1\.1\s*$', (ROOT / 'gradle.properties').read_text(), re.M):
+    raise SystemExit('Historical 1.1.1-only source trimmer. Build 1.2.0 directly; do not remove encounters.')
 OUT = Path(sys.argv[1]).resolve()
 assert OUT == (ROOT / 'build/stable-release/release-inputs').resolve()
 

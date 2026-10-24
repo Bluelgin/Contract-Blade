@@ -38,6 +38,11 @@ public final class ContractTooltipComposer {
                 ? IntrinsicSpiritApi.stored(stack, "blade_tetra:akatsuki")
                 : MaidInfusion.containsMaid(stack);
 
+        if (spirit.isEmpty() && !red) {
+            appendOrdinary(stack, viewer, data, mastery, tooltip, expanded, stored, transferred, ownerAccess);
+            return;
+        }
+
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.identity",
                 mastery.getLevel(), data.getMaidName(),
@@ -46,19 +51,19 @@ public final class ContractTooltipComposer {
                         : "maid_weapon.tooltip.compact.away")).withStyle(ChatFormatting.GRAY));
 
         String kind = black ? "black" : white ? "white" : red ? "red" : "";
+        String loreKind = red ? "red" : FoxSpiritState.BLACK.equals(spirit) ? "black" : "white";
         CompoundTag route = kind.isEmpty() ? new CompoundTag() : ContractTooltipSnapshot.route(viewer, kind);
         boolean known = route.getBoolean("known");
-        if (known) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.lore." + kind)
+        if (!expanded) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.lore." + loreKind)
                     .withStyle(ChatFormatting.GRAY));
+        } else if (known) {
             if (black) BlackFoxTooltipSection.append(tooltip, route, expanded);
             else if (white) WhiteFoxTooltipSection.append(tooltip, route, expanded);
             else if (red) AkatsukiTooltipSection.append(tooltip, route, expanded);
         } else if (!kind.isEmpty()) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.waiting")
                     .withStyle(ChatFormatting.DARK_GRAY));
-        } else {
-            appendResonance(stack, viewer, tooltip);
         }
 
         if (red && !stored) {
@@ -74,7 +79,7 @@ public final class ContractTooltipComposer {
                 || !active(viewer, stack, kind))) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.inactive")
                     .withStyle(ChatFormatting.GRAY));
-        } else if (!kind.isEmpty() && known) {
+        } else if (!kind.isEmpty() && known && expanded) {
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.equipped")
                     .withStyle(ChatFormatting.DARK_GREEN));
         }
@@ -82,11 +87,11 @@ public final class ContractTooltipComposer {
             tooltip.add(Component.translatable("maid_weapon.tooltip.borrowed_contract_locked")
                     .withStyle(ChatFormatting.GRAY));
         }
-        tooltip.add(Component.translatable(expanded
-                ? "maid_weapon.tooltip.shift.expanded"
-                : "maid_weapon.tooltip.shift.collapsed"));
-
-        if (!expanded) return;
+        if (!expanded) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.simple.shift").withStyle(ChatFormatting.DARK_GRAY));
+            return;
+        }
+        if (known) FoxTooltipProgress.append(tooltip, route);
         appendContractSection(stack, viewer, data, tooltip);
         appendGrowthSection(mastery, tooltip);
         if (FoxSpiritState.hasResident(stack) && !FoxSpiritState.isOriginalHome(stack)) {
@@ -141,6 +146,10 @@ public final class ContractTooltipComposer {
     private static void appendGrowthSection(com.maidweapon.common.data.ContractMasteryData mastery, List<Component> tooltip) {
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.growth"));
+        appendGrowthDetails(mastery, tooltip);
+    }
+
+    private static void appendGrowthDetails(com.maidweapon.common.data.ContractMasteryData mastery, List<Component> tooltip) {
         tooltip.add(Component.translatable("maid_weapon.tooltip.kills", mastery.getTotalKills()));
         tooltip.add(Component.translatable("maid_weapon.tooltip.unlocked_tier", tierName(mastery.getUnlockedTier())));
         if (mastery.getEnderDragonKills() > 0 || mastery.getWitherKills() > 0)
@@ -154,11 +163,34 @@ public final class ContractTooltipComposer {
         if (transferred || !ownerAccess) return;
         tooltip.add(Component.empty());
         tooltip.add(Component.translatable("maid_weapon.tooltip.section.usage"));
+        appendUsageDetails(stack, stored, tooltip);
+    }
+
+    private static void appendUsageDetails(ItemStack stack, boolean stored, List<Component> tooltip) {
         tooltip.add(Component.translatable(stored ? "maid_weapon.tooltip.call_companion"
                 : "maid_weapon.tooltip.recall_companion",
                 com.maidweapon.forge.client.ContractCompanionKeys.CALL.getTranslatedKeyMessage()));
         if (SlashBladeCompat.usesMaidSlashBladeTask(stack))
             tooltip.add(Component.translatable("maid_weapon.tooltip.maid_slashblade_task"));
+    }
+
+    private static void appendOrdinary(ItemStack stack, Player viewer, MaidWeaponData data,
+            com.maidweapon.common.data.ContractMasteryData mastery, List<Component> tooltip,
+            boolean expanded, boolean stored, boolean transferred, boolean ownerAccess) {
+        tooltip.add(Component.translatable("maid_weapon.tooltip.compact.identity", mastery.getLevel(), data.getMaidName(),
+                Component.translatable(transferred ? "maid_weapon.tooltip.compact.transferred"
+                        : stored ? "maid_weapon.tooltip.compact.stored" : "maid_weapon.tooltip.compact.away"))
+                .withStyle(ChatFormatting.GRAY));
+        if (!ownerAccess && viewer != null) tooltip.add(Component.translatable("maid_weapon.tooltip.borrowed_contract_locked"));
+        SimpleTooltipPresentation.append(tooltip, expanded, "maid_weapon.tooltip.simple.bound.lore", lines -> {
+            String owner = ContractCarrierData.getOwnerName(stack);
+            if (owner != null) SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.owner", owner);
+            SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.favorability", data.getFavorability(),
+                    LoyaltySystem.getFavorabilityTitle(data.getFavorability()));
+            appendResonance(stack, viewer, lines);
+            appendGrowthDetails(mastery, lines);
+            if (!transferred && ownerAccess) appendUsageDetails(stack, stored, lines);
+        });
     }
 
     private static Component tierName(int tier) {

@@ -541,8 +541,7 @@ public final class ContractInteriorService {
     private static void attachHome(ServerPlayer player, String binding, Entity maid,
                                    ContractInteriorSavedData saved, ContractInteriorSavedData.Plot plot, boolean arrival) {
         if (maid instanceof net.minecraft.world.entity.LivingEntity living) {
-            com.maidweapon.forge.compat.TaczCompat.clear(player, living, findContractByBinding(player, binding));
-            com.maidweapon.forge.compat.TripleMagicCompat.clearPhantoms(living, findContractByBinding(player, binding));
+            com.maidweapon.forge.compat.ContractEquipmentCleanup.clear(player, living, findContractByBinding(player, binding));
         }
         if (maid instanceof Mob mob) ContractHomeRuntime.startOnVisit(player, binding, mob, saved, plot, arrival);
         ContractInteriorGuideService.give(player, saved, plot);

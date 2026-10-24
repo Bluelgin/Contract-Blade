@@ -8,6 +8,22 @@ import java.util.*;
 import org.junit.jupiter.api.Test;
 
 class ContractTooltipSnapshotTest {
+  @Test void nextAwakeningFollowsDatapackAndSkipsNumbersOnlySteps() {
+    var guard = WhiteFoxBlessingGrowth.id("blessing_guard");
+    var heal = WhiteFoxBlessingGrowth.id("blessing_heal");
+    var custom = new ContractAbilityDefinition(WhiteFoxBlessingGrowth.ID, List.of(
+        new ContractAbilityMilestone(1, Set.of(guard), Map.of()),
+        new ContractAbilityMilestone(2, Set.of(guard), Map.of()),
+        new ContractAbilityMilestone(7, Set.of(heal), Map.of())));
+    var next = ContractTooltipSnapshot.project(1, Map.of("white", custom)).getCompound("white");
+    assertEquals(7, next.getInt("next_level"));
+    assertEquals("blessing_heal", next.getList("next_features", 8).getString(0));
+    assertEquals(1, next.getList("next_features", 8).size());
+    assertFalse(ContractTooltipSnapshot.unlocked(next, "blessing_heal"));
+    assertFalse(ContractTooltipSnapshot.project(7, Map.of("white", custom))
+        .getCompound("white").contains("next_level"));
+  }
+
   @Test
   void akatsukiCoreUnlockAndMasteryHpLimitAreNotConfused() {
     var routes = Map.of("red", AkatsukiDomainGrowth.fallback());

@@ -28,6 +28,18 @@ public final class ContractTooltipSnapshot {
         var resolved = entry.getValue().resolve(mastery);
         route.putBoolean("known", true);
         for (var feature : resolved.features()) route.putBoolean(feature.getPath(), true);
+        // Follow datapack milestones rather than assuming the built-in Lv.1-10 order.
+        for (var milestone : entry.getValue().milestones()) {
+          if (milestone.level() <= mastery) continue;
+          var upcoming = milestone.features().stream()
+              .filter(feature -> !resolved.has(feature)).sorted().toList();
+          if (upcoming.isEmpty()) continue;
+          route.putInt("next_level", milestone.level());
+          var names = new net.minecraft.nbt.ListTag();
+          for (var feature : upcoming) names.add(net.minecraft.nbt.StringTag.valueOf(feature.getPath()));
+          route.put("next_features", names);
+          break;
+        }
         var parameters = new CompoundTag();
         for (var number : resolved.parameters().entrySet()) {
           if (number.getKey().getNamespace().equals("maid_weapon")

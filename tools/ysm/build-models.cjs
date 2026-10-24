@@ -20,7 +20,7 @@ const specs = [
 ];
 const aliases = {MAllBody:'MAllbody', Skirt:'clothe', LeftSkirt:'LeftClothe', RightSkirt:'RightClothe', FrontSkirt:'FrontClothe', BackSkirt:'BackClothe', RightEyesBase:'RightEyelidBase', LeftEyesBase:'LeftEyelidBase', RightPupil:'RightEyeDot', LeftPupil:'LeftEyeDot', Eyebrow:'EyeBrow', Collar:'lingzi'};
 const report = [];
-for (const spec of specs) {
+for (const spec of specs.filter(spec => spec.id !== 'contract_akatsuki' || process.argv.includes('--include-unfinished'))) {
   const bb = read(path.join(root,spec.bb)), geo = read(path.join(root,spec.geo));
   const g = geo['minecraft:geometry'][0];
   const hidden = new Set(['FOX','FoxMoonCrown']);

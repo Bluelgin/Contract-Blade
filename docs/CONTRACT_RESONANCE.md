@@ -4,6 +4,12 @@
 
 ## Scope and baseline
 
+1.2.0 correction: projection baubles never switch work/schedules (including feeding).
+Old borrowed task snapshots are restored once. The historical AUTO_WORK discussion
+below is superseded; `ContractBaubleEffects` no longer exposes that effect.
+Spirit crystal now has a six-ingredient native altar recipe (0.2P), closing the
+survival ingredient chain. Flowing/Endless Vein previews use the approved crystal-growth art.
+
 Built independently on master `3e2cf94007ba531d20150863fdb32e63f98648b2` (Tooltip PR #24). Open combat PR #25 was inspected at `64dffaefb10749661f422c3b987715dc572bfadd`; its branch is not modified or incorporated. There are no new Akatsuki, black-fox or white-fox skill costs and no changes to their damage, animation, frequency, cooldown or growth parameters. BladeTetra remains optional.
 
 ## Authority and persistence

@@ -24,8 +24,6 @@ public final class TripleMagicCompat {
     private static final String MAID_SPELL = "touhou_little_maid_spell";
     private static final String IRONS = "irons_spellbooks";
     private static final String GOETY = "goety";
-    private static Method tlmRestoreHandMethod;
-    private static boolean searchedTlmRestoreHandMethod;
     private static Method ironIsSpellContainerMethod;
     private static boolean searchedIronSpellContainerMethod;
     private static String maidSpellRangedTaskId;
@@ -99,7 +97,8 @@ public final class TripleMagicCompat {
     }
 
     public static void clearPhantoms(LivingEntity maid, ItemStack source) {
-        restoreTlmEatingHand(maid);
+        // Defer slot restoration too: an active meal may temporarily occupy a projected hand.
+        if (maid.isUsingItem() && maid.getUseItem().isEdible()) return;
         ContractEquipmentProjection.clear(maid, source);
         maid.getPersistentData().remove(MAGIC_LOADOUT);
     }
@@ -110,24 +109,6 @@ public final class TripleMagicCompat {
         ItemStack phantom = maid.getMainHandItem();
         return isPhantom(phantom)
                 && SlashBladeCompat.syncPhantomProgress(source, phantom);
-    }
-
-    /** Cancels a TLM meal without losing the temporary hand stack before the maid is stored. */
-    private static void restoreTlmEatingHand(LivingEntity maid) {
-        if (!maid.isUsingItem() || !maid.getUseItem().isEdible()
-                || !maid.getClass().getName().equals(
-                "com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid")) return;
-        try {
-            maid.stopUsingItem();
-            if (!searchedTlmRestoreHandMethod) {
-                searchedTlmRestoreHandMethod = true;
-                tlmRestoreHandMethod = maid.getClass().getDeclaredMethod("backCurrentHandItemStack");
-                tlmRestoreHandMethod.setAccessible(true);
-            }
-            if (tlmRestoreHandMethod != null) tlmRestoreHandMethod.invoke(maid);
-        } catch (ReflectiveOperationException ignored) {
-            // Keeping the food in the serialized hand is safer than deleting it if TLM changes internals.
-        }
     }
 
     public static void purgeLeakedCopies(Player player) {
@@ -144,7 +125,7 @@ public final class TripleMagicCompat {
      * owner's copied focus bag.
      */
     public static boolean syncMaidSpellLoadout(Player owner, LivingEntity maid, ItemStack weapon) {
-        if (!usesMaidSpellTask(weapon)) return false;
+        if (maid.isUsingItem() || !usesMaidSpellTask(weapon)) return false;
         ResourceLocation weaponId = ForgeRegistries.ITEMS.getKey(weapon.getItem());
         ItemStack accessory = equippedMagicAccessory(owner);
         ResourceLocation accessoryId = accessory.isEmpty() ? null
@@ -167,6 +148,10 @@ public final class TripleMagicCompat {
             maid.getPersistentData().remove(MAGIC_LOADOUT);
             return false;
         }
+    }
+
+    public static void invalidateSpellLoadout(LivingEntity maid) {
+        maid.getPersistentData().remove(MAGIC_LOADOUT);
     }
 
     /**

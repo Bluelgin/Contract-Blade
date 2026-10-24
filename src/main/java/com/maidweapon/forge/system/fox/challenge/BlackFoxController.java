@@ -45,7 +45,7 @@ public final class BlackFoxController {
     }
     public BlackFoxNativeCombo nativeCombo() { return nativeCombo; }
     public void damageAccepted() {
-        defense.accepted(); fight.wakeFaster();
+        fight.wakeFaster();
     }
     public BlackFoxDomainAttacks ranged() { return ranged; }
     public BlackFoxDimensionStrike dimensionStrike() { return dimensionStrike; }
@@ -80,7 +80,6 @@ public final class BlackFoxController {
     }
     public void close() {
         com.maidweapon.forge.network.BlackFoxFeedbackNetwork.bar(actor, player(), bar.getId(), 0, 0, false);
-        com.maidweapon.forge.network.BlackFoxFeedbackNetwork.music(actor, player(), false);
         seals.close(); phaseOne.close(); corruption.close(); nativeCombo.stop(); parryProtectedUntil = Long.MIN_VALUE; bar.removeAllPlayers();
     }
     public BlackFoxCorruption corruption() { return corruption; }
@@ -112,7 +111,6 @@ public final class BlackFoxController {
             actions.face(player.position());
             if (boss().distanceTo(player) > 22) { synchronize(); return; }
             engaged = true;
-            com.maidweapon.forge.network.BlackFoxFeedbackNetwork.music(actor, player, true);
             player.sendSystemMessage(Component.translatable("maid_weapon.fox.boss.warning"));
             BlackFoxEffects.tell(boss(), false);
         }
@@ -201,7 +199,6 @@ public final class BlackFoxController {
         boss().setHealth(1); boss().setDeltaMovement(Vec3.ZERO); bar.setProgress(0);
         var player = player();
         if (player != null) {
-            com.maidweapon.forge.network.BlackFoxFeedbackNetwork.music(actor, player, false);
             BlackFoxEncounters.recordWin(player);
             boolean rescued = BlackFoxShrineReturn.get(player.getServer()).rescue(player);
             player.sendSystemMessage(Component.translatable(rescued ? "maid_weapon.fox.black.returning"

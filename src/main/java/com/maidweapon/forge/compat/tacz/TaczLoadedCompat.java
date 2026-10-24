@@ -74,6 +74,9 @@ public final class TaczLoadedCompat {
 
         ItemStack current = maid.getMainHandItem();
         if (!isMatchingProjection(current, owner.getUUID(), binding)) {
+            // A real item supplied during projection belongs to the player, not to this adapter.
+            if (!current.isEmpty() && !TaczCompat.isProjection(current)
+                    && !com.maidweapon.forge.compat.TripleMagicCompat.isPhantom(current)) return false;
             // TLM temporarily swaps food into the hand while feeding. Do not
             // overwrite that stack; it restores the projected gun afterwards.
             if (!current.isEmpty() && maid.isUsingItem()) {
@@ -100,12 +103,12 @@ public final class TaczLoadedCompat {
 
     public static void clear(Player owner, LivingEntity maid, ItemStack source) {
         if (owner.level().isClientSide) return;
-        restoreTlmEatingHand(maid);
+        if (maid.isUsingItem() && maid.getUseItem().isEdible()) return;
         ItemStack projection = maid.getMainHandItem();
         if (TaczCompat.isProjection(projection)) {
             refundProjectionAmmo(owner, projection);
-            restoreOriginalHand(maid);
         }
+        restoreOriginalHand(maid);
         removeLinks(maid);
         maid.getPersistentData().remove(TaczCompat.ENTITY_OWNER_TAG);
         maid.getPersistentData().remove(TaczCompat.ENTITY_BINDING_TAG);
@@ -347,26 +350,19 @@ public final class TaczLoadedCompat {
 
     private static void restoreOriginalHand(LivingEntity maid) {
         CompoundTag data = maid.getPersistentData();
-        ItemStack original = data.contains(ORIGINAL_HAND_TAG)
-                ? ItemStack.of(data.getCompound(ORIGINAL_HAND_TAG))
-                : ItemStack.EMPTY;
-        maid.setItemSlot(EquipmentSlot.MAINHAND, original);
-        data.remove(ORIGINAL_HAND_TAG);
-    }
-
-    private static void restoreTlmEatingHand(LivingEntity maid) {
-        if (!maid.isUsingItem() || !maid.getUseItem().isEdible()
-                || !maid.getClass().getName().equals(
-                "com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid")) return;
-        try {
-            maid.stopUsingItem();
-            Method method = maid.getClass().getDeclaredMethod("backCurrentHandItemStack");
-            method.setAccessible(true);
-            method.invoke(maid);
-        } catch (ReflectiveOperationException ignored) {
-            // If TLM changes this private helper, retaining the hand is safer
-            // than deleting an item that may belong to the real maid inventory.
+        if (!data.contains(ORIGINAL_HAND_TAG)) {
+            if (TaczCompat.isProjection(maid.getMainHandItem())) maid.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+            return;
         }
+        ItemStack original = ItemStack.of(data.getCompound(ORIGINAL_HAND_TAG));
+        ItemStack current = maid.getMainHandItem();
+        if (current.isEmpty() || TaczCompat.isProjection(current)) {
+            maid.setItemSlot(EquipmentSlot.MAINHAND, original);
+        } else if (!com.maidweapon.forge.compat.TripleMagicCompat.isPhantom(original)
+                && !TaczCompat.isProjection(original)) {
+            com.maidweapon.forge.compat.tlm.TlmEquipmentReturns.returnOriginal(maid, original);
+        }
+        data.remove(ORIGINAL_HAND_TAG);
     }
 
     private static boolean isMatchingProjection(ItemStack stack, UUID owner, String binding) {

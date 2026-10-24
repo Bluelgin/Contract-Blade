@@ -9,22 +9,10 @@ plugins {
 version = mod_version
 group = mod_group_id
 
-// Keep unfinished encounters in the development tree, physically absent from public builds.
+// 1.2.0 ships the complete feature set. The historical flag now only isolates output.
 def stableRelease = providers.gradleProperty('stableRelease').map { it.toBoolean() }.orElse(false).get()
 if (stableRelease) {
     layout.buildDirectory.set(file('build/stable-release'))
-    def staged = layout.buildDirectory.dir('release-inputs')
-    def prepare = tasks.register('prepareStableRelease', Exec) {
-        inputs.dir('src/main/java')
-        inputs.dir('src/main/resources')
-        inputs.file('tools/prepare_stable_release.py')
-        outputs.dir(staged)
-        commandLine 'python', 'tools/prepare_stable_release.py', staged.get().asFile.absolutePath
-    }
-    sourceSets.main.java.setSrcDirs([staged.get().dir('java')])
-    sourceSets.main.resources.setSrcDirs([staged.get().dir('resources')])
-    tasks.named('compileJava').configure { dependsOn prepare }
-    tasks.named('processResources').configure { dependsOn prepare }
 }
 
 def compatTestMode = providers.gradleProperty('compatTest').orElse('vanilla').get()
@@ -123,6 +111,7 @@ minecraft {
             property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
             property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
             property 'contractblade.blackFox.guardValidation', providers.gradleProperty('blackFoxGuardTest').orElse('false').get()
+            property 'contractblade.blackFox.defenseValidation', providers.gradleProperty('blackFoxDefenseTest').orElse('false').get()
             property 'contractblade.blackFox.clientValidation', providers.gradleProperty('blackFoxClientTest').orElse('false').get()
             property 'forge.logging.console.level', 'debug'
             // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
@@ -162,7 +151,32 @@ minecraft {
 }
 
 // 将生成的资源目录加入资源集
-if (!stableRelease) sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// Native fixtures stay available to Forge development runs, never in a player JAR.
+def validationSources = ['**/*Validation.java', '**/AkatsukiVisualCapture.java',
+        '**/MankaClientMetrics.java', '**/MankaServerMetrics.java',
+        '**/MankaAcceptanceCommands.java',
+        '**/DevelopmentValidationBootstrap.java', '**/ContractInteriorValidationCommands.java']
+sourceSets {
+    main.java { validationSources.each { exclude it } }
+    validation {
+        java {
+            srcDir 'src/main/java'
+            validationSources.each { include it }
+        }
+        resources {
+            srcDir 'src/main/resources'
+            include 'modelpacks/contract-fox-1.0.0.zip'
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+tasks.named('check').configure { dependsOn tasks.named('compileValidationJava') }
+minecraft.runs.configureEach {
+    mods { "${mod_id}" { source sourceSets.validation } }
+}
 
 
 // 依赖配置
@@ -317,6 +331,11 @@ dependencies {
 // 资源处理 - 替换 mods.toml 和 pack.mcmeta 中的占位符
 // 关键：设置 UTF-8 编码，防止中文变乱码
 tasks.named('processResources', ProcessResources).configure {
+    // Preserve unfinished authoring archives in the repository, not in the published mod.
+    exclude 'modelpacks/contract-akatsuki-1.0.0.zip'
+    exclude 'modelpacks/contract-fox-1.0.0.zip'
+    exclude 'assets/maid_weapon/sounds/black_fox/epicbattle_j_*.ogg'
+    exclude 'licenses/black_fox_music/**'
     var replaceProperties = [
             minecraft_version   : minecraft_version,
             minecraft_version_range: minecraft_version_range,
@@ -325,13 +344,10 @@ tasks.named('processResources', ProcessResources).configure {
             loader_version_range: loader_version_range,
             mod_id              : mod_id,
             mod_name            : mod_name,
-            mod_license         : mod_license + (stableRelease ? '' : '; CC BY-4.0 (music)'),
+            mod_license         : mod_license,
             mod_version         : mod_version,
             mod_authors         : mod_authors,
             mod_description     : mod_description,
-            mod_asset_notice    : stableRelease
-                ? '各类资源分别遵守其附带许可；代码许可不替代模型许可。'
-                : '音乐 / Music: EpicBattle_J — PeriTune (Sei Mutsuki), CC BY 4.0。\n来源：https://peritune.com/blog/2021/09/16/epicbattle_j/\n署名、音频处理记录与完整条款见包内 licenses/black_fox_music/。',
             tlm_mandatory       : galleryPreviewMode ? 'false' : 'true'
     ]
     inputs.properties replaceProperties

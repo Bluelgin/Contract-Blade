@@ -25,10 +25,6 @@ public final class BlackFoxBossCompat {
     public static void bootstrap(IEventBus bus) {
         if (!available()) return;
         com.maidweapon.forge.network.BlackFoxFeedbackNetwork.register();
-        var sounds = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, "maid_weapon");
-        sounds.register("black_fox_music", () -> net.minecraft.sounds.SoundEvent.createVariableRangeEvent(
-                net.minecraft.resources.ResourceLocation.parse("maid_weapon:black_fox_music")));
-        sounds.register(bus);
         var entities = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, "maid_weapon");
         type = entities.register("black_fox_boss", () -> EntityType.Builder
                 .of(BlackFoxBossEntity::new, MobCategory.MONSTER).sized(.65f, 1.8f)

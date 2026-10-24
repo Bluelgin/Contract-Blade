@@ -12,7 +12,7 @@ assert hashlib.sha256(SOURCE.read_bytes()).hexdigest() == (
     '7fc3517d572a09964e97fe42ae68f45c3ad98b108a44b170039341dc0afbe308'
 ), 'Supplied model archive must remain unchanged, including attribution'
 
-# This reviewed manifest pins the existing three-fox runtime pack. The archive's
+# This reviewed manifest pins the published dual-fox runtime pack. The archive's
 # own checksum file alone cannot authorize new files (it could be changed with them).
 manifest = json.loads((ROOT / 'tools/fox_model_runtime_manifest.json').read_text())['files']
 with zipfile.ZipFile(PACK) as archive:
@@ -52,41 +52,13 @@ with zipfile.ZipFile(PACK) as archive:
         name = name.lstrip('*').removeprefix('./')
         assert hashlib.sha256(archive.read(name)).hexdigest() == digest.lower(), name
     metadata = json.loads(archive.read('assets/contract_fox/maid_model.json'))
-    assert metadata['version'] == '1.2.2'
+    assert metadata['version'] == '1.2.3'
     assert metadata['author'] == ['Very Many Authors']
     assert {model['model_id'] for model in metadata['model_list']} == {
-        'contract_fox:fox_white', 'contract_fox:fox_black', 'akatsuki_winefox:akatsuki'
+        'contract_fox:fox_white', 'contract_fox:fox_black'
     }
     for model in metadata['model_list']:
         assert model['is_gecko'] is True and model['render_entity_scale'] == 0.65
-        if model['model_id'] == 'akatsuki_winefox:akatsuki':
-            # Native Akatsuki assets and attribution are independently pinned above.
-            assert archive.read('AKATSUKI-CREDITS.md')
-            assert archive.read('AKATSUKI-LICENSE-CC-BY-NC-SA-4.0.txt')
-            with zipfile.ZipFile(ROOT / 'src/main/resources/modelpacks/contract-akatsuki-1.0.0.zip') as native:
-                for name in files:
-                    if name.startswith('assets/akatsuki_winefox/'):
-                        assert archive.read(name) == native.read(name), ('Native Akatsuki source changed', name)
-            geometry = json.loads(archive.read('assets/akatsuki_winefox/models/entity/akatsuki.json'))
-            assert geometry['minecraft:geometry']
-            bones = {bone['name'] for bone in geometry['minecraft:geometry'][0]['bones']}
-            # Upstream clips address absent optional outfit/weapon bones. Pin the known
-            # sets explicitly; do not silently accept newly introduced unknown tracks.
-            absent = {
-                'winefox.animation.json': {'BackDress', 'DaiMao', 'FFM1_1', 'FFM2_1', 'FFM3_1',
-                    'HairDownLeft', 'HairDownRight', 'HatRibbon', 'HatRibbon2', 'HatRibbon3',
-                    'LeftClothe2', 'LeftLongHair', 'Ribbon', 'RightClothe2', 'RightLongHair', 'WLongHair'},
-                'foxmaid.tac.animation.json': {'FFM1', 'FFM1_1', 'FFM2_1', 'FFM3', 'FFM3_1',
-                    'LongHead', 'ak47', 'g17', 'long_h1', 'rpg7'},
-                'akatsuki.adaptation.animation.json': set(),
-            }
-            for animation in model['animation']:
-                namespace, path = animation.split(':', 1)
-                clips = json.loads(archive.read(f'assets/{namespace}/{path}'))['animations']
-                assert clips
-                missing = {bone for clip in clips.values() for bone in clip.get('bones', {})} - bones
-                assert missing == absent[Path(path).name], ('Changed upstream optional bones', animation)
-            continue
         color = model['model_id'].split(':')[1]
         geometry = json.loads(archive.read(f'assets/contract_fox/models/entity/{color}.json'))
         assert geometry['minecraft:geometry']

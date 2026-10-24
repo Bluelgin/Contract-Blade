@@ -1,12 +1,14 @@
 $ErrorActionPreference = 'Stop'
 $taskRoot = 'E:/Little maid'
 $taskGame = Join-Path $taskRoot 'run-ysm-test'
+$taskVersion = ((Get-Content -LiteralPath (Join-Path $taskRoot 'gradle.properties') | Where-Object { $_ -match '^mod_version=' }) -replace '^mod_version=', '').Trim()
+if (-not $taskVersion -or $taskVersion -match '[\\/]') { throw 'Invalid project version.' }
 $taskRunning = Get-CimInstance Win32_Process -Filter "Name = 'java.exe'" | Where-Object { $_.CommandLine -like '*run-ysm-test*' }
 if ($taskRunning) { throw 'Close the YSM test client before replacing runtime files.' }
 $taskBackup = Join-Path $taskGame ('launcher/backups/integration-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 New-Item -ItemType Directory -Path $taskBackup -Force | Out-Null
 $taskMods = @(
-    'build/libs/contract-blade-forge-1.20.1-1.1.1.jar',
+    "build/libs/contract-blade-forge-1.20.1-$taskVersion.jar",
     'libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar',
     'tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar',
     'tmp/compat-test/blade_tetra-1.5.9.jar',
@@ -29,9 +31,18 @@ foreach ($taskRelative in $taskMods) {
     if (Test-Path -LiteralPath $taskTarget) { Copy-Item -LiteralPath $taskTarget -Destination $taskBackup }
     Copy-Item -LiteralPath $taskSource -Destination $taskTarget
     if ((Get-FileHash -LiteralPath $taskSource).Hash -ne (Get-FileHash -LiteralPath $taskTarget).Hash) { throw "Copied mod mismatch: $taskName" }
+    if ($taskName -eq "contract-blade-forge-1.20.1-$taskVersion.jar") {
+        # Only retire exact sibling mod files after the replacement has been verified.
+        $taskModDirectory = [IO.Path]::GetFullPath((Join-Path $taskGame 'mods'))
+        foreach ($taskPrevious in Get-ChildItem -LiteralPath $taskModDirectory -Filter 'contract-blade-forge-*.jar' -File) {
+            if ($taskPrevious.Name -eq $taskName) { continue }
+            if ($taskPrevious.DirectoryName -ne $taskModDirectory) { throw 'Unexpected mod location.' }
+            Move-Item -LiteralPath $taskPrevious.FullName -Destination $taskBackup
+        }
+    }
 }
-foreach ($taskId in @('contract_akatsuki','contract_white_fox','contract_black_fox')) {
-    $taskSource = Join-Path $taskRoot "dist/ysm/1.1.0/models/$taskId"
+foreach ($taskId in @('contract_white_fox','contract_black_fox')) {
+    $taskSource = Join-Path $taskRoot "dist/ysm/1.1.1/models/$taskId"
     $taskTarget = Join-Path $taskGame "config/yes_steve_model/custom/$taskId"
     if (Test-Path -LiteralPath $taskTarget) { Copy-Item -LiteralPath $taskTarget -Destination $taskBackup -Recurse }
     New-Item -ItemType Directory -Path $taskTarget -Force | Out-Null

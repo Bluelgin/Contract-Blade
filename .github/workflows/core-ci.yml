@@ -4,22 +4,10 @@ on:
   push:
     branches:
       - master
-      - codex/unified-contract-interior-land
-      - codex/fox-level-stats-passive-blessing
   pull_request:
     branches:
       - master
-      - codex/contract-resonance-foundation
-      - codex/fox-native-sword-art
-      - codex/black-fox-sword-core-growth
-      - codex/contract-lifecycle-recovery
-      - codex/white-fox-blessing-growth
-      - codex/simplify-contract-lifecycle
-      - codex/architecture-refinement
-      - codex/white-fox-growth-rework
-      - codex/akatsuki-domain
-      - codex/akatsuki-provenance-airborne
-      - codex/akatsuki-uncapped-space-cut
+  workflow_dispatch:
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
@@ -81,11 +69,13 @@ jobs:
           python tools/validate_epicfight.py
           python tools/validate_item_models.py
           python tools/validate_projection_baubles.py
+          python tools/validate_release_readiness.py --jar build/libs/contract-blade-forge-1.20.1-1.2.0.jar
           python tools/validate_companion.py
           python tools/validate_shrine.py
           python tools/validate_player_tooltips.py
           python tools/validate_fox_models.py
           python tools/test_fox_model_validator.py
+          python tools/test_release_distribution.py
 
       - name: Prepare native regression runtimes
         run: |

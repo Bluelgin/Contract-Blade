@@ -134,9 +134,11 @@ public class MaidWeaponItem extends SwordItem {
         super.appendHoverText(stack, level, tooltip, flag);
         if (hasMaidData(stack)) return;
 
-        tooltip.add(Component.empty());
-        tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.direct_bind_hint"));
+        // Unbound presentation is added by the client-only simple tooltip layer.
+        if (stack.is(com.maidweapon.forge.init.ModItems.TEST_SLASHBLADE.get())) {
+            tooltip.add(Component.translatable("maid_weapon.tooltip.title"));
+            tooltip.add(Component.translatable("maid_weapon.tooltip.direct_bind_hint"));
+        }
     }
 
     // ==================== 实体交互（右键女仆） ====================

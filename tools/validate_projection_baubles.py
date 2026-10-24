@@ -18,16 +18,40 @@ assert 'getMaidBauble' in slots and 'getStackInSlot' in slots
 assert 'CuriosApi' not in slots and 'getInventory' not in slots
 assert 'if (!ContractWorkPolicy.automatic(mode)) return;' in runtime
 assert 'ContractWorkPolicy.combat(mode)' in runtime and 'ContractWorkPolicy.feeding(mode)' in runtime
-assert 'mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get()' in work
-assert 'mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_FEED.get()' in work
+assert 'mode.weapon() && MaidCareTaskSystem.ATTACK_TASK.equals(TouhouLittleMaidHelper.getMaidTaskId(maid))' in runtime
+assert runtime.index('TripleMagicCompat.castFallbackSpell') < runtime.index('if (!ContractWorkPolicy.automatic(mode)) return;')
+assert 'AUTO_COMBAT.get()' not in work and 'AUTO_FEED.get()' not in work
+assert 'public static boolean combat(ContractProjectionMode mode) {\n        return false;' in work
+assert 'public static boolean feeding(ContractProjectionMode mode) {\n        return false;' in work
+assert 'MaidCareTaskSystem.rememberOriginalTask' not in work
+assert 'ORIGINAL_SCHEDULE_TAG' in work and 'ORIGINAL_TASK_TAG' in work
 assert 'ContractWorkPolicy.release(weapon, maid)' in runtime
 assert 'restoreOriginalTask(carrier, maid)' in work and 'clearOriginalTask(carrier)' in work
 assert 'owner.getAttributeValue' not in projection
 assert 'MaidWeaponOriginalAttack' in projection and 'MaidWeaponOriginalArmor' in projection
 assert 'mode.weapon() : mode.armor()' in projection
 assert 'returnOriginal(maid, original)' in projection
+assert 'else if (!ItemStack.isSameItemSameTags(current, original))' not in projection
+cleanup = read('compat/ContractEquipmentCleanup.java')
+assert cleanup.index('TaczCompat.clear(') < cleanup.index('TripleMagicCompat.clearPhantoms(')
+for path in ('system/deployment/ContractMaidRuntimeService.java', 'compat/tlm/ContractMaidLifecycleService.java',
+             'system/interior/ContractInteriorService.java'):
+    assert 'ContractEquipmentCleanup.clear(' in read(path)
+    assert 'TripleMagicCompat.clearPhantoms(' not in read(path)
 assert 'isUsingItem()) return' in projection
+magic = read('compat/TripleMagicCompat.java')
+tacz = read('compat/tacz/TaczLoadedCompat.java')
+meal = read('compat/tlm/TlmMealLifecycle.java')
+for cleaner in (magic, tacz):
+    assert 'if (maid.isUsingItem() && maid.getUseItem().isEdible()) return;' in cleaner
+    assert 'stopUsingItem' not in cleaner and 'backCurrentHandItemStack' not in cleaner
+assert 'TlmMealLifecycle.prepareForStorage(living)' in runtime
+assert 'TlmMealLifecycle.prepareForStorage(living)' in read('compat/tlm/ContractMaidLifecycleService.java')
+assert 'stopUsingItem' in meal and 'backCurrentHandItemStack' in meal
+assert 'hand != net.minecraft.world.InteractionHand.OFF_HAND' in meal
 assert 'ContractCarrierData.clearMaidContract(copy)' in read('compat/TripleMagicCompat.java')
+assert 'TripleMagicCompat.invalidateSpellLoadout(maid)' in projection
+assert 'maid.isUsingItem() || !usesMaidSpellTask(weapon)' in magic
 knot = json.loads((root / 'src/main/resources/data/maid_weapon/recipes/altar/heartbound_knot.json').read_text())
 assert knot['ingredients'] == [
     {'item': 'maid_weapon:resonance_sword_tassel'}, {'item': 'maid_weapon:guardian_ribbon'},

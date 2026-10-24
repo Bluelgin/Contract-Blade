@@ -6,19 +6,15 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 
-/** Boss-local hit cadence and readable, cooldown-limited counter. No vanilla i-frame resets. */
+/** Readable, cooldown-limited counter only. Ordinary damage uses native hit immunity. */
 final class BlackFoxDefense {
-    static final int HIT_INTERVAL = 16, OPENING_INTERVAL = 8, COUNTER_INTERVAL = 60;
+    static final int COUNTER_INTERVAL = 60;
     private final BlackFoxActions actions;
     private final BlackFoxPhaseOne phaseOne;
-    private long damageAt, counterAt, guardingUntil;
+    private long counterAt, guardingUntil;
     BlackFoxDefense(BlackFoxActions actions, BlackFoxPhaseOne phaseOne) { this.actions = actions; this.phaseOne = phaseOne; }
     private long now() { return actions.boss().level().getGameTime(); }
-    boolean protectedNow() { return now() < damageAt || now() < guardingUntil; }
-    void accepted() {
-        damageAt = now() + (actions.fight.skill() == BlackFoxFight.Skill.STAGGER
-                || BlackFoxOpenings.active(actions.fight.skill(), actions.fight.age()) ? OPENING_INTERVAL : HIT_INTERVAL);
-    }
+    boolean protectedNow() { return now() < guardingUntil; }
     boolean counter(DamageSource source) {
         var fight = actions.fight;
         boolean ready = fight.skill() == BlackFoxFight.Skill.APPROACH || fight.skill() == BlackFoxFight.Skill.PHANTOM_FEINT

@@ -10,8 +10,6 @@ import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.Level;
-import java.util.List;
-import javax.annotation.Nullable;
 
 /** Stage-specific presentation; all upgrade rules and persistence belong to the progress service. */
 public final class ResonanceUpgradeItem extends Item {
@@ -32,8 +30,5 @@ public final class ResonanceUpgradeItem extends Item {
         ((ServerLevel) level).sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY() + 1, player.getZ(), 24, .4, .5, .4, .05);
         return InteractionResultHolder.success(stack);
     }
-    @Override public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("maid_weapon.tooltip.vein", stage));
-        tooltip.add(Component.translatable("maid_weapon.tooltip.vein.global"));
-    }
+    public int stage() { return stage; }
 }

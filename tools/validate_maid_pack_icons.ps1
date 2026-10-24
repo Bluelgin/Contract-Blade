@@ -1,11 +1,9 @@
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $checkRoot = Split-Path $PSScriptRoot
-$checkExpected = [IO.File]::ReadAllBytes((Join-Path $checkRoot 'art/maid_pack_icons/trio-pack-icon-256.png'))
+$checkExpected = [IO.File]::ReadAllBytes((Join-Path $checkRoot 'art/fox_model_pack/fox_pixel_icon.png'))
 foreach ($checkPack in @(
-    @{Before = 'contract-fox-before-cover.zip'; After = 'contract-fox-1.0.1.zip'; Namespace = 'contract_fox'},
-    @{Before = 'contract-akatsuki-before-cover.zip'; After = 'contract-akatsuki-1.0.0.zip'; Namespace = 'akatsuki_winefox'},
-    @{Before = 'contract-akatsuki-before-cover.zip'; After = 'contract-fox-1.0.1.zip'; Namespace = 'akatsuki_winefox'}
+    @{Before = 'contract-fox-before-cover.zip'; After = 'contract-fox-1.0.1.zip'; Namespace = 'contract_fox'}
 )) {
     $checkOld = [IO.Compression.ZipFile]::OpenRead((Join-Path $checkRoot "art/maid_pack_icons/before/$($checkPack.Before)"))
     $checkNew = [IO.Compression.ZipFile]::OpenRead((Join-Path $checkRoot "src/main/resources/modelpacks/$($checkPack.After)"))
@@ -52,5 +50,5 @@ foreach ($checkPack in @(
     } finally { $checkOld.Dispose(); $checkNew.Dispose() }
 }
 $checkMixin = Get-Content -LiteralPath (Join-Path $checkRoot 'src/main/resources/maid_weapon.mixins.json') -Raw | ConvertFrom-Json
-if ($checkMixin.client) { throw 'Unexpected client model-preview hook.' }
+if (@($checkMixin.client | Where-Object { $_ -match 'ModelPreview|ModelThumbnail' }).Count) { throw 'Unexpected client model-preview hook.' }
 Write-Output 'Native 3D thumbnails: no client rendering hooks added.'

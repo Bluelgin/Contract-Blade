@@ -1,5 +1,16 @@
 # Asset sources
 
+## 1.2.0 distribution cleanup (2026-10-24)
+
+The release retains the complete gameplay and current dual-fox runtime pack.
+The original `src/main/resources/modelpacks/contract-fox-1.0.0.zip` is a repository
+reference / development fixture only, not a second bundled model pack.
+The former encounter soundtrack is no longer played or distributed. Its audio,
+license records and archived runtime sources remain in development assets; the
+music history below does not describe shipped 1.2.0 content.
+The mod-list illustration is exported at 256x179 from the preserved 485x340 image
+in `art/mod_list_logo/`; character textures and native 3D previews are unchanged.
+
 ## Resonance spirit veins and Endless Contract — approved v2 motion (2026-10-18)
 
 The four icons were manually redrawn as pixel SVGs after a built-in imagegen
@@ -206,9 +217,9 @@ Playback applies a three-second smooth gain fade-in. The loop already includes
 the opening musical passage; the short lead-in is followed by that loop in one
 streaming channel, avoiding a redundant complete cycle. Recurring motifs
 are retained. No YouTube cover art or photograph is bundled. Attribution,
-full CC BY 4.0 terms, modification notes and file hashes are shipped under
-`licenses/black_fox_music/`. This music license does not relicense the fox models.
-Encounter-free stable builds exclude both the soundtrack and its sound event.
+full CC BY 4.0 terms, modification notes and file hashes remain in the repository
+under `src/main/resources/licenses/black_fox_music/`. These archived resources are
+excluded from 1.2.0 distribution. This music license does not relicense the fox models.
 
 ## Mod-list White Fox screenshot
 

@@ -173,7 +173,7 @@ public final class ContractResonanceValidation {
         first.getTag().getCompound("MaidData").putInt("ContractSchema", 2);
         ContractCarrierData.setContractSuperseded(first, true);
         check(ResonanceService.canPay(a, first, binding, 0) == UNAUTHORIZED, "superseded rejected");
-        for (String name : new String[]{"awakening_vein", "flowing_vein", "endless_vein", "endless_contract"})
+        for (String name : new String[]{"spirit_crystal", "awakening_vein", "flowing_vein", "endless_vein", "endless_contract"})
             check(level.getRecipeManager().byKey(new net.minecraft.resources.ResourceLocation("maid_weapon", "altar/" + name)).isPresent(), "altar recipe loaded");
     }
     private static ItemStack create(Player owner, int slot) throws Exception {
