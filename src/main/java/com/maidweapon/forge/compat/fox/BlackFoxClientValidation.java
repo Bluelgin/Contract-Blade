@@ -20,15 +20,16 @@ import net.minecraft.world.entity.Entity;
 import java.util.List;
 
 /** Opt-in fresh-client resource check; does not open or change any save. */
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid = "maid_weapon", value = net.minecraftforge.api.distmarker.Dist.CLIENT)
 public final class BlackFoxClientValidation {
     private static boolean finished;
+    @net.minecraftforge.eventbus.api.SubscribeEvent
     public static void tick(TickEvent.ClientTickEvent event) {
-        if (finished || event.phase != TickEvent.Phase.END || Minecraft.getInstance().getOverlay() != null
+        if (!Boolean.getBoolean("contractblade.blackFox.clientValidation") || finished || event.phase != TickEvent.Phase.END || Minecraft.getInstance().getOverlay() != null
                 || Minecraft.getInstance().screen == null || GeckoLibCache.getInstance().getAnimations().isEmpty()) return;
         finished = true;
         try {
             BlackFoxBossResources.ensureLoaded();
-            BlackFoxMusicValidation.run();
             BlackFoxBossBarValidation.run();
             try (var resource = Minecraft.getInstance().getResourceManager().getResource(
                     ResourceLocation.parse("maid_weapon:textures/particle/parry_contact.png")).orElseThrow().open();

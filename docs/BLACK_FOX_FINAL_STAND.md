@@ -6,7 +6,7 @@ Development-only encounter changes; the stable public package is unchanged.
 
 `BlackFoxBalance` counts successful player parries and native Combo B clashes through the existing confirmed feedback path, not incoming projectile contacts. Five confirmations trigger a five-second (100-tick) balance loss and reset the count. The same consumed swing cannot count twice; confirmations within four ticks are deduplicated. Successful parries during balance loss do not build another reward.
 
-The controller consumes the pending reward after attack execution, so an executor's ordinary short stagger cannot overwrite it. Pending native B clashes apply it on the following combat tick. It reuses the existing stagger pose, stops attacks, cancels pending movement and clears ranged projectiles. Each accepted damaging hit advances recovery by ten ticks (0.5 seconds); blocked hits do not. Existing eight-tick opening damage cadence and vanilla hit immunity remain in force.
+The controller consumes the pending reward after attack execution, so an executor's ordinary short stagger cannot overwrite it. Pending native B clashes apply it on the following combat tick. It reuses the existing stagger pose, stops attacks, cancels pending movement and clears ranged projectiles. Each accepted damaging hit advances recovery by ten ticks (0.5 seconds); blocked hits do not. As of 2026-10-24, ordinary hits and openings use native hit immunity only; the extra sixteen/eight-tick damage timers were removed. Counter/clash and encounter-mechanic protection remain unchanged.
 
 ## Terminal black hole
 

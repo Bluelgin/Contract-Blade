@@ -2,15 +2,27 @@
 
 ## 仓库范围 / Repository scope
 
-默认分支现在只维护 **Core（契约之刃）**，当前版本为 **1.1.0**。旧版 Part（剧情、七宗罪、世界生成等）暂不更新，也不会随 Core 的发布包提供。需要查看旧版 Part 的源码时，请使用 [`codex/part-core-archive`](https://github.com/Bluelgin/Contract-Blade/tree/codex/part-core-archive) 存档分支；不要将它视为当前可维护版本。
+默认分支只维护 **Core（契约之刃）1.2.0**。源码版本不代表已经上传发布，请以仓库 Releases 或作者发布页的实际附件为准。旧版 Part（剧情、七宗罪、世界生成等）暂不更新，也不会随 Core 的发布包提供。旧源码见 [`codex/part-core-archive`](https://github.com/Bluelgin/Contract-Blade/tree/codex/part-core-archive)，仅供历史参考。
 
 The default branch contains the maintained Core addon only. The legacy Part campaign is paused and retained on the archive branch for reference, not shipped in Core releases.
+
+## 文档入口 / Start here
+
+- 更新内容 / Release notes: [中文](docs/changelog/CHANGELOG.md) · [English](docs/changelog/CHANGELOG.en.md)
+- 玩家与服主 / Players and server owners: [文档导航](docs/README.md) · [配置](docs/CONTRACT_CONFIGURATION.md)
+- 黑白狐玩家外观 / YSM player models: [安装与打包](docs/YSM_MODELS.md). 独立于女仆模型；不含赤月外观。
+- 开发与发布 / Development: [仓库目录与归档约定](docs/REPOSITORY_GUIDE.md) · [构建与验收](docs/STABLE_RELEASE.md)
+- 美术来源 / Asset sources: [署名及许可](ASSET_SOURCES.md) · [素材导航](art/README.md)
+
+Version 1.2.0 includes the Black Fox challenge, spirit growth, Akatsuki's domain,
+Manka Talisman, and Resonance progression. Akatsuki's unfinished appearance is
+not shipped. Source version numbers do not imply a published download.
 
 Architecture and extension boundaries are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Legacy seven-sins NBT from older worlds is preserved as archival metadata, but it no longer affects Core combat, resonance, deployment, or progression.
 
 Contract Blade is a Touhou Little Maid addon that lets maids form persistent contracts with supported weapons. Call companions manually or enable protective manifestation after enemy damage, build Contract Resonance, and strengthen their weapon through shared battles. Switching weapons does not dismiss a manually called companion. Versioned compressed storage preserves maid inventories, appearances, capabilities, and progression while reducing contract NBT size.
 
-契约配置说明见 [docs/CONTRACT_CONFIGURATION.md](docs/CONTRACT_CONFIGURATION.md)：跟随人数上限、受伤显现开关、饰品自动工作、共鸣上限，以及每级的击杀条件与攻击力加成。新规则使用存档的 `serverconfig/maid_weapon-server.toml`，服务器自动同步客户端。开发版将 `Manifestation.maxFollowingMaids` 设为 2 即可正式双召唤，默认仍为 1。
+契约配置说明见 [docs/CONTRACT_CONFIGURATION.md](docs/CONTRACT_CONFIGURATION.md)：跟随人数上限、受伤显现开关、共鸣上限，以及每级的击杀条件与攻击力加成。饰品不再自动选择工作，战斗、喂食和作息由玩家手动设置。新规则使用存档的 `serverconfig/maid_weapon-server.toml`，服务器自动同步客户端。将 `Manifestation.maxFollowingMaids` 设为 2 即可双召唤，默认仍为 1。升级与发布验收见 [1.2.0 清单](docs/RELEASE_1_2_0_CHECKLIST.md)。
 
 ## Features
 
@@ -54,10 +66,11 @@ Contract Interiors continue to manage their own residents separately.
 
 Place these items in the maid's native Touhou Little Maid bauble slots; Curios is not required.
 
-- **共鸣剑穗 / Resonance Sword Tassel** projects the contract weapon and enables automatic combat-task selection.
+- **共鸣剑穗 / Resonance Sword Tassel** projects the contract weapon; work is selected manually.
 - **守护缎带 / Guardian Ribbon** projects the owner's armor without changing the maid's work.
-- **同心结 / Heartbound Knot** combines weapon and armor projection with automatic work in one slot.
-- Without an active tassel or knot, select the maid's work manually. Effects are exclusive: the first of these baubles in slot order takes priority. Projections are inactive inside the contract home.
+- **同心结 / Heartbound Knot** combines weapon and armor projection in one slot, without changing work.
+- **无尽契约 / Endless Contract** retains combined projection and waives resonance costs, not native weapon costs, cooldowns or unlock requirements.
+- Select the maid's work manually with any bauble. Projection effects are exclusive: the first projection bauble in slot order takes priority. Projections are inactive inside the contract home.
 
 All three baubles use the native TLM altar, not a crafting table (one ingredient
 per pedestal). Tassel: 3 string, gold nugget, amethyst shard, red dye (0.15 P).
@@ -80,15 +93,14 @@ equipment, appearance and contract-home binding are retained. Keep her original
 blade: her special story only continues while she lives in that exact blade.
 Ordinary crafting cannot consume her occupied weapon or soul talisman.
 
-The supplied White/Black Fox model pack is prepared automatically for TLM's
-native loader. Existing same-ID packs are preserved. With BladeTetra, the shrine
-encounter and existing divine-domain progress provide additional dialogue;
-without it, the secondary shrine offers a separate dream entrance rather than
-a divine-domain quest. Black Fox now guards a private Sealed Rift arena: evade
-her mobile sword attacks, attack into her flashing finisher to clash, or exploit
-her recovery. The shrine White Fox's Purifying Edge helps against this encounter.
-Wine Fox's rescue, a corruption-source Boss and the story Black Fox companion
-reward are not implemented yet. This fight requires TLM 1.5.3+ and SlashBlade.
+The supplied White/Black Fox models use TLM's native loader.
+Akatsuki's unfinished appearance is not included; her awakening and combat abilities remain available.
+The secondary shrine's ritual and dream entrance work with or without BladeTetra;
+the older narrative route is dormant. Black Fox guards a private Sealed Rift arena.
+Use SlashBlade's native Shift guard to clash with telegraphed skills; qualifying
+skill clashes build her counter window. Failure returns the player safely; victory
+starts the arena-collapse return countdown and strengthens the shrine Black Fox
+blade with its sword-core art. This fight requires TLM 1.5.3+ and SlashBlade.
 
 ## Requirements
 
@@ -100,10 +112,10 @@ reward are not implemented yet. This fight requires TLM 1.5.3+ and SlashBlade.
 All compatibility integrations are optional and are detected at runtime.
 
 With Epic Fight and EpicFight: Touhou Little Maid installed (including the latter's
-required Avalon dependency), manifested contract maids wearing an active Resonance Sword Tassel or Heartbound Knot automatically select
-`ef_tlm:fight_mode_task` for equipped melee weapons with actual maid attack motions.
-SlashBlade, spell and gun integrations retain priority. Unsupported weapons use
-ordinary combat; contract-home living and the maid's original work remain intact.
+required Avalon dependency), select `ef_tlm:fight_mode_task` manually for supported
+equipped melee weapons with actual maid attack motions. Projection baubles no longer
+select or replace work tasks. Select the corresponding provider task manually for
+SlashBlade, spell and gun integrations; contract-home living and work choices remain intact.
 Animations and learned skills stay owned by the provider; no Epic Fight assets
 are bundled. The development profile is `-PcompatTest=epicfight`, with an opt-in
 isolated server fixture enabled by `-PepicFightTest=true` (never use this fixture

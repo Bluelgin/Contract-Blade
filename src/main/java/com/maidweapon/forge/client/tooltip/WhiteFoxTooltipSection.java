@@ -4,38 +4,22 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import java.util.List;
-import java.util.ArrayList;
 /** One blade's player-facing tooltip; no client-side gameplay calculations. */
 final class WhiteFoxTooltipSection {
     static void append(List<Component> tooltip, CompoundTag profile, boolean expanded) {
+        if (!expanded) return;
+        SimpleTooltipPresentation.line(tooltip, "maid_weapon.tooltip.fox.white.condition");
         tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.stats",
                 ContractTooltipFormat.percent(ContractTooltipSnapshot.value(profile, "health_bonus")),
                 ContractTooltipFormat.percent(ContractTooltipSnapshot.value(profile, "attack_speed_bonus")))
                 .withStyle(ChatFormatting.GREEN));
-        List<String> learned = new ArrayList<>();
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_cleanse"))
-            learned.add(Component.translatable("maid_weapon.tooltip.white.name.cleanse").getString());
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_heal"))
-            learned.add(Component.translatable("maid_weapon.tooltip.white.name.heal").getString());
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_edge"))
-            learned.add(Component.translatable("maid_weapon.tooltip.white.name.edge").getString());
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_resonance"))
-            learned.add(Component.translatable("maid_weapon.tooltip.white.name.resonance").getString());
-        if (ContractTooltipSnapshot.unlocked(profile, "blessing_oath"))
-            learned.add(Component.translatable("maid_weapon.tooltip.white.name.oath").getString());
         boolean guardUnlocked = ContractTooltipSnapshot.unlocked(profile, "blessing_guard");
-        tooltip.add(Component.translatable("maid_weapon.tooltip.white.learned",
-                learned.isEmpty() ? Component.translatable(guardUnlocked
-                        ? "maid_weapon.tooltip.white.name.guard"
-                        : "maid_weapon.tooltip.white.name.locked").getString()
-                        : String.join(" / ", learned)).withStyle(ChatFormatting.GRAY));
         if (guardUnlocked)
             tooltip.add(Component.translatable("maid_weapon.tooltip.compact.white.guard",
                     ContractTooltipFormat.percent(ContractTooltipSnapshot.value(profile, "guard_reduction")),
                     ContractTooltipFormat.decimal(ContractTooltipSnapshot.value(profile, "guard_cooldown") / 20))
                     .withStyle(ChatFormatting.AQUA));
         if (expanded) {
-            tooltip.add(Component.translatable("maid_weapon.tooltip.section.power"));
             if (guardUnlocked)
                 tooltip.add(Component.translatable("maid_weapon.tooltip.white.protection_story").withStyle(ChatFormatting.GRAY));
             if (ContractTooltipSnapshot.unlocked(profile, "blessing_cleanse"))

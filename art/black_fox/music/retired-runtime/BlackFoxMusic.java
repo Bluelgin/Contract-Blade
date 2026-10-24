@@ -14,7 +14,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import java.util.UUID;
 
-/** One challenger-owned soundtrack, never a world scan or a phase-specific playlist. */
+/** Archived soundtrack, no longer compiled or shipped in 1.2.0. */
 @Mod.EventBusSubscriber(modid = "maid_weapon", value = Dist.CLIENT)
 public final class BlackFoxMusic {
     private static ClientLevel source;

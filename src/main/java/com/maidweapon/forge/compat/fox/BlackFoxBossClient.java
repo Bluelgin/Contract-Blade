@@ -15,8 +15,6 @@ public final class BlackFoxBossClient {
         bus.addListener(BlackFoxBossClient::particles);
         bus.addListener(BlackFoxEnergyShader::register);
         MinecraftForge.EVENT_BUS.addListener(BlackFoxBossClient::logout);
-        if (Boolean.getBoolean("contractblade.blackFox.clientValidation"))
-            MinecraftForge.EVENT_BUS.addListener(BlackFoxClientValidation::tick);
     }
     private static void renderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(BlackFoxBossCompat.type(), BlackFoxBossRenderer::new);

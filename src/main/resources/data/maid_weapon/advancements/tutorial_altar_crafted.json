@@ -18,6 +18,10 @@
         "recipe_id": "maid_weapon:altar/heartbound_knot"
       }
     },
+    "spirit_crystal": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {"recipe_id": "maid_weapon:altar/spirit_crystal"}
+    },
     "awakening_vein": {
       "trigger": "touhou_little_maid:altar/altar_craft",
       "conditions": {
@@ -54,6 +58,7 @@
       "tassel",
       "ribbon",
       "knot",
+      "spirit_crystal",
       "awakening_vein",
       "flowing_vein",
       "endless_vein",

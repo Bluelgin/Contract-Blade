@@ -93,6 +93,10 @@ public final class BlackFoxBossValidation {
             player.setPos(boss.getX(), boss.getY(), boss.getZ() - 3);
             player.setYRot(0); boss.setYRot(180);
             actor.combat().tick();
+            if (Boolean.getBoolean("contractblade.blackFox.defenseValidation")) {
+                BlackFoxDefenseValidation.run(actor, player);
+                return;
+            }
             if (Boolean.getBoolean("contractblade.blackFox.guardValidation")) {
                 BlackFoxDifficultyValidation.run(actor, player);
                 BlackFoxGuardValidation.run(actor, player);

@@ -4,7 +4,12 @@ Requires: cairosvg, Pillow. Run from anywhere; writes only project textures and 
 from pathlib import Path
 import math,copy,json,io,os,argparse
 from xml.etree import ElementTree as E
-import cairosvg
+try:
+ import cairosvg
+ def render_svg(svg):return cairosvg.svg2png(bytestring=svg.encode(),output_width=32,output_height=32)
+except (ImportError,OSError):
+ import resvg_py
+ def render_svg(svg):return resvg_py.svg_to_bytes(svg_string=svg,width=32,height=32)
 from PIL import Image,ImageDraw,ImageFont
 ROOT=Path(__file__).resolve().parents[1]
 ART=ROOT/'art/resonance';BASE=ART
@@ -12,6 +17,7 @@ TEXTURES=ROOT/'src/main/resources/assets/maid_weapon/textures/item'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--export-svg',action='store_true',help='Also bake standalone SMIL SVG previews')
 parser.add_argument('--individual',action='store_true',help='Also export one GIF per item')
+parser.add_argument('--items',nargs='+',choices=['awakening_vein','flowing_vein','endless_vein','endless_contract'],help='Only replace these runtime textures; previews still show all four')
 args=parser.parse_args()
 VECTORS=ART/'animated-svg';GIFS=ART/'individual-gifs'
 for p in (ART,TEXTURES):p.mkdir(parents=True,exist_ok=True)
@@ -22,7 +28,7 @@ def tag(n):return '{'+NS+'}'+n
 COUNT=40;DELAY=100;DURATION=4.0
 NAMES=['awakening_vein','flowing_vein','endless_vein','endless_contract']
 LABELS=['初醒灵脉','流转灵脉','无尽灵脉','无尽契约']
-DESC=['灵晶呼吸 · 灵脉流光','金环循光 · 青蓝灵流','双脉循行 · 契印明灭','晶心呼吸 · 双流苏错相轻摆']
+DESC=['灵晶呼吸 · 灵脉流光','双生晶簇 · 灵流上行','永续晶冠 · 三脉共鸣','晶心呼吸 · 双流苏错相轻摆']
 PALETTE={'#a66bce':.6,'#c998ed':1,'#e9c7fc':.5,'#389ebc':.45,'#82deed':.6}
 
 def shade(c,amount):
@@ -81,17 +87,20 @@ def frame_svg(name,index):
   a=math.sin(math.pi*u)**1.2
   rect(lights,x,y,'#fff7f4',a*.95);rect(lights,x+1,y,'#b5edff',a*.45)
  elif name=='flowing_vein':
-  pts=[(14,3),(11,5),(8,8),(6,12),(5,18),(7,23),(12,26),(18,27),(23,25),(26,21),(26,17)]
-  u=index/COUNT;x,y=point(pts,u)
-  rect(lights,x,y,'#fff6cd',math.sin(math.pi*u)**.7)
-  x,y=point([(9,12),(6,13),(4,14)],(u+.2)%1)
-  rect(lights,x,y,'#dafbff',.75)
+  u=index/COUNT
+  x,y=point([(8,25),(12,23),(14,19),(16,14),(18,10),(19,6)],u)
+  rect(lights,x,y,'#fff5ef',math.sin(math.pi*u)*.65)
+  v=(u+.35)%1
+  x,y=point([(13,27),(17,25),(20,22),(23,20)],v)
+  rect(lights,x,y,'#d2f6f1',math.sin(math.pi*v)*.6)
  elif name=='endless_vein':
-  pts=[(16,4),(20,5),(24,7),(27,11),(28,16),(27,21),(24,25),(20,27),(16,28),(12,27),(8,25),(5,21),(4,16),(5,11),(8,7),(12,5),(16,4)]
-  for offset,color in [(0,'#c7f7ff'),(.5,'#ffe4f0')]:
-   x,y=point(pts,(index/COUNT+offset)%1);rect(lights,x,y,color,.95)
-  for k,(x,y) in enumerate([(16,4),(28,16),(16,28),(4,16)]):
-   rect(lights,x,y,'#fff9e8',.15+.65*(.5+.5*math.sin(phase-k*math.pi/2))**3)
+  paths=[[(9,20),(8,16),(8,12),(8,9)],[(16,23),(15,19),(15,14),(16,9),(16,5)],[(22,20),(23,16),(24,12),(25,9)]]
+  for k,pts in enumerate(paths):
+   u=(index/COUNT+k/3)%1
+   x,y=point(pts,u);rect(lights,x,y,'#fff5ef',math.sin(math.pi*u)*.65)
+  u=index/COUNT
+  x,y=point([(7,24),(10,26),(14,28),(18,28),(22,26),(25,23)],u)
+  rect(lights,x,y,'#d2f6f1',math.sin(math.pi*u)*.6)
  else:
   rect(lights,16,16,'#fff0ff',.15+.50*(.5-.5*math.cos(phase)))
   rect(lights,16,3,'#fff9e8',.1+.75*max(0,math.sin(phase-.7))**4)
@@ -121,12 +130,13 @@ def animated_svg(name,frames):
 all_frames={}
 for name in NAMES:
  svgs=[frame_svg(name,i) for i in range(COUNT)]
- images=[Image.open(io.BytesIO(cairosvg.svg2png(bytestring=s.encode(),output_width=32,output_height=32))).convert('RGBA') for s in svgs]
+ images=[Image.open(io.BytesIO(render_svg(s))).convert('RGBA') for s in svgs]
  all_frames[name]=images
  strip=Image.new('RGBA',(32,32*COUNT))
  for i,im in enumerate(images):strip.paste(im,(0,32*i))
- strip.save(TEXTURES/f'{name}.png')
- (TEXTURES/f'{name}.png.mcmeta').write_text(json.dumps({'animation':{'frametime':2,'interpolate':False,'width':32,'height':32}},indent=2)+'\n')
+ if not args.items or name in args.items:
+  strip.save(TEXTURES/f'{name}.png')
+  (TEXTURES/f'{name}.png.mcmeta').write_text(json.dumps({'animation':{'frametime':2,'interpolate':False,'width':32,'height':32}},indent=2)+'\n')
  if args.export_svg:animated_svg(name,svgs)
  singles=[]
  for im in images:
@@ -137,7 +147,7 @@ font_path=Path(os.environ.get('CONTRACT_ART_FONT','/usr/share/fonts/opentype/not
 CJK=font_path.exists()
 if not CJK:
  LABELS=['Awakening Vein','Flowing Vein','Endless Vein','Endless Contract']
- DESC=['Crystal breath / vein shimmer','Gold rim glint / cyan flow','Twin orbit / seal shimmer','Heart breath / soft tassel sway']
+ DESC=['Crystal breath / vein shimmer','Crystal branches / rising current','Crystal crown / three veins','Heart breath / soft tassel sway']
 def font(sz):
  if CJK:return ImageFont.truetype(str(font_path),sz)
  try:return ImageFont.truetype('DejaVuSans.ttf',sz)
@@ -145,8 +155,8 @@ def font(sz):
 preview=[]
 for f in range(COUNT):
  canvas=Image.new('RGB',(1440,660),'#171621');d=ImageDraw.Draw(canvas)
- d.text((48,27),'契约共鸣 · 第二版动态预览' if CJK else 'Contract Resonance / Animated Items v2',font=font(32),fill='#f5e8dc')
- d.text((50,80),'4 秒无缝循环  /  晶体流光 · 双脉循行 · 流苏轻摆' if CJK else '4 second loop / crystal light / twin orbit / soft tassel sway',font=font(19),fill='#b4adbb')
+ d.text((48,27),'契约共鸣 · 灵晶生长版动态预览' if CJK else 'Contract Resonance / Crystal Growth',font=font(32),fill='#f5e8dc')
+ d.text((50,80),'4 秒无缝循环  /  灵流上行 · 晶冠共鸣 · 流苏轻摆' if CJK else '4 second loop / rising current / crystal crown / soft tassel sway',font=font(19),fill='#b4adbb')
  for i,(name,label,desc) in enumerate(zip(NAMES,LABELS,DESC)):
   x=48+i*348
   d.rounded_rectangle((x,130,x+327,490),radius=14,fill='#252231',outline='#3a3449',width=1)

@@ -7,8 +7,6 @@ public final class BlackFoxClientConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.DoubleValue PARRY_SHAKE;
     public static final ForgeConfigSpec.BooleanValue BOSS_IMPACT_SHAKE;
-    public static final ForgeConfigSpec.BooleanValue BOSS_MUSIC;
-    public static final ForgeConfigSpec.DoubleValue BOSS_MUSIC_VOLUME;
     static {
         var builder = new ForgeConfigSpec.Builder();
         builder.push("combatFeedback");
@@ -17,11 +15,7 @@ public final class BlackFoxClientConfig {
         BOSS_IMPACT_SHAKE = builder.comment("Also shake briefly for nearby heavy Boss cuts. Parry shake strength controls both.")
                 .define("bossImpactShake", true);
         builder.pop();
-        builder.push("blackFoxMusic");
-        BOSS_MUSIC = builder.comment("Play EpicBattle_J during your Black Fox encounter.").define("enabled", true);
-        BOSS_MUSIC_VOLUME = builder.comment("Boss music multiplier, also controlled by Minecraft's Music volume slider.")
-                .defineInRange("volume", .65, 0, 1);
-        builder.pop(); SPEC = builder.build();
+        SPEC = builder.build();
     }
     private BlackFoxClientConfig() { }
 }

@@ -44,7 +44,10 @@ public final class ContractEquipmentProjection {
             }
             ItemStack replacement = original.isEmpty() ? ItemStack.EMPTY
                     : TripleMagicCompat.createProjection(original, owner);
-            if (!ItemStack.isSameItemSameTags(current, replacement)) maid.setItemSlot(slot, replacement);
+            if (!ItemStack.isSameItemSameTags(current, replacement)) {
+                maid.setItemSlot(slot, replacement);
+                if (slot.getType() == EquipmentSlot.Type.HAND) TripleMagicCompat.invalidateSpellLoadout(maid);
+            }
         }
     }
 
@@ -58,7 +61,11 @@ public final class ContractEquipmentProjection {
     private static void restoreSlot(LivingEntity maid, ItemStack source, EquipmentSlot slot) {
         CompoundTag gear = maid.getPersistentData().getCompound(GEAR);
         String key = slot.getName();
-        if (!gear.contains(key)) return;
+        if (!gear.contains(key)) {
+            // Repair an orphan left by an older cleanup order, never a real item.
+            if (TripleMagicCompat.isPhantom(maid.getItemBySlot(slot))) maid.setItemSlot(slot, ItemStack.EMPTY);
+            return;
+        }
         if (slot == EquipmentSlot.MAINHAND) {
             TripleMagicCompat.syncSlashBladeProgress(maid, source);
             EpicFightCompat.clearSelection(maid);
@@ -67,7 +74,8 @@ public final class ContractEquipmentProjection {
         ItemStack original = ItemStack.of(gear.getCompound(key));
         if (current.isEmpty() || TripleMagicCompat.isPhantom(current)) {
             maid.setItemSlot(slot, original);
-        } else if (!ItemStack.isSameItemSameTags(current, original)) {
+        } else {
+            // Equal item data does not imply identity: the player may have supplied a second copy.
             com.maidweapon.forge.compat.tlm.TlmEquipmentReturns.returnOriginal(maid, original);
         }
         gear.remove(key);

@@ -18,6 +18,4 @@ Runtime derivative for Contract Blade: crown geometry removed, player-facing des
 
 2026-10-10: added a low-priority humanoid tail-motion override with root-to-tip lag, body-driven locomotion and smooth turning/stopping. Original activity clips, fox-form tail tracks, flight, geometry and textures are preserved. Uses the native Touhou Little Maid animation system; no YSM mod dependency is required.
 
-2026-10-10 pack cover: replaced only pack.png and the maid-pack tab icon with an AI-assisted square portrait of Akatsuki, White Fox and Black Fox, based on the project-provided group illustration. Native 3D model thumbnails, character geometry, textures and animations remain unchanged by this cover update. Generated with the built-in image generation tool; composition refined for small icons. Original character attribution and CC BY-NC-SA 4.0 notices remain applicable.
-
-2026-10-10 shared page: Akatsuki joins White Fox and Black Fox. All original model IDs, geometry, character textures and animations are preserved. Akatsuki attribution is provided in AKATSUKI-CREDITS.md and its full license in AKATSUKI-LICENSE-CC-BY-NC-SA-4.0.txt. Long technical credits are kept in these documents rather than the model selection screen.
+2026-10-23: Akatsuki appearance deferred; this release contains only White Fox and Black Fox, with the existing dual-fox pixel icon. Their runtime models and animations are preserved.

@@ -46,6 +46,8 @@ public final class ContractProjectionValidation {
         player.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(40);
         player.getAttribute(Attributes.ARMOR).setBaseValue(40);
         player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+        ContractEquipmentOwnershipValidation.run(level, player);
+        MaidDreamMealValidation.run(level, player);
         Mob maid = (Mob) TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(level);
         TlmEntityAdapter.tame(maid, player);
         maid.moveTo(0.5, 100, 0.5, 0, 0);
@@ -70,6 +72,7 @@ public final class ContractProjectionValidation {
             check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "no tassel preserves manual work");
             check(ItemStack.isSameItemSameTags(ownSword, maid.getMainHandItem()), "no bauble preserves weapon");
             check(ItemStack.isSameItemSameTags(ownHelmet, maid.getItemBySlot(EquipmentSlot.HEAD)), "no bauble preserves armor");
+            validateMeals(player, carrier, maid, baubles);
             TlmEntityAdapter.switchTask(maid, "touhou_little_maid:attack");
             ContractCombatTaskRouter.configure(player, carrier, maid);
             check("touhou_little_maid:attack".equals(TlmEntityAdapter.taskId(maid)), "router cannot override manual work");
@@ -79,7 +82,7 @@ public final class ContractProjectionValidation {
             check(TripleMagicCompat.isPhantom(maid.getMainHandItem()), "tassel enables weapon projection");
             check(!ContractCarrierData.hasMaidData(maid.getMainHandItem()), "projection has no duplicate growth contract");
             check(ItemStack.isSameItemSameTags(ownHelmet, maid.getItemBySlot(EquipmentSlot.HEAD)), "tassel does not project armor");
-            check(!"touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "tassel enables automatic work");
+            check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "tassel preserves manual work");
             validateWorkSwitches(player, carrier, maid);
             baubles.setStackInSlot(1, ribbon.copy());
             check(TlmProjectionBaubles.mode(maid) == ContractProjectionMode.WEAPON, "projection channels never stack");
@@ -124,7 +127,16 @@ public final class ContractProjectionValidation {
                     "combined knot takes one active slot without stacking");
             check(TripleMagicCompat.isPhantom(maid.getMainHandItem())
                     && TripleMagicCompat.isPhantom(maid.getItemBySlot(EquipmentSlot.HEAD)), "knot projects both channels");
-            check(!"touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "knot enables automatic work");
+            check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "knot preserves manual work");
+            baubles.setStackInSlot(0, new ItemStack(ModItems.ENDLESS_CONTRACT.get()));
+            TlmEntityAdapter.switchTask(maid, "touhou_little_maid:feed");
+            for (int tick = 0; tick < 200; tick++) ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check("touhou_little_maid:feed".equals(TlmEntityAdapter.taskId(maid))
+                    && TripleMagicCompat.isPhantom(maid.getMainHandItem())
+                    && TripleMagicCompat.isPhantom(maid.getItemBySlot(EquipmentSlot.HEAD)),
+                    "endless contract preserves manual work and both projections");
+            TlmEntityAdapter.switchTask(maid, "touhou_little_maid:idle");
+            baubles.setStackInSlot(0, knot.copy());
             check(maid.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue() == attack
                     && maid.getAttribute(Attributes.ARMOR).getBaseValue() == armor, "knot adds no copied base stats");
             baubles.setStackInSlot(0, ribbon.copy());
@@ -171,6 +183,86 @@ public final class ContractProjectionValidation {
         }
     }
 
+    private static void validateMeals(net.minecraft.world.entity.player.Player player,
+                                      ItemStack carrier, Mob maid, IItemHandlerModifiable baubles)
+            throws ReflectiveOperationException {
+        // Use the same hand/startUsingItem sequence as Sol: Maids' Dream's feeding handler.
+        for (boolean home : new boolean[]{false, true}) {
+            maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, home);
+            maid.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.APPLE));
+            maid.startUsingItem(net.minecraft.world.InteractionHand.OFF_HAND);
+            for (int tick = 0; tick < 80; tick++) ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check(maid.isUsingItem() && maid.getUseItem().is(Items.APPLE),
+                    "no projection must not cancel a meal, home=" + home);
+            check(maid.getOffhandItem().getCount() == 1, "maintenance never consumes the food");
+            maid.stopUsingItem();
+            maid.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+        }
+        var finished = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.function.Consumer<net.minecraftforge.event.entity.living.LivingEntityUseItemEvent.Finish> listener =
+                meal -> { if (meal.getEntity() == maid && meal.getItem().is(Items.APPLE)) finished.incrementAndGet(); };
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.addListener(listener);
+        boolean noAi = maid.isNoAi();
+        try {
+            maid.setNoAi(true);
+            for (boolean home : new boolean[]{false, true}) {
+                maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, home);
+                maid.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.APPLE));
+                maid.startUsingItem(net.minecraft.world.InteractionHand.OFF_HAND);
+                int before = finished.get();
+                for (int tick = 0; tick < 40; tick++) {
+                    ContractMaidRuntimeService.maintain(player, carrier, maid);
+                    maid.tick();
+                }
+                check(finished.get() == before + 1 && !maid.isUsingItem(),
+                        "native meal reaches exactly one Finish event, home=" + home);
+            }
+        } finally {
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(listener);
+            maid.setNoAi(noAi);
+        }
+        maid.getClass().getMethod("setHomeModeEnable", boolean.class).invoke(maid, false);
+        baubles.setStackInSlot(0, new ItemStack(ModItems.RESONANCE_SWORD_TASSEL.get()));
+        ContractMaidRuntimeService.maintain(player, carrier, maid);
+        check(TripleMagicCompat.isPhantom(maid.getMainHandItem()), "meal fixture projects weapon");
+        maid.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.APPLE));
+        maid.startUsingItem(net.minecraft.world.InteractionHand.OFF_HAND);
+        baubles.setStackInSlot(0, ItemStack.EMPTY);
+        for (int tick = 0; tick < 80; tick++) ContractMaidRuntimeService.maintain(player, carrier, maid);
+        check(maid.isUsingItem() && maid.getOffhandItem().is(Items.APPLE),
+                "removing projection during a meal defers cleanup");
+        check(maid.getPersistentData().contains("MaidWeaponProjectionGear"), "deferred cleanup retains original gear");
+        maid.stopUsingItem();
+        maid.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+        ContractMaidRuntimeService.maintain(player, carrier, maid);
+        check(maid.getMainHandItem().is(Items.IRON_SWORD)
+                && !maid.getPersistentData().contains("MaidWeaponProjectionGear"),
+                "cleanup resumes after meal without losing original gear");
+        maid.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.APPLE));
+        maid.startUsingItem(net.minecraft.world.InteractionHand.OFF_HAND);
+        var backpack = (IItemHandlerModifiable) maid.getClass().getMethod("getAvailableBackpackInv").invoke(maid);
+        int apples = 0;
+        for (int slot = 0; slot < backpack.getSlots(); slot++) {
+            if (backpack.getStackInSlot(slot).is(Items.APPLE)) apples += backpack.getStackInSlot(slot).getCount();
+        }
+        ContractMaidRuntimeService.cleanupBeforeRecall(player, carrier, maid);
+        check(!maid.isUsingItem(), "actual recall still stops an unfinished meal");
+        int returned = maid.getOffhandItem().is(Items.APPLE) ? maid.getOffhandItem().getCount() : 0;
+        for (int slot = 0; slot < backpack.getSlots(); slot++) {
+            if (backpack.getStackInSlot(slot).is(Items.APPLE)) returned += backpack.getStackInSlot(slot).getCount();
+        }
+        check(returned == apples + 1, "recall preserves exactly one unfinished food in hand or backpack");
+        maid.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+        maid.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.APPLE));
+        maid.setItemSlot(EquipmentSlot.OFFHAND, new ItemStack(Items.STICK));
+        maid.startUsingItem(net.minecraft.world.InteractionHand.MAIN_HAND);
+        ContractMaidRuntimeService.cleanupBeforeRecall(player, carrier, maid);
+        check(!maid.isUsingItem() && maid.getMainHandItem().is(Items.APPLE)
+                && maid.getOffhandItem().is(Items.STICK), "main-hand addon meal does not borrow native offhand restoration");
+        maid.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
+        maid.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+    }
+
     private static void validateWorkSwitches(net.minecraft.world.entity.player.Player player,
                                              ItemStack carrier, Mob maid) {
         boolean combat = com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get();
@@ -186,8 +278,8 @@ public final class ContractProjectionValidation {
             player.getFoodData().setFoodLevel(6);
             com.maidweapon.common.ContractRulesConfig.AUTO_FEED.set(true);
             ContractMaidRuntimeService.maintain(player, carrier, maid);
-            check("touhou_little_maid:feed".equals(TlmEntityAdapter.taskId(maid)),
-                    "feeding works independently of combat automation");
+            check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)),
+                    "legacy feeding setting cannot change manual work");
             player.getFoodData().setFoodLevel(20);
             ContractMaidRuntimeService.maintain(player, carrier, maid);
             check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)),
@@ -197,8 +289,23 @@ public final class ContractProjectionValidation {
             player.getFoodData().setFoodLevel(6);
             ContractMaidRuntimeService.maintain(player, carrier, maid);
             check(!"touhou_little_maid:feed".equals(TlmEntityAdapter.taskId(maid))
-                    && !"touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)),
-                    "combat automation does not depend on feeding automation");
+                    && "touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)),
+                    "legacy combat setting cannot change manual work");
+            String schedule = TlmEntityAdapter.scheduleName(maid);
+            com.maidweapon.forge.system.MaidCareTaskSystem.rememberOriginalTask(carrier, maid);
+            TlmEntityAdapter.switchTask(maid, "touhou_little_maid:attack");
+            TlmEntityAdapter.setAllDaySchedule(maid);
+            ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid))
+                    && schedule.equals(TlmEntityAdapter.scheduleName(maid)),
+                    "legacy borrowed task and schedule restored once");
+            TlmEntityAdapter.switchTask(maid, "touhou_little_maid:feed");
+            for (int tick = 0; tick < 200; tick++) ContractMaidRuntimeService.maintain(player, carrier, maid);
+            check("touhou_little_maid:feed".equals(TlmEntityAdapter.taskId(maid))
+                    && schedule.equals(TlmEntityAdapter.scheduleName(maid))
+                    && !carrier.getTag().contains(com.maidweapon.forge.system.MaidCareTaskSystem.ORIGINAL_TASK_TAG),
+                    "new manual selection survives maintenance after migration");
+            TlmEntityAdapter.switchTask(maid, "touhou_little_maid:idle");
         } finally {
             player.getFoodData().setFoodLevel(food);
             com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.set(combat);
@@ -207,7 +314,7 @@ public final class ContractProjectionValidation {
     }
 
     private static void validateAltarRecipes(net.minecraft.server.level.ServerLevel level) {
-        for (String name : new String[] {"resonance_sword_tassel", "guardian_ribbon", "heartbound_knot"}) {
+        for (String name : new String[] {"resonance_sword_tassel", "guardian_ribbon", "heartbound_knot", "spirit_crystal"}) {
             var id = new net.minecraft.resources.ResourceLocation(MaidWeaponConstants.MOD_ID, "altar/" + name);
             var loaded = level.getRecipeManager().byKey(id).orElseThrow();
             check(loaded instanceof com.github.tartaricacid.touhoulittlemaid.crafting.AltarRecipe,
@@ -224,7 +331,7 @@ public final class ContractProjectionValidation {
             check(result.getCount() == 1 && result.getItem() == net.minecraftforge.registries.ForgeRegistries.ITEMS
                     .getValue(new net.minecraft.resources.ResourceLocation(MaidWeaponConstants.MOD_ID, name)),
                     "altar produces the registered bauble: " + name);
-            check(Math.abs(recipe.getPowerCost() - (name.equals("heartbound_knot") ? 0.3f : 0.15f)) < 0.001,
+            check(Math.abs(recipe.getPowerCost() - (name.equals("heartbound_knot") ? 0.3f : name.equals("spirit_crystal") ? 0.2f : 0.15f)) < 0.001,
                     "native altar power cost: " + name);
             inventory.setItem(0, new ItemStack(Items.DIRT));
             check(!recipe.matches(inventory, level), "wrong ingredients rejected: " + name);

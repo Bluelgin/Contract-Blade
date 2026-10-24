@@ -3,14 +3,17 @@ const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../..');
-const version='1.1.0';
-const output=path.join(root,'dist/ysm',version);
+const version=process.argv[3]||'1.1.1';
+assert(/^\d+\.\d+\.\d+$/.test(version),'Invalid model version');
+const output=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'dist/ysm',version);
+assert(!fs.existsSync(output),`Release output already exists: ${output}`);
 const stage=path.join(output,'models');
 const read=f=>JSON.parse(fs.readFileSync(f,'utf8'));
 const write=(f,text)=>{fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,text);};
 const flight=read(path.join(root,'art/ysm-test/taisho-flight-source.json'));
-const template=read(path.join(root,'tmp/ysm-test/default/ysm.json')).metadata;
+const template=read(path.join(__dirname,'release-sources.json')).default_model;
 const players=read(path.join(root,'art/ysm-test/models/contract_white_fox/ysm.json')).metadata.authors.slice(0,2);
+for(const author of players) author.name=author.name.replace(' / 用户提供角色包','');
 const instructions=`# 安装与使用
 
 适用：Minecraft Java 1.20.1、Forge、Yes Steve Model（YSM）2.6.5。
@@ -29,9 +32,8 @@ const instructions=`# 安装与使用
 
 ## 模型特色
 
-- 赤月：粉白发色与同色狐尾，酒红叠裙搭配浅色内裙，保留原袜子。
 - 白狐、黑狐：三条尾巴在走跑、转身和停步时有柔和的跟随感。
-- 三款角色均有旋转尾巴的普通飞行动作，并提供第一人称手臂。
+- 两款角色均有旋转尾巴的普通飞行动作，并提供第一人称手臂。
 - 普通飞行与鞘翅飞行是不同动作；旋转尾巴对应普通飞行。
 
 ## 常见问题
@@ -48,9 +50,39 @@ YSM 默认基础动作原本为 CC0；这不改变角色模型和大正酒狐飞
 官方帮助：https://yesstevemodel.github.io/wiki/faq/
 许可说明：https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans
 `;
+const english=`# Black & White Fox — YSM ${version}
+
+Player appearance models for Minecraft Java 1.20.1 / Forge / Yes Steve Model 2.6.5.
+Contract Blade and Touhou Little Maid are not required. These models do not add Boss skills, spirit abilities, music, or gameplay changes. Akatsuki is not included.
+
+## Installation
+
+1. Install YSM for the matching Minecraft version and loader, then launch once.
+2. If you downloaded the duo bundle, extract it first. Inside are two individual model ZIPs. Do not install the outer bundle as a model.
+3. Place either or both individual ZIPs in config/yes_steve_model/custom under the active game instance. Keep each individual ZIP intact; ysm.json is already at its root. Do not put them in mods or resourcepacks.
+4. Restart, or use /ysm model reload with permission. Open the model menu with Alt + Y on Forge and select White Fox or Black Fox. Check key conflicts if the menu does not open. The menu also has an Open Model Folder button.
+5. When updating, move the previous ZIP or folder with the same model ID out of custom first. Keep your own backup; do not install duplicate copies.
+
+For multiplayer, the server administrator installs the models on the server and reloads them. Both server and clients need matching YSM versions. A client-only installation does not guarantee other players can see or select the models; ask the administrator about model permissions.
+
+## Features and limitations
+
+- Three tails with softened walking, running, turning, and stopping motion.
+- Spinning-tail animation for ordinary flight; elytra flight uses a different animation.
+- Separate first-person arms and standard player-state animations.
+- Clothes, hair, and tails may intersect in extreme poses or third-party animations. Bundled compatibility clips are not a guarantee for every mod combination.
+- Pack checks do not replace in-game visual testing. Other Minecraft versions and loaders are not claimed as tested.
+
+## Credits and license
+
+See CREDITS.md and LICENSE-CC-BY-NC-SA-4.0.txt inside each model ZIP for original authors, adaptation history, and full license terms. The model derivatives use CC BY-NC-SA 4.0: attribution, noncommercial use, and share-alike apply. YSM default base animations retain their original CC0 status. Spinning-tail flight is credited separately and is not CC0. Contract Blade's code license does not replace these asset licenses.
+
+Official help: https://yesstevemodel.github.io/en/wiki/faq/
+YSM download: https://modrinth.com/mod/yes-steve-model
+License: https://creativecommons.org/licenses/by-nc-sa/4.0/
+`;
 const rows=[];
 for(const [id,name,description] of [
-  ['contract_akatsuki','赤月 · 粉白','粉白长发与同色狐尾，奶白上衣搭配酒红叠裙与浅色裙褶。'],
   ['contract_white_fox','白狐','银白长发、朱色结饰与三条柔软的狐尾。'],
   ['contract_black_fox','黑狐','墨发、紫衣与三条柔软的狐尾，静静守望归途。']
 ]){
@@ -71,18 +103,17 @@ for(const [id,name,description] of [
     license:{type:'CC BY-NC-SA 4.0',desc:'非商业使用；转载保留署名，修改版采用相同许可。完整来源与条款随包附带。'}};
   write(path.join(dest,'ysm.json'),JSON.stringify(json,null,2)+'\n');
   write(path.join(dest,'README.md'),`# ${name} · YSM ${version}\n\n${description}\n\n`+instructions);
+  write(path.join(dest,'README.en.md'),english);
   const credits=`# ${name} · 来源与署名
 
 ## 角色模型
 
 原 Wine Fox / 酒狐角色与模型：TartaricAcid / 酒石酸菌及 Touhou Little Maid 模型包贡献者。
-赤月大正酒狐 1.2.3 来源适配：Blade Tetra contributors。
-项目改造：契约之刃（Contract Blade）；赤月粉白造型、黑白狐配色与三尾、服装细化和玩家动作适配。
+项目改造：契约之刃（Contract Blade）；黑白狐配色与三尾、服装细化和玩家动作适配。
 上游来源：https://github.com/TartaricAcid/TouhouLittleMaid
 
 此前改造包括人形及狐形配色、三尾、服装与饰件贴合、移除月冠，以及贴图整理。本 YSM 版本仅使用人形；保留当前外观，增加玩家状态、第一人称手臂及走跑尾巴跟随。没有附带女仆、Boss 逻辑或战斗音乐。
-${id==='contract_akatsuki'?'1.1.0 外观更新：酒红立体叠裙、暖粉白内褶裙、加厚金白包边、赤金结饰及贴合衣料的垂绳；奶白上衣保留原设计。粉白发尾、脸、袜鞋及旋转尾巴飞行动作保留。':'1.1.0 合集打包：黑白狐外观与动作保持上一发布版不变。'}
-${id==='contract_akatsuki'?'赤月改造版本的 CC BY-NC-SA 4.0 发布许可由本项目角色包提供者确认；原始来源与署名继续保留。':'黑白狐来源包附带 CC BY-NC-SA 4.0 许可；本次衍生继续遵守该许可。'}
+黑白狐来源包附带 CC BY-NC-SA 4.0 许可；本次衍生继续遵守该许可。
 
 ## YSM 基础动作（CC0）
 
@@ -106,8 +137,9 @@ YSM 项目与文档：https://yesstevemodel.github.io/
 `;
   write(path.join(dest,'CREDITS.md'),credits);
   fs.copyFileSync(path.join(source,'LICENSE-CC-BY-NC-SA-4.0.txt'),path.join(dest,'LICENSE-CC-BY-NC-SA-4.0.txt'));
-  rows.push({id,name,version,resources:resources.length,files:[...resources,'ysm.json','README.md','CREDITS.md','LICENSE-CC-BY-NC-SA-4.0.txt']});
+  rows.push({id,name,version,resources:resources.length,files:[...resources,'ysm.json','README.md','README.en.md','CREDITS.md','LICENSE-CC-BY-NC-SA-4.0.txt']});
 }
-write(path.join(output,'README.md'),`# 三狐 YSM 模型 · ${version}\n\n合集 ZIP 需要先解压，再将里面的三个角色 ZIP 放入 config/yes_steve_model/custom；不要把合集 ZIP 整体放进去。每个角色 ZIP 是可单独安装的模型，也可同时安装三款。重启后即可选择。详细安装与许可说明位于各包 README.md 和 CREDITS.md。\n\n`+instructions);
-write(path.join(root,'tmp/ysm-release-manifest.json'),JSON.stringify(rows,null,2));
+write(path.join(output,'README.md'),`# 黑白狐 YSM 模型 · ${version}\n\n合集 ZIP 需要先解压，再将里面的两个角色 ZIP 放入 config/yes_steve_model/custom；不要把合集 ZIP 整体放进去。每个角色 ZIP 是可单独安装的模型，也可同时安装两款。重启后即可选择。详细安装与许可说明位于各包 README.md 和 CREDITS.md。\n\n`+instructions);
+write(path.join(output,'README.en.md'),english);
+write(path.join(output,'release-manifest.json'),JSON.stringify(rows,null,2));
 console.log(JSON.stringify(rows.map(({files,...row})=>row),null,2));

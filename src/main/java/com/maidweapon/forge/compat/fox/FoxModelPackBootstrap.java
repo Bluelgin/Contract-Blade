@@ -67,10 +67,6 @@ public final class FoxModelPackBootstrap {
             LogUtils.getLogger().warn("[MaidWeapon] Existing managed fox pack was not overwritten; inspect it if models are missing");
             return;
         }
-        if (com.maidweapon.forge.compat.tlm.AkatsukiModelPackBootstrap.hasUnmanagedPack(directory, upgrade ? target : null)) {
-            LogUtils.getLogger().warn("[MaidWeapon] Custom Akatsuki pack found; shared fox page installation skipped to preserve it");
-            return;
-        }
         Path temporary = Files.createTempFile(directory, ".contract-fox-", ".tmp");
         try (var source = FoxModelPackBootstrap.class.getResourceAsStream(RESOURCE)) {
             if (source == null) throw new IOException("Missing bundled fox model archive");
@@ -105,7 +101,9 @@ public final class FoxModelPackBootstrap {
                     "9f0dabf01a62e9d64a7ea3a272dfe5bc4dfb89fdb6b967c2865a70442a9a8bf0",
                     "49807e70c4eddb95321a8b1ada8fbfa9d6be6eb43c8a7d991744055fa3bd4bd4",
                     "cf1b17abe896e83d20987858e28d41f2cb3c55a1024d0a4126880ba03098d732",
-                    "8c713434e70c14869164a67f2634c3de764800dd3b1248daaaf93e4906abbf8d")
+                    "8c713434e70c14869164a67f2634c3de764800dd3b1248daaaf93e4906abbf8d",
+                    "c66d9de40369de9b52b54bd7836757f33d169cbdfa06212760fa5f309c63c24d",
+                    "1d00d56b59c3f96deef08a6c53461f3d4c1ecf25ba5c95778f187113082ede21")
                     .contains(java.util.HexFormat.of().formatHex(
                     java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path))));
         } catch (java.security.NoSuchAlgorithmException impossible) {

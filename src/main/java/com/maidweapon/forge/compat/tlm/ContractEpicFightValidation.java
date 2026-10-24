@@ -54,13 +54,13 @@ public final class ContractEpicFightValidation {
                 ItemStack weapon = new ItemStack(item);
                 weapon.getOrCreateTag().putString("FixturePreserved", "contract data");
                 TlmEntityAdapter.switchTask(maid, "touhou_little_maid:idle");
-                MaidCareTaskSystem.rememberOriginalTask(weapon, maid);
                 TripleMagicCompat.equipPhantoms(player, maid, weapon);
                 check(TripleMagicCompat.isPhantom(maid.getMainHandItem()), "existing equipment projection reused");
                 check(EpicFightCompat.isMeleeWeapon(weapon), "melee capability: " + item);
                 check(EpicFightCompat.usesMaidFightTask(weapon, maid), "actual attack motions: " + item);
                 ContractCombatTaskRouter.configure(player, weapon, maid);
-                check(EpicFightCompat.FIGHT_TASK.equals(TlmEntityAdapter.taskId(maid)), "auto fight task: " + item);
+                check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "manual work is not overridden: " + item);
+                TlmEntityAdapter.switchTask(maid, EpicFightCompat.FIGHT_TASK);
                 ContractCombatTaskRouter.configure(player, weapon, maid);
                 check(EpicFightCompat.FIGHT_TASK.equals(TlmEntityAdapter.taskId(maid)), "stable repeated routing");
                 for (int tick = 0; tick < 200; tick++) {
@@ -80,7 +80,7 @@ public final class ContractEpicFightValidation {
                 check(EpicFightCompat.FIGHT_TASK.equals(TlmEntityAdapter.taskId(maid)), "temporary empty hand cannot reset combat mode");
                 maid.setItemSlot(EquipmentSlot.MAINHAND, deployedHand);
                 ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
-                check("touhou_little_maid:idle".equals(TlmEntityAdapter.taskId(maid)), "original task restored");
+                check(EpicFightCompat.FIGHT_TASK.equals(TlmEntityAdapter.taskId(maid)), "manual task retained; original task restored only for legacy snapshots");
                 check(ItemStack.isSameItemSameTags(original, maid.getMainHandItem()), "original equipment restored");
                 check("contract data".equals(weapon.getTag().getString("FixturePreserved")), "source data preserved");
                 check(!EpicFightCompat.usesMaidFightTask(weapon, maid), "recall clears the session selection");
@@ -92,7 +92,7 @@ public final class ContractEpicFightValidation {
             maid.setItemSlot(EquipmentSlot.MAINHAND, unsupported.copy());
             check(!EpicFightCompat.usesMaidFightTask(unsupported, maid), "unsupported tool excluded");
             ContractCombatTaskRouter.configure(player, unsupported, maid);
-            check(MaidCareTaskSystem.ATTACK_TASK.equals(TlmEntityAdapter.taskId(maid)), "ordinary fallback");
+            check(EpicFightCompat.FIGHT_TASK.equals(TlmEntityAdapter.taskId(maid)), "ordinary fallback never overrides manual work");
         } finally {
             maid.discard();
         }

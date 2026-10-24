@@ -13,14 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--gradle', default='gradle')
 parser.add_argument('--offline', action='store_true')
+parser.add_argument('--init-script', action='append', default=[], help='Optional local Gradle dependency resolver; repeatable')
 parser.add_argument('--output', type=Path, help='New disposable fixture directory')
 parser.add_argument('--compat', choices=['vanilla','slashblade'], default='slashblade')
-parser.add_argument('--fixture', choices=['projection','companion','resonance','recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider'])
+parser.add_argument('--fixture', choices=['projection','companion','resonance','recovery','rebirth','fox','shrine','sword','blessing','white-se','architecture','akatsuki-domain','akatsuki-provider','boss-defense'])
 args = parser.parse_args()
 root = args.output or Path(tempfile.mkdtemp(prefix='contract-stage-three-'))
 root.mkdir(parents=True, exist_ok=True)
 print(f'Disposable fixtures: {root}', flush=True)
 fixtures = [
+    ('boss-defense', ['-PblackFoxTest=true', '-PblackFoxDefenseTest=true'], ['BLACK_FOX_DEFENSE_PASS']),
     ('projection', ['-PprojectionTest=true'], ['PROJECTION_VALIDATION_PASS']),
     ('companion', ['-PcompanionTest=true'], ['COMPANION_VALIDATION_PASS']),
     ('resonance', ['-PresonanceTest=true'], ['CONTRACT_RESONANCE_PASS']),
@@ -48,13 +50,15 @@ for name, flags, markers in fixtures:
            f'-PcompatTest={args.compat}',f'-PcompatRunDir={directory}',*flags]
     if args.offline:
         cmd.append('--offline')
+    for script in args.init_script:
+        cmd.extend(['-I', str(Path(script).resolve())])
     log = root / f'{name}.log'
     try:
         with log.open('w') as output:
             result = subprocess.run(cmd,cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
-        content = log.read_text()
+        content = log.read_text(encoding='utf-8', errors='replace')
         runtime_log = directory / 'logs' / 'latest.log'
-        if runtime_log.exists(): content += '\n' + runtime_log.read_text()
+        if runtime_log.exists(): content += '\n' + runtime_log.read_text(encoding='utf-8', errors='replace')
         missing = [marker for marker in markers if marker not in content]
         if result.returncode or missing or '_FAIL' in content:
             failed.append(name); print(f'{name}: FAIL missing={missing}; {log}',flush=True)
@@ -64,8 +68,8 @@ for name, flags, markers in fixtures:
                 restart_log = root / f'{name}-restart.log'
                 with restart_log.open('w') as output:
                     resumed = subprocess.run([*cmd, '-PresonanceResume=true' if name == 'resonance' else '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true' if name == 'blessing' else '-PakatsukiDomainResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
-                resumed_text = restart_log.read_text()
-                if runtime_log.exists(): resumed_text += '\n' + runtime_log.read_text()
+                resumed_text = restart_log.read_text(encoding='utf-8', errors='replace')
+                if runtime_log.exists(): resumed_text += '\n' + runtime_log.read_text(encoding='utf-8', errors='replace')
                 if resumed.returncode or ('CONTRACT_RESONANCE_RESTART_PASS' if name == 'resonance' else 'CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS' if name == 'blessing' else 'AKATSUKI_RESCUE_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
                     failed.append(f'{name}-restart');print(f'{name}-restart: FAIL; {restart_log}',flush=True)
                 else:

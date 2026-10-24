@@ -176,8 +176,13 @@ if "if (!hungry) return false;" not in care:
 if "return switchIfNeeded(maid, FEED_TASK);" not in care:
     raise SystemExit("A failed feeding-task switch can still suppress weapon-specific combat")
 runtime = read("src/main/java/com/maidweapon/forge/system/deployment/ContractMaidRuntimeService.java")
-if "TripleMagicCompat.clearPhantoms(living, weapon)" not in runtime:
+if "ContractEquipmentCleanup.clear(player, living, weapon)" not in runtime:
     raise SystemExit("Recall can discard final-tick SlashBlade progress")
+cleanup = read("src/main/java/com/maidweapon/forge/compat/ContractEquipmentCleanup.java")
+if "TripleMagicCompat.clearPhantoms(maid, source)" not in cleanup:
+    raise SystemExit("Shared equipment cleanup no longer flushes SlashBlade progress")
+if cleanup.index("TaczCompat.clear(owner, maid, source)") > cleanup.index("TripleMagicCompat.clearPhantoms(maid, source)"):
+    raise SystemExit("Specialized hand projections must unwind before general equipment")
 
 magic = read("src/main/java/com/maidweapon/forge/compat/TripleMagicCompat.java")
 if 'private static final String MAID_SPELL = "touhou_little_maid_spell"' not in magic:

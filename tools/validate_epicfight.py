@@ -22,7 +22,7 @@ assert runtime.index("INTERIOR_LEVEL)) return;") < runtime.index("equipPhantoms(
 assert "ContractWorkPolicy.release(weapon, maid)" in runtime
 assert "if (!ContractWorkPolicy.combat(com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(maid))) return;" in router
 work = (java / "system/deployment/ContractWorkPolicy.java").read_text(encoding="utf-8")
-assert "mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get()" in work
+assert "AUTO_COMBAT.get()" not in work and 'return false;' in work
 care = (java / "system/MaidCareTaskSystem.java").read_text(encoding="utf-8")
 assert "onPlayerTick" not in care, "Care must not compete with deployment's combat task routing"
 assert "switchIfNeeded(maid, ATTACK_TASK)" not in care

@@ -24,7 +24,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = "maid_weapon")
 public final class AkatsukiModelValidation {
     private static final String ID = PresetSpiritModels.AKATSUKI;
-    private static final String MODEL = AkatsukiModelPackBootstrap.MODEL;
+    private static final String MODEL = "touhou_little_maid:hakurei_reimu";
 
     @SubscribeEvent
     public static void started(ServerStartedEvent event) {
@@ -38,27 +38,8 @@ public final class AkatsukiModelValidation {
     }
 
     private static void run(net.minecraft.server.MinecraftServer server) throws Exception {
-        check(PresetSpiritModels.isAvailable(MODEL), "native server loader registered bundled Akatsuki");
-        var directory = java.nio.file.Files.createTempDirectory(
-                net.minecraftforge.fml.loading.FMLPaths.GAMEDIR.get(), ".akatsuki-pack-fixture-");
-        var managed = directory.resolve("contract-akatsuki-1.0.0.zip");
-        AkatsukiModelPackBootstrap.install(directory);
-        byte[] original = java.nio.file.Files.readAllBytes(managed);
-        AkatsukiModelPackBootstrap.install(directory);
-        check(java.util.Arrays.equals(original, java.nio.file.Files.readAllBytes(managed)), "repeated install preserves pack");
-        var supplied = directory.resolve("custom-akatsuki.zip");
-        java.nio.file.Files.move(managed, supplied);
-        AkatsukiModelPackBootstrap.install(directory);
-        check(!java.nio.file.Files.exists(managed), "user-supplied same-ID archive wins without duplicate installation");
-        var editedDirectory = java.nio.file.Files.createTempDirectory(directory, "edited-");
-        var edited = editedDirectory.resolve("contract-akatsuki-1.0.0.zip");
-        java.nio.file.Files.copy(supplied, edited);
-        try (var zip = java.nio.file.FileSystems.newFileSystem(edited)) {
-            java.nio.file.Files.delete(zip.getPath("/assets/akatsuki_winefox/maid_model.json"));
-        }
-        byte[] editedBytes = java.nio.file.Files.readAllBytes(edited);
-        AkatsukiModelPackBootstrap.install(editedDirectory);
-        check(java.util.Arrays.equals(editedBytes, java.nio.file.Files.readAllBytes(edited)), "unknown edited managed archive is never replaced");
+        check(PresetSpiritModels.modelFor(ID).isEmpty(), "awakening does not assign an unfinished model");
+        check(!PresetSpiritModels.isAvailable(AkatsukiModelPackBootstrap.MODEL), "unfinished model is not bundled");
 
         ServerPlayer owner = FakePlayerFactory.get(server.overworld(), new GameProfile(
                 java.util.UUID.fromString("e2364878-32b8-468c-a759-b0dc6db84a15"), "AkatsukiModelFixture"));
@@ -69,7 +50,7 @@ public final class AkatsukiModelValidation {
         ItemStack blade = new ItemStack(Items.IRON_SWORD);
         try {
             check((Boolean) provider.invoke(null, owner, blade, true), "real BladeTetra bridge creates and selects Akatsuki");
-            check(MODEL.equals(model(blade)), "fresh awakened contract selects pink-white Akatsuki");
+            check(MODEL.equals(model(blade)), "fresh awakened contract retains native maid appearance");
             String maidId = ContractCarrierData.getBoundMaidUUID(blade);
             String bindingId = ContractCarrierData.getBindingId(blade);
             owner.getInventory().selected = 0; owner.getInventory().setItem(0, blade);
@@ -79,13 +60,7 @@ public final class AkatsukiModelValidation {
                     "100 provider syncs neither rewrite the complete contract nor auto-spawn a maid");
             ContractCompanionService.toggle(owner);
             maid = server.overworld().getEntity(java.util.UUID.fromString(maidId));
-            check(maid != null && MODEL.equals(maid.getClass().getMethod("getModelId").invoke(maid)), "manual manifest uses native Akatsuki model");
-            maid.getClass().getMethod("setModelId", String.class).invoke(maid, "maid_weapon:akatsuki");
-            unmark(blade);
-            check((Boolean) provider.invoke(null, owner, blade, true)
-                            && server.overworld().getEntity(maid.getUUID()) == maid
-                            && MODEL.equals(maid.getClass().getMethod("getModelId").invoke(maid)),
-                    "live legacy default migrates in place without recall or replacement");
+            check(maid != null && MODEL.equals(maid.getClass().getMethod("getModelId").invoke(maid)), "manual manifest uses native maid appearance");
             check(IntrinsicSpiritApi.setIntrinsicSpiritModel(owner, blade, ID, FoxModelPackBootstrap.WHITE_MODEL), "owner can change live skin");
             unmark(blade);
             check((Boolean) provider.invoke(null, owner, blade, true)
@@ -98,10 +73,10 @@ public final class AkatsukiModelValidation {
                     "completed one-time migration preserves subsequent player selection of the native default");
             check(InfusedMaidDeploymentSystem.forceRecall(owner, maidId, 0), "native recall retains spirit identity");
             maid = null;
-            check(IntrinsicSpiritApi.setIntrinsicSpiritModel(owner, blade, ID, "maid_weapon:akatsuki"), "fixture emulates saved legacy skin");
+            check(IntrinsicSpiritApi.setIntrinsicSpiritModel(owner, blade, ID, "touhou_little_maid:hakurei_reimu"), "fixture emulates saved legacy skin");
             unmark(blade);
             check((Boolean) provider.invoke(null, owner, blade, false), "provider can select dormant intrinsic channel");
-            check(MODEL.equals(archivedModel(blade)), "dormant Akatsuki migrates without manifesting");
+            check(MODEL.equals(archivedModel(blade)), "dormant channel retains native appearance without manifesting");
             check((Boolean) provider.invoke(null, owner, blade, true)
                             && maidId.equals(ContractCarrierData.getBoundMaidUUID(blade))
                             && bindingId.equals(ContractCarrierData.getBindingId(blade)), "channel round trip retains original UUID and binding");
@@ -116,16 +91,16 @@ public final class AkatsukiModelValidation {
             var external = new ItemStack(Items.DIAMOND_SWORD);
             check(EmbeddedSpiritApi.bindPresetSpirit(owner, external, "fixture:external", "External"), "fixture creates independent external contract");
             CompoundTag externalBefore = com.maidweapon.forge.system.contract.ContractChannelStorage.captureContract(external);
-            check((Boolean) provider.invoke(null, owner, external, true) && MODEL.equals(model(external)), "Akatsuki may coexist with an external weapon contract");
+            check((Boolean) provider.invoke(null, owner, external, true) && MODEL.equals(model(external)), "Akatsuki may coexist with an external weapon contract without selecting a custom model");
             check((Boolean) provider.invoke(null, owner, external, false)
                             && externalBefore.equals(com.maidweapon.forge.system.contract.ContractChannelStorage.captureContract(external)),
                     "external contract model and complete payload remain byte-identical after channel round trip");
 
             var legacy = new ItemStack(Items.GOLDEN_SWORD);
             check(EmbeddedSpiritApi.bindPresetSpirit(owner, legacy, ID, "赤月"), "legacy preset API still works");
-            var data = MaidEntityDataCodec.read(legacy.getTag()); data.putString("ModelId", "maid_weapon:akatsuki");
+            var data = MaidEntityDataCodec.read(legacy.getTag()); data.putString("ModelId", FoxModelPackBootstrap.WHITE_MODEL);
             MaidEntityDataCodec.write(legacy.getTag(), data);
-            check((Boolean) provider.invoke(null, owner, legacy, true) && MODEL.equals(model(legacy)), "legacy embedded channel migrates to matching Akatsuki skin");
+            check((Boolean) provider.invoke(null, owner, legacy, true) && FoxModelPackBootstrap.WHITE_MODEL.equals(model(legacy)), "legacy embedded channel retains its existing custom appearance");
             check(PresetSpiritModels.modelFor("fixture:external").isEmpty(), "unrelated preset identities have no Akatsuki default");
         } finally {
             if (maid != null && !maid.isRemoved()) maid.discard();

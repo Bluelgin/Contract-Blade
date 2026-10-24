@@ -6,8 +6,10 @@ $taskWorld = Join-Path $taskRoot 'run/fox-minimal-dialogue-standalone-20261011'
 if (-not (Test-Path -LiteralPath (Join-Path $taskWorld 'level.dat'))) { throw 'Missing isolated fixture world.' }
 New-Item -ItemType Directory -Path (Join-Path $taskSmoke 'mods') -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $taskSmoke 'saves') -Force | Out-Null
-Get-ChildItem -LiteralPath (Join-Path $taskGame 'mods') -Filter '*.jar' | Copy-Item -Destination (Join-Path $taskSmoke 'mods')
-Copy-Item -LiteralPath (Join-Path $taskRoot 'build/libs/contract-blade-forge-1.20.1-1.1.1.jar') -Destination (Join-Path $taskSmoke 'mods/contract-blade-forge-1.20.1-1.1.1.jar') -Force
+$taskVersion = ((Get-Content -LiteralPath (Join-Path $taskRoot 'gradle.properties') | Where-Object { $_ -match '^mod_version=' }) -replace '^mod_version=', '').Trim()
+if (-not $taskVersion -or $taskVersion -match '[\\/]') { throw 'Invalid project version.' }
+Get-ChildItem -LiteralPath (Join-Path $taskGame 'mods') -Filter '*.jar' | Where-Object { $_.Name -notlike 'contract-blade-forge-*.jar' } | Copy-Item -Destination (Join-Path $taskSmoke 'mods')
+Copy-Item -LiteralPath (Join-Path $taskRoot "build/libs/contract-blade-forge-1.20.1-$taskVersion.jar") -Destination (Join-Path $taskSmoke 'mods')
 Copy-Item -LiteralPath $taskWorld -Destination (Join-Path $taskSmoke 'saves/PhantomSmoke') -Recurse
 & node (Join-Path $taskRoot 'tools/ysm/confirm-phantom-smoke.cjs') (Join-Path $taskSmoke 'saves/PhantomSmoke/level.dat')
 if ($LASTEXITCODE -ne 0) { throw 'Fixture preparation failed.' }

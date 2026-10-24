@@ -1,0 +1,14 @@
+{
+  "default_model": {
+    "source": "Yes Steve Model 2.6.5 bundled default/ysm.json",
+    "license": "CC0",
+    "authors": [
+      { "name": "哥斯拉", "role": "模型" },
+      { "name": "端木一动不动", "role": "动画" },
+      { "name": "甜粽子", "role": "动画" },
+      { "name": "星屑海螺", "role": "动画" },
+      { "name": "蓝玫瑰", "role": "材质/模型" },
+      { "name": "艾雷克亚", "role": "铁魔法动画" }
+    ]
+  }
+}

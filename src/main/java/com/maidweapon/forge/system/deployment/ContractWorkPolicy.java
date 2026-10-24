@@ -5,19 +5,22 @@ import com.maidweapon.forge.system.MaidCareTaskSystem;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
-/** Automatic work is a borrowed setting, never authority over a manually configured maid. */
+/** Projection grants equipment only. Work and schedule remain the player's choices. */
 public final class ContractWorkPolicy {
     public static boolean combat(ContractProjectionMode mode) {
-        return mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_COMBAT.get();
+        return false;
     }
     public static boolean feeding(ContractProjectionMode mode) {
-        return mode.weapon() && com.maidweapon.common.ContractRulesConfig.AUTO_FEED.get()
-                && com.maidweapon.common.MaidWeaponConfig.ENABLE_SAFE_FEEDING.get();
+        return false;
     }
     public static boolean automatic(ContractProjectionMode mode) { return combat(mode) || feeding(mode); }
     public static void prepare(ItemStack carrier, Entity maid, ContractProjectionMode mode) {
-        if (automatic(mode)) MaidCareTaskSystem.rememberOriginalTask(carrier, maid);
-        else release(carrier, maid);
+        // Restore a pre-1.2 borrowed task/schedule once, then clear its snapshot.
+        // Subsequent ticks must not overwrite a new manual task selection.
+        if (carrier.getTag() != null && (carrier.getTag().contains(MaidCareTaskSystem.ORIGINAL_TASK_TAG)
+                || carrier.getTag().contains(MaidCareTaskSystem.ORIGINAL_SCHEDULE_TAG))) {
+            release(carrier, maid);
+        }
     }
 
     public static void release(ItemStack carrier, Entity maid) {

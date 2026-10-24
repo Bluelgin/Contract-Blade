@@ -23,8 +23,6 @@ import java.util.function.Consumer;
 
 import com.maidweapon.common.data.MaidWeaponData;
 import com.maidweapon.forge.api.event.ContractMaidCapturedEvent;
-import com.maidweapon.forge.compat.TaczCompat;
-import com.maidweapon.forge.compat.TripleMagicCompat;
 import com.maidweapon.forge.item.MaidInfusion;
 import com.maidweapon.forge.system.MaidAttentionSystem;
 import com.maidweapon.forge.system.MaidCareTaskSystem;
@@ -186,8 +184,8 @@ public final class ContractMaidLifecycleService {
             entity.getPersistentData().putString(ContractMaidKeys.ENTITY_BINDING_ID, weaponBinding);
             MaidCareTaskSystem.restoreOriginalTask(weaponStack, entity);
             if (entity instanceof LivingEntity living) {
-                TripleMagicCompat.clearPhantoms(living, weaponStack);
-                TaczCompat.clear(player, living, weaponStack);
+                TlmMealLifecycle.prepareForStorage(living);
+                com.maidweapon.forge.compat.ContractEquipmentCleanup.clear(player, living, weaponStack);
             }
             CompoundTag maidEntityTag = TlmEntityAdapter.save(entity);
             if (!maidEntityTag.hasUUID("Owner") || !player.getUUID().equals(maidEntityTag.getUUID("Owner"))
