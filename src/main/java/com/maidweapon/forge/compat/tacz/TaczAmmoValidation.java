@@ -63,6 +63,21 @@ public final class TaczAmmoValidation {
         check(!ContractProjectionIdentity.isProjection(gun), "real gun identity retained");
         owner.setStackInSlot(0, projection);
         check(first.getStackInSlot(0).isEmpty(), "projection cannot be its own supply");
+        var player = net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(
+                (net.minecraft.server.level.ServerLevel) maid.level());
+        var container = new net.minecraft.world.SimpleContainer(27);
+        container.setItem(0, projection);
+        var menu = net.minecraft.world.inventory.ChestMenu.threeRows(99, player.getInventory(), container);
+        for (var click : new net.minecraft.world.inventory.ClickType[]{
+                net.minecraft.world.inventory.ClickType.PICKUP,
+                net.minecraft.world.inventory.ClickType.QUICK_MOVE,
+                net.minecraft.world.inventory.ClickType.SWAP,
+                net.minecraft.world.inventory.ClickType.THROW,
+                net.minecraft.world.inventory.ClickType.CLONE,
+                net.minecraft.world.inventory.ClickType.QUICK_CRAFT}) {
+            menu.clicked(0, 0, click, player);
+            check(container.getItem(0) == projection && menu.getCarried().isEmpty(), "menu blocks " + click);
+        }
         com.mojang.logging.LogUtils.getLogger().info("[MaidWeapon] TACZ_AMMO_VALIDATION_PASS");
     }
     private static ItemStack rounds(ResourceLocation id, int count) {

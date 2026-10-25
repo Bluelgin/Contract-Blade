@@ -90,7 +90,16 @@ public final class TaczLoadedCompat {
         }
 
         if (TaczCompat.isProjection(maid.getMainHandItem())) {
-            maid.getMainHandItem().getOrCreateTag().putUUID("MaidWeaponProjectionMaid", maid.getUUID());
+            ItemStack active = maid.getMainHandItem();
+            CompoundTag activeTag = active.getOrCreateTag();
+            activeTag.putUUID("MaidWeaponProjectionMaid", maid.getUUID());
+            IGun nativeGun = IGun.getIGunOrNull(source);
+            // Repair already-saved projections too, without replacing their live magazine.
+            if (nativeGun != null && !nativeGun.useDummyAmmo(source)) activeTag.remove("DummyAmmo");
+            if (!activeTag.getBoolean(TaczAmmoAccounting.TRACKED)) {
+                activeTag.putBoolean(TaczAmmoAccounting.TRACKED, true);
+                activeTag.putInt(TaczAmmoAccounting.PAID, TaczAmmoAccounting.loaded(active));
+            }
         }
         source.getOrCreateTag().remove(LINK_FAILURE_TAG);
         return true;
