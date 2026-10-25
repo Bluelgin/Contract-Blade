@@ -14,7 +14,11 @@
     "DamageObservationMixin",
     "DamageObservationForgeMixin",
     "SoulCarrierChangeMixin",
-    "SoulNativePlayerAttackMixin"
+    "SoulNativePlayerAttackMixin",
+    "ContractProjectionMenuMixin",
+    "ContractProjectionSlotMixin",
+    "ContractProjectionEquipmentMixin",
+    "ContractProjectionBackpackMixin"
   ],
   "injectors": {
     "defaultRequire": 1

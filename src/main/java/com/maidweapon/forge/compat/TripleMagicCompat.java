@@ -210,7 +210,7 @@ public final class TripleMagicCompat {
         return copy;
     }
     public static boolean isPhantom(ItemStack stack) {
-        return !stack.isEmpty() && stack.getTag() != null && stack.getTag().getBoolean(PHANTOM_TAG);
+        return ContractProjectionIdentity.isProjection(stack);
     }
     public static ItemStack projectionAccessory(Player owner, ItemStack source) {
         return usesMaidSpellTask(source) ? equippedMagicAccessory(owner) : ItemStack.EMPTY;

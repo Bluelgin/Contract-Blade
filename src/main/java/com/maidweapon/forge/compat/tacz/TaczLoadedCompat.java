@@ -37,13 +37,11 @@ import java.util.UUID;
 
 /** Loaded only when TACZ is present. */
 public final class TaczLoadedCompat {
-    static final String LAST_REPORTED_TAG = "MaidWeaponTaczLastReported";
     private static final String LINK_OWNER_TAG = "MaidWeaponTaczLinkOwner";
     private static final String LINK_MAID_TAG = "MaidWeaponTaczLinkMaid";
     private static final String LINK_BINDING_TAG = "MaidWeaponTaczLinkBinding";
     private static final String ORIGINAL_HAND_TAG = "MaidWeaponTaczOriginalHand";
     private static final String LINK_FAILURE_TAG = "MaidInfusionTaczAmmoLinkFailure";
-    private static final int MAX_REPORTED_AMMO = 1_000_000;
     private static final double MAX_LINK_DISTANCE_SQR = 64.0 * 64.0;
 
     private static final DeferredRegister<Item> ITEMS =
@@ -72,15 +70,21 @@ public final class TaczLoadedCompat {
         maid.getPersistentData().putUUID(TaczCompat.ENTITY_OWNER_TAG, owner.getUUID());
         maid.getPersistentData().putString(TaczCompat.ENTITY_BINDING_TAG, binding);
 
+        if (!maid.getPersistentData().getBoolean("MaidWeaponTaczLinksRetired")) {
+            removeLinks(maid);
+            maid.getPersistentData().putBoolean("MaidWeaponTaczLinksRetired", true);
+        }
+        migrateNestedSnapshot(maid);
         ItemStack current = maid.getMainHandItem();
         if (!isMatchingProjection(current, owner.getUUID(), binding)) {
             // A real item supplied during projection belongs to the player, not to this adapter.
-            if (!current.isEmpty() && !TaczCompat.isProjection(current)
-                    && !com.maidweapon.forge.compat.TripleMagicCompat.isPhantom(current)) return false;
+            if (maid.getPersistentData().contains(ORIGINAL_HAND_TAG)
+                    && !current.isEmpty()
+                    && !com.maidweapon.forge.compat.ContractProjectionIdentity.isProjection(current)) return false;
             // TLM temporarily swaps food into the hand while feeding. Do not
             // overwrite that stack; it restores the projected gun afterwards.
             if (!current.isEmpty() && maid.isUsingItem()) {
-                return ensureLink(owner, maid, source, binding);
+                return true;
             }
             rememberOriginalHand(maid, current);
             ItemStack projection = createProjection(source, owner.getUUID(), binding);
@@ -90,20 +94,14 @@ public final class TaczLoadedCompat {
             }
         }
 
-        boolean linked = ensureLink(owner, maid, source, binding);
-        if (linked) {
-            source.getOrCreateTag().remove(LINK_FAILURE_TAG);
-        } else if (!source.getOrCreateTag().getBoolean(LINK_FAILURE_TAG)) {
-            source.getOrCreateTag().putBoolean(LINK_FAILURE_TAG, true);
-            owner.displayClientMessage(net.minecraft.network.chat.Component.translatable(
-                    "maid_weapon.message.tacz_link_full"), true);
-        }
-        return linked;
+        source.getOrCreateTag().remove(LINK_FAILURE_TAG);
+        return true;
     }
 
     public static void clear(Player owner, LivingEntity maid, ItemStack source) {
         if (owner.level().isClientSide) return;
         if (maid.isUsingItem() && maid.getUseItem().isEdible()) return;
+        migrateNestedSnapshot(maid);
         ItemStack projection = maid.getMainHandItem();
         if (TaczCompat.isProjection(projection)) {
             refundProjectionAmmo(owner, projection);
@@ -129,44 +127,43 @@ public final class TaczLoadedCompat {
         }
     }
 
-    static LinkContext resolve(ItemStack link) {
-        if (!isLink(link) || link.getTag() == null
-                || !link.getTag().hasUUID(LINK_OWNER_TAG)
-                || !link.getTag().hasUUID(LINK_MAID_TAG)) return null;
-
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        if (server == null) return null;
-        UUID ownerId = link.getTag().getUUID(LINK_OWNER_TAG);
-        UUID maidId = link.getTag().getUUID(LINK_MAID_TAG);
-        String binding = link.getTag().getString(LINK_BINDING_TAG);
-        ServerPlayer owner = server.getPlayerList().getPlayer(ownerId);
-        if (owner == null || binding.isEmpty()) return null;
-
-        Entity found = null;
-        for (var level : server.getAllLevels()) {
-            found = level.getEntity(maidId);
-            if (found != null) break;
-        }
-        if (!(found instanceof LivingEntity maid)
-                || maid.level() != owner.level()
+    /** Fresh server-side authority check; never retain an inventory count or link token. */
+    static LinkContext resolve(LivingEntity maid) {
+        if (maid.level().isClientSide || maid.getServer() == null
+                || !maid.getServer().isSameThread()
+                || !com.maidweapon.forge.compat.tlm.TlmEntityAdapter.isMaidEntity(maid)
+                || !maid.isAlive()) return null;
+        CompoundTag data = maid.getPersistentData();
+        if (!data.hasUUID(TaczCompat.ENTITY_OWNER_TAG)) return null;
+        UUID ownerId = data.getUUID(TaczCompat.ENTITY_OWNER_TAG);
+        String binding = data.getString(TaczCompat.ENTITY_BINDING_TAG);
+        ServerPlayer owner = maid.getServer().getPlayerList().getPlayer(ownerId);
+        if (owner == null || binding.isEmpty() || owner.level() != maid.level()
                 || maid.distanceToSqr(owner) > MAX_LINK_DISTANCE_SQR
-                || !maid.getPersistentData().hasUUID(TaczCompat.ENTITY_OWNER_TAG)
-                || !ownerId.equals(maid.getPersistentData().getUUID(
-                        TaczCompat.ENTITY_OWNER_TAG))
-                || !binding.equals(maid.getPersistentData().getString(
-                        TaczCompat.ENTITY_BINDING_TAG))
-                || !binding.equals(maid.getPersistentData().getString(
-                        TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID))) return null;
-
-        ItemStack source = InfusedMaidDeploymentSystem.findBoundWeapon(
-                owner, maid.getStringUUID());
+                || !com.maidweapon.forge.compat.tlm.TlmEntityAdapter.isOwnedMaid(maid, owner)
+                || !com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(maid).weapon()
+                || com.maidweapon.forge.compat.tlm.TlmResidenceAdapter.isResident(maid)
+                || maid.level().dimension().equals(
+                    com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
+                || !binding.equals(data.getString(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID))) return null;
+        ItemStack source = InfusedMaidDeploymentSystem.findBoundWeapon(owner, maid.getStringUUID());
         ItemStack gun = maid.getMainHandItem();
         if (source.isEmpty() || !ContractCarrierData.isOwner(source, owner)
                 || !binding.equals(ContractCarrierData.getBindingId(source))
-                || !isGun(source) || !isMatchingProjection(gun, ownerId, binding)) {
-            return null;
-        }
+                || !isGun(source) || !isMatchingProjection(gun, ownerId, binding)
+                || !sameGun(source, gun)) return null;
         return new LinkContext(owner, maid, source, gun);
+    }
+
+    public static net.minecraftforge.common.util.LazyOptional<IItemHandler> ammoView(
+            LivingEntity shooter, net.minecraftforge.common.util.LazyOptional<IItemHandler> nativeInventory) {
+        LinkContext context = resolve(shooter);
+        if (context == null) return nativeInventory;
+        IItemHandler own = context.owner().getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(null);
+        IItemHandler fallback = nativeInventory.orElse(null);
+        if (own == null || fallback == null) return nativeInventory;
+        return net.minecraftforge.common.util.LazyOptional.of(
+                () -> new TaczPriorityAmmoHandler(own, fallback, shooter));
     }
 
     static net.minecraft.resources.ResourceLocation ammoId(ItemStack gun) {
@@ -182,106 +179,6 @@ public final class TaczLoadedCompat {
         IGun right = IGun.getIGunOrNull(actual);
         return left != null && right != null
                 && left.getGunId(expected).equals(right.getGunId(actual));
-    }
-
-    static int countOwnerAmmo(LinkContext context) {
-        if (context.owner().isCreative()) return MAX_REPORTED_AMMO;
-        return context.owner().getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .map(handler -> countAmmo(handler, context.gun()))
-                .orElse(0);
-    }
-
-    static int consumeOwnerAmmo(LinkContext context, int requested) {
-        if (requested <= 0) return 0;
-        if (context.owner().isCreative()) return requested;
-        int consumed = context.owner().getCapability(ForgeCapabilities.ITEM_HANDLER)
-                .map(handler -> consumeAmmo(handler, context.gun(), requested))
-                .orElse(0);
-        if (consumed > 0) context.owner().getInventory().setChanged();
-        return consumed;
-    }
-
-    private static int countAmmo(IItemHandler handler, ItemStack gun) {
-        long total = 0;
-        for (int i = 0; i < handler.getSlots(); i++) {
-            ItemStack candidate = handler.getStackInSlot(i);
-            if (candidate.isEmpty() || isLink(candidate)) continue;
-            if (candidate.getItem() instanceof IAmmo ammo
-                    && ammo.isAmmoOfGun(gun, candidate)) {
-                total += candidate.getCount();
-            } else if (candidate.getItem() instanceof IAmmoBox box
-                    && box.isAmmoBoxOfGun(gun, candidate)) {
-                if (box.isCreative(candidate)) return MAX_REPORTED_AMMO;
-                total += Math.max(0, box.getAmmoCount(candidate));
-            }
-            if (total >= MAX_REPORTED_AMMO) return MAX_REPORTED_AMMO;
-        }
-        return (int) total;
-    }
-
-    private static int consumeAmmo(IItemHandler handler, ItemStack gun, int requested) {
-        // A creative ammo box makes the whole linked supply infinite. Detect it
-        // before extracting loose rounds from any earlier inventory slot.
-        for (int i = 0; i < handler.getSlots(); i++) {
-            ItemStack candidate = handler.getStackInSlot(i);
-            if (candidate.isEmpty() || isLink(candidate)) continue;
-            if (candidate.getItem() instanceof IAmmoBox box
-                    && box.isAmmoBoxOfGun(gun, candidate)
-                    && box.isCreative(candidate)) {
-                return requested;
-            }
-        }
-
-        int remaining = requested;
-        for (int i = 0; i < handler.getSlots() && remaining > 0; i++) {
-            ItemStack candidate = handler.getStackInSlot(i);
-            if (candidate.isEmpty() || isLink(candidate)) continue;
-            if (candidate.getItem() instanceof IAmmo ammo
-                    && ammo.isAmmoOfGun(gun, candidate)) {
-                ItemStack extracted = handler.extractItem(i, remaining, false);
-                remaining -= extracted.getCount();
-                continue;
-            }
-            if (candidate.getItem() instanceof IAmmoBox box
-                    && box.isAmmoBoxOfGun(gun, candidate)) {
-                int available = Math.max(0, box.getAmmoCount(candidate));
-                int take = Math.min(available, remaining);
-                if (take <= 0) continue;
-                int left = available - take;
-                box.setAmmoCount(candidate, left);
-                if (left <= 0) box.setAmmoId(candidate, DefaultAssets.EMPTY_AMMO_ID);
-                if (handler instanceof IItemHandlerModifiable modifiable) {
-                    modifiable.setStackInSlot(i, candidate);
-                }
-                remaining -= take;
-            }
-        }
-        return requested - remaining;
-    }
-
-    private static boolean ensureLink(Player owner, LivingEntity maid,
-                                      ItemStack source, String binding) {
-        IItemHandlerModifiable inventory = maidInventory(maid);
-        if (inventory == null) return false;
-        int emptySlot = -1;
-        for (int i = inventory.getSlots() - 1; i >= 0; i--) {
-            ItemStack stack = inventory.getStackInSlot(i);
-            if (isLink(stack)) {
-                if (linkMatches(stack, owner.getUUID(), maid.getUUID(), binding)) return true;
-                inventory.setStackInSlot(i, ItemStack.EMPTY);
-            } else if (stack.isEmpty() && emptySlot < 0) {
-                emptySlot = i;
-            }
-        }
-        if (emptySlot < 0) return false;
-
-        ItemStack link = new ItemStack(AMMO_LINK.get());
-        CompoundTag tag = link.getOrCreateTag();
-        tag.putUUID(LINK_OWNER_TAG, owner.getUUID());
-        tag.putUUID(LINK_MAID_TAG, maid.getUUID());
-        tag.putString(LINK_BINDING_TAG, binding);
-        inventory.setStackInSlot(emptySlot, link);
-        return true;
     }
 
     private static void removeLinks(LivingEntity maid) {
@@ -313,6 +210,8 @@ public final class TaczLoadedCompat {
         tag.putUUID("MaidWeaponPhantomOwner", owner);
         tag.putString("MaidWeaponPhantomBinding", binding);
 
+        tag.putBoolean(TaczAmmoAccounting.TRACKED, true);
+        tag.putInt(TaczAmmoAccounting.PAID, 0);
         IGun gun = IGun.getIGunOrNull(copy);
         if (gun != null) {
             gun.setCurrentAmmoCount(copy, 0);
@@ -325,21 +224,43 @@ public final class TaczLoadedCompat {
     private static void refundProjectionAmmo(Player owner, ItemStack projection) {
         IGun gun = IGun.getIGunOrNull(projection);
         if (gun == null) return;
-        if (owner.isCreative()) {
-            gun.setCurrentAmmoCount(projection, 0);
-            gun.setBulletInBarrel(projection, false);
-            return;
+        var index = TimelessAPI.getCommonGunIndex(gun.getGunId(projection)).orElse(null);
+        int loaded = gun.getCurrentAmmoCount(projection) + (gun.hasBulletInBarrel(projection) ? 1 : 0);
+        int paid = Math.max(0, projection.getOrCreateTag().getInt(TaczAmmoAccounting.PAID));
+        // Unknown legacy loaded guns retain the old refund behavior. New projections are ledgered.
+        if (!projection.getOrCreateTag().getBoolean(TaczAmmoAccounting.TRACKED)) paid = loaded;
+        boolean refundable = index != null && !owner.isCreative() && !gun.useDummyAmmo(projection)
+                && !index.getGunData().getReloadData().isInfinite()
+                && index.getGunData().getReloadData().getType()
+                    != com.tacz.guns.resource.pojo.data.gun.FeedType.FUEL;
+        gun.setCurrentAmmoCount(projection, 0);
+        gun.setBulletInBarrel(projection, false);
+        projection.getOrCreateTag().putInt(TaczAmmoAccounting.PAID, 0);
+        int remaining = refundable ? Math.min(loaded, paid) : 0;
+        var id = ammoId(projection);
+        var ammo = TimelessAPI.getCommonAmmoIndex(id).orElse(null);
+        if (ammo == null || DefaultAssets.EMPTY_AMMO_ID.equals(id)) return;
+        while (remaining > 0) {
+            int count = Math.min(remaining, Math.max(1, ammo.getStackSize()));
+            ItemHandlerHelper.giveItemToPlayer(owner,
+                    AmmoItemBuilder.create().setId(id).setCount(count).build());
+            remaining -= count;
         }
+    }
 
-        boolean chambered = gun.hasBulletInBarrel(projection);
-        gun.dropAllAmmo(owner, projection);
-        if (chambered) {
-            var id = ammoId(projection);
-            if (!DefaultAssets.EMPTY_AMMO_ID.equals(id)) {
-                ItemStack round = AmmoItemBuilder.create().setId(id).setCount(1).build();
-                ItemHandlerHelper.giveItemToPlayer(owner, round);
-            }
-            gun.setBulletInBarrel(projection, false);
+    private static void migrateNestedSnapshot(LivingEntity maid) {
+        CompoundTag data = maid.getPersistentData();
+        if (!data.contains(ORIGINAL_HAND_TAG)) return;
+        ItemStack old = ItemStack.of(data.getCompound(ORIGINAL_HAND_TAG));
+        if (!com.maidweapon.forge.compat.ContractProjectionIdentity.isProjection(old)) return;
+        CompoundTag gear = data.getCompound("MaidWeaponProjectionGear");
+        if (gear.contains("mainhand")) {
+            data.put(ORIGINAL_HAND_TAG, gear.getCompound("mainhand").copy());
+            gear.remove("mainhand");
+            if (gear.isEmpty()) data.remove("MaidWeaponProjectionGear");
+            else data.put("MaidWeaponProjectionGear", gear);
+        } else {
+            data.put(ORIGINAL_HAND_TAG, ItemStack.EMPTY.save(new CompoundTag()));
         }
     }
 
@@ -371,16 +292,6 @@ public final class TaczLoadedCompat {
         return owner.equals(stack.getTag().getUUID("MaidWeaponPhantomOwner"))
                 && binding.equals(stack.getTag().getString("MaidWeaponPhantomBinding"))
                 && isGun(stack);
-    }
-
-    private static boolean linkMatches(ItemStack stack, UUID owner, UUID maid,
-                                       String binding) {
-        return stack.getTag() != null
-                && stack.getTag().hasUUID(LINK_OWNER_TAG)
-                && owner.equals(stack.getTag().getUUID(LINK_OWNER_TAG))
-                && stack.getTag().hasUUID(LINK_MAID_TAG)
-                && maid.equals(stack.getTag().getUUID(LINK_MAID_TAG))
-                && binding.equals(stack.getTag().getString(LINK_BINDING_TAG));
     }
 
     private static boolean isLink(ItemStack stack) {
