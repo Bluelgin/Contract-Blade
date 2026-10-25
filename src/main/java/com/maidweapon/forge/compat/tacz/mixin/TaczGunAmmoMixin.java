@@ -22,4 +22,10 @@ public abstract class TaczGunAmmoMixin {
             Operation<LazyOptional<IItemHandler>> original) {
         return TaczLoadedCompat.ammoView(shooter, original.call(shooter, capability, side));
     }
+    @WrapOperation(method = {"canReload", "hasInventoryAmmo"}, at = @At(value = "INVOKE",
+            target = "Lcom/tacz/guns/api/item/gun/AbstractGunItem;getDummyAmmoAmount(Lnet/minecraft/world/item/ItemStack;)I"))
+    private int contractblade$dummy(com.tacz.guns.api.item.gun.AbstractGunItem gun,
+            net.minecraft.world.item.ItemStack stack, Operation<Integer> original) {
+        return TaczLoadedCompat.availableDummy(stack, original.call(gun, stack));
+    }
 }

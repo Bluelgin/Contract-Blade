@@ -15,4 +15,10 @@ public abstract class TaczExtractAmmoMixin {
                                          CallbackInfoReturnable<Integer> result) {
         if (inventory instanceof TaczPriorityAmmoHandler priority) result.setReturnValue(priority.consume(gun, requested));
     }
+    @Inject(method = "findAndExtractDummyAmmo", at = @At("HEAD"), cancellable = true)
+    private void contractblade$dummyDebit(ItemStack gun, int requested, CallbackInfoReturnable<Integer> result) {
+        if (com.maidweapon.forge.compat.TaczCompat.isProjection(gun)) {
+            result.setReturnValue(com.maidweapon.forge.compat.tacz.TaczLoadedCompat.consumeDummy(gun, requested));
+        }
+    }
 }

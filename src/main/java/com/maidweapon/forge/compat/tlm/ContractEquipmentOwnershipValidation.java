@@ -45,6 +45,12 @@ public final class ContractEquipmentOwnershipValidation {
         ItemStack gun = (ItemStack) builderType.getMethod("build").invoke(builder);
         check(!gun.isEmpty() && TaczCompat.isGun(gun), "real TACZ gun available");
         ContractCarrierData.ensureBindingId(gun);
+        Class.forName("com.maidweapon.forge.compat.tacz.TaczAmmoValidation")
+                .getMethod("run", net.minecraft.world.entity.LivingEntity.class, ItemStack.class)
+                .invoke(null, maid, gun);
+        check(!((Boolean) Class.forName("com.tacz.guns.api.item.IGun")
+                .getMethod("useDummyAmmo", ItemStack.class).invoke(gun.getItem(), gun)),
+                "ordinary native gun starts without virtual ammo");
 
         for (boolean manual : new boolean[]{false, true}) {
             Mob armed = create(level, player);
@@ -52,6 +58,13 @@ public final class ContractEquipmentOwnershipValidation {
             equipped.setStackInSlot(0, new ItemStack(ModItems.RESONANCE_SWORD_TASSEL.get()));
             ContractMaidRuntimeService.prepare(player, gun, armed);
             check(TaczCompat.isProjection(armed.getMainHandItem()), "native gun projection active");
+            check(!armed.getMainHandItem().getOrCreateTag().contains("DummyAmmo"), "ordinary projection never enables dummy ammo");
+            check(!armed.getPersistentData().getCompound("MaidWeaponProjectionGear").contains("mainhand"),
+                    "TACZ has sole main-hand snapshot authority");
+            var hand = armed.getCapability(net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER,
+                    net.minecraft.core.Direction.DOWN).orElseThrow(IllegalStateException::new);
+            check(hand.extractItem(0, 1, true).isEmpty() && hand.extractItem(0, 1, false).isEmpty(),
+                    "native Forge hand blocks simulated and real extraction");
             if (manual) {
                 armed.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SWORD));
                 for (int i = 0; i < 5; i++) ContractMaidRuntimeService.prepare(player, gun, armed);

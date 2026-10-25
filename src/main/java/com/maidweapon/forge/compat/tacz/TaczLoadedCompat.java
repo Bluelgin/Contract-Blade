@@ -8,8 +8,6 @@ import com.maidweapon.forge.compat.TouhouLittleMaidHelper;
 import com.maidweapon.forge.system.InfusedMaidDeploymentSystem;
 import com.tacz.guns.api.DefaultAssets;
 import com.tacz.guns.api.TimelessAPI;
-import com.tacz.guns.api.item.IAmmo;
-import com.tacz.guns.api.item.IAmmoBox;
 import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.item.builder.AmmoItemBuilder;
 import net.minecraft.nbt.CompoundTag;
@@ -37,9 +35,6 @@ import java.util.UUID;
 
 /** Loaded only when TACZ is present. */
 public final class TaczLoadedCompat {
-    private static final String LINK_OWNER_TAG = "MaidWeaponTaczLinkOwner";
-    private static final String LINK_MAID_TAG = "MaidWeaponTaczLinkMaid";
-    private static final String LINK_BINDING_TAG = "MaidWeaponTaczLinkBinding";
     private static final String ORIGINAL_HAND_TAG = "MaidWeaponTaczOriginalHand";
     private static final String LINK_FAILURE_TAG = "MaidInfusionTaczAmmoLinkFailure";
     private static final double MAX_LINK_DISTANCE_SQR = 64.0 * 64.0;
@@ -94,6 +89,9 @@ public final class TaczLoadedCompat {
             }
         }
 
+        if (TaczCompat.isProjection(maid.getMainHandItem())) {
+            maid.getMainHandItem().getOrCreateTag().putUUID("MaidWeaponProjectionMaid", maid.getUUID());
+        }
         source.getOrCreateTag().remove(LINK_FAILURE_TAG);
         return true;
     }
@@ -104,7 +102,7 @@ public final class TaczLoadedCompat {
         migrateNestedSnapshot(maid);
         ItemStack projection = maid.getMainHandItem();
         if (TaczCompat.isProjection(projection)) {
-            refundProjectionAmmo(owner, projection);
+            refundProjectionAmmo(owner, projection, source);
         }
         restoreOriginalHand(maid);
         removeLinks(maid);
@@ -166,6 +164,40 @@ public final class TaczLoadedCompat {
                 () -> new TaczPriorityAmmoHandler(own, fallback, shooter));
     }
 
+    public static LinkContext resolveProjection(ItemStack projection) {
+        if (!TaczCompat.isProjection(projection) || projection.getTag() == null
+                || !projection.getTag().hasUUID("MaidWeaponProjectionMaid")
+                || !projection.getTag().hasUUID("MaidWeaponPhantomOwner")) return null;
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if (server == null || !server.isSameThread()) return null;
+        ServerPlayer owner = server.getPlayerList().getPlayer(projection.getTag().getUUID("MaidWeaponPhantomOwner"));
+        if (owner == null) return null;
+        Entity entity = owner.serverLevel().getEntity(projection.getTag().getUUID("MaidWeaponProjectionMaid"));
+        if (!(entity instanceof LivingEntity maid) || maid.getMainHandItem() != projection) return null;
+        return resolve(maid);
+    }
+
+    public static int availableDummy(ItemStack projection, int nativeCount) {
+        if (!TaczCompat.isProjection(projection)) return nativeCount;
+        LinkContext context = resolveProjection(projection);
+        if (context == null) return 0;
+        IGun gun = IGun.getIGunOrNull(context.source());
+        return gun == null ? 0 : gun.getDummyAmmoAmount(context.source());
+    }
+
+    public static int consumeDummy(ItemStack projection, int requested) {
+        LinkContext context = resolveProjection(projection);
+        if (context == null || requested <= 0) return 0;
+        IGun gun = IGun.getIGunOrNull(context.source());
+        if (gun == null) return 0;
+        int before = Math.max(0, gun.getDummyAmmoAmount(context.source()));
+        gun.setDummyAmmoAmount(context.source(), before - Math.min(before, requested));
+        int actual = Math.min(requested, Math.max(0, before - gun.getDummyAmmoAmount(context.source())));
+        TaczAmmoAccounting.purchased(projection, actual);
+        context.owner().getInventory().setChanged();
+        return actual;
+    }
+
     static net.minecraft.resources.ResourceLocation ammoId(ItemStack gun) {
         IGun iGun = IGun.getIGunOrNull(gun);
         if (iGun == null) return DefaultAssets.EMPTY_AMMO_ID;
@@ -216,12 +248,14 @@ public final class TaczLoadedCompat {
         if (gun != null) {
             gun.setCurrentAmmoCount(copy, 0);
             gun.setBulletInBarrel(copy, false);
-            gun.setDummyAmmoAmount(copy, 0);
+            // Presence of DummyAmmo, even zero, enables TACZ virtual-ammo mode.
+            // Ordinary guns MUST NOT acquire that tag.
+            if (gun.useDummyAmmo(source)) gun.setDummyAmmoAmount(copy, 0);
         }
         return copy;
     }
 
-    private static void refundProjectionAmmo(Player owner, ItemStack projection) {
+    private static void refundProjectionAmmo(Player owner, ItemStack projection, ItemStack source) {
         IGun gun = IGun.getIGunOrNull(projection);
         if (gun == null) return;
         var index = TimelessAPI.getCommonGunIndex(gun.getGunId(projection)).orElse(null);
@@ -237,6 +271,16 @@ public final class TaczLoadedCompat {
         gun.setBulletInBarrel(projection, false);
         projection.getOrCreateTag().putInt(TaczAmmoAccounting.PAID, 0);
         int remaining = refundable ? Math.min(loaded, paid) : 0;
+        if (gun.useDummyAmmo(projection) && index != null
+                && index.getGunData().getReloadData().getType()
+                    != com.tacz.guns.resource.pojo.data.gun.FeedType.FUEL
+                && !index.getGunData().getReloadData().isInfinite()
+                && isGun(source) && ContractCarrierData.isOwner(source, owner)
+                && projection.getTag().getString("MaidWeaponPhantomBinding")
+                    .equals(ContractCarrierData.getBindingId(source))) {
+            IGun realGun = IGun.getIGunOrNull(source);
+            realGun.addDummyAmmoAmount(source, Math.min(loaded, paid));
+        }
         var id = ammoId(projection);
         var ammo = TimelessAPI.getCommonAmmoIndex(id).orElse(null);
         if (ammo == null || DefaultAssets.EMPTY_AMMO_ID.equals(id)) return;

@@ -230,7 +230,7 @@ dependencies {
     } else {
         compileOnly fg.deobf(taczDependency)
     }
-    if (compatTestMode == 'tacz' && !ciMode) {
+    if (compatTestMode == 'tacz') {
         runtimeOnly fg.deobf(taczDependency)
     }
 

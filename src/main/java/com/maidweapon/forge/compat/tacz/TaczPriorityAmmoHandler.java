@@ -14,8 +14,14 @@ public final class TaczPriorityAmmoHandler implements IItemHandler {
     private final IItemHandler maid;
     private final LivingEntity shooter;
     private final int ownerSlots;
+    private final java.util.function.BooleanSupplier ownerAccess;
 
     public TaczPriorityAmmoHandler(IItemHandler owner, IItemHandler maid, LivingEntity shooter) {
+        this(owner, maid, shooter, () -> TaczLoadedCompat.resolve(shooter) != null);
+    }
+    TaczPriorityAmmoHandler(IItemHandler owner, IItemHandler maid, LivingEntity shooter,
+                            java.util.function.BooleanSupplier ownerAccess) {
+        this.ownerAccess = ownerAccess;
         this.owner = owner;
         this.maid = maid;
         this.shooter = shooter;
@@ -26,7 +32,7 @@ public final class TaczPriorityAmmoHandler implements IItemHandler {
     private boolean allowed(int slot) {
         return slot >= 0 && slot < getSlots() && !shooter.level().isClientSide
                 && shooter.getServer() != null && shooter.getServer().isSameThread()
-                && (slot >= ownerSlots || TaczLoadedCompat.resolve(shooter) != null);
+                && (slot >= ownerSlots || ownerAccess.getAsBoolean());
     }
     @Override public int getSlots() { return ownerSlots + maid.getSlots(); }
     @Override public ItemStack getStackInSlot(int slot) {
@@ -62,6 +68,9 @@ public final class TaczPriorityAmmoHandler implements IItemHandler {
                 remaining -= extracted;
                 paid += extracted;
             } else if (stack.getItem() instanceof IAmmoBox box && box.isAmmoBoxOfGun(gun, stack)) {
+                // TACZ's box API mutates the real stack. A copy-only third-party view
+                // cannot commit that mutation, so do not report it as paid ammunition.
+                if (inventory(slot).getStackInSlot(index(slot)) != stack) continue;
                 int before = Math.max(0, box.getAmmoCount(stack));
                 int take = Math.min(before, remaining);
                 box.setAmmoCount(stack, before - take);

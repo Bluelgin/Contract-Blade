@@ -10,6 +10,12 @@ public final class TaczAmmoAccounting {
     static final String TRACKED = "MaidWeaponTaczAmmoTracked";
     public static void purchased(ItemStack gun, int amount) {
         if (!TaczCompat.isProjection(gun) || amount <= 0) return;
+        IGun nativeGun = IGun.getIGunOrNull(gun);
+        if (nativeGun != null && nativeGun.useInventoryAmmo(gun)) {
+            var index = com.tacz.guns.api.TimelessAPI.getCommonGunIndex(nativeGun.getGunId(gun)).orElse(null);
+            if (nativeGun.hasBulletInBarrel(gun) || index == null
+                    || index.getGunData().getBolt() == com.tacz.guns.resource.pojo.data.gun.Bolt.OPEN_BOLT) return;
+        }
         var tag = gun.getOrCreateTag();
         tag.putInt(PAID, (int) Math.min(Integer.MAX_VALUE, (long) Math.max(0, tag.getInt(PAID)) + amount));
     }
