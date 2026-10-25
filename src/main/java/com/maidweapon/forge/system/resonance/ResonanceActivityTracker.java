@@ -15,7 +15,10 @@ public final class ResonanceActivityTracker {
         sources.put(source, new Report(activity, context.owner().getServer().overworld().getGameTime() + ticks));
     }
     public static ResonanceActivity current(ResonanceContract context) {
-        var live = context.liveMaid();
+        return current(context, context.liveMaid());
+    }
+    /** Reuse one lookup across recovery and activity classification. */
+    public static ResonanceActivity current(ResonanceContract context, net.minecraft.world.entity.Entity live) {
         var base = live == null ? ResonanceActivity.STORED : ResonanceActivity.MANIFESTED_IDLE;
         if (live instanceof net.minecraft.world.entity.Mob mob && mob.getTarget() != null && mob.getTarget().isAlive())
             base = ResonanceActivity.COMBAT;

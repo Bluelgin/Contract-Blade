@@ -4,6 +4,10 @@ import com.maidweapon.forge.compat.tlm.danmaku.ContractDanmakuProjectile;
 import com.maidweapon.forge.compat.tlm.danmaku.DanmakuProjectilePatterns;
 import com.maidweapon.forge.compat.tlm.danmaku.DanmakuShotQueue;
 import com.maidweapon.forge.system.mastery.ContractMasteryService;
+import com.maidweapon.forge.system.contract.ContractCarrierData;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -23,6 +27,12 @@ import static com.maidweapon.forge.system.danmaku.DanmakuTargeting.acquireTarget
 @Mod.EventBusSubscriber
 public final class DanmakuCombatService {
     private static final java.util.Map<UUID, String> VISUAL_BINDINGS = new java.util.HashMap<>();
+    /** Cosmetic state only; casts and damage never trust this snapshot. */
+    private record EligibilitySnapshot(ItemStack hand, String binding, ResourceKey<Level> dimension,
+                                       boolean alive, boolean spectator, long validatedTick,
+                                       String maid) { }
+    private static final java.util.Map<UUID, EligibilitySnapshot> ELIGIBILITY = new java.util.HashMap<>();
+    static void invalidateEligibility(UUID player) { ELIGIBILITY.remove(player); }
     @SubscribeEvent public static void afterMelee(LivingDamageEvent event) {
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)
                 || event.getAmount() <= 0 || player.level().isClientSide) return;
@@ -111,23 +121,44 @@ public final class DanmakuCombatService {
             DanmakuHitBudget.cleanup(now);
             DanmakuHitPolicy.cleanup(now);
         }
-        var context = DanmakuEligibility.context(player);
-        String binding = context == null ? "" : context.maid();
-        // Push eligibility changes on the same server tick; sync deduplicates packets.
-        com.maidweapon.forge.network.DanmakuNetwork.sync(player,
-                context == null ? "" : context.binding(), context != null,
-                ContractMasteryService.getLevel(player));
-        String previous = VISUAL_BINDINGS.put(player.getUUID(), binding);
-        if (previous != null && !previous.equals(binding))
-            DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.CANCEL,
-                    0, 0, player, player.position());
-        DanmakuWaveSessions.tick(player, context == null ? null : context.maid(), now);
-        DanmakuGuardService.tick(player, context == null ? null : context.maid(), now);
+        UUID id = player.getUUID();
+        ItemStack hand = player.getMainHandItem();
+        String heldBinding = ContractCarrierData.getBindingId(hand);
+        EligibilitySnapshot previousSnapshot = ELIGIBILITY.get(id);
+        boolean pending = DanmakuWaveSessions.hasPending(player);
+        boolean guarding = DanmakuGuardService.hasSession(player);
+        boolean changed = previousSnapshot == null
+                || previousSnapshot.hand() != hand
+                || !java.util.Objects.equals(previousSnapshot.binding(), heldBinding)
+                || !previousSnapshot.dimension().equals(player.level().dimension())
+                || previousSnapshot.alive() != player.isAlive()
+                || previousSnapshot.spectator() != player.isSpectator();
+        boolean refresh = DanmakuTickRefreshPolicy.shouldValidate(changed, pending || guarding,
+                player.tickCount, previousSnapshot == null ? Long.MIN_VALUE : previousSnapshot.validatedTick());
+        String maid = previousSnapshot == null ? null : previousSnapshot.maid();
+        if (refresh) {
+            // Only HUD/visual entitlement is cached. Actual actions and active
+            // wave/guard sessions perform full server-side contract authorization.
+            var context = DanmakuEligibility.context(player);
+            maid = context == null ? null : context.maid();
+            ELIGIBILITY.put(id, new EligibilitySnapshot(hand, heldBinding, player.level().dimension(),
+                    player.isAlive(), player.isSpectator(), player.tickCount, maid));
+            com.maidweapon.forge.network.DanmakuNetwork.sync(player,
+                    context == null ? "" : context.binding(), context != null,
+                    ContractMasteryService.getLevel(player));
+            String previous = VISUAL_BINDINGS.put(id, maid == null ? "" : maid);
+            if (previous != null && !previous.equals(maid == null ? "" : maid))
+                DanmakuWorldEvents.send(player, com.maidweapon.forge.api.danmaku.DanmakuVisualEvent.Kind.CANCEL,
+                        0, 0, player, player.position());
+        }
+        if (pending || refresh) DanmakuWaveSessions.tick(player, maid, now);
+        if (guarding) DanmakuGuardService.tick(player, maid, now);
     }
 
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID id = event.getEntity().getUUID();
         VISUAL_BINDINGS.remove(id);
+        ELIGIBILITY.remove(id);
         DanmakuInputGate.forget(id);
         DanmakuWaveSessions.forget(id);
         DanmakuGuardService.forget(id);
@@ -135,6 +166,7 @@ public final class DanmakuCombatService {
     }
     @SubscribeEvent public static void stop(ServerStoppedEvent event) {
         VISUAL_BINDINGS.clear();
+        ELIGIBILITY.clear();
         DanmakuInputGate.clear();
         DanmakuWaveSessions.clear();
         DanmakuGuardService.clear();

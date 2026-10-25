@@ -22,6 +22,13 @@ final class DanmakuWaveSessions {
                                 UUID target, int mastery, float basis, int nextWave,
                                 long due, boolean synchronizedStrike) { }
     private static final Map<String, PendingSpell> PENDING = new HashMap<>();
+    /** Idle players can test for work without scanning global wave maps. */
+    private static final Map<UUID, Integer> ACTIVE_OWNERS = new HashMap<>();
+    private static void queued(UUID owner) { ACTIVE_OWNERS.merge(owner, 1, Integer::sum); }
+    private static void completed(UUID owner) {
+        ACTIVE_OWNERS.computeIfPresent(owner, (id, count) -> count <= 1 ? null : count - 1);
+    }
+    static boolean hasPending(ServerPlayer player) { return ACTIVE_OWNERS.containsKey(player.getUUID()); }
     private static String key(ServerPlayer player, String maid, String suffix) {
         return player.getUUID() + ":" + maid + ":" + suffix;
     }
@@ -55,6 +62,7 @@ final class DanmakuWaveSessions {
         AUTOS.put(key(player, maid, "auto_" + UUID.randomUUID()),
                 new PendingAuto(maid, player.level().dimension(), victim.getUUID(),
                         mastery, weaponPanel, climax, now + 2));
+        queued(player.getUUID());
     }
 
 
@@ -68,6 +76,7 @@ final class DanmakuWaveSessions {
                 new PendingSpell(maid, player.level().dimension(), form,
                         target == null ? null : target.getUUID(), level, basis, 1,
                         now + DanmakuGrowth.waveSpacing(form), false));
+        queued(player.getUUID());
     }
     static void tick(ServerPlayer player, String maid, long now) {
         String prefix = player.getUUID() + ":";
@@ -80,10 +89,12 @@ final class DanmakuWaveSessions {
             if (maid == null || !queued.maid.equals(maid)
                     || !queued.dimension.equals(player.level().dimension())) {
                 scheduledAuto.remove();
+                completed(player.getUUID());
                 continue;
             }
             if (now < queued.due) continue;
             scheduledAuto.remove();
+            completed(player.getUUID());
             LivingEntity victim = targetById(player, queued.target);
             if (victim != null)
                 DanmakuProjectilePatterns.auto(player, victim, queued.mastery,
@@ -99,6 +110,7 @@ final class DanmakuWaveSessions {
                     || !wave.dimension.equals(player.level().dimension())
                     || ContractMasteryService.getLevel(player) < wave.form.requiredLevel()) {
                 spells.remove();
+                completed(player.getUUID());
                 continue;
             }
             if (now < wave.due) continue;
@@ -108,6 +120,7 @@ final class DanmakuWaveSessions {
             DanmakuSpellEffects.wave(player, wave.form, target, wave.nextWave);
             if (wave.nextWave + 1 >= DanmakuGrowth.waveCount(wave.form)) {
                 spells.remove();
+                completed(player.getUUID());
             } else {
                 entry.setValue(new PendingSpell(wave.maid, wave.dimension, wave.form, wave.target,
                         wave.mastery, wave.basis, wave.nextWave + 1,
@@ -118,11 +131,12 @@ final class DanmakuWaveSessions {
 
     }
     static void forget(UUID id) {
+        ACTIVE_OWNERS.remove(id);
         String prefix = id + ":";
         CHAINS.keySet().removeIf(k -> k.startsWith(prefix));
         AUTOS.keySet().removeIf(k -> k.startsWith(prefix));
         PENDING.keySet().removeIf(k -> k.startsWith(prefix));
     }
-    static void clear() { CHAINS.clear(); AUTOS.clear(); PENDING.clear(); }
+    static void clear() { CHAINS.clear(); AUTOS.clear(); PENDING.clear(); ACTIVE_OWNERS.clear(); }
     private DanmakuWaveSessions() { }
 }
