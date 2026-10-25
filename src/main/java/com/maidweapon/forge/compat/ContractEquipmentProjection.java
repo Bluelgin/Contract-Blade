@@ -96,6 +96,15 @@ public final class ContractEquipmentProjection {
         TripleMagicCompat.syncSlashBladeProgress(maid, source);
         CompoundTag gear = data.getCompound(LEGACY_GEAR);
         for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot == EquipmentSlot.MAINHAND && TaczCompat.isProjection(maid.getMainHandItem())) {
+                // The old all-gear snapshot must not destroy a loaded specialized gun.
+                ItemStack nested = ItemStack.of(data.getCompound("MaidWeaponTaczOriginalHand"));
+                if (gear.contains(slot.getName()) && (!data.contains("MaidWeaponTaczOriginalHand")
+                        || ContractProjectionIdentity.isProjection(nested))) {
+                    data.put("MaidWeaponTaczOriginalHand", gear.getCompound(slot.getName()).copy());
+                }
+                continue;
+            }
             if (TripleMagicCompat.isPhantom(maid.getItemBySlot(slot))) {
                 maid.setItemSlot(slot, ItemStack.of(gear.getCompound(slot.getName())));
             }
