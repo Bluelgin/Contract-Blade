@@ -11,7 +11,6 @@ from pathlib import Path
 import re
 import subprocess
 import tempfile
-import urllib.request
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -38,8 +37,10 @@ else:
         artifacts[module + '.jar'] = f'https://repo.maven.apache.org/maven2/org/ow2/asm/{module}/9.6/{module}-9.6.jar'
     for name, url in artifacts.items():
         if not (deps / name).exists():
-            with urllib.request.urlopen(url, timeout=90) as response:
-                (deps / name).write_bytes(response.read())
+            # Forge Maven rejects some urllib user agents. Match the repository's
+            # existing CI downloads and retain curl's retry/HTTP failure checks.
+            subprocess.run(['curl', '-fL', '--retry', '3', '--connect-timeout', '20',
+                            '--max-time', '120', url, '-o', str(deps / name)], check=True)
     cp = os.pathsep.join(str(deps / name) for name in artifacts)
 
 production = (ROOT / 'src/main/java/com/maidweapon/forge/mixin/DamageObservationMixin.java').read_text()
