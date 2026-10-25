@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.maidweapon.forge.compat.tacz.mixin",
+  "plugin": "com.maidweapon.forge.compat.tacz.mixin.TaczMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "TaczGunAmmoMixin",
+    "TaczScriptAmmoMixin",
+    "TaczShootAmmoMixin",
+    "TaczExtractAmmoMixin",
+    "TaczSpentAmmoMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

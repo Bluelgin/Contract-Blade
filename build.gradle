@@ -120,6 +120,7 @@ minecraft {
             args '--mixin', 'maid_weapon.mixins.json'
             args '--mixin', 'maid_weapon.slashblade.mixins.json'
             args '--mixin', 'maid_weapon.soul-boss.mixins.json'
+            args '--mixin', 'maid_weapon.tacz.mixins.json'
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -229,7 +230,7 @@ dependencies {
     } else {
         compileOnly fg.deobf(taczDependency)
     }
-    if (compatTestMode == 'tacz' && !ciMode) {
+    if (compatTestMode == 'tacz') {
         runtimeOnly fg.deobf(taczDependency)
     }
 
@@ -366,7 +367,7 @@ jar {
                 'Implementation-Title'  : project.name,
                 'Implementation-Version': project.jar.archiveVersion,
                 'Implementation-Vendor' : mod_authors,
-                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json,maid_weapon.soul-boss.mixins.json',
+                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json,maid_weapon.soul-boss.mixins.json,maid_weapon.tacz.mixins.json',
         ])
     }
     finalizedBy 'reobfJar'

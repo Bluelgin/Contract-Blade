@@ -13,5 +13,16 @@ public final class ContractProjectionDropGuard {
         event.getDrops().removeIf(drop -> TripleMagicCompat.isPhantom(drop.getItem()));
     }
 
+    @SubscribeEvent
+    public static void itemSpawn(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide && event.getEntity() instanceof net.minecraft.world.entity.item.ItemEntity item
+                && TripleMagicCompat.isPhantom(item.getItem())) event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public static void toss(net.minecraftforge.event.entity.item.ItemTossEvent event) {
+        if (TripleMagicCompat.isPhantom(event.getEntity().getItem())) event.setCanceled(true);
+    }
+
     private ContractProjectionDropGuard() { }
 }

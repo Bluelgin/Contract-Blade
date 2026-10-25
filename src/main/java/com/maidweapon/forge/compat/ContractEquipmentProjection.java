@@ -21,6 +21,11 @@ public final class ContractEquipmentProjection {
         // TLM temporarily holds food while eating. Never replace or consume it here.
         if (maid.isUsingItem()) return;
         for (EquipmentSlot slot : EquipmentSlot.values()) {
+            // TACZ owns its mutable main hand. Transfer an existing generic snapshot once.
+            if (slot == EquipmentSlot.MAINHAND && mode.weapon() && TaczCompat.isGun(source)) {
+                if (!TaczCompat.isProjection(maid.getMainHandItem())) restoreSlot(maid, source, slot);
+                continue;
+            }
             boolean enabled = slot.getType() == EquipmentSlot.Type.HAND ? mode.weapon() : mode.armor();
             if (!enabled) {
                 restoreSlot(maid, source, slot);
@@ -63,7 +68,8 @@ public final class ContractEquipmentProjection {
         String key = slot.getName();
         if (!gear.contains(key)) {
             // Repair an orphan left by an older cleanup order, never a real item.
-            if (TripleMagicCompat.isPhantom(maid.getItemBySlot(slot))) maid.setItemSlot(slot, ItemStack.EMPTY);
+            if (TripleMagicCompat.isPhantom(maid.getItemBySlot(slot))
+                    && !TaczCompat.isProjection(maid.getItemBySlot(slot))) maid.setItemSlot(slot, ItemStack.EMPTY);
             return;
         }
         if (slot == EquipmentSlot.MAINHAND) {
@@ -90,6 +96,15 @@ public final class ContractEquipmentProjection {
         TripleMagicCompat.syncSlashBladeProgress(maid, source);
         CompoundTag gear = data.getCompound(LEGACY_GEAR);
         for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (slot == EquipmentSlot.MAINHAND && TaczCompat.isProjection(maid.getMainHandItem())) {
+                // The old all-gear snapshot must not destroy a loaded specialized gun.
+                ItemStack nested = ItemStack.of(data.getCompound("MaidWeaponTaczOriginalHand"));
+                if (gear.contains(slot.getName()) && (!data.contains("MaidWeaponTaczOriginalHand")
+                        || ContractProjectionIdentity.isProjection(nested))) {
+                    data.put("MaidWeaponTaczOriginalHand", gear.getCompound(slot.getName()).copy());
+                }
+                continue;
+            }
             if (TripleMagicCompat.isPhantom(maid.getItemBySlot(slot))) {
                 maid.setItemSlot(slot, ItemStack.of(gear.getCompound(slot.getName())));
             }
