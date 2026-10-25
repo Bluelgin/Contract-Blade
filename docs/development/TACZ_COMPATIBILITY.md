@@ -106,10 +106,13 @@ python tools/run_stage_three_tests.py --fixture projection --compat tacz
 
 It uses the pinned real mods in a disposable dedicated-server world and requires
 `TACZ_AMMO_VALIDATION_PASS`, `TACZ_OWNERSHIP_VALIDATION_PASS` and
-`PROJECTION_VALIDATION_PASS`. Tests execute TACZ's extraction entry point with
-real TACZ rounds/boxes and exercise production inventory-view code. The fixture
-supplies an explicit owner-access predicate for inventory arithmetic tests; it
-does **not** establish a real online-player authorization session.
+`PROJECTION_VALIDATION_PASS`, plus `TACZ_OWNER_ROUTE_VALIDATION_PASS`. Tests execute TACZ's extraction entry point with
+real TACZ rounds/boxes and exercise production inventory-view code. The arithmetic fixture supplies an explicit access predicate. A second fixture
+registers a fake server player temporarily in the disposable world's online map,
+binds/spawns a real maid, and uses the production authority resolver and native
+script API. It checks owner priority, native magazine insertion/shot reduction,
+range/logout fallback and conservation after teardown. This is a synthetic server
+session, not a network-connected player or live AI combat test.
 
 Covered cases: owner-only, split supply, maid-only, insufficient/empty supply,
 shared owner inventory, revoked owner supply, live native box debit, stale

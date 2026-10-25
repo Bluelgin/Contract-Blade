@@ -23,7 +23,7 @@ root.mkdir(parents=True, exist_ok=True)
 print(f'Disposable fixtures: {root}', flush=True)
 fixtures = [
     ('boss-defense', ['-PblackFoxTest=true', '-PblackFoxDefenseTest=true'], ['BLACK_FOX_DEFENSE_PASS']),
-    ('projection', ['-PprojectionTest=true'], ['PROJECTION_VALIDATION_PASS', *(['TACZ_AMMO_VALIDATION_PASS', 'TACZ_OWNERSHIP_VALIDATION_PASS'] if args.compat == 'tacz' else [])]),
+    ('projection', ['-PprojectionTest=true'], ['PROJECTION_VALIDATION_PASS', *(['TACZ_AMMO_VALIDATION_PASS', 'TACZ_OWNERSHIP_VALIDATION_PASS', 'TACZ_OWNER_ROUTE_VALIDATION_PASS'] if args.compat == 'tacz' else [])]),
     ('companion', ['-PcompanionTest=true'], ['COMPANION_VALIDATION_PASS']),
     ('resonance', ['-PresonanceTest=true'], ['CONTRACT_RESONANCE_PASS']),
     ('akatsuki-domain', ['-PakatsukiDomainTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_NO_PROVIDER_PASS']),

@@ -86,6 +86,9 @@ public final class ContractEquipmentOwnershipValidation {
         ContractEquipmentCleanup.clear(player, captured, gun);
         check(captured.getMainHandItem().is(Items.IRON_SWORD) && count(captured, Items.IRON_SWORD) == 1,
                 "storage cleanup unwinds nested snapshots in ownership order");
+        Class.forName("com.maidweapon.forge.compat.tacz.TaczAmmoValidation")
+                .getMethod("verifyOwnerRoute", Mob.class, net.minecraft.server.level.ServerPlayer.class, ItemStack.class)
+                .invoke(null, create(level, player), player, gun);
         com.mojang.logging.LogUtils.getLogger().info("[MaidWeapon] TACZ_OWNERSHIP_VALIDATION_PASS");
     }
 

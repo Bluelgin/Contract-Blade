@@ -80,6 +80,85 @@ public final class TaczAmmoValidation {
         }
         com.mojang.logging.LogUtils.getLogger().info("[MaidWeapon] TACZ_AMMO_VALIDATION_PASS");
     }
+    /** Register a fake player only in this disposable test's online lookup, then restore it. */
+    @SuppressWarnings("unchecked")
+    public static void verifyOwnerRoute(net.minecraft.world.entity.Mob maid,
+            net.minecraft.server.level.ServerPlayer owner, ItemStack source) throws ReflectiveOperationException {
+        var players = owner.getServer().getPlayerList();
+        java.util.Map<java.util.UUID, net.minecraft.server.level.ServerPlayer> online = null;
+        for (Class<?> type = players.getClass(); type != null && online == null; type = type.getSuperclass()) {
+            for (var field : type.getDeclaredFields()) {
+                String signature = field.getGenericType().getTypeName();
+                if (java.util.Map.class.isAssignableFrom(field.getType())
+                        && signature.contains("java.util.UUID") && signature.contains("ServerPlayer")) {
+                    field.setAccessible(true);
+                    online = (java.util.Map<java.util.UUID, net.minecraft.server.level.ServerPlayer>) field.get(players);
+                    break;
+                }
+            }
+        }
+        if (online == null) throw new IllegalStateException("Native fixture cannot locate online player map");
+        var previous = online.put(owner.getUUID(), owner);
+        ItemStack savedGunSlot = owner.getInventory().getItem(8);
+        ItemStack savedAmmoSlot = owner.getInventory().getItem(0);
+        var pack = (net.minecraftforge.items.IItemHandlerModifiable) maid.getClass().getMethod("getMaidInv").invoke(maid);
+        ItemStack savedMaidAmmo = pack.getStackInSlot(0);
+        var baubles = (net.minecraftforge.items.IItemHandlerModifiable) maid.getClass().getMethod("getMaidBauble").invoke(maid);
+        try {
+            com.maidweapon.forge.system.contract.ContractCarrierData.setOwner(source, owner);
+            com.maidweapon.forge.system.contract.ContractCarrierData.setBoundMaidUUID(source, maid.getStringUUID());
+            String binding = com.maidweapon.forge.system.contract.ContractCarrierData.ensureBindingId(source);
+            maid.getPersistentData().putString(com.maidweapon.forge.compat.TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID, binding);
+            owner.getInventory().setItem(8, source);
+            owner.getInventory().setItem(0, rounds(TaczLoadedCompat.ammoId(source), 10));
+            pack.setStackInSlot(0, rounds(TaczLoadedCompat.ammoId(source), 50));
+            baubles.setStackInSlot(0, new ItemStack(com.maidweapon.forge.init.ModItems.RESONANCE_SWORD_TASSEL.get()));
+            maid.setPos(owner.getX(), owner.getY(), owner.getZ());
+            check(owner.serverLevel().addFreshEntity(maid), "owner-route maid spawned");
+            com.maidweapon.forge.system.deployment.ContractMaidRuntimeService.prepare(owner, source, maid);
+            ItemStack projection = maid.getMainHandItem();
+            AbstractGunItem gun = (AbstractGunItem) projection.getItem();
+            check(TaczLoadedCompat.resolve(maid) != null, "real authority resolver accepts online owner");
+            check(gun.canReload(maid, projection), "native reload check sees owner ammunition");
+            var api = new com.tacz.guns.item.ModernKineticGunScriptAPI();
+            api.setShooter(maid);
+            api.setItemStack(projection);
+            api.setDataHolder(new com.tacz.guns.entity.shooter.ShooterDataHolder());
+            check(api.hasAmmoToConsume(), "native script presence call");
+            check(api.consumeAmmoFromPlayer(30) == 30, "native script consumes owner then maid");
+            check(owner.getInventory().getItem(0).isEmpty() && pack.getStackInSlot(0).getCount() == 30,
+                    "native routed debit priority");
+            check(api.putAmmoInMagazine(30) == 0 && gun.getCurrentAmmoCount(projection) == 30,
+                    "native magazine receives exactly debited rounds");
+            check(api.reduceAmmoOnce() && gun.getCurrentAmmoCount(projection) == 29,
+                    "native shot debit and ledger");
+            check(projection.getTag().getInt(TaczAmmoAccounting.PAID) == 29, "paid credits follow native shot");
+            maid.setPos(owner.getX() + 65, owner.getY(), owner.getZ());
+            check(TaczLoadedCompat.resolve(maid) == null, "range revokes owner supply");
+            check(api.consumeAmmoFromPlayer(1) == 1 && pack.getStackInSlot(0).getCount() == 29,
+                    "out of range uses maid supply");
+            check(api.putAmmoInMagazine(1) == 0 && api.reduceAmmoOnce(), "out-of-range round is loaded then spent");
+            maid.setPos(owner.getX(), owner.getY(), owner.getZ());
+            online.remove(owner.getUUID());
+            check(api.consumeAmmoFromPlayer(1) == 1 && pack.getStackInSlot(0).getCount() == 28,
+                    "offline owner uses maid supply");
+            check(api.putAmmoInMagazine(1) == 0, "offline maid round loaded");
+            online.put(owner.getUUID(), owner);
+            com.maidweapon.forge.compat.ContractEquipmentCleanup.clear(owner, maid, source);
+            check(!TaczCompat.isProjection(maid.getMainHandItem()), "route cleanup restores real equipment");
+            check(owner.getInventory().getItem(0).getCount() == 30
+                    && pack.getStackInSlot(0).getCount() == 28, "60 starting rounds = 58 refunded/reserved + 2 spent");
+            com.mojang.logging.LogUtils.getLogger().info("[MaidWeapon] TACZ_OWNER_ROUTE_VALIDATION_PASS");
+        } finally {
+            if (previous == null) online.remove(owner.getUUID()); else online.put(owner.getUUID(), previous);
+            owner.getInventory().setItem(8, savedGunSlot);
+            owner.getInventory().setItem(0, savedAmmoSlot);
+            pack.setStackInSlot(0, savedMaidAmmo);
+            baubles.setStackInSlot(0, ItemStack.EMPTY);
+            maid.discard();
+        }
+    }
+
     private static ItemStack rounds(ResourceLocation id, int count) {
         return count <= 0 ? ItemStack.EMPTY : AmmoItemBuilder.create().setId(id).setCount(count).build();
     }
