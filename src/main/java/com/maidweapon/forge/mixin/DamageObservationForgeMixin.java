@@ -10,7 +10,10 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(value = ForgeHooks.class, remap = false)
 public abstract class DamageObservationForgeMixin {
-  @WrapMethod(method = "onLivingAttack", remap = false)
+  @WrapMethod(
+      method =
+          "onLivingAttack(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+      remap = false)
   private static boolean cb$attack(
       LivingEntity t, DamageSource s, float n, Operation<Boolean> original) {
     boolean r = original.call(t, s, n);
@@ -18,14 +21,20 @@ public abstract class DamageObservationForgeMixin {
     return r;
   }
 
-  @WrapMethod(method = "onLivingHurt", remap = false)
+  @WrapMethod(
+      method =
+          "onLivingHurt(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;F)F",
+      remap = false)
   private static float cb$hurt(LivingEntity t, DamageSource s, float n, Operation<Float> original) {
     float r = original.call(t, s, n);
     DamageObservationService.hurt(t, s, n, r);
     return r;
   }
 
-  @WrapMethod(method = "onLivingDamage", remap = false)
+  @WrapMethod(
+      method =
+          "onLivingDamage(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/damagesource/DamageSource;F)F",
+      remap = false)
   private static float cb$damage(
       LivingEntity t, DamageSource s, float n, Operation<Float> original) {
     float r = original.call(t, s, n);

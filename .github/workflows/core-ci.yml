@@ -48,8 +48,14 @@ jobs:
             "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
             -o libs/tacz-1.20.1-1.1.8-release.jar
 
+      - name: Damage observer MixinExtras overload regression
+        run: python tools/run_damage_mixin_fixture.py --java-home "$JAVA_HOME" --output /tmp/cb-damage-mixin
+
       - name: Build and player mastery behavioral tests
         run: gradle --no-daemon clean build -Pci=true
+
+      - name: Reobfuscated damage observer overload regression
+        run: python tools/run_damage_mixin_fixture.py --java-home "$JAVA_HOME" --jar build/libs/contract-blade-forge-1.20.1-1.2.0.jar --output /tmp/cb-damage-mixin-reobf
 
       - name: Architecture and data validators
         run: |
@@ -109,6 +115,9 @@ jobs:
       - name: Real soul damage and anchor interaction fixture
         run: python tools/run_soul_damage_tests.py --gradle gradle
 
+      - name: Official Torches dual-mod server and soul damage regression
+        run: python tools/run_soul_damage_tests.py --gradle gradle --torches
+
       - name: Native dedicated-server domain and regression fixtures
         run: |
           python tools/run_stage_three_tests.py --fixture akatsuki-domain --compat vanilla
@@ -127,6 +136,7 @@ jobs:
           path: |
             build/libs/*.jar
             build/test-results/test/*.xml
+            /tmp/cb-damage-mixin*/**/transform.log
             /tmp/contract-stage-three-*/*.log
             /tmp/contract-soul-*/server.log
             /tmp/contract-manka-native/server.log

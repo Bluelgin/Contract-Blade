@@ -235,6 +235,11 @@ dependencies {
     }
 
     // Optional local launch matrix. These are runtime-only and never bundled.
+    if (providers.gradleProperty('torchesTest').map { it.toBoolean() }.orElse(false).get()) {
+        runtimeOnly fg.deobf("curse.maven:gathering-torches-become-sunlight-1115278:8549179")
+        runtimeOnly fg.deobf("curse.maven:geckolib-388172:8285794")
+        runtimeOnly fg.deobf("curse.maven:curios-309927:6418456")
+    }
     if (providers.gradleProperty('handbookTest').orElse('false').get().toBoolean() && !ciMode) {
         runtimeOnly fg.deobf("compat:Patchouli:1.20.1-85-FORGE")
     }

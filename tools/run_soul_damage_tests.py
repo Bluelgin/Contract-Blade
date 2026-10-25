@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--gradle', default='gradle')
 p.add_argument('--bosses', action='store_true')
+p.add_argument('--torches', action='store_true', help='Add official Torches 0.5.0-hotfix2 and its dependencies')
 p.add_argument('--mowzie', action='store_true', help='Exact Mowzie 1.8.2 native weakness/death fixture')
 p.add_argument('--goety', action='store_true')
 p.add_argument('--goety-only',action='store_true')
@@ -30,6 +31,8 @@ if (root / 'soul-validation').exists():
     'view-distance=2\nsimulation-distance=2\nspawn-protection=0\n')
 command = [args.gradle, '--no-daemon', 'runServer', '-x', 'downloadAssets', '-Pci=true',
     '-PtlmRuntimeTest=true', '-PfoxBladeTetraTest=true', '-PsoulTest=true', f'-PcompatRunDir={root}']
+if args.torches:
+    command.append('-PtorchesTest=true')
 if args.bosses:
     command.append('-PsoulBossTest=true')
 if args.mowzie:
