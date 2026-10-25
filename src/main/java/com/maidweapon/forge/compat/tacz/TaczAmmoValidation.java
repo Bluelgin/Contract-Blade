@@ -144,6 +144,8 @@ public final class TaczAmmoValidation {
                     "offline owner uses maid supply");
             check(api.putAmmoInMagazine(1) == 0, "offline maid round loaded");
             online.put(owner.getUUID(), owner);
+            check(projection.getTag().getInt(TaczAmmoAccounting.PAID) == 30,
+                    "maid-only fallback keeps paid-round credits");
             com.maidweapon.forge.compat.ContractEquipmentCleanup.clear(owner, maid, source);
             check(!TaczCompat.isProjection(maid.getMainHandItem()), "route cleanup restores real equipment");
             check(owner.getInventory().getItem(0).getCount() == 30

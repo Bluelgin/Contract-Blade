@@ -164,11 +164,25 @@ public final class TaczLoadedCompat {
 
     public static net.minecraftforge.common.util.LazyOptional<IItemHandler> ammoView(
             LivingEntity shooter, net.minecraftforge.common.util.LazyOptional<IItemHandler> nativeInventory) {
-        LinkContext context = resolve(shooter);
-        if (context == null) return nativeInventory;
-        IItemHandler own = context.owner().getCapability(ForgeCapabilities.ITEM_HANDLER).orElse(null);
         IItemHandler fallback = nativeInventory.orElse(null);
-        if (own == null || fallback == null) return nativeInventory;
+        if (fallback == null || shooter.level().isClientSide || shooter.getServer() == null
+                || !shooter.getServer().isSameThread()
+                || !com.maidweapon.forge.compat.tlm.TlmEntityAdapter.isMaidEntity(shooter)) return nativeInventory;
+        ItemStack projection = shooter.getMainHandItem();
+        if (!TaczCompat.isProjection(projection) || projection.getTag() == null
+                || !projection.getTag().hasUUID("MaidWeaponPhantomOwner")
+                || !(shooter instanceof net.minecraft.world.entity.TamableAnimal tame)
+                || !projection.getTag().getUUID("MaidWeaponPhantomOwner").equals(tame.getOwnerUUID())
+                || !projection.getTag().getString("MaidWeaponPhantomBinding").equals(
+                    shooter.getPersistentData().getString(TouhouLittleMaidHelper.TAG_ENTITY_BINDING_ID))
+                || !com.maidweapon.forge.compat.tlm.TlmProjectionBaubles.mode(shooter).weapon()
+                || com.maidweapon.forge.compat.tlm.TlmResidenceAdapter.isResident(shooter)) return nativeInventory;
+        LinkContext context = resolve(shooter);
+        IItemHandler own = context == null ? net.minecraftforge.items.wrapper.EmptyHandler.INSTANCE
+                : context.owner().getCapability(ForgeCapabilities.ITEM_HANDLER)
+                    .orElse(net.minecraftforge.items.wrapper.EmptyHandler.INSTANCE);
+        // Still use the debit/accounting boundary for maid-only fallback. Losing owner
+        // authorization must not turn locally paid rounds into unrefundable free supply.
         return net.minecraftforge.common.util.LazyOptional.of(
                 () -> new TaczPriorityAmmoHandler(own, fallback, shooter));
     }
