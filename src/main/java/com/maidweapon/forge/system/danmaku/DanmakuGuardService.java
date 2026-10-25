@@ -34,6 +34,7 @@ final class DanmakuGuardService {
         }
     }
     private static final Map<UUID, GuardSession> GUARDS = new HashMap<>();
+    static boolean hasSession(ServerPlayer player) { return GUARDS.containsKey(player.getUUID()); }
     static boolean active(ServerPlayer player, long now) {
         GuardSession existing = GUARDS.get(player.getUUID());
         return existing != null && now < existing.expires;
