@@ -1,16 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
-<!-- Original pixel paths: antique gold oath ring, crimson soul crystal, pink/blue heartbound ribbons. -->
-<path fill="#29233b" d="M10 7h12v2h3v3h2v12h-2v3h-3v2H10v-2H7v-3H5V12h2V9h3z"/>
-<path fill="#b46a3b" d="M10 9h12v2h3v3h-3v-2H10v2H8v10h3v2h10v-2h3V14h2v10h-2v3H10v-2H7V13h3z"/>
-<path fill="#f4cb76" d="M11 10h10v2H11zM8 14h3v2H9v7H7v-8zM10 24h3v2h8v2H10zM23 14h2v9h-2z"/>
-<path fill="#fff1b3" d="M11 10h6v1h-6zM8 16h1v5H8zM14 26h6v1h-6z"/>
-<path fill="#29233b" d="M11 3h10v2h3v6h-3v3H11v-3H8V5h3z"/>
-<path fill="#d39354" d="M12 4h8v2h3v4h-3v3h-8v-3H9V6h3z"/>
-<path fill="#a22f53" d="M13 4h6v2h2v4h-3v2h-4v-2h-3V6h2z"/>
-<path fill="#ed6c80" d="M13 5h5v2h-2v3h-3V8h-2V6h2z"/>
-<path fill="#ffe0b7" d="M13 5h3v2h-3zM20 7h1v2h-1z"/>
-<path fill="#29233b" d="M13 18h5v3h2v4h-3v-2h-2v4h-4v-3H9v-4h4z"/>
-<path fill="#e99cb9" d="M12 20h3v2h-3v2h-2v-3h2zM14 23h2v4h-2z"/>
-<path fill="#8ed5e4" d="M16 20h2v2h2v2h-3v-2h-1zM17 25h2v3h-2z"/>
-<path fill="#ffe1a0" d="M14 20h3v3h-3z"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges"><defs><clipPath id="band"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 12H9V9H12V7H19V8H23V10H25V13H27V21H25V24H22V26H14V25H10V23H7V20H5V14H7Z M11 15H13V12H18V11H20V13H23V16H24V19H22V22H17V23H15V21H12V19H10V16H11Z"/></clipPath></defs><path fill="#34304e" fill-rule="evenodd" clip-rule="evenodd" d="M7 12H9V9H12V7H19V8H23V10H25V13H27V21H25V24H22V26H14V25H10V23H7V20H5V14H7Z M11 15H13V12H18V11H20V13H23V16H24V19H22V22H17V23H15V21H12V19H10V16H11Z"/><g clip-path="url(#band)"><path fill="#9babc7" d="M8 12H10V10H13V8H19V9H22V11H24V14H26V21H24V23H21V25H14V24H11V22H8V19H6V15H8Z"/><path fill="#d2dcee" d="M8 13H10V11H13V9H19V10H22V12H20V11H17V12H13V15H11V19H9V21H8V18H7V15H8Z"/><path fill="#ffffff" d="M9 13H10V12H12V10H16V11H13V13H11V16H10V18H9Z"/><path fill="#65708f" d="M24 13H26V20H24V23H21V25H15V24H20V22H22V20H24Z"/><path fill="#d2dcee" d="M10 22H13V23H16V24H21V23H23V22H24V24H21V26H14V25H11Z"/><path fill="#ffffff" d="M13 23H16V24H19V25H16V24H13Z"/></g><path fill="#34304e" d="M3 8H5V5H9V4H12V6H15V9H14V12H11V14H8V12H5V11H3Z"/><path fill="#63b6ce" d="M4 8H6V6H9V5H11V7H10V10H8V12H6V10H4Z"/><path fill="#c8f2f0" d="M5 8H7V6H9V8H8V10H6Z"/><path fill="#cf78ad" d="M10 7H12V6H14V9H13V11H10V13H8V11H9V9H10Z"/><path fill="#ffcae5" d="M11 7H13V9H11V10H10V9H11Z"/><path fill="#f8e6ba" d="M8 9H10V11H8Z"/><path fill="#e69cbd" d="M20 23H22V24H20Z"/></svg>
