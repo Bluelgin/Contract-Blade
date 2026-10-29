@@ -45,6 +45,9 @@ public final class ModItems {
     public static final RegistryObject<Item> ENDLESS_CONTRACT = ITEMS.register("endless_contract",
             () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED, true));
 
+    public static final RegistryObject<Item> OATH_RING = ITEMS.register("oath_ring",
+            () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED, false, true));
+
     public static final RegistryObject<Item> MANKA_TALISMAN = ITEMS.register("manka_talisman",
             com.maidweapon.forge.item.DanmakuTalismanItem::new);
 

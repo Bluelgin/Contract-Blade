@@ -51,6 +51,7 @@ public final class ContractCompanionService {
     }
 
     public static void toggle(Player owner) {
+        if (com.maidweapon.forge.system.oath.OathService.active(owner)) return;
         if (!owner.isAlive() || owner.isSpectator() || owner.containerMenu != owner.inventoryMenu) return;
         long now = now(owner);
         if (now < NEXT_REQUEST.getOrDefault(owner.getUUID(), 0L)) return;
@@ -119,7 +120,7 @@ public final class ContractCompanionService {
             else if (mode == ContractCompanionState.Mode.RESIDENT) mode = ContractCompanionState.Mode.MANUAL;
             ContractCompanionState.mark(carrier, maid, mode, ContractCompanionState.until(carrier));
             InfusedMaidDeploymentSystem.maintainCompanion(owner, carrier, maid, resident);
-            if (resident) continue;
+            if (resident || com.maidweapon.forge.system.oath.OathService.empowered(maid)) continue;
             if (mode != ContractCompanionState.Mode.GUARD) continue;
             if (inCombat(owner, maid)) ContractCompanionState.extend(carrier, maid, now(owner) + 200);
             if (now(owner) >= ContractCompanionState.until(carrier)
@@ -154,6 +155,7 @@ public final class ContractCompanionService {
     }
 
     public static boolean canFollow(Player owner, ItemStack requested) {
+        if (com.maidweapon.forge.system.oath.OathService.active(owner)) return false;
         String requestedBinding = ContractCarrierData.getBindingId(requested);
         var seen = new HashSet<String>();
         for (int slot = 0; slot < owner.getInventory().getContainerSize(); slot++) {

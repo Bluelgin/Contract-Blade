@@ -15,6 +15,7 @@ public final class ContractBaubleExtension implements ILittleMaid {
         manager.bind(ModItems.GUARDIAN_RIBBON, new IMaidBauble() { });
         manager.bind(ModItems.HEARTBOUND_KNOT, new IMaidBauble() { });
         manager.bind(ModItems.ENDLESS_CONTRACT, new IMaidBauble() { });
+        manager.bind(ModItems.OATH_RING, new IMaidBauble() { });
         manager.bind(ModItems.MANKA_TALISMAN, new IMaidBauble() { });
     }
 }

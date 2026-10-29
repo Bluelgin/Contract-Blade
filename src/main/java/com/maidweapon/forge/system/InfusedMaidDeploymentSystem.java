@@ -226,6 +226,7 @@ public final class InfusedMaidDeploymentSystem {
     }
 
     public static boolean recallRequested(Player player, ItemStack weapon) {
+        if (com.maidweapon.forge.system.oath.OathService.active(player)) return false;
         if (!MaidInfusion.isInfused(weapon) || !ContractCarrierData.isOwner(weapon, player)) return false;
         String id = ContractCarrierData.getBoundMaidUUID(weapon);
         Entity maid = id == null ? null : findManifestedMaid(player, id);
@@ -336,6 +337,8 @@ public final class InfusedMaidDeploymentSystem {
 
         ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
         if (ContractLifecycleService.capture(player, maid, weapon, false)) {
+            if (com.maidweapon.forge.system.oath.OathService.binding(player).equals(ContractCarrierData.getBindingId(weapon)))
+                com.maidweapon.forge.system.oath.OathService.end(player, "protective_recall", false);
             ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
             ContractRecoveryService.cancel(player, maidId);
             MaidCareTaskSystem.clearOriginalTask(weapon);

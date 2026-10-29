@@ -242,3 +242,6 @@ atlas. The concept bitmap is not resampled into the game. Fox-tail and knot
 details, three styles, and five procedural parry marks follow the approved
 minimal direction. `runtime-bar-preview.png` is an actual offscreen Minecraft
 GUI render. No artwork from a third-party game's boss HUD was copied.
+
+## Oath Manifestation 1.0
+Original pixel SVG artwork: `art/oath/oath_ring.svg` and `oath_backlash.svg`, authored for this project; no generated images or third-party artwork. Rebuild PNGs with `python art/oath/export.py` (Inkscape).

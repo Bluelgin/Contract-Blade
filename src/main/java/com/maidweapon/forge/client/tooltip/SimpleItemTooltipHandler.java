@@ -21,11 +21,12 @@ public final class SimpleItemTooltipHandler {
         Consumer<List<Component>> details;
         if (stack.getItem() instanceof ContractProjectionBaubleItem bauble) {
             String mode = bauble.mode().name().toLowerCase(java.util.Locale.ROOT);
-            lore = bauble.resonanceWaiver() ? "maid_weapon.tooltip.simple.endless_contract.lore"
+            lore = bauble.oathManifestation() ? "maid_weapon.tooltip.oath.lore" : bauble.resonanceWaiver() ? "maid_weapon.tooltip.simple.endless_contract.lore"
                     : "maid_weapon.tooltip.projection." + mode + ".flavor";
             details = lines -> {
                 SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.projection.slot");
                 SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.projection." + mode);
+                if (bauble.oathManifestation()) SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.oath.details");
                 if (bauble.resonanceWaiver()) SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.endless_contract");
             };
         } else if (stack.getItem() instanceof ResonanceUpgradeItem vein) {

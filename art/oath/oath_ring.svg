@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
+<!-- Original pixel paths: antique gold oath ring, crimson soul crystal, pink/blue heartbound ribbons. -->
+<path fill="#29233b" d="M10 7h12v2h3v3h2v12h-2v3h-3v2H10v-2H7v-3H5V12h2V9h3z"/>
+<path fill="#b46a3b" d="M10 9h12v2h3v3h-3v-2H10v2H8v10h3v2h10v-2h3V14h2v10h-2v3H10v-2H7V13h3z"/>
+<path fill="#f4cb76" d="M11 10h10v2H11zM8 14h3v2H9v7H7v-8zM10 24h3v2h8v2H10zM23 14h2v9h-2z"/>
+<path fill="#fff1b3" d="M11 10h6v1h-6zM8 16h1v5H8zM14 26h6v1h-6z"/>
+<path fill="#29233b" d="M11 3h10v2h3v6h-3v3H11v-3H8V5h3z"/>
+<path fill="#d39354" d="M12 4h8v2h3v4h-3v3h-8v-3H9V6h3z"/>
+<path fill="#a22f53" d="M13 4h6v2h2v4h-3v2h-4v-2h-3V6h2z"/>
+<path fill="#ed6c80" d="M13 5h5v2h-2v3h-3V8h-2V6h2z"/>
+<path fill="#ffe0b7" d="M13 5h3v2h-3zM20 7h1v2h-1z"/>
+<path fill="#29233b" d="M13 18h5v3h2v4h-3v-2h-2v4h-4v-3H9v-4h4z"/>
+<path fill="#e99cb9" d="M12 20h3v2h-3v2h-2v-3h2zM14 23h2v4h-2z"/>
+<path fill="#8ed5e4" d="M16 20h2v2h2v2h-3v-2h-1zM17 25h2v3h-2z"/>
+<path fill="#ffe1a0" d="M14 20h3v3h-3z"/>
+</svg>

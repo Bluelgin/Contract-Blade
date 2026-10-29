@@ -618,5 +618,13 @@
   "patchouli.maid_weapon.entry.growth_values.page.6.title": "灵结晶与灵脉",
   "patchouli.maid_weapon.entry.growth_values.page.6": "灵结晶在女仆祭坛制作：紫水晶碎片×2、青金石、荧石粉、红石、石英各一份，消耗0.2 P点。手持水晶、副手持自己的契约武器使用；默认恢复250共鸣，满值不消耗。$(br2)初醒、流转、无尽灵脉依次使用后永久提升玩家的自然恢复倍率至1.25／1.60／2倍，不增加上限、不立即回满。后阶配方消耗前阶物品，已用掉前阶时需另制一份作为材料。",
   "patchouli.maid_weapon.entry.growth_values.page.7.title": "毕业饰品与存档",
-  "patchouli.maid_weapon.entry.growth_values.page.7": "无尽契约由同心结进阶，保留装备投影并免除佩戴女仆的共鸣费用；不会免除耀魂、技能冷却或解锁条件，也不自动授予万华御札。免耗后无需为她专门回能，灵脉仍能帮助其他女仆。$(br2)等级由玩家共享，共鸣按女仆独立计算。更新前备份整个世界，保留旧配置用于迁移；跨服务器携带武器不会携带世界保存的成长和共鸣。"
+  "patchouli.maid_weapon.entry.growth_values.page.7": "无尽契约由同心结进阶，保留装备投影并免除佩戴女仆的共鸣费用；不会免除耀魂、技能冷却或解锁条件，也不自动授予万华御札。免耗后无需为她专门回能，灵脉仍能帮助其他女仆。$(br2)等级由玩家共享，共鸣按女仆独立计算。更新前备份整个世界，保留旧配置用于迁移；跨服务器携带武器不会携带世界保存的成长和共鸣。",
+  "item.maid_weapon.oath_ring": "誓约戒指",
+  "effect.maid_weapon.oath_backlash": "誓约反噬",
+  "key.maid_weapon.oath_manifestation": "完全显现",
+  "maid_weapon.tooltip.oath.lore": "共鸣为火，誓约为戒。与你并肩，直至燃尽。",
+  "maid_weapon.tooltip.oath.details": "装备于女仆原生饰品栏：组合投影；按完全显现键共斗，无免耗。与无尽契约按槽位顺序互斥。燃尽后承受誓约反噬。",
+  "maid_weapon.oath.started": "誓约显现——共鸣开始燃烧。",
+  "maid_weapon.oath.unavailable": "需要一名装备有效誓约戒指、共鸣大于零的合法出战契约女仆。",
+  "maid_weapon.oath.one_companion": "完全显现需要当前仅有一名出战契约女仆。"
 }

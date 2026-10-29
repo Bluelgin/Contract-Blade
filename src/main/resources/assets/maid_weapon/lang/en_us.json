@@ -616,5 +616,13 @@
   "patchouli.maid_weapon.entry.growth_values.page.6.title": "Crystals and Spirit Veins",
   "patchouli.maid_weapon.entry.growth_values.page.6": "At a maid altar, use 2 amethyst shards, 1 lapis lazuli, 1 glowstone dust, 1 redstone and 1 quartz; costs 0.2 P. Use the crystal with your contract in the offhand to recover 250 resonance by default; a full pool consumes nothing.$(br2)Use Awakening, Flowing and Endless Veins in order for permanent player-wide recovery multipliers of 1.25/1.60/2.00. They neither raise capacity nor refill the pool. Later recipes consume an earlier-stage item; craft a spare if you already used yours.",
   "patchouli.maid_weapon.entry.growth_values.page.7.title": "Endgame Baubles and Saves",
-  "patchouli.maid_weapon.entry.growth_values.page.7": "Endless Contract upgrades the knot, retaining projection and waiving its wearer's resonance costs. It does not waive Proud Soul, cooldowns or unlock conditions, or grant Manka Talisman. Spirit Veins still help other maids.$(br2)Mastery belongs to the player; resonance pools are per maid. Back up the whole world before updating and retain old configs for migration. Moving a weapon across servers does not move world-owned mastery or resonance."
+  "patchouli.maid_weapon.entry.growth_values.page.7": "Endless Contract upgrades the knot, retaining projection and waiving its wearer's resonance costs. It does not waive Proud Soul, cooldowns or unlock conditions, or grant Manka Talisman. Spirit Veins still help other maids.$(br2)Mastery belongs to the player; resonance pools are per maid. Back up the whole world before updating and retain old configs for migration. Moving a weapon across servers does not move world-owned mastery or resonance.",
+  "item.maid_weapon.oath_ring": "Oath Ring",
+  "effect.maid_weapon.oath_backlash": "Oath Backlash",
+  "key.maid_weapon.oath_manifestation": "Oath Manifestation",
+  "maid_weapon.tooltip.oath.lore": "Resonance is the flame. Our oath endures until its final ember.",
+  "maid_weapon.tooltip.oath.details": "Native maid bauble: combined projection and Oath Manifestation, without free resonance. First ultimate bauble wins against Endless Contract. Burnout inflicts Oath Backlash.",
+  "maid_weapon.oath.started": "Oath Manifestation — resonance ignited.",
+  "maid_weapon.oath.unavailable": "Requires one legal deployed companion with an effective Oath Ring and positive resonance.",
+  "maid_weapon.oath.one_companion": "Oath Manifestation requires exactly one deployed companion."
 }

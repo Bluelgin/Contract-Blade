@@ -1,0 +1,33 @@
+{
+  "type": "touhou_little_maid:altar_crafting",
+  "output": {
+    "type": "minecraft:item",
+    "nbt": {
+      "Item": {
+        "id": "maid_weapon:oath_ring",
+        "Count": 1
+      }
+    }
+  },
+  "power": 1.0,
+  "ingredients": [
+    {
+      "item": "maid_weapon:heartbound_knot"
+    },
+    {
+      "item": "maid_weapon:spirit_crystal"
+    },
+    {
+      "item": "maid_weapon:spirit_crystal"
+    },
+    {
+      "item": "minecraft:netherite_ingot"
+    },
+    {
+      "item": "minecraft:ghast_tear"
+    },
+    {
+      "item": "minecraft:blaze_powder"
+    }
+  ]
+}

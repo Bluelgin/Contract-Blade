@@ -31,6 +31,23 @@ import java.util.List;
 /** Combat and recovery rules for the short-term contract resonance resource. */
 @Mod.EventBusSubscriber
 public final class MaidBondCombatHandler {
+    private static final Map<LivingEntity, Map<String, Long>> OATH_COOLDOWNS = new java.util.WeakHashMap<>();
+    /** Reuse the effective-hit records and 60 tick window. No independent hit tracker or hurt call. */
+    public static boolean oathCooperation(Player owner, LivingEntity target, boolean maidAttack) {
+        if (!(target instanceof net.minecraft.world.entity.monster.Enemy) || target.isAlliedTo(owner)) return false;
+        String binding = com.maidweapon.forge.system.oath.OathService.binding(owner);
+        if (binding.isEmpty()) return false;
+        long time = owner.level().getGameTime();
+        String key = key(owner.getUUID(), target.getUUID());
+        Long previous = maidAttack ? PLAYER_HITS.get(key) : MAID_HITS.get(key + ":" + binding);
+        if (previous == null || time < previous || time - previous > 60) return false;
+        var cooldown = OATH_COOLDOWNS.computeIfAbsent(target, entity -> new HashMap<>());
+        String actor = owner.getStringUUID() + ":" + binding;
+        long last = cooldown.getOrDefault(actor, Long.MIN_VALUE / 2);
+        if (time - last < com.maidweapon.common.OathConfig.COOP_INTERVAL.get()) return false;
+        cooldown.put(actor, time);
+        return true;
+    }
     private static final Map<String, Long> PLAYER_HITS = new HashMap<>();
     private static final Map<String, Long> MAID_HITS = new HashMap<>();
     private static final Map<String, Long> LAST_COOP_REWARD = new HashMap<>();
@@ -89,6 +106,7 @@ public final class MaidBondCombatHandler {
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID player = event.getEntity().getUUID();
+        OATH_COOLDOWNS.values().forEach(map -> map.keySet().removeIf(key -> key.startsWith(player + ":")));
         LAST_COOP_REWARD.keySet().removeIf(key -> key.startsWith(player + ":"));
         PLAYER_HITS.keySet().removeIf(key -> key.startsWith(player + ":"));
         MAID_HITS.keySet().removeIf(key -> key.startsWith(player + ":"));

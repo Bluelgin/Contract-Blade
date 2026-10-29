@@ -84,6 +84,12 @@ public final class ResonanceService {
         int before = pool(context).current(context);
         if (before >= 0 && pool(context).set(context, before - cost)) sync(context);
     }
+    /** Already resolved server authority, used only by the oath session tick. Never waived. */
+    public static void burnOath(ResonanceContract context, int cost) {
+        if (cost <= 0 || !com.maidweapon.forge.system.oath.OathService.burning(context)) return;
+        int current = pool(context).current(context);
+        if (current >= 0 && pool(context).set(context, Math.max(0, current - cost))) sync(context);
+    }
     public static boolean recover(Player owner, ItemStack carrier, String binding, int amount) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
         if (context == null || amount <= 0) return false;
