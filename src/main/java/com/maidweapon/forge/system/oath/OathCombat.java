@@ -32,7 +32,8 @@ public final class OathCombat {
         if (e.getEntity().level().isClientSide || e.getAmount() <= 0) return;
         if (OathService.empowered(e.getEntity())) { e.setCanceled(true); return; }
         // Soul debt/critical settlements already derive from original damage. Never compound them.
-        boolean settlement = com.maidweapon.forge.system.akatsuki.soul.SoulDamageEngine.applying();
+        var strike = com.maidweapon.forge.system.akatsuki.soul.SoulStrikeContext.current();
+        boolean settlement = strike != null && strike.matches(e.getEntity(), e.getSource());
         double multiplier = 1;
         Entity attacker = actor(e.getSource());
         if (!settlement && attacker instanceof Player player) {
@@ -44,7 +45,8 @@ public final class OathCombat {
             if (backlash != null) multiplier *= Math.max(0, 1 - Math.min(.5, OathBurn.penaltyLevels(backlash.getAmplifier()) * OathConfig.BACKLASH_OUT.get()));
         } else if (!settlement && attacker instanceof TamableAnimal maid && OathService.empowered(maid)) {
             multiplier *= 1 + OathConfig.MAID_DAMAGE.get();
-            if (maid.getOwner() instanceof Player owner && MaidBondCombatHandler.oathCooperation(owner, e.getEntity(), true))
+            Player owner = MaidBondCombatHandler.getOwner(maid);
+            if (owner != null && MaidBondCombatHandler.oathCooperation(owner, e.getEntity(), true))
                 multiplier *= 1 + OathConfig.COOP_DAMAGE.get();
         }
         if (e.getEntity() instanceof Player target) {

@@ -41,6 +41,20 @@ public final class OathValidation {
         owner.getAbilities().instabuild = false; owner.setHealth(owner.getMaxHealth());
         owner.moveTo(0, 100, 0, 0, 0);
         try {
+            var ordered = new net.minecraftforge.items.ItemStackHandler(3);
+            ordered.setStackInSlot(0, new ItemStack(ModItems.RESONANCE_SWORD_TASSEL.get()));
+            ordered.setStackInSlot(1, new ItemStack(ModItems.OATH_RING.get()));
+            ordered.setStackInSlot(2, new ItemStack(ModItems.ENDLESS_CONTRACT.get()));
+            var effects = ContractBaubleEffects.resolveSlots(ordered);
+            check(effects.contains(ContractBaubleEffects.Effect.OATH_MANIFESTATION)
+                    && !effects.contains(ContractBaubleEffects.Effect.RESONANCE_WAIVER)
+                    && !effects.contains(ContractBaubleEffects.Effect.ARMOR_PROJECTION), "ordinary projection slot policy preserved");
+            var inventory = ordered.serializeNBT();
+            var items = inventory.getList("Items", 10); var reversed = new net.minecraft.nbt.ListTag();
+            for (int i = items.size() - 1; i >= 0; i--) reversed.add(items.get(i).copy());
+            inventory.put("Items", reversed); var payload = new net.minecraft.nbt.CompoundTag();
+            payload.put("MaidBaubleInventory", inventory);
+            check(StoredMaidBaubleResolver.readNativeEffects(payload).equals(effects), "stored slot order ignores list order");
             var blade = create(owner, 0);
             String binding = ContractCarrierData.getBindingId(blade);
             check(ContractLifecycleService.manifest(owner, blade, false), "native manifestation");
@@ -81,6 +95,15 @@ public final class OathValidation {
             Zombie target = new Zombie(level); target.moveTo(1, 100, 0, 0, 0); level.addFreshEntity(target);
             var attack = new LivingHurtEvent(target, level.damageSources().playerAttack(owner), 10);
             OathCombat.hurt(attack); near(attack.getAmount(), 12, "all-weapon player damage");
+            owner.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_AXE));
+            var arrow = new net.minecraft.world.entity.projectile.Arrow(level, owner);
+            var arrowSource = level.damageSources().arrow(arrow, owner);
+            var ranged = new LivingHurtEvent(target, arrowSource, 10);
+            OathCombat.hurt(ranged); near(ranged.getAmount(), 12, "projectile ownership independent of held weapon");
+            arrow.setOwner(maid);
+            var reassigned = new LivingHurtEvent(target, arrowSource, 10);
+            OathCombat.hurt(reassigned); near(reassigned.getAmount(), 10, "changed projectile owner cannot borrow attribution");
+            arrow.discard();
             var maidAttack = new LivingHurtEvent(target, level.damageSources().mobAttack(maid), 10);
             OathCombat.hurt(maidAttack); near(maidAttack.getAmount(), 13, "maid damage");
             // Feed the existing effective-hit callback, then examine the second attack's amount.
@@ -93,6 +116,18 @@ public final class OathValidation {
             OathCombat.hurt(unknown); near(unknown.getAmount(), 10, "environment has no attacker bonus");
             var incoming = new LivingHurtEvent(owner, level.damageSources().generic(), 10);
             OathCombat.hurt(incoming); near(incoming.getAmount(), 9, "player defense");
+            var limit = new com.maidweapon.forge.compat.DomainTargetCompatibility.State[]{
+                    new com.maidweapon.forge.compat.DomainTargetCompatibility.State(5, 0, false, "fixture")};
+            com.maidweapon.forge.compat.DomainTargetCompatibility.register("oath_fixture",
+                    new com.maidweapon.forge.compat.DomainTargetCompatibility.Adapter() {
+                        public boolean supports(LivingEntity t) { return t == target; }
+                        public com.maidweapon.forge.compat.DomainTargetCompatibility.State inspect(LivingEntity t) { return limit[0]; }
+                    });
+            var capped = new LivingHurtEvent(target, level.damageSources().playerAttack(owner), 5);
+            OathCombat.hurt(capped); near(capped.getAmount(), 5, "verified hit cap retained");
+            limit[0] = new com.maidweapon.forge.compat.DomainTargetCompatibility.State(5, 20, false, "fixture");
+            var budget = new LivingHurtEvent(target, level.damageSources().playerAttack(owner), 4);
+            OathCombat.hurt(budget); near(budget.getAmount(), 4, "no bonus appended after rolling budget");
             var second = create(owner, 1);
             check(ResonanceService.recover(owner, second, ContractCarrierData.getBindingId(second), 1), "other pool recovers");
             int maximum = ResonanceService.maximum();

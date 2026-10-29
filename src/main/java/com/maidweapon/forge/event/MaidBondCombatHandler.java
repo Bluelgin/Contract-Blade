@@ -199,7 +199,7 @@ public final class MaidBondCombatHandler {
         return result;
     }
 
-    private static Player getOwner(Entity maid) {
+    public static Player getOwner(Entity maid) {
         if (!(maid instanceof TamableAnimal tamable) || tamable.getOwnerUUID() == null
                 || maid.getServer() == null) return null;
         ServerPlayer player = maid.getServer().getPlayerList().getPlayer(tamable.getOwnerUUID());

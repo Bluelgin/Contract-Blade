@@ -39,6 +39,7 @@ public final class OathService {
     }
     public static String binding(Player owner) { return active(owner) ? session(owner).getString("Binding") : ""; }
     public static boolean empowered(Entity maid) {
+        if (!com.maidweapon.forge.compat.tlm.TlmEntityAdapter.isMaidEntity(maid)) return false;
         if (!(maid instanceof TamableAnimal animal) || animal.getOwnerUUID() == null || maid.getServer() == null) return false;
         var owner = maid.getServer().getPlayerList().getPlayer(animal.getOwnerUUID());
         if (!active(owner)) return false;
@@ -49,7 +50,9 @@ public final class OathService {
     }
     public static void activate(Player owner) {
         if (!(owner instanceof ServerPlayer) || !owner.isAlive() || owner.isSpectator() || active(owner)
-                || owner.containerMenu != owner.inventoryMenu || !OathSavedData.get(owner.getServer()).writable()) return;
+                || owner.containerMenu != owner.inventoryMenu
+                || owner.level().dimension().equals(com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
+                || !OathSavedData.get(owner.getServer()).writable()) return;
         ResonanceContract selected = null;
         var seen = new HashSet<String>();
         for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
@@ -115,7 +118,9 @@ public final class OathService {
         OathSavedData.get(owner.getServer()).put(owner.getUUID(), state); ONLINE.remove(owner.getUUID());
         com.maidweapon.forge.network.OathNetwork.send(owner, state.getString("Maid"), false);
         var carrier = ContractWeaponLocator.findBoundWeaponByBinding(owner, state.getString("Binding"));
-        boolean recalled = !carrier.isEmpty() && InfusedMaidDeploymentSystem.forceRecall(owner, state.getString("Maid"), carrier, 0);
+        boolean recalled = false;
+        try { recalled = !carrier.isEmpty() && InfusedMaidDeploymentSystem.forceRecall(owner, state.getString("Maid"), carrier, 0); }
+        catch (RuntimeException failure) { LOG.warn("Oath safe recall failed owner={} maid={}", owner.getUUID(), state.getString("Maid"), failure); }
         // Existing recovery journal remains authoritative if the entity/carrier is unloaded or transferred.
         if (exhausted && owner.isAlive()) {
             var old = owner.getEffect(OathEffects.BACKLASH.get());
