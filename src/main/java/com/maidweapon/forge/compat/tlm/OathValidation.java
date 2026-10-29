@@ -23,6 +23,12 @@ import java.util.*;
  * FakePlayer is used for deterministic server behavior; this is not client gameplay acceptance.
  */
 public final class OathValidation {
+    public static void restart(MinecraftServer server) {
+        var state = OathSavedData.get(server).session(UUID.fromString("07a4f283-201e-488e-a0e8-d9269fe65dcd"));
+        check(!state.getBoolean("Active") && state.getString("LastOutcome").equals("fixture_disconnect"),
+                "real server restart retains finished session without replay");
+        com.mojang.logging.LogUtils.getLogger().info("OATH_RESTART_PASS");
+    }
     public static void run(MinecraftServer server) throws Exception {
         var level = server.overworld();
         var owner = net.minecraftforge.common.util.FakePlayerFactory.get(level,

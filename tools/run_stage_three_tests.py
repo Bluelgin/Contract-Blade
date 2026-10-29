@@ -25,7 +25,7 @@ fixtures = [
     ('boss-defense', ['-PblackFoxTest=true', '-PblackFoxDefenseTest=true'], ['BLACK_FOX_DEFENSE_PASS']),
     ('projection', ['-PprojectionTest=true'], ['PROJECTION_VALIDATION_PASS', *(['TACZ_AMMO_VALIDATION_PASS', 'TACZ_OWNERSHIP_VALIDATION_PASS', 'TACZ_OWNER_ROUTE_VALIDATION_PASS'] if args.compat == 'tacz' else [])]),
     ('companion', ['-PcompanionTest=true'], ['COMPANION_VALIDATION_PASS']),
-    ('resonance', ['-PresonanceTest=true'], ['CONTRACT_RESONANCE_PASS']),
+    ('resonance', ['-PresonanceTest=true'], ['CONTRACT_RESONANCE_PASS', 'OATH_NATIVE_PASS']),
     ('akatsuki-domain', ['-PakatsukiDomainTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_NO_PROVIDER_PASS']),
     ('akatsuki-provider', ['-PakatsukiDomainTest=true','-PfoxBladeTetraTest=true'], ['AKATSUKI_DOMAIN_SERVER_PASS','AKATSUKI_DOMAIN_PROVIDER_PASS']),
     ('architecture', ['-ParchitectureTest=true'], ['CONTRACT_ARCHITECTURE_PASS']),
@@ -70,7 +70,7 @@ for name, flags, markers in fixtures:
                     resumed = subprocess.run([*cmd, '-PresonanceResume=true' if name == 'resonance' else '-PstageThreeResume=true' if name == 'recovery' else '-PwhiteBlessingResume=true' if name == 'blessing' else '-PakatsukiDomainResume=true'],cwd=ROOT,env=os.environ.copy(),stdout=output,stderr=subprocess.STDOUT,timeout=900)
                 resumed_text = restart_log.read_text(encoding='utf-8', errors='replace')
                 if runtime_log.exists(): resumed_text += '\n' + runtime_log.read_text(encoding='utf-8', errors='replace')
-                if resumed.returncode or ('CONTRACT_RESONANCE_RESTART_PASS' if name == 'resonance' else 'CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS' if name == 'blessing' else 'AKATSUKI_RESCUE_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
+                if resumed.returncode or ('OATH_RESTART_PASS' if name == 'resonance' else 'CONTRACT_STAGE_THREE_RESTART_PASS' if name == 'recovery' else 'WHITE_BLESSING_RESTART_PASS' if name == 'blessing' else 'AKATSUKI_RESCUE_RESTART_PASS') not in resumed_text or '_FAIL' in resumed_text:
                     failed.append(f'{name}-restart');print(f'{name}-restart: FAIL; {restart_log}',flush=True)
                 else:
                     print(f'{name}-restart: PASS',flush=True)

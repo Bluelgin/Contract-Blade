@@ -56,7 +56,8 @@ public final class OathService {
             ItemStack carrier = owner.getInventory().getItem(i);
             for (var channel : ContractChannelStorage.channels(carrier)) {
                 var c = ResonanceContract.resolve(owner, carrier, channel.getString("MaidBindingId"));
-                if (c == null || c.liveMaid() == null || ContractCompanionService.isResident(owner, carrier)
+                if (c == null || c.liveMaid() == null || !c.binding().equals(ContractCarrierData.getBindingId(carrier))
+                        || ContractCompanionService.isResident(owner, carrier)
                         || !seen.add(c.maid())) continue;
                 if (selected != null) { message(owner, "one_companion"); return; }
                 selected = c;
@@ -92,7 +93,7 @@ public final class OathService {
         var carrier = ContractWeaponLocator.findBoundWeaponByBinding(owner, state.getString("Binding"));
         var c = ResonanceContract.resolve(owner, carrier, state.getString("Binding"));
         if (!owner.isAlive() || c == null || !state.getString("Maid").equals(c.maid()) || c.liveMaid() == null
-                || c.liveMaid().level() != owner.level() || ContractCompanionService.isResident(owner, carrier)) {
+                || c.liveMaid().level() != owner.level()) {
             end(owner, "identity_or_lifecycle_interrupted", false); return;
         }
         int current = ResonanceService.current(owner, carrier, c.binding());
@@ -134,6 +135,9 @@ public final class OathService {
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void death(LivingDeathEvent e) {
         if (!e.getEntity().level().isClientSide && e.getEntity() instanceof Player p) end(p, "death", false);
+    }
+    @SubscribeEvent(priority = EventPriority.HIGHEST) public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e) {
+        if (!e.getEntity().level().isClientSide) end(e.getEntity(), "dimension_change", false);
     }
     @SubscribeEvent public static void stop(ServerStoppingEvent e) {
         for (var player : e.getServer().getPlayerList().getPlayers()) end(player, "server_stopping", false);

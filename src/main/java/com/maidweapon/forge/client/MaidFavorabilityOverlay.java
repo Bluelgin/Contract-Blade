@@ -74,8 +74,15 @@ public final class MaidFavorabilityOverlay {
     private static void renderBurn(GuiGraphics g, int x, int y, int width, int filled, float ratio,
                                    float time, boolean burning, float ash) {
         if (!burning) {
-            int alpha = Math.round(180 * ash) << 24;
-            g.fill(x, y, x + Math.round(width * ash), y + 9, alpha | 0x675D57);
+            // First collapse the last ember, then let a sparse ash trail drift away.
+            if (ash > .73f) {
+                float collapse = (ash - .73f) / .27f;
+                int ember = Math.max(1, Math.round(6 * collapse));
+                g.fillGradient(x, y - Math.round(3 * collapse), x + ember, y + 9,
+                        0xCCFFCE63, 0x88BA3027);
+            }
+            int alpha = Math.round(150 * ash) << 24;
+            g.fill(x, y + 8, x + Math.round(width * ash), y + 9, alpha | 0x675D57);
             for (int i = 0; i < 9; i++) {
                 int px = x + i * 9 + (int) (Math.sin(i + time * .2) * 2);
                 int py = y - (int) ((1 - ash) * (8 + i % 4 * 3));

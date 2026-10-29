@@ -61,6 +61,7 @@ public final class ContractLifecycleService {
     public static boolean manifest(Player player, ItemStack contract, boolean notifyPlayer,
                                    java.util.function.Consumer<Entity> beforeSpawn) {
         if (player == null || contract.isEmpty()
+                || com.maidweapon.forge.system.oath.OathService.active(player)
                 || !MaidInfusion.isInfused(contract)
                 || !ContractCarrierData.isOwner(contract, player)
                 || ContractCarrierData.isContractSuperseded(contract)
@@ -85,6 +86,7 @@ public final class ContractLifecycleService {
      * second lifecycle.</p>
      */
     public static ToggleResult toggle(Player player, ItemStack contract, boolean notifyPlayer) {
+        if (com.maidweapon.forge.system.oath.OathService.active(player)) return ToggleResult.FAILED;
         if (player == null || contract.isEmpty() || !MaidInfusion.isInfused(contract)) {
             return ToggleResult.NOT_CONTRACT;
         }

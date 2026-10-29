@@ -38,6 +38,7 @@ public final class ContractResonanceValidation {
         if (Boolean.getBoolean("contractblade.resonance.resume")) {
             check(ResonanceProgressService.stage(a) == 3 && ResonanceProgressService.stage(b) == 0,
                     "world restart retains player progression and isolation");
+            OathValidation.restart(event.getServer());
             LogUtils.getLogger().info("CONTRACT_RESONANCE_RESTART_PASS"); return;
         }
         // Damage callbacks resolve the owner through the real online-player index.

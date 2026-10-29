@@ -21,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 public final class ContractInteractionService {
     public static InteractionResult capture(Player player, Entity maid, ItemStack weapon) {
         if (player == null || maid == null || weapon.isEmpty()) return InteractionResult.PASS;
+        if (com.maidweapon.forge.system.oath.OathService.empowered(maid)) return InteractionResult.FAIL;
         if (!TouhouLittleMaidCompat.isTouhouLittleMaidLoaded()
                 || !TouhouLittleMaidCompat.isMaidEntity(maid)
                 || !MaidInfusion.isWeapon(weapon)) {

@@ -338,7 +338,9 @@ public final class InfusedMaidDeploymentSystem {
         ContractMaidRuntimeService.cleanupBeforeRecall(player, weapon, maid);
         if (ContractLifecycleService.capture(player, maid, weapon, false)) {
             if (com.maidweapon.forge.system.oath.OathService.binding(player).equals(ContractCarrierData.getBindingId(weapon)))
-                com.maidweapon.forge.system.oath.OathService.end(player, "protective_recall", false);
+                com.maidweapon.forge.system.oath.OathService.end(player, "protective_recall",
+                    player.isAlive() && com.maidweapon.forge.system.resonance.ResonanceService.current(
+                        player, weapon, ContractCarrierData.getBindingId(weapon)) == 0);
             ContractActiveDeployments.forgetMaid(player.getUUID(), maidId);
             ContractRecoveryService.cancel(player, maidId);
             MaidCareTaskSystem.clearOriginalTask(weapon);

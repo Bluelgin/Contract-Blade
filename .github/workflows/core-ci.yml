@@ -91,14 +91,14 @@ jobs:
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
             -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
 
-      - name: Native Manka growth, payment and four-wave fixture
-        run: python tools/run_manka_native_validation.py --output /tmp/contract-manka-native
-
       - name: Native resonance, restart, projection and companion fixtures
         run: |
           python tools/run_stage_three_tests.py --fixture resonance --compat vanilla
           python tools/run_stage_three_tests.py --fixture projection --compat vanilla
           python tools/run_stage_three_tests.py --fixture companion --compat vanilla
+
+      - name: Native Manka growth, payment and four-wave fixture
+        run: python tools/run_manka_native_validation.py --output /tmp/contract-manka-native
 
       - name: Prepare optional BladeTetra provider runtime
         run: |

@@ -52,7 +52,15 @@ public final class OathCombat {
             var backlash = target.getEffect(OathEffects.BACKLASH.get());
             if (backlash != null) multiplier *= 1 + Math.min(.5, OathBurn.penaltyLevels(backlash.getAmplifier()) * OathConfig.BACKLASH_IN.get());
         }
-        e.setAmount((float) Math.min(Float.MAX_VALUE, e.getAmount() * multiplier));
+        double amount = e.getAmount() * multiplier;
+        if (amount > e.getAmount()) {
+            var limits = com.maidweapon.forge.compat.DomainTargetCompatibility.inspect(e.getEntity());
+            // A rolling native budget may already have been spent before Forge's event.
+            // Do not append bonus damage after that verified budget or protected phase.
+            if (limits.protectedPhase() || limits.dpsCap() > 0) amount = e.getAmount();
+            else if (limits.hitCap() > 0) amount = Math.min(amount, limits.hitCap());
+        }
+        e.setAmount((float) Math.min(Float.MAX_VALUE, amount));
     }
     private OathCombat() { }
 }
