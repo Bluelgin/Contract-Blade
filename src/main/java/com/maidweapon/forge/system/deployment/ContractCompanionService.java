@@ -120,7 +120,8 @@ public final class ContractCompanionService {
             else if (mode == ContractCompanionState.Mode.RESIDENT) mode = ContractCompanionState.Mode.MANUAL;
             ContractCompanionState.mark(carrier, maid, mode, ContractCompanionState.until(carrier));
             InfusedMaidDeploymentSystem.maintainCompanion(owner, carrier, maid, resident);
-            if (resident || com.maidweapon.forge.system.oath.OathService.empowered(maid)) continue;
+            if (resident) continue;
+            if (com.maidweapon.forge.system.oath.OathService.empowered(maid)) continue;
             if (mode != ContractCompanionState.Mode.GUARD) continue;
             if (inCombat(owner, maid)) ContractCompanionState.extend(carrier, maid, now(owner) + 200);
             if (now(owner) >= ContractCompanionState.until(carrier)

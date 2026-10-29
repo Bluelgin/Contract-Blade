@@ -626,5 +626,6 @@
   "maid_weapon.tooltip.oath.details": "装备于女仆原生饰品栏：组合投影；按完全显现键共斗，无免耗。与无尽契约按槽位顺序互斥。燃尽后承受誓约反噬。",
   "maid_weapon.oath.started": "誓约显现——共鸣开始燃烧。",
   "maid_weapon.oath.unavailable": "需要一名装备有效誓约戒指、共鸣大于零的合法出战契约女仆。",
-  "maid_weapon.oath.one_companion": "完全显现需要当前仅有一名出战契约女仆。"
+  "maid_weapon.oath.one_companion": "完全显现需要当前仅有一名出战契约女仆。",
+  "jei.maid_weapon.altar_craft.oath_ring.result": "誓约戒指"
 }

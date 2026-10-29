@@ -49,7 +49,7 @@ public final class OathService {
     }
     public static void activate(Player owner) {
         if (!(owner instanceof ServerPlayer) || !owner.isAlive() || owner.isSpectator() || active(owner)
-                || owner.containerMenu != owner.inventoryMenu) return;
+                || owner.containerMenu != owner.inventoryMenu || !OathSavedData.get(owner.getServer()).writable()) return;
         ResonanceContract selected = null;
         var seen = new HashSet<String>();
         for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
@@ -68,6 +68,7 @@ public final class OathService {
             message(owner, "unavailable"); return;
         }
         var state = new CompoundTag();
+        state.putLong("Remainder", OathSavedData.get(owner.getServer()).remainder(owner.getUUID(), selected.maid()));
         state.putBoolean("Active", true); state.putString("Maid", selected.maid()); state.putString("Binding", selected.binding());
         OathSavedData.get(owner.getServer()).put(owner.getUUID(), state); ONLINE.add(owner.getUUID());
         com.maidweapon.forge.network.ResonanceNetwork.sendIfChanged(owner, selected.maid(),
@@ -107,6 +108,7 @@ public final class OathService {
         if (owner == null || owner.getServer() == null) return;
         var state = session(owner);
         if (!state.getBoolean("Active")) return;
+        OathSavedData.get(owner.getServer()).remainder(owner.getUUID(), state.getString("Maid"), state.getLong("Remainder"));
         state.putBoolean("Active", false); state.putString("LastOutcome", reason);
         state.putLong("EndedAt", owner.getServer().overworld().getGameTime());
         OathSavedData.get(owner.getServer()).put(owner.getUUID(), state); ONLINE.remove(owner.getUUID());

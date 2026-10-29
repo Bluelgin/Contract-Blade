@@ -624,5 +624,6 @@
   "maid_weapon.tooltip.oath.details": "Native maid bauble: combined projection and Oath Manifestation, without free resonance. First ultimate bauble wins against Endless Contract. Burnout inflicts Oath Backlash.",
   "maid_weapon.oath.started": "Oath Manifestation — resonance ignited.",
   "maid_weapon.oath.unavailable": "Requires one legal deployed companion with an effective Oath Ring and positive resonance.",
-  "maid_weapon.oath.one_companion": "Oath Manifestation requires exactly one deployed companion."
+  "maid_weapon.oath.one_companion": "Oath Manifestation requires exactly one deployed companion.",
+  "jei.maid_weapon.altar_craft.oath_ring.result": "Oath Ring"
 }
