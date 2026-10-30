@@ -27,6 +27,8 @@ public final class OathValidation {
         var state = OathSavedData.get(server).session(UUID.fromString("07a4f283-201e-488e-a0e8-d9269fe65dcd"));
         check(!state.getBoolean("Active") && state.getString("LastOutcome").equals("fixture_disconnect"),
                 "real server restart retains finished session without replay");
+        check(OathSavedData.get(server).rests(UUID.fromString("07a4f283-201e-488e-a0e8-d9269fe65dcd"))
+                .getInt(state.getString("RestValidationMaid")) == 123, "real restart preserves paused per-maid rest");
         com.mojang.logging.LogUtils.getLogger().info("OATH_RESTART_PASS");
     }
     public static void run(MinecraftServer server) throws Exception {
@@ -73,9 +75,18 @@ public final class OathValidation {
             tick(owner); check(!OathService.active(owner), "one point burns out");
             check(owner.getEffect(OathEffects.BACKLASH.get()).getAmplifier() == 0, "first burnout I");
             check(com.maidweapon.forge.item.MaidInfusion.containsMaid(blade), "burnout safely recalled");
+            String restingMaid = ContractCarrierData.getBoundMaidUUID(blade);
+            check(com.maidweapon.forge.system.oath.OathRest.resting(owner, restingMaid), "burnout locks maid identity");
+            check(!ContractLifecycleService.manifest(owner, blade, false), "burnout blocks manual manifestation");
+            check(!ContractMaidLifecycleService.manifest(owner, blade, false), "native conversion cannot bypass rest");
+            check(!ContractCompanionService.canFollow(owner, blade), "automatic follow blocked during rest");
+            var rests = OathSavedData.get(server).save(new net.minecraft.nbt.CompoundTag());
+            check(rests.getCompound("RestingMaids").getCompound(owner.getStringUUID()).getInt(restingMaid) > 0,
+                    "maid rest persists independently of carrier");
             tick(owner); check(owner.getEffect(OathEffects.BACKLASH.get()).getAmplifier() == 0, "no duplicate settlement");
             check(!owner.getEffect(OathEffects.BACKLASH.get()).isCurativeItem(new ItemStack(Items.MILK_BUCKET)), "native milk immunity");
             owner.removeEffect(OathEffects.BACKLASH.get());
+            check(!com.maidweapon.forge.system.oath.OathRest.resting(owner, restingMaid), "cleared backlash releases rest");
             check(ContractLifecycleService.manifest(owner, blade, false), "second manifestation");
             maid = (LivingEntity) ContractWeaponLocator.findManifestedMaid(owner, ContractCarrierData.getBoundMaidUUID(blade));
             slots = (IItemHandlerModifiable) maid.getClass().getMethod("getMaidBauble").invoke(maid);
@@ -142,6 +153,14 @@ public final class OathValidation {
             secondSlots.setStackInSlot(0, new ItemStack(ModItems.OATH_RING.get()));
             set(owner, second, 1); OathService.activate(owner); tick(owner);
             check(owner.getEffect(OathEffects.BACKLASH.get()).getAmplifier() == 1, "different maid stacks backlash II");
+            String secondId = ContractCarrierData.getBoundMaidUUID(second);
+            var restStore = OathSavedData.get(server);
+            com.maidweapon.forge.system.oath.OathRest.begin(owner, restingMaid, 2);
+            com.maidweapon.forge.system.oath.OathRest.tick(owner);
+            com.maidweapon.forge.system.oath.OathRest.tick(owner);
+            check(!com.maidweapon.forge.system.oath.OathRest.resting(owner, restingMaid)
+                    && com.maidweapon.forge.system.oath.OathRest.resting(owner, secondId),
+                    "each maid expires independently while backlash remains");
             check(owner.getEffect(OathEffects.BACKLASH.get()).getDuration() == 3600, "native duration refreshed");
             var output = new LivingHurtEvent(target, level.damageSources().playerAttack(owner), 10);
             OathCombat.hurt(output); near(output.getAmount(), 8, "backlash outgoing II");
@@ -156,6 +175,10 @@ public final class OathValidation {
             check(!saved.getCompound(owner.getStringUUID()).getBoolean("Active"), "persisted session tombstone");
             OathService.end(owner, "fixture_repeat", true);
             check(!owner.hasEffect(OathEffects.BACKLASH.get()), "repeat ending cannot impose backlash");
+            com.maidweapon.forge.system.oath.OathRest.begin(owner, secondId, 123);
+            var restartState = OathSavedData.get(server).session(owner.getUUID());
+            restartState.putString("RestValidationMaid", secondId);
+            OathSavedData.get(server).put(owner.getUUID(), restartState);
             target.discard();
             com.mojang.logging.LogUtils.getLogger().info("OATH_NATIVE_PASS");
         } finally {

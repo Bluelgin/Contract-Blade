@@ -31,7 +31,7 @@ public final class ContractCompanionService {
     public static void attacked(Player owner, Entity attacker, float damage) {
         if (damage <= 0 || !(attacker instanceof LivingEntity) || attacker == owner || atHome(owner)) return;
         prolongGuard(owner);
-        if (!ContractRulesConfig.AUTO_MANIFEST.get()
+        if (!ContractGuardPolicy.allows(owner, owner.getMainHandItem())
                 || now(owner) < AUTO_NEXT.getOrDefault(owner.getUUID(), 0L)) return;
         ItemStack held = owner.getMainHandItem();
         if (InfusedMaidDeploymentSystem.isEligibleWeapon(held, owner)
@@ -59,6 +59,8 @@ public final class ContractCompanionService {
         if (atHome(owner)) { message(owner, "interior"); return; }
         ItemStack carrier = owner.getMainHandItem();
         if (!owned(owner, carrier)) { message(owner, "hold_contract"); return; }
+        if (com.maidweapon.forge.system.oath.OathRest.deny(owner,
+                ContractCarrierData.getBoundMaidUUID(carrier), true)) return;
         if (ContractCarrierData.isContractSuperseded(carrier)) { message(owner, "unavailable"); return; }
         Entity maid = loaded(owner, carrier);
         if (maid != null || !MaidInfusion.containsMaid(carrier)) {
@@ -81,7 +83,7 @@ public final class ContractCompanionService {
     public static void tick(Player owner) {
         Injury injury = INJURIES.remove(owner.getUUID());
         ItemStack held = owner.getMainHandItem();
-        if (injury != null && ContractRulesConfig.AUTO_MANIFEST.get()
+        if (injury != null && ContractGuardPolicy.allows(owner, held)
                 && now(owner) >= AUTO_NEXT.getOrDefault(owner.getUUID(), 0L)
                 && !atHome(owner) && !owner.isSpectator()
                 && (com.maidweapon.forge.system.resonance.ResonanceService.current(owner, held, ContractCarrierData.getBindingId(held)) >= ContractRulesConfig.HURT_MIN_RESONANCE.get()
@@ -156,6 +158,7 @@ public final class ContractCompanionService {
     }
 
     public static boolean canFollow(Player owner, ItemStack requested) {
+        if (com.maidweapon.forge.system.oath.OathRest.resting(owner, ContractCarrierData.getBoundMaidUUID(requested))) return false;
         if (com.maidweapon.forge.system.oath.OathService.active(owner)) return false;
         String requestedBinding = ContractCarrierData.getBindingId(requested);
         var seen = new HashSet<String>();

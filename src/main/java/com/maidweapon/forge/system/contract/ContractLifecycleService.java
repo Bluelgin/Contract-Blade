@@ -69,6 +69,7 @@ public final class ContractLifecycleService {
             return false;
         }
         String id = ContractCarrierData.getBoundMaidUUID(contract);
+        if (com.maidweapon.forge.system.oath.OathRest.deny(player, id, notifyPlayer)) return false;
         if (!ContractWeaponLocator.mayManifest(player, id)) {
             if (notifyPlayer) player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.recovery.still_away"), true);
             return false;

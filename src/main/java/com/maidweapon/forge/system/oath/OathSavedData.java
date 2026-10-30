@@ -24,6 +24,14 @@ public final class OathSavedData extends SavedData {
         all.put(owner.toString(), account); root.put("Fractions", all); setDirty();
     }
     public CompoundTag session(UUID owner) { return root.getCompound(owner.toString()).copy(); }
+    public CompoundTag rests(UUID owner) { return root.getCompound("RestingMaids").getCompound(owner.toString()).copy(); }
+    public void rests(UUID owner, CompoundTag rests) {
+        if (!writable()) return;
+        var all = root.getCompound("RestingMaids");
+        if (rests.isEmpty()) all.remove(owner.toString());
+        else all.put(owner.toString(), rests.copy());
+        root.put("RestingMaids", all); setDirty();
+    }
     public void put(UUID owner, CompoundTag session) { if (!writable()) return; root.putInt("SchemaVersion", 1); root.put(owner.toString(), session.copy()); setDirty(); }
     @Override public CompoundTag save(CompoundTag tag) { tag.merge(root); return tag; }
 }

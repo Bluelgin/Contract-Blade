@@ -113,6 +113,10 @@ public final class BlackFoxSwordArtCompat {
     private static boolean prepare(ServerPlayer player) {
         RELEASES.remove(player);
         if (!com.maidweapon.forge.compat.fox.BlackFoxBossCompat.available() || !player.isAlive() || player.isSpectator() || !entitled(player.getMainHandItem(), player)) return false;
+        if (!com.maidweapon.forge.api.IntrinsicSpiritApi.stored(player.getMainHandItem(), FoxSpiritState.BLACK)) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.fox.sa.not_stored"), true);
+            return false;
+        }
         var result = ContractAbilityProgressionService.query(player, player.getMainHandItem(), ID);
         var profile = BlackFoxSwordCoreGrowth.ready(result);
         if (profile == null) return false;

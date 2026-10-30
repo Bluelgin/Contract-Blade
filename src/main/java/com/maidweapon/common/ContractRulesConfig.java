@@ -8,6 +8,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
 public final class ContractRulesConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.BooleanValue AUTO_MANIFEST, AUTO_COMBAT, AUTO_FEED;
+    public static final ForgeConfigSpec.ConfigValue<String> AUTO_MANIFEST_MODE;
+    public static final ForgeConfigSpec.IntValue GROWTH_HIT_WINDOW;
     public static final ForgeConfigSpec.IntValue HURT_COOLDOWN, HURT_MIN_RESONANCE, MAX_RESONANCE, POOL_MAX_RESONANCE, KILL_REWARD, MAX_FOLLOWERS;
     public static final LevelRule[] LEVELS = new LevelRule[11];
 
@@ -26,8 +28,11 @@ public final class ContractRulesConfig {
         b.push("Manifestation");
         MAX_FOLLOWERS = b.comment("同时跟随的契约女仆上限；家模式/待命不计入。超限时拒绝召唤或恢复驻留。")
                 .defineInRange("maxFollowingMaids", 1, 1, 8);
-        AUTO_MANIFEST = b.comment("受伤后自动显现女仆；仅限手持自己的契约武器，默认关闭。")
+        AUTO_MANIFEST = b.comment("旧版自动护主开关；仅在 autoManifestMode=migrate 时用于迁移，true 保留无需饰品护主。")
                 .define("autoManifestWhenHurt", false);
+        AUTO_MANIFEST_MODE = b.comment("自动护主：disabled 关闭 / bauble 需要护主结 / always 无需饰品。",
+                "默认 migrate：旧 autoManifestWhenHurt=true 保留无需饰品；否则采用 bauble。显式选择前三项后忽略旧开关。")
+                .define("autoManifestMode", "migrate", value -> value instanceof String s && List.of("migrate", "disabled", "bauble", "always").contains(s));
         HURT_COOLDOWN = b.comment("自动显现冷却，单位 tick（20 tick = 1 秒）。")
                 .defineInRange("hurtCooldownTicks", 200, 0, 72000);
         HURT_MIN_RESONANCE = b.comment("自动显现所需最低共鸣；仍须满足正常显现条件。")
@@ -46,6 +51,8 @@ public final class ContractRulesConfig {
          KILL_REWARD = b.comment("契约武器合格击杀后的共鸣恢复量；0 关闭击杀恢复。")
                 .defineInRange("killRecovery", 5, 0, 1000000);
         b.pop().push("Growth");
+        GROWTH_HIT_WINDOW = b.comment("同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。")
+                .defineInRange("baubleHitWindowTicks", 10, 1, 200);
         for (int level = 1; level <= 10; level++) {
             b.push("level" + level);
             var mode = b.comment("升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。")
@@ -68,6 +75,10 @@ public final class ContractRulesConfig {
 
     public static int maximumResonance() {
         return SPEC.isLoaded() ? POOL_MAX_RESONANCE.get() : 1000;
+    }
+    public static String autoManifestMode() {
+        String mode = AUTO_MANIFEST_MODE.get();
+        return mode.equals("migrate") ? AUTO_MANIFEST.get() ? "always" : "bauble" : mode;
     }
     private ContractRulesConfig() { }
 }

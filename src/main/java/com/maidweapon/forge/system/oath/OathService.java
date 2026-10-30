@@ -72,6 +72,7 @@ public final class OathService {
             message(owner, "unavailable"); return;
         }
         var state = new CompoundTag();
+        if (OathRest.deny(owner, selected.maid(), true)) return;
         state.putLong("Remainder", OathSavedData.get(owner.getServer()).remainder(owner.getUUID(), selected.maid()));
         state.putBoolean("Active", true); state.putString("Maid", selected.maid()); state.putString("Binding", selected.binding());
         OathSavedData.get(owner.getServer()).put(owner.getUUID(), state); ONLINE.add(owner.getUUID());
@@ -91,7 +92,9 @@ public final class OathService {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void tick(TickEvent.PlayerTickEvent e) {
         var owner = e.player;
-        if (e.phase != TickEvent.Phase.START || owner.level().isClientSide || !active(owner)) return;
+        if (e.phase != TickEvent.Phase.START || owner.level().isClientSide) return;
+        OathRest.tick(owner);
+        if (!active(owner)) return;
         var state = session(owner);
         var carrier = ContractWeaponLocator.findBoundWeaponByBinding(owner, state.getString("Binding"));
         var c = ResonanceContract.resolve(owner, carrier, state.getString("Binding"));
@@ -116,18 +119,20 @@ public final class OathService {
         state.putBoolean("Active", false); state.putString("LastOutcome", reason);
         state.putLong("EndedAt", owner.getServer().overworld().getGameTime());
         OathSavedData.get(owner.getServer()).put(owner.getUUID(), state); ONLINE.remove(owner.getUUID());
+        // Persist the lock before attempting recall: even a failed recall must not permit reactivation.
+        if (exhausted && owner.isAlive()) {
+            var old = owner.getEffect(OathEffects.BACKLASH.get());
+            int amplifier = old == null ? 0 : Math.min(254, old.getAmplifier() + 1);
+            owner.removeEffect(OathEffects.BACKLASH.get());
+            owner.addEffect(new MobEffectInstance(OathEffects.BACKLASH.get(), OathConfig.BACKLASH_DURATION.get(), amplifier));
+            OathRest.begin(owner, state.getString("Maid"), OathConfig.BACKLASH_DURATION.get());
+        }
         com.maidweapon.forge.network.OathNetwork.send(owner, state.getString("Maid"), false);
         var carrier = ContractWeaponLocator.findBoundWeaponByBinding(owner, state.getString("Binding"));
         boolean recalled = false;
         try { recalled = !carrier.isEmpty() && InfusedMaidDeploymentSystem.forceRecall(owner, state.getString("Maid"), carrier, 0); }
         catch (RuntimeException failure) { LOG.warn("Oath safe recall failed owner={} maid={}", owner.getUUID(), state.getString("Maid"), failure); }
         // Existing recovery journal remains authoritative if the entity/carrier is unloaded or transferred.
-        if (exhausted && owner.isAlive()) {
-            var old = owner.getEffect(OathEffects.BACKLASH.get());
-            int amplifier = old == null ? 0 : Math.min(254, old.getAmplifier() + 1);
-            owner.removeEffect(OathEffects.BACKLASH.get());
-            owner.addEffect(new MobEffectInstance(OathEffects.BACKLASH.get(), OathConfig.BACKLASH_DURATION.get(), amplifier));
-        }
         LOG.info("Oath ended owner={} maid={} reason={} exhausted={} recalled={}", owner.getUUID(), state.getString("Maid"), reason, exhausted, recalled);
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
@@ -139,7 +144,10 @@ public final class OathService {
         ONLINE.remove(e.getEntity().getUUID());
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void death(LivingDeathEvent e) {
-        if (!e.getEntity().level().isClientSide && e.getEntity() instanceof Player p) end(p, "death", false);
+        if (!e.getEntity().level().isClientSide && e.getEntity() instanceof Player p) {
+            end(p, "death", false);
+            OathRest.clear(p);
+        }
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void dimension(PlayerEvent.PlayerChangedDimensionEvent e) {
         if (!e.getEntity().level().isClientSide) end(e.getEntity(), "dimension_change", false);

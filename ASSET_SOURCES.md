@@ -245,3 +245,12 @@ GUI render. No artwork from a third-party game's boss HUD was copied.
 
 ## Oath Manifestation 1.0
 Original pixel SVG artwork: `art/oath/oath_ring.svg` and `oath_backlash.svg`, authored for this project; no generated images or third-party artwork. Rebuild PNGs with `python art/oath/export.py` (Inkscape).
+
+## Contract support accessories
+
+Original 32px pixel SVG artwork in `art/contract_support/`: `contract_emblem.svg`
+and `guard_knot.svg`. Runtime PNGs are exported by `export.py` using resvg-py.
+The project license applies to this original artwork. Botania's official mana
+ring was viewed only as a silhouette and shading reference; no external pixels
+or reference downloads are included in the distribution. See that directory's
+README for the official reference URL and reproduction instructions.

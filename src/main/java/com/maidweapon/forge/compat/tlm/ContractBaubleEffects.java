@@ -9,10 +9,14 @@ import java.util.EnumSet;
 
 /** Capability composition shared by old projection items and the ultimate upgrade. */
 public final class ContractBaubleEffects {
-    public enum Effect { WEAPON_PROJECTION, ARMOR_PROJECTION, RESONANCE_WAIVER, OATH_MANIFESTATION, DANMAKU_ART }
+    public enum Effect { WEAPON_PROJECTION, ARMOR_PROJECTION, RESONANCE_WAIVER, OATH_MANIFESTATION, DANMAKU_ART, GROWTH_DAMAGE, AUTO_GUARD }
     public static EnumSet<Effect> effects(ItemStack stack) {
         var result = EnumSet.noneOf(Effect.class);
         if (stack.isEmpty()) return result;
+        if (stack.getItem() instanceof com.maidweapon.forge.item.ContractSupportBaubleItem item) {
+            result.add(item.kind() == com.maidweapon.forge.item.ContractSupportBaubleItem.Kind.GROWTH ? Effect.GROWTH_DAMAGE : Effect.AUTO_GUARD);
+            return result;
+        }
         if (stack.getItem() instanceof com.maidweapon.forge.item.DanmakuTalismanItem) {
             result.add(Effect.DANMAKU_ART);
             return result;
@@ -43,6 +47,8 @@ public final class ContractBaubleEffects {
                 ultimate = true;
             }
             if (next.contains(Effect.DANMAKU_ART)) result.add(Effect.DANMAKU_ART);
+            if (next.contains(Effect.GROWTH_DAMAGE)) result.add(Effect.GROWTH_DAMAGE);
+            if (next.contains(Effect.AUTO_GUARD)) result.add(Effect.AUTO_GUARD);
         }
         return result;
     }

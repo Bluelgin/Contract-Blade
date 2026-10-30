@@ -25,7 +25,14 @@ import static com.maidweapon.forge.system.resonance.ResonanceCostPolicy.Payment.
 public final class ContractResonanceValidation {
     @SubscribeEvent public static void started(ServerStartedEvent event) {
         if (!Boolean.getBoolean("contractblade.resonance.validation")) return;
-        try { run(event); if (!Boolean.getBoolean("contractblade.resonance.resume")) OathValidation.run(event.getServer()); LogUtils.getLogger().info("CONTRACT_RESONANCE_PASS"); }
+        try {
+            run(event);
+            if (!Boolean.getBoolean("contractblade.resonance.resume")) {
+                OathValidation.run(event.getServer());
+                com.maidweapon.forge.system.mastery.ContractSupportBaubleValidation.run(event.getServer());
+            }
+            LogUtils.getLogger().info("CONTRACT_RESONANCE_PASS");
+        }
         catch (Throwable failure) { LogUtils.getLogger().error("CONTRACT_RESONANCE_FAIL", failure); }
         finally { event.getServer().halt(false); }
     }
