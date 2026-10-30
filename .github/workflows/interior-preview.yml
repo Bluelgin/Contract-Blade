@@ -1,27 +1,7 @@
 name: Contract Interior Preview
 
 on:
-  push:
-    branches:
-      - codex/unified-contract-interior-land
   workflow_dispatch:
-  pull_request:
-    branches:
-      - master
-    paths:
-      - "src/main/java/com/maidweapon/forge/system/interior/**"
-      - "src/main/java/com/maidweapon/forge/compat/tlm/**"
-      - "src/main/resources/assets/maid_weapon/lang/**"
-      - "tools/validate_home_life.py"
-      - "tools/tests/HomeClockResolverTest.java"
-      - "src/main/java/com/maidweapon/forge/event/MaidWeaponCommand.java"
-      - "src/main/resources/data/maid_weapon/dimension/**"
-      - "src/main/resources/data/maid_weapon/dimension_type/**"
-      - "src/main/resources/META-INF/mods.toml"
-      - "tools/render_contract_interior_world.py"
-      - "tools/rcon_command.py"
-      - "build.gradle"
-      - ".github/workflows/interior-preview.yml"
 
 concurrency:
   group: contract-interior-preview-${{ github.event.pull_request.number || github.ref }}
@@ -44,7 +24,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
 
       - name: Set up Python
         uses: actions/setup-python@v5

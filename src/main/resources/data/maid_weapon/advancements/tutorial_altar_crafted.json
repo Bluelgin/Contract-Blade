@@ -59,6 +59,18 @@
       "conditions": {
         "recipe_id": "maid_weapon:altar/oath_ring"
       }
+    },
+    "contract_emblem": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/contract_emblem"
+      }
+    },
+    "guard_knot": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/guard_knot"
+      }
     }
   },
   "requirements": [
@@ -72,7 +84,9 @@
       "endless_vein",
       "endless_contract",
       "manka_talisman",
-      "oath_ring"
+      "oath_ring",
+      "contract_emblem",
+      "guard_knot"
     ]
   ]
 }

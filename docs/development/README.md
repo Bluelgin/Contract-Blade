@@ -21,6 +21,7 @@
 ## 构建与发布
 
 - [正式包构建与分发](STABLE_RELEASE.md) · [发布检查清单](../validation/RELEASE_1_2_0_CHECKLIST.md)
+- [CI 默认检查与手动扩展](CI.md)
 - [YSM 双狐打包](YSM_PACKAGING.md) · [玩家安装说明](../player/YSM_MODELS.md)
 - [仓库与文档约定](REPOSITORY_GUIDE.md) · [来源和许可](../../ASSET_SOURCES.md)
 - [验证记录索引](../validation/README.md)

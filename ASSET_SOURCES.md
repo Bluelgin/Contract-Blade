@@ -254,3 +254,11 @@ The project license applies to this original artwork. Botania's official mana
 ring was viewed only as a silhouette and shading reference; no external pixels
 or reference downloads are included in the distribution. See that directory's
 README for the official reference URL and reproduction instructions.
+
+The selected emblem is a hand-redrawn spectral sword based on a project-specific
+built-in image-generation concept (`art/contract_support/spectral-sword/`). The
+concept itself is not a runtime asset. The selected guardian knot is hand-redrawn
+red/orange braided-cord pixel geometry based on a project-specific built-in
+image-generation concept (`art/contract_support/kumihimo-v2/`), inspired by the
+connection motif of kumihimo in *Your Name*, without copied film imagery or
+third-party pixels. Only the 32px hand-redrawn PNG is included at runtime.

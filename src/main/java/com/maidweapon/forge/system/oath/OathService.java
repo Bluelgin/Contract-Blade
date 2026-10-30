@@ -35,9 +35,20 @@ public final class OathService {
                 && ONLINE.contains(owner.getUUID()) && session(owner).getBoolean("Active");
     }
     public static boolean burning(ResonanceContract c) {
-        return c != null && active(c.owner()) && c.maid().equals(session(c.owner()).getString("Maid"));
+        return c != null && active(c.owner()) && c.maid().equals(session(c.owner()).getString("Maid"))
+                && c.binding().equals(session(c.owner()).getString("Binding"));
     }
     public static String binding(Player owner) { return active(owner) ? session(owner).getString("Binding") : ""; }
+    /** Ability permission only: never pretend that the manifested maid is physically stored. */
+    public static boolean permitsSpirit(Player owner, ItemStack carrier, String spirit) {
+        if (!active(owner) || !owner.isAlive() || owner.isSpectator()
+                || !com.maidweapon.forge.api.IntrinsicSpiritApi.isIntrinsicSpiritActive(carrier, spirit)
+                || com.maidweapon.forge.api.EmbeddedSpiritApi.isDormant(carrier)) return false;
+        var c = ResonanceContract.resolve(owner, carrier, ContractCarrierData.getBindingId(carrier));
+        return c != null && burning(c) && c.binding().equals(binding(owner))
+                && c.liveMaid() != null && c.liveMaid().level() == owner.level() && empowered(c.liveMaid())
+                && ResonanceService.current(owner, carrier, c.binding()) > 0;
+    }
     public static boolean empowered(Entity maid) {
         if (!com.maidweapon.forge.compat.tlm.TlmEntityAdapter.isMaidEntity(maid)) return false;
         if (!(maid instanceof TamableAnimal animal) || animal.getOwnerUUID() == null || maid.getServer() == null) return false;
@@ -53,7 +64,11 @@ public final class OathService {
                 || owner.containerMenu != owner.inventoryMenu
                 || owner.level().dimension().equals(com.maidweapon.forge.system.interior.ContractInteriorService.INTERIOR_LEVEL)
                 || !OathSavedData.get(owner.getServer()).writable()) return;
-        ResonanceContract selected = null;
+        var held = owner.getMainHandItem();
+        var pending = ResonanceContract.resolve(owner, held, ContractCarrierData.getBindingId(held));
+        boolean summon = pending != null && pending.liveMaid() == null
+                && ContractBaubleEffects.has(pending, ContractBaubleEffects.Effect.OATH_MANIFESTATION);
+        ResonanceContract selected = summon ? pending : null;
         var seen = new HashSet<String>();
         for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
             ItemStack carrier = owner.getInventory().getItem(i);
@@ -66,16 +81,26 @@ public final class OathService {
                 selected = c;
             }
         }
-        if (selected == null || selected.liveMaid().level() != owner.level()
+        if (selected == null || (!summon && selected.liveMaid().level() != owner.level())
                 || !ContractBaubleEffects.has(selected, ContractBaubleEffects.Effect.OATH_MANIFESTATION)
                 || ResonanceService.current(owner, selected.carrier(), selected.binding()) <= 0) {
-            message(owner, "unavailable"); return;
+            return;
         }
         var state = new CompoundTag();
         if (OathRest.deny(owner, selected.maid(), true)) return;
+        if (summon) {
+            if (!com.maidweapon.forge.system.contract.ContractLifecycleService.manifest(owner, held, false)) return;
+            selected = ResonanceContract.resolve(owner, held, pending.binding());
+            if (selected == null || selected.liveMaid() == null) return;
+        }
         state.putLong("Remainder", OathSavedData.get(owner.getServer()).remainder(owner.getUUID(), selected.maid()));
         state.putBoolean("Active", true); state.putString("Maid", selected.maid()); state.putString("Binding", selected.binding());
+        state.putLong("StartedAt", owner.getServer().overworld().getGameTime());
+        state.putInt("StartingResonance", ResonanceService.current(owner, selected.carrier(), selected.binding()));
         OathSavedData.get(owner.getServer()).put(owner.getUUID(), state); ONLINE.add(owner.getUUID());
+        LOG.info("Oath started owner={} maid={} binding={} summoned={} resonance={} maximum={} burnPerSecond={}",
+                owner.getUUID(), selected.maid(), selected.binding(), summon, state.getInt("StartingResonance"),
+                ResonanceService.maximum(), OathConfig.BURN.get());
         com.maidweapon.forge.network.ResonanceNetwork.sendIfChanged(owner, selected.maid(),
                 ResonanceService.current(owner, selected.carrier(), selected.binding()), ResonanceService.maximum());
         com.maidweapon.forge.network.OathNetwork.send(owner, selected.maid(), true);
@@ -133,7 +158,10 @@ public final class OathService {
         try { recalled = !carrier.isEmpty() && InfusedMaidDeploymentSystem.forceRecall(owner, state.getString("Maid"), carrier, 0); }
         catch (RuntimeException failure) { LOG.warn("Oath safe recall failed owner={} maid={}", owner.getUUID(), state.getString("Maid"), failure); }
         // Existing recovery journal remains authoritative if the entity/carrier is unloaded or transferred.
-        LOG.info("Oath ended owner={} maid={} reason={} exhausted={} recalled={}", owner.getUUID(), state.getString("Maid"), reason, exhausted, recalled);
+        LOG.info("Oath ended owner={} maid={} reason={} exhausted={} recalled={} startingResonance={} elapsedTicks={}",
+                owner.getUUID(), state.getString("Maid"), reason, exhausted, recalled,
+                state.getInt("StartingResonance"), state.contains("StartedAt")
+                        ? owner.getServer().overworld().getGameTime() - state.getLong("StartedAt") : -1);
     }
     @SubscribeEvent(priority = EventPriority.HIGHEST) public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
         if (!e.getEntity().level().isClientSide) end(e.getEntity(), "disconnect", false);

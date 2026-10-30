@@ -57,6 +57,7 @@ public final class OathValidation {
             inventory.put("Items", reversed); var payload = new net.minecraft.nbt.CompoundTag();
             payload.put("MaidBaubleInventory", inventory);
             check(StoredMaidBaubleResolver.readNativeEffects(payload).equals(effects), "stored slot order ignores list order");
+            verifySpiritSession(owner);
             var blade = create(owner, 0);
             String binding = ContractCarrierData.getBindingId(blade);
             check(ContractLifecycleService.manifest(owner, blade, false), "native manifestation");
@@ -66,7 +67,17 @@ public final class OathValidation {
             slots.setStackInSlot(1, new ItemStack(ModItems.ENDLESS_CONTRACT.get()));
             check(!ResonanceService.waived(owner, blade), "ring-first disables waiver");
             set(owner, blade, 0); OathService.activate(owner); check(!OathService.active(owner), "zero rejected");
-            set(owner, blade, 1); OathService.activate(owner); check(OathService.active(owner), "one accepted without hand requirement");
+            check(ContractLifecycleService.capture(owner, maid, blade, false), "store equipped ring for one-key activation");
+            owner.getInventory().selected = 0;
+            set(owner, blade, 1); OathService.activate(owner);
+            check(OathService.active(owner) && !com.maidweapon.forge.item.MaidInfusion.containsMaid(blade),
+                    "one key summons and activates at one resonance");
+            maid = (LivingEntity) ContractWeaponLocator.findManifestedMaid(owner, ContractCarrierData.getBoundMaidUUID(blade));
+            slots = (IItemHandlerModifiable) maid.getClass().getMethod("getMaidBauble").invoke(maid);
+            int beforeSkill = value(owner, blade);
+            check(SpiritAbilityResonanceCosts.pay(owner, blade, SpiritAbilityResonanceCosts.Action.BLACK_SUMMON)
+                    && value(owner, blade) == beforeSkill, "session pays through burn, not per-skill resonance");
+            owner.getInventory().selected = 5; // Later weapon-switch checks must not overwrite the real carrier.
             check(!InfusedMaidDeploymentSystem.recallRequested(owner, blade), "manual recall locked");
             check(!ContractCompanionService.canFollow(owner, blade), "switching companions locked");
             slots.setStackInSlot(0, ItemStack.EMPTY); slots.setStackInSlot(1, ItemStack.EMPTY);
@@ -184,6 +195,55 @@ public final class OathValidation {
         } finally {
             OathService.end(owner, "fixture_cleanup", false); online.remove(owner.getUUID());
         }
+    }
+    private static void verifySpiritSession(ServerPlayer owner) throws Exception {
+        var weapon = new ItemStack(Items.IRON_SWORD);
+        boolean provider = net.minecraftforge.fml.ModList.get().isLoaded("blade_tetra");
+        if (provider) {
+            owner.getInventory().selected = 0;
+            var prepare = com.maidweapon.forge.system.akatsuki.AkatsukiDomainValidation.class
+                    .getDeclaredMethod("prepareBlade", ServerPlayer.class);
+            prepare.setAccessible(true); weapon = (ItemStack) prepare.invoke(null, owner);
+            owner.getInventory().setItem(0, ItemStack.EMPTY);
+        }
+        owner.getInventory().setItem(6, weapon); owner.getInventory().selected = 6;
+        String spirit = "blade_tetra:akatsuki";
+        check(com.maidweapon.forge.api.IntrinsicSpiritApi.ensureIntrinsicSpirit(owner, weapon, spirit, "赤月")
+                && com.maidweapon.forge.api.IntrinsicSpiritApi.setIntrinsicSpiritActive(owner, weapon, spirit, true),
+                "native intrinsic spirit for oath authorization");
+        set(owner, weapon, ResonanceService.maximum()); OathService.activate(owner);
+        check(!OathService.active(owner) && com.maidweapon.forge.item.MaidInfusion.containsMaid(weapon),
+                "missing ring never summons or starts a session");
+        check(ContractLifecycleService.manifest(owner, weapon, false), "ordinary spirit manifestation");
+        var maid = ContractWeaponLocator.findManifestedMaid(owner, ContractCarrierData.getBoundMaidUUID(weapon));
+        var slots = (IItemHandlerModifiable) maid.getClass().getMethod("getMaidBauble").invoke(maid);
+        slots.setStackInSlot(0, new ItemStack(ModItems.OATH_RING.get()));
+        check(!OathService.permitsSpirit(owner, weapon, spirit), "ordinary manifestation still pauses spirit abilities");
+        check(ContractLifecycleService.capture(owner, maid, weapon, false), "store intrinsic with ring");
+        set(owner, weapon, ResonanceService.maximum()); OathService.activate(owner);
+        check(OathService.active(owner) && OathService.permitsSpirit(owner, weapon, spirit), "one-key intrinsic permission");
+        check(!OathService.permitsSpirit(owner, weapon, "maid_weapon:white_fox")
+                && !OathService.permitsSpirit(owner, weapon.copy(), spirit), "other spirit and copied carrier rejected");
+        check(!com.maidweapon.forge.api.IntrinsicSpiritApi.stored(weapon, spirit), "permission never fabricates stored payload");
+        int before = value(owner, weapon);
+        check(ResonanceAttackCosts.pay(owner, weapon, SpiritAbilityResonanceCosts.Action.RED_SPACE_CUT, 10)
+                && value(owner, weapon) == before, "manifested spirit attack billing uses shared burn");
+        int initial = value(owner, weapon);
+        check(initial == ResonanceService.maximum(), "one-key activation preserves starting full resonance");
+        for (int i = 0; i < 20; i++) {
+            owner.tickCount++;
+            weapon.inventoryTick(owner.level(), owner, 6, true);
+            tick(owner);
+            ContractCompanionService.tick(owner);
+        }
+        check(OathService.active(owner) && OathService.permitsSpirit(owner, weapon, spirit),
+                "one-key manifestation remains present after twenty real session ticks");
+        near(value(owner, weapon), initial - Math.round(ResonanceService.maximum() * com.maidweapon.common.OathConfig.BURN.get()),
+                "one-key manifestation burns only the configured amount per second");
+        if (provider) com.mojang.logging.LogUtils.getLogger().info("OATH_PROVIDER_ONEKEY_PASS");
+        OathService.end(owner, "fixture_spirit_complete", false);
+        check(!OathService.permitsSpirit(owner, weapon, spirit), "session end revokes permission immediately");
+        owner.getInventory().setItem(6, ItemStack.EMPTY); owner.getInventory().selected = 5;
     }
     private static ItemStack create(ServerPlayer owner, int slot) throws Exception {
         var maid = (Mob) TlmEntityAdapter.maidClass().getConstructor(Level.class).newInstance(owner.level());

@@ -1,18 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" shape-rendering="crispEdges">
-<!-- Original pixel geometry: protective jade loops and a shield clasp, with plum silk ends. -->
-<path fill="#293b48" d="M5 3h6v2h3v2h4V5h3V3h6v3h2v8h-3v3h-4v3h-3v3h-6v-3h-3v-3H6v-3H3V6h2z"/>
-<path fill="#4b8591" d="M6 5h4v2h3v3h6V7h3V5h4v2h1v6h-3v2h-5v3h-6v-3H8v-2H5V7h1z"/>
-<path fill="#9edbd3" d="M6 5h4v2H7v5H5V7h1zM22 5h4v2h1v2h-3V7h-3zM8 13h4v1H8zM20 13h4v1h-4z"/>
-<path fill="#244955" d="M8 8h2v2h2v2H8zM22 8h2v4h-4v-2h2z"/>
-<path fill="#382a42" d="M9 17h6v6h-2v5h-3v3H6v-5h2v-5h1zM18 17h5v4h2v5h2v5h-5v-3h-3v-5h-1z"/>
-<path fill="#976080" d="M10 19h3v3h-2v6H8v-2h1v-5h1zM20 19h2v3h2v5h1v2h-2v-3h-3z"/>
-<path fill="#dc9bb3" d="M10 20h2v2h-1v4H9v-2h1zM21 21h1v3h2v3h-1v-2h-2z"/>
-<path fill="#8a633d" d="M6 28h4v3H6zM23 28h4v3h-4z"/>
-<path fill="#f2cf8a" d="M6 28h4v1H6zM23 28h4v1h-4z"/>
-<path fill="#302a42" d="M12 9h8v2h2v7h-2v3h-2v2h-4v-2h-2v-3h-2v-7h2z"/>
-<path fill="#ba8c4f" d="M13 10h6v2h2v5h-2v3h-2v2h-2v-2h-2v-3h-2v-5h2z"/>
-<path fill="#ffe5a8" d="M13 10h6v1h-6zM11 12h2v4h-1v-3h-1z"/>
-<path fill="#775080" d="M13 12h6v5h-2v3h-2v-3h-2z"/>
-<path fill="#c795d4" d="M13 12h6v2h-2v4h-2v-4h-2z"/>
-<path fill="#f5d6ef" d="M14 12h3v2h-3z"/>
+<!-- Hand redrawn from the generated concept, not a resized bitmap. -->
+<path fill="none" stroke="#531e29" stroke-width="5" stroke-linejoin="miter" d="M13 17H11V15H9V12H8V8H9V5H11V3H14V2H17V3H20V5H22V8H23V12H22V15H20V17H18"/>
+<path fill="none" stroke="#c33735" stroke-width="3" d="M13 17H11V15H9V12H8V8H9V5H11V3H14V2H17V3H20V5H22V8H23V12H22V15H20V17H18"/>
+<path fill="#f76a43" d="M13 1h4v1h-4zM10 3h2v1h-2zM8 6h1v3H8zM7 10h1v2H7zM9 13h1v2H9zM21 5h1v2h-1zM23 9h1v3h-1zM21 14h1v2h-1z"/>
+<path fill="#eea341" d="M14 1h2v1h1v1h1v2h-2V4h-1V3h-1zM10 3h3v2h-2v1H9V4h1zM8 7h2v2H9v1H7V8h1zM8 11h2v2h1v2H9v-2H8zM11 15h2v3h-2zM19 3h1v1h2v3h-2V5h-1zM22 8h2v3h-1v1h-2v-2h1zM21 13h2v2h-2v1h-2v-2h2z"/>
+<path fill="#ffd175" d="M10 3h2v1h-2zM14 1h2v1h-2zM8 7h2v1H8zM9 12h1v2H9zM20 4h1v2h-1zM22 8h1v2h-1zM20 14h2v1h-2z"/>
+<!-- Braided lower cords and asymmetrical tassels. -->
+<path fill="#531e29" d="M13 19h4v3h-2v3h-2v3H9v-4h2v-3h2zM19 20h3v2h2v2h2v3h-4v-2h-2v-2h-1zM9 25h5v5h-2v2H8v-1H5v-3h2v-2h2zM23 24h4v2h2v2h2v2h-3v1h-5v-2h-1v-3h1z"/>
+<path fill="#d83b35" d="M13 20h2v2h-2v3h-2v2H9v-3h2v-2h2zM20 21h2v2h2v2h-2v-1h-2zM9 27h4v3h-2v1H8v-1H6v-1h2v-1h1zM24 26h2v1h2v1h2v1h-3v1h-3v-2h-1v-1h1z"/>
+<path fill="#f19c39" d="M13 21h2v1h-1v2h-2v1h-1v-2h2zM20 21h2v1h-2zM23 23h1v1h1v1h-2zM10 27h1v4h-1zM25 26h1v2h1v2h-2z"/>
+<path fill="#f56a44" d="M8 28h1v1H8zM7 29h1v1H7zM12 28h1v2h-1zM27 27h1v1h-1zM28 28h1v1h-1z"/>
+<!-- Central knot: dark recesses plus alternating overpasses. -->
+<path fill="#531e29" d="M12 15h5v1h4v1h2v4h-2v2h-5v-1h-4v-1h-2v-4h2z"/>
+<path fill="#a62a31" d="M12 16h4v1h4v1h2v3h-3v1h-3v-1h-4v-1h-1v-2h1z"/>
+<path fill="#f1a13b" d="M12 16h3v1h2v2h-2v-1h-3v1h-1v1h-1v-3h2zM19 17h2v1h1v3h-2v-3h-1zM13 19h2v2h3v1h-3v-1h-2z"/>
+<path fill="#ed5537" d="M15 16h2v1h2v2h-2v-1h-2zM12 18h2v2h-2zM18 20h2v1h-2z"/>
+<path fill="#ffca68" d="M12 16h3v1h-3zM13 19h1v1h-1zM19 17h1v1h-1zM15 21h2v1h-2z"/>
+<path fill="#744332" d="M9 25h5v2H9zM23 24h4v2h-4z"/>
+<path fill="#efcd83" d="M9 25h4v1H9zM10 26h4v1h-4zM23 24h3v1h-3zM24 25h3v1h-3z"/>
+<path fill="#fff0bb" d="M9 25h2v1H9zM23 24h2v1h-2z"/>
 </svg>

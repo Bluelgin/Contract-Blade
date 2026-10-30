@@ -46,8 +46,7 @@ public final class AkatsukiDomainAuthorization {
             new ContractCombatCreditResolver.Credit(owner, carrier))
         || !IntrinsicSpiritApi.isIntrinsicSpiritActive(carrier, SPIRIT)
         || EmbeddedSpiritApi.isDormant(carrier)
-        || ContractAnomalyRecoveryService.transitioning(carrier)
-        || !IntrinsicSpiritApi.stored(carrier, SPIRIT)) return false;
+        || ContractAnomalyRecoveryService.transitioning(carrier)) return false;
     var contract = IntrinsicSpiritApi.readOnlyContract(carrier, SPIRIT);
     if (!com.maidweapon.forge.system.contract.IntrinsicSpiritOriginData.get(owner.getServer())
         .matches(
@@ -55,7 +54,9 @@ public final class AkatsukiDomainAuthorization {
             contract.getString("MaidUUID"),
             contract.getString("MaidBindingId"),
             SPIRIT)) return false;
-    if (!ContractWeaponLocator.mayManifest(owner, contract.getString("MaidUUID"))) return false;
+    if (com.maidweapon.forge.system.oath.OathService.permitsSpirit(owner, carrier, SPIRIT)) return true;
+    if (!IntrinsicSpiritApi.stored(carrier, SPIRIT)
+        || !ContractWeaponLocator.mayManifest(owner, contract.getString("MaidUUID"))) return false;
     long now = owner.getServer().overworld().getGameTime();
     var proof = PROOFS.get(carrier);
     if (proof != null
