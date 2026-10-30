@@ -11,14 +11,11 @@ public final class TlmProjectionBaubles {
         try {
             Object value = maid.getClass().getMethod("getMaidBauble").invoke(maid);
             if (value instanceof IItemHandler slots) {
-                for (int slot = 0; slot < slots.getSlots(); slot++) {
-                    var stack = slots.getStackInSlot(slot);
-                    var effects = ContractBaubleEffects.effects(stack);
-                    boolean weapon = effects.contains(ContractBaubleEffects.Effect.WEAPON_PROJECTION);
-                    boolean armor = effects.contains(ContractBaubleEffects.Effect.ARMOR_PROJECTION);
-                    if (weapon || armor) return weapon && armor ? ContractProjectionMode.COMBINED
-                            : weapon ? ContractProjectionMode.WEAPON : ContractProjectionMode.ARMOR;
-                }
+                var effects = ContractBaubleEffects.resolveSlots(slots);
+                boolean weapon = effects.contains(ContractBaubleEffects.Effect.WEAPON_PROJECTION);
+                boolean armor = effects.contains(ContractBaubleEffects.Effect.ARMOR_PROJECTION);
+                return weapon && armor ? ContractProjectionMode.COMBINED
+                        : weapon ? ContractProjectionMode.WEAPON : armor ? ContractProjectionMode.ARMOR : ContractProjectionMode.NONE;
             }
         } catch (ReflectiveOperationException | LinkageError ignored) {
             // Unsupported native versions fail closed: no free projections or task overrides.

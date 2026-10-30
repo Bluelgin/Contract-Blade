@@ -52,7 +52,7 @@ public final class ResonanceService {
     public static boolean waived(Player owner, ItemStack carrier, String binding) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
         return context != null && pool(context).current(context) >= 0
-                && ContractBaubleEffects.hasWaiver(context);
+                && (ContractBaubleEffects.hasWaiver(context) || com.maidweapon.forge.system.oath.OathService.burning(context));
     }
     public static Payment canPay(Player owner, ItemStack carrier, String binding, int cost) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
@@ -61,7 +61,8 @@ public final class ResonanceService {
     private static Payment decision(ResonanceContract context, int cost) {
         int available = context == null ? -1 : pool(context).current(context);
         return ResonanceCostPolicy.evaluate(available >= 0,
-                available >= 0 && ContractBaubleEffects.hasWaiver(context), available, cost);
+                available >= 0 && (ContractBaubleEffects.hasWaiver(context)
+                        || com.maidweapon.forge.system.oath.OathService.burning(context)), available, cost);
     }
     public static Payment pay(Player owner, ItemStack carrier, String binding, int cost, PaymentAttempt attempt) {
         var context = ResonanceContract.resolve(owner, carrier, binding);
@@ -80,9 +81,16 @@ public final class ResonanceService {
     public static void drain(Player owner, ItemStack carrier, int cost) {
         if (carrier == null) return;
         var context = ResonanceContract.resolve(owner, carrier, ContractCarrierData.getBindingId(carrier));
-        if (context == null || cost <= 0 || ContractBaubleEffects.hasWaiver(context)) return;
+        if (context == null || cost <= 0 || ContractBaubleEffects.hasWaiver(context)
+                || com.maidweapon.forge.system.oath.OathService.burning(context)) return;
         int before = pool(context).current(context);
         if (before >= 0 && pool(context).set(context, before - cost)) sync(context);
+    }
+    /** Already resolved server authority, used only by the oath session tick. Never waived. */
+    public static void burnOath(ResonanceContract context, int cost) {
+        if (cost <= 0 || !com.maidweapon.forge.system.oath.OathService.burning(context)) return;
+        int current = pool(context).current(context);
+        if (current >= 0 && pool(context).set(context, Math.max(0, current - cost))) sync(context);
     }
     public static boolean recover(Player owner, ItemStack carrier, String binding, int amount) {
         var context = ResonanceContract.resolve(owner, carrier, binding);

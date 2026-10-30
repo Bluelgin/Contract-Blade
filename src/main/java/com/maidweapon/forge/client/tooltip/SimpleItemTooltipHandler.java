@@ -19,11 +19,28 @@ public final class SimpleItemTooltipHandler {
         ItemStack stack = event.getItemStack();
         String lore;
         Consumer<List<Component>> details;
-        if (stack.getItem() instanceof ContractProjectionBaubleItem bauble) {
+        if (stack.getItem() instanceof ContractSupportBaubleItem bauble) {
+            String kind = bauble.kind() == ContractSupportBaubleItem.Kind.GROWTH ? "emblem" : "guard";
+            lore = "maid_weapon.tooltip.support." + kind + ".lore";
+            details = lines -> {
+                SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.projection.slot");
+                SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.support." + kind + ".effect");
+                SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.support." + kind + ".condition");
+            };
+        } else if (stack.getItem() instanceof ContractProjectionBaubleItem bauble) {
             String mode = bauble.mode().name().toLowerCase(java.util.Locale.ROOT);
-            lore = bauble.resonanceWaiver() ? "maid_weapon.tooltip.simple.endless_contract.lore"
+            lore = bauble.oathManifestation() ? "maid_weapon.tooltip.oath.lore" : bauble.resonanceWaiver() ? "maid_weapon.tooltip.simple.endless_contract.lore"
                     : "maid_weapon.tooltip.projection." + mode + ".flavor";
             details = lines -> {
+                if (bauble.oathManifestation()) {
+                    SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.oath.details",
+                            com.maidweapon.forge.client.ContractCompanionKeys.OATH.getTranslatedKeyMessage());
+                    SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.oath.burnout");
+                    lines.add(Component.empty());
+                    lines.add(Component.translatable("maid_weapon.tooltip.oath.quote")
+                            .withStyle(net.minecraft.ChatFormatting.DARK_PURPLE, net.minecraft.ChatFormatting.ITALIC));
+                    return;
+                }
                 SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.projection.slot");
                 SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.projection." + mode);
                 if (bauble.resonanceWaiver()) SimpleTooltipPresentation.line(lines, "maid_weapon.tooltip.endless_contract");

@@ -43,13 +43,15 @@ public final class FoxSpiritAbilityAuthorization {
         || !owner.getUUID().equals(identity.getUUID("OwnerUUID"))
         || !FoxSpiritLedger.get(owner.getServer()).owns(identity, "WEAPON"))
       return new Result(false, "identity");
-    if (ContractAnomalyRecoveryService.transitioning(carrier)
-        || !IntrinsicSpiritApi.stored(carrier, spirit)) return new Result(false, "not_stored");
+    if (ContractAnomalyRecoveryService.transitioning(carrier)) return new Result(false, "not_stored");
     // World identity is cheap and volatile: never cache a permission to spawn/use a second UUID.
     var contract = IntrinsicSpiritApi.readOnlyContract(carrier, spirit);
     String originalMaid = FoxSpiritLedger.get(owner.getServer()).maid(identity);
     String maidId = contract.getString("MaidUUID");
     if (!originalMaid.isEmpty() && !originalMaid.equals(maidId)) return new Result(false, "identity");
+    if (com.maidweapon.forge.system.oath.OathService.permitsSpirit(owner, carrier, spirit))
+      return new Result(true, "oath");
+    if (!IntrinsicSpiritApi.stored(carrier, spirit)) return new Result(false, "not_stored");
     if (!ContractWeaponLocator.mayManifest(owner, maidId)) return new Result(false, "not_stored");
     long now = owner.getServer().overworld().getGameTime();
     var currentOwner = new UUIDOwner(owner.getUUID(), originalMaid);

@@ -113,6 +113,7 @@ public final class ResonancePoolSavedData extends SavedData {
         var record = resolve(context);
         if (record == null) return false;
         int value = Math.max(0, Math.min(maximum(), amount));
+        if (value > record.getInt("Current") && com.maidweapon.forge.system.oath.OathService.burning(context)) return false;
         if (record.getInt("Current") == value) return true;
         var updated = record.copy();
         updated.putInt("Current", value);

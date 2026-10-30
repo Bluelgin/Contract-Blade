@@ -14,7 +14,9 @@ projection = read('compat/ContractEquipmentProjection.java')
 work = read('system/deployment/ContractWorkPolicy.java')
 assert '@LittleMaidExtension' in native and 'implements ILittleMaid' in native
 assert all(item in native for item in ('RESONANCE_SWORD_TASSEL', 'GUARDIAN_RIBBON', 'HEARTBOUND_KNOT'))
-assert 'getMaidBauble' in slots and 'getStackInSlot' in slots
+effects = read('compat/tlm/ContractBaubleEffects.java')
+assert 'getMaidBauble' in slots and 'resolveSlots(slots)' in slots
+assert 'getStackInSlot' in effects and 'resolveSlots' in effects
 assert 'CuriosApi' not in slots and 'getInventory' not in slots
 assert 'if (!ContractWorkPolicy.automatic(mode)) return;' in runtime
 assert 'ContractWorkPolicy.combat(mode)' in runtime and 'ContractWorkPolicy.feeding(mode)' in runtime

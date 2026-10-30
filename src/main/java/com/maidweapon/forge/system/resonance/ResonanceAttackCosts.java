@@ -24,14 +24,14 @@ public final class ResonanceAttackCosts {
 
     public static boolean affordable(ServerPlayer owner, ItemStack carrier, SpiritAbilityResonanceCosts.Action action) {
         var context = ResonanceContract.resolve(owner, carrier, ContractCarrierData.getBindingId(carrier));
-        return context != null && context.liveMaid() == null
+        return context != null && (context.liveMaid() == null || com.maidweapon.forge.system.oath.OathService.burning(context))
                 && (window(owner, context, action).covers(owner.getServer().overworld().getGameTime())
                     || SpiritAbilityResonanceCosts.affordable(owner, carrier, action));
     }
 
     public static boolean pay(ServerPlayer owner, ItemStack carrier, SpiritAbilityResonanceCosts.Action action, int ticks) {
         var context = ResonanceContract.resolve(owner, carrier, ContractCarrierData.getBindingId(carrier));
-        if (context == null || context.liveMaid() != null) return false;
+        if (context == null || (context.liveMaid() != null && !com.maidweapon.forge.system.oath.OathService.burning(context))) return false;
         boolean paid = window(owner, context, action).pay(owner.getServer().overworld().getGameTime(), ticks,
                 () -> SpiritAbilityResonanceCosts.pay(owner, carrier, action));
         if (paid) ResonanceActivityTracker.report(context, "spirit_attack", ResonanceActivity.ABILITY_ATTACKING,

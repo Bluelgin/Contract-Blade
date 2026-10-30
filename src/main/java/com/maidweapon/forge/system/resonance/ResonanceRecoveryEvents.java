@@ -31,6 +31,10 @@ public final class ResonanceRecoveryEvents {
             for (var channel : ContractChannelStorage.channels(carrier)) {
                 var context = ResonanceContract.resolve(owner, carrier, channel.getString("MaidBindingId"));
                 if (context == null || !seen.add(context.maid())) continue;
+                if (com.maidweapon.forge.system.oath.OathService.burning(context)) {
+                    accumulators.remove(context.maid());
+                    continue;
+                }
                 var live = context.liveMaid();
                 var activity = ResonanceActivityTracker.current(context, live);
                 double rate = ResonanceRecoveryPolicy.rate(live != null, activity,

@@ -25,7 +25,14 @@ import static com.maidweapon.forge.system.resonance.ResonanceCostPolicy.Payment.
 public final class ContractResonanceValidation {
     @SubscribeEvent public static void started(ServerStartedEvent event) {
         if (!Boolean.getBoolean("contractblade.resonance.validation")) return;
-        try { run(event); LogUtils.getLogger().info("CONTRACT_RESONANCE_PASS"); }
+        try {
+            run(event);
+            if (!Boolean.getBoolean("contractblade.resonance.resume")) {
+                OathValidation.run(event.getServer());
+                com.maidweapon.forge.system.mastery.ContractSupportBaubleValidation.run(event.getServer());
+            }
+            LogUtils.getLogger().info("CONTRACT_RESONANCE_PASS");
+        }
         catch (Throwable failure) { LogUtils.getLogger().error("CONTRACT_RESONANCE_FAIL", failure); }
         finally { event.getServer().halt(false); }
     }
@@ -38,6 +45,7 @@ public final class ContractResonanceValidation {
         if (Boolean.getBoolean("contractblade.resonance.resume")) {
             check(ResonanceProgressService.stage(a) == 3 && ResonanceProgressService.stage(b) == 0,
                     "world restart retains player progression and isolation");
+            OathValidation.restart(event.getServer());
             LogUtils.getLogger().info("CONTRACT_RESONANCE_RESTART_PASS"); return;
         }
         // Damage callbacks resolve the owner through the real online-player index.

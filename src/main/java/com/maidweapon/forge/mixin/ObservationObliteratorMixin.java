@@ -14,7 +14,10 @@ import org.spongepowered.asm.mixin.*;
     remap = false)
 public abstract class ObservationObliteratorMixin {
   @WrapMethod(
-      method = {"hurt", "m_6469_"},
+      method = {
+        "hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+        "m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+      },
       remap = false)
   private boolean cb$observe(DamageSource source, float amount, Operation<Boolean> original) {
     try (var scope =

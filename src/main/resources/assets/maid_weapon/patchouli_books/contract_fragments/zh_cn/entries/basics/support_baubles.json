@@ -1,0 +1,15 @@
+{
+  "name": "patchouli.maid_weapon.entry.support_baubles.name",
+  "category": "maid_weapon:basics",
+  "icon": "maid_weapon:contract_emblem",
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.support_baubles.growth"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "patchouli.maid_weapon.entry.support_baubles.guard"
+    }
+  ]
+}

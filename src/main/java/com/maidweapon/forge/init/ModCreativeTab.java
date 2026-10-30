@@ -28,6 +28,9 @@ public final class ModCreativeTab {
                         output.accept(ModItems.FLOWING_VEIN.get());
                         output.accept(ModItems.ENDLESS_VEIN.get());
                         output.accept(ModItems.ENDLESS_CONTRACT.get());
+                        output.accept(ModItems.OATH_RING.get());
+                        output.accept(ModItems.CONTRACT_EMBLEM.get());
+                        output.accept(ModItems.GUARD_KNOT.get());
                         output.accept(ModItems.MANKA_TALISMAN.get());
                         output.accept(ModItems.MAID_HEAVY.get());
                         output.accept(ModItems.MAID_FAST.get());

@@ -14,10 +14,11 @@ import java.util.function.Supplier;
 
 /** Client sends intent only; the server chooses and validates the held contract. */
 public final class ContractCompanionNetwork {
-    private static final String VERSION = "1";
+    private static final String VERSION = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(MaidWeaponConstants.MOD_ID, "companion"), () -> VERSION, VERSION::equals, VERSION::equals);
     public record Call() { }
+    public record OathCall() { }
     private static final java.util.Map<net.minecraft.server.level.ServerPlayer, Long> LAST_CALL =
             new java.util.WeakHashMap<>();
 
@@ -29,6 +30,13 @@ public final class ContractCompanionNetwork {
         return true;
     }
     public static void register() {
+        CHANNEL.registerMessage(1, OathCall.class, (packet, buffer) -> { }, buffer -> new OathCall(),
+                (packet, supplier) -> {
+                    var ctx = supplier.get();
+                    if (ctx.getSender() != null && accept(ctx.getSender()))
+                        ctx.enqueueWork(() -> com.maidweapon.forge.system.oath.OathService.activate(ctx.getSender()));
+                    ctx.setPacketHandled(true);
+                }, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(0, Call.class, (packet, buffer) -> { }, ContractCompanionNetwork::decode,
                 ContractCompanionNetwork::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }

@@ -18,6 +18,11 @@ public final class ContractGrowthAttributes {
                 || com.maidweapon.forge.system.deployment.ContractTransferSafetyService.isProjectionPhantom(carrier)
                 || !player.level().isClientSide && !ContractAuthorization.allows(player, carrier)) return new Values(0, 1);
         ContractMasteryService.observe(player, carrier);
+        if (!player.level().isClientSide) {
+            var c = com.maidweapon.forge.system.resonance.ResonanceContract.resolve(player, carrier, ContractCarrierData.getBindingId(carrier));
+            if (c == null || c.liveMaid() != null || !com.maidweapon.forge.compat.tlm.ContractBaubleEffects.has(c,
+                    com.maidweapon.forge.compat.tlm.ContractBaubleEffects.Effect.GROWTH_DAMAGE)) return new Values(0, 1);
+        } else return new Values(0, 1); // Server-authoritative native slots; no item-NBT guesses on clients.
         return new Values(ContractMasteryService.getProgress(player).getAttackDamageBonus(), MaidInfusion.data(carrier).getFavorabilityDamageMultiplier());
     }
     private ContractGrowthAttributes() { }

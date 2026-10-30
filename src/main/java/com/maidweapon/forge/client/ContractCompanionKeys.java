@@ -16,8 +16,10 @@ import org.lwjgl.glfw.GLFW;
 public final class ContractCompanionKeys {
     public static final KeyMapping CALL = new KeyMapping("key.maid_weapon.call_companion", InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_RIGHT_BRACKET, "key.categories.maid_weapon");
+    public static final KeyMapping OATH = new KeyMapping("key.maid_weapon.oath_manifestation", InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_O, "key.categories.maid_weapon");
     @SubscribeEvent
-    public static void register(RegisterKeyMappingsEvent event) { event.register(CALL); }
+    public static void register(RegisterKeyMappingsEvent event) { event.register(CALL); event.register(OATH); }
 
     @Mod.EventBusSubscriber(modid = MaidWeaponConstants.MOD_ID, value = Dist.CLIENT)
     public static final class Input {
@@ -25,6 +27,10 @@ public final class ContractCompanionKeys {
         public static void tick(TickEvent.ClientTickEvent event) {
             if (event.phase != TickEvent.Phase.END) return;
             var client = Minecraft.getInstance();
+            while (OATH.consumeClick()) {
+                if (client.player != null && client.screen == null && !client.player.isSpectator())
+                    ContractCompanionNetwork.CHANNEL.sendToServer(new ContractCompanionNetwork.OathCall());
+            }
             while (CALL.consumeClick()) {
                 if (client.player != null && client.screen == null && !client.player.isSpectator())
                     ContractCompanionNetwork.CHANNEL.sendToServer(new ContractCompanionNetwork.Call());

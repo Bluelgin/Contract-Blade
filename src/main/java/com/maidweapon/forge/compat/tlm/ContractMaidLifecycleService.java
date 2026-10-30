@@ -284,6 +284,8 @@ public final class ContractMaidLifecycleService {
                 || ContractCarrierData.isContractSuperseded(weaponStack)) {
             return false;
         }
+        if (com.maidweapon.forge.system.oath.OathRest.deny(player,
+                ContractCarrierData.getBoundMaidUUID(weaponStack), notifyPlayer)) return false;
         if (!ContractCarrierData.hasMaidEntityData(weaponStack)) {
             player.displayClientMessage(
                     Component.translatable("maid_weapon.message.no_maid_data"), true);

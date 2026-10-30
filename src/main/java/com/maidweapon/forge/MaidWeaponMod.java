@@ -73,6 +73,10 @@ public final class MaidWeaponMod {
             "maid_weapon-server.toml");
     com.maidweapon.forge.init.ModSoulEntities.TYPES.register(modBus);
     com.maidweapon.forge.network.SoulBurstNetwork.register();
+    com.maidweapon.forge.system.oath.OathEffects.EFFECTS.register(modBus);
+    net.minecraftforge.fml.ModLoadingContext.get().registerConfig(
+        net.minecraftforge.fml.config.ModConfig.Type.SERVER, com.maidweapon.common.OathConfig.SPEC, "maid_weapon-oath-server.toml");
+    com.maidweapon.forge.network.OathNetwork.register();
     ModItems.ITEMS.register(modBus);
     ModBlocks.BLOCKS.register(modBus);
     ModMenus.MENUS.register(modBus);

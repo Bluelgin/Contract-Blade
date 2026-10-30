@@ -45,6 +45,13 @@ public final class ModItems {
     public static final RegistryObject<Item> ENDLESS_CONTRACT = ITEMS.register("endless_contract",
             () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED, true));
 
+    public static final RegistryObject<Item> OATH_RING = ITEMS.register("oath_ring",
+            () -> new ContractProjectionBaubleItem(ContractProjectionMode.COMBINED, false, true));
+    public static final RegistryObject<Item> CONTRACT_EMBLEM = ITEMS.register("contract_emblem",
+            () -> new com.maidweapon.forge.item.ContractSupportBaubleItem(com.maidweapon.forge.item.ContractSupportBaubleItem.Kind.GROWTH));
+    public static final RegistryObject<Item> GUARD_KNOT = ITEMS.register("guard_knot",
+            () -> new com.maidweapon.forge.item.ContractSupportBaubleItem(com.maidweapon.forge.item.ContractSupportBaubleItem.Kind.GUARD));
+
     public static final RegistryObject<Item> MANKA_TALISMAN = ITEMS.register("manka_talisman",
             com.maidweapon.forge.item.DanmakuTalismanItem::new);
 

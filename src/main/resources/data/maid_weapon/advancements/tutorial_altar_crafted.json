@@ -20,7 +20,9 @@
     },
     "spirit_crystal": {
       "trigger": "touhou_little_maid:altar/altar_craft",
-      "conditions": {"recipe_id": "maid_weapon:altar/spirit_crystal"}
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/spirit_crystal"
+      }
     },
     "awakening_vein": {
       "trigger": "touhou_little_maid:altar/altar_craft",
@@ -51,6 +53,24 @@
       "conditions": {
         "recipe_id": "maid_weapon:altar/manka_talisman"
       }
+    },
+    "oath_ring": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/oath_ring"
+      }
+    },
+    "contract_emblem": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/contract_emblem"
+      }
+    },
+    "guard_knot": {
+      "trigger": "touhou_little_maid:altar/altar_craft",
+      "conditions": {
+        "recipe_id": "maid_weapon:altar/guard_knot"
+      }
     }
   },
   "requirements": [
@@ -63,7 +83,10 @@
       "flowing_vein",
       "endless_vein",
       "endless_contract",
-      "manka_talisman"
+      "manka_talisman",
+      "oath_ring",
+      "contract_emblem",
+      "guard_knot"
     ]
   ]
 }

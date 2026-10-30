@@ -8,6 +8,15 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      extended:
+        description: Run extended BladeTetra, soul damage and dedicated-server regressions
+        type: boolean
+        default: false
+      visuals:
+        description: Check art exports and record real-client gameplay (slow)
+        type: boolean
+        default: false
 
 concurrency:
   group: contract-blade-core-${{ github.event.pull_request.number || github.ref }}
@@ -29,7 +38,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,8 +56,14 @@ jobs:
             "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
             -o libs/tacz-1.20.1-1.1.8-release.jar
 
+      - name: Damage observer MixinExtras overload regression
+        run: python tools/run_damage_mixin_fixture.py --java-home "$JAVA_HOME" --output /tmp/cb-damage-mixin
+
       - name: Build and player mastery behavioral tests
-        run: gradle --no-daemon clean build -Pci=true
+        run: gradle --no-daemon build -Pci=true
+
+      - name: Reobfuscated damage observer overload regression
+        run: python tools/run_damage_mixin_fixture.py --java-home "$JAVA_HOME" --jar build/libs/contract-blade-forge-1.20.1-1.2.0.jar --output /tmp/cb-damage-mixin-reobf
 
       - name: Architecture and data validators
         run: |
@@ -85,16 +99,17 @@ jobs:
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" \
             -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
 
-      - name: Native Manka growth, payment and four-wave fixture
-        run: python tools/run_manka_native_validation.py --output /tmp/contract-manka-native
-
       - name: Native resonance, restart, projection and companion fixtures
         run: |
           python tools/run_stage_three_tests.py --fixture resonance --compat vanilla
           python tools/run_stage_three_tests.py --fixture projection --compat vanilla
           python tools/run_stage_three_tests.py --fixture companion --compat vanilla
 
+      - name: Native Manka growth, payment and four-wave fixture
+        run: python tools/run_manka_native_validation.py --output /tmp/contract-manka-native
+
       - name: Prepare optional BladeTetra provider runtime
+        if: github.event_name == 'workflow_dispatch' && inputs.extended
         run: |
           curl -fL --retry 3 "https://github.com/Bluelgin/Blade-Tetra-Forged-Styles/releases/download/v1.5.9/blade_tetra-1.5.9.jar" \
             -o tmp/compat-test/blade_tetra-1.5.9.jar
@@ -104,12 +119,19 @@ jobs:
             -o tmp/compat-test/mutil-1.20.1-6.2.0.jar
 
       - name: Native awakened Akatsuki provider fixture
+        if: github.event_name == 'workflow_dispatch' && inputs.extended
         run: python tools/run_stage_three_tests.py --fixture akatsuki-provider
 
       - name: Real soul damage and anchor interaction fixture
+        if: github.event_name == 'workflow_dispatch' && inputs.extended
         run: python tools/run_soul_damage_tests.py --gradle gradle
 
+      - name: Official Torches dual-mod server and soul damage regression
+        if: github.event_name == 'workflow_dispatch' && inputs.extended
+        run: python tools/run_soul_damage_tests.py --gradle gradle --torches
+
       - name: Native dedicated-server domain and regression fixtures
+        if: github.event_name == 'workflow_dispatch' && inputs.extended
         run: |
           python tools/run_stage_three_tests.py --fixture akatsuki-domain --compat vanilla
           python tools/run_stage_three_tests.py --fixture akatsuki-domain
@@ -127,6 +149,7 @@ jobs:
           path: |
             build/libs/*.jar
             build/test-results/test/*.xml
+            /tmp/cb-damage-mixin*/**/transform.log
             /tmp/contract-stage-three-*/*.log
             /tmp/contract-soul-*/server.log
             /tmp/contract-manka-native/server.log
@@ -142,7 +165,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -163,6 +185,7 @@ jobs:
           path: /tmp/tacz-projection/**/*.log
 
   spellcard-resources:
+    if: github.event_name == 'workflow_dispatch' && inputs.visuals
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -175,6 +198,7 @@ jobs:
       - run: python art/danmaku/export_spellcards.py --check
 
   manka-real-client:
+    if: github.event_name == 'workflow_dispatch' && inputs.visuals
     runs-on: ubuntu-24.04
     timeout-minutes: 55
     env:
@@ -186,7 +210,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: gradle
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -202,10 +225,9 @@ jobs:
           curl -fL --retry 3 "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" -o libs/tacz-1.20.1-1.1.8-release.jar
           curl -fL --retry 3 "https://edge.forgecdn.net/files/8061/847/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar" -o libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar
           curl -fL --retry 3 "https://cdn.modrinth.com/data/8T53F0sy/versions/pdMMavGH/SlashBladeResharped-1.20.1-1.9.65.jar" -o tmp/compat-test/SlashBladeResharped-1.20.1-1.9.65.jar
-      - name: Exact requested wrapper build and tests
+      - name: Build real-client runtime
         run: |
-          ./gradlew --no-daemon clean build
-          ./gradlew --no-daemon test
+          ./gradlew --no-daemon build
           echo "MANKA_WRAPPER_BUILD_PASSED=true" >> "$GITHUB_ENV"
       - name: Create stopped native fixture world
         run: python tools/run_manka_native_validation.py --output /tmp/manka-capture-seed

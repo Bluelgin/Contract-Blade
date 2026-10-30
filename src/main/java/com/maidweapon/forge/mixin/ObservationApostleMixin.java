@@ -12,7 +12,10 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(targets = "com.Polarice3.Goety.common.entities.boss.Apostle", remap = false)
 public abstract class ObservationApostleMixin {
   @WrapMethod(
-      method = {"hurt", "m_6469_"},
+      method = {
+        "hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z",
+        "m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+      },
       remap = false)
   private boolean cb$observe(DamageSource source, float amount, Operation<Boolean> original) {
     try (var scope =
@@ -33,7 +36,10 @@ public abstract class ObservationApostleMixin {
   }
 
   @WrapOperation(
-      method = {"actuallyHurt", "m_6475_"},
+      method = {
+        "actuallyHurt(Lnet/minecraft/world/damagesource/DamageSource;F)V",
+        "m_6475_(Lnet/minecraft/world/damagesource/DamageSource;F)V"
+      },
       at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(FF)F"),
       require = 1)
   private float cb$cap(float a, float b, Operation<Float> original) {

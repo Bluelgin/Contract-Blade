@@ -71,15 +71,16 @@ public final class StoredMaidBaubleResolver {
         if (size < 1 || size > 30 || !inventory.contains("Items", Tag.TAG_LIST)) return empty;
         var items = inventory.getList("Items", Tag.TAG_COMPOUND);
         if (items.size() > size) return empty;
+        var slots = new net.minecraftforge.items.ItemStackHandler(size);
         var occupied = new HashSet<Integer>();
         var effects = java.util.EnumSet.noneOf(ContractBaubleEffects.Effect.class);
         for (Tag item : items) {
             var entry = (CompoundTag) item;
             int slot = entry.getInt("Slot");
             if (!entry.contains("Slot", Tag.TAG_INT) || slot < 0 || slot >= size || !occupied.add(slot)) return empty;
-            effects.addAll(ContractBaubleEffects.effects(ItemStack.of(entry)));
+            slots.setStackInSlot(slot, ItemStack.of(entry));
         }
-        return effects;
+        return ContractBaubleEffects.resolveSlots(slots);
     }
     public static void clear(UUID owner) {
         var entries = CACHE.entrySet().iterator();
