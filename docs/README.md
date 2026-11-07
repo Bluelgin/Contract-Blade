@@ -19,6 +19,10 @@
 - [历史归档索引](archive/README.md)：旧方案、逐次改动与已撤回功能
 - [资源来源及许可](../ASSET_SOURCES.md) · [素材导航](../art/README.md)
 
+## 剧情创作草案 / Story drafts
+
+- [赤月异闻：两篇小说、人物与游戏衔接（未定稿）](story/akatsuki/README.md) — 独立于当前 Core 发布内容；尚未实装。
+
 ## 更新日志 / Release notes
 
 - [完整历史（中文）](changelog/CHANGELOG.md) · [Full history (English)](changelog/CHANGELOG.en.md)
