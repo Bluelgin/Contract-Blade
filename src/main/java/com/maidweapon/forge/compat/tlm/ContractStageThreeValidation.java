@@ -40,7 +40,7 @@ public final class ContractStageThreeValidation {
         var maid = maid(player); UUID id = maid.getUUID(); var weapon = new ItemStack(Items.IRON_SWORD);
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, weapon);
         check(ContractLifecycleService.capture(player, maid, weapon, false), "capture commits before live entity removal");
-        String binding = ContractCarrierData.getBindingId(weapon);
+        String originalBinding = ContractCarrierData.getBindingId(weapon);
         check(ContractAnomalyRecoveryService.state(player,weapon)==ContractAnomalyRecoveryService.State.STORED, "stored state");
         var menu = new MaidInjectorMenu(31,player.getInventory(),player.blockPosition()); player.containerMenu=menu;
         player.getInventory().clearContent(); menu.getSlot(0).set(weapon); menu.getSlot(1).set(item("touhou_little_maid:smart_slab_empty"));
@@ -48,6 +48,77 @@ public final class ContractStageThreeValidation {
         var clean=menu.getSlot(2).getItem(); var seal=menu.getSlot(3).getItem(); var staleSeal=seal.copy();
         check(SoulTalismanService.filled(seal)&&!seal.getTag().contains(SoulTalismanService.EMERGENCY), "normal talisman is not emergency film");
         check(!MaidInfusion.isInfused(clean), "ordinary unbind preserves weapon without active contract");
+        check(SoulTalismanService.nativeReleaseAllowed(player, seal),
+                "ordinary transferred soul talisman is eligible for native release");
+        var wrongBinding = seal.copy();
+        wrongBinding.getTag().getCompound(SoulTalismanService.RECEIPT).putString("Binding", "invalid");
+        check(!SoulTalismanService.nativeReleaseAllowed(player, wrongBinding),
+                "stale transfer binding cannot bypass current destination");
+        var wrongOwner = seal.copy();
+        wrongOwner.getTag().getCompound("MaidInfo").putUUID("Owner", UUID.randomUUID());
+        check(!SoulTalismanService.nativeReleaseAllowed(player, wrongOwner),
+                "ordinary soul release still requires its real owner");
+
+        // Exercise the actual TLM smart-slab item, ToMaid event and accepted ServerLevel spawn.
+        // Native TLM resolves the online owner during ToMaid; register this disposable FakePlayer.
+        menu.getSlot(2).set(ItemStack.EMPTY); menu.getSlot(3).set(ItemStack.EMPTY);
+        player.containerMenu = player.inventoryMenu;
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, seal.copy());
+        var nativePlayerField = net.minecraft.server.players.PlayerList.class.getDeclaredField("playersByUUID");
+        nativePlayerField.setAccessible(true);
+        @SuppressWarnings("unchecked") var nativePlayerMap =
+                (java.util.Map<UUID,ServerPlayer>)nativePlayerField.get(server.getPlayerList());
+        nativePlayerMap.put(player.getUUID(), player);
+        try {
+            var floor = player.blockPosition().below();
+            server.overworld().setBlockAndUpdate(floor, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            var context = new net.minecraft.world.item.context.UseOnContext(player,
+                    net.minecraft.world.InteractionHand.MAIN_HAND,
+                    new net.minecraft.world.phys.BlockHitResult(
+                            net.minecraft.world.phys.Vec3.atCenterOf(floor),
+                            net.minecraft.core.Direction.UP, floor, false));
+            java.util.function.Consumer<net.minecraftforge.event.entity.EntityJoinLevelEvent> cancelNative =
+                    join -> { if (join.getEntity().getUUID().equals(id)) join.setCanceled(true); };
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.addListener(cancelNative);
+            try {
+                player.getMainHandItem().getItem().useOn(context);
+            } finally { net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancelNative); }
+            check(server.overworld().getEntity(id) == null
+                    && "SEAL".equals(ContractRecoveryJournal.get(server)
+                            .transfer(id.toString()).getString("Kind"))
+                    && !ContractRecoveryJournal.get(server).isMaidPresent(id.toString()),
+                    "canceled native spawn retains sealed destination without publishing a maid");
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, seal.copy());
+            check(player.getMainHandItem().getItem().useOn(context).consumesAction(),
+                    "transferred ordinary soul can use native TLM placement");
+        } finally { nativePlayerMap.remove(player.getUUID()); }
+        var nativeMaid = server.overworld().getEntity(id);
+        check(nativeMaid instanceof LivingEntity && TlmEntityAdapter.isOwnedMaid(nativeMaid, player),
+                "native soul placement restores original maid UUID and owner");
+        check(nativeMaid.getPersistentData().getCompound(ContractMaidKeys.EMERGENCY_FILM_PROGRESS)
+                .equals(seal.getTag().getCompound(ContractMaidKeys.FILM_PROGRESS)),
+                "native release retains ordinary contract progress for future rebinding");
+        var nativeDestination = ContractRecoveryJournal.get(server).transfer(id.toString());
+        check("FREE_MAID".equals(nativeDestination.getString("Kind"))
+                && ContractRecoveryJournal.get(server).isMaidPresent(id.toString())
+                && nativeMaid.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID).isEmpty(),
+                "successful native release publishes a live free maid, not a stored talisman");
+        check(!SoulTalismanService.nativeReleaseAllowed(player, staleSeal),
+                "copied old talisman cannot duplicate an already live maid");
+
+        // Use the clean weapon returned by the table to create a new contract.
+        weapon = clean;
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, weapon);
+        check(ContractLifecycleService.capture(player, nativeMaid, weapon, false),
+                "released ordinary maid can form a new contract with the clean weapon");
+        String binding = ContractCarrierData.getBindingId(weapon);
+        check(binding != null && !binding.equals(originalBinding), "recapture creates a fresh binding");
+        menu.getSlot(0).set(weapon);
+        menu.getSlot(1).set(item("touhou_little_maid:smart_slab_empty"));
+        player.containerMenu = menu;
+        check(menu.clickMenuButton(player, 0), "re-extract native released maid through contract table");
+        seal = menu.getSlot(3).getItem();
+        check(SoulTalismanService.filled(seal), "re-extracted talisman carries the original maid");
         menu.getSlot(2).set(ItemStack.EMPTY); menu.getSlot(3).set(ItemStack.EMPTY);
         menu.getSlot(0).set(new ItemStack(Items.DIAMOND_SWORD)); menu.getSlot(1).set(seal);
         check(menu.clickMenuButton(player,0),"talisman migrates to another carrier"); weapon=menu.getSlot(2).getItem();
@@ -90,7 +161,7 @@ public final class ContractStageThreeValidation {
         check(!emergency.isEmpty()&&emergency.getTag().contains(SoulTalismanService.EMERGENCY),"confirmed destroyed carrier permits emergency film");
         check(!TlmFilmService.isFilledMaidFilm(emergency)&&!SoulTalismanService.importAllowed(player,emergency),"emergency film cannot be normal talisman");
         // separate native source for legacy film migration; unknown/bound sources cannot be cleared or imported
-        var nativeMaid=maid(player); var raw=TlmEntityAdapter.save(nativeMaid); nativeMaid.discard();
+        var legacySourceMaid=maid(player); var raw=TlmEntityAdapter.save(legacySourceMaid); legacySourceMaid.discard();
         var legacy=item("touhou_little_maid:film"); legacy.getOrCreateTag().put("MaidInfo",raw);
         var legacyBefore=legacy.copy(); check(!SoulTalismanService.migrateLegacy(player,legacy).isEmpty(),"owned unbound legacy MaidInfo migration");
         check(legacy.getTag().equals(legacyBefore.getTag()),"precheck does not consume old film");

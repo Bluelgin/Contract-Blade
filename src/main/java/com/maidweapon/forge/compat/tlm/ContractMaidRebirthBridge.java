@@ -17,8 +17,28 @@ import java.util.*;
 /** Thin native photo/film adapter. No backup directory reads, consumption ledger or replay transactions. */
 public final class ContractMaidRebirthBridge {
     private static final Set<Entity> REJECTED = Collections.newSetFromMap(new IdentityHashMap<>());
+    // Identity, not Entity.hashCode(): the native spawn can assign a new entity ID.
+    // Cleared on both successful and rejected addEntity, never publish before success.
+    private record PendingSoulRelease(UUID owner, UUID maid, String binding) { }
+    private static final Map<Entity, PendingSoulRelease> PENDING_SOUL_RELEASE = new IdentityHashMap<>();
     public static boolean rejected(Entity entity) { return REJECTED.remove(entity); }
-    public static void clearSession() { REJECTED.clear(); }
+    public static void clearSession() { REJECTED.clear(); PENDING_SOUL_RELEASE.clear(); }
+
+    /** Called at the end of ServerLevel.addEntity, on both success and failure. */
+    public static void nativeSoulFinished(Entity entity, boolean added) {
+        var pending = PENDING_SOUL_RELEASE.remove(entity);
+        if (!added || pending == null || entity.getServer() == null
+                || !pending.maid().equals(entity.getUUID())
+                || !(entity instanceof net.minecraft.world.entity.TamableAnimal tamed)
+                || !pending.owner().equals(tamed.getOwnerUUID())) return;
+        var journal = ContractRecoveryJournal.get(entity.getServer());
+        var current = journal.transfer(pending.maid().toString());
+        if (!journal.knownSchema() || !"SEAL".equals(current.getString("Kind"))
+                || !current.hasUUID("Owner") || !pending.owner().equals(current.getUUID("Owner"))
+                || !pending.binding().equals(current.getString("Binding"))) return;
+        journal.destination(pending.maid().toString(), pending.owner(), pending.binding(),
+                "FREE_MAID", ContractRecoveryJournal.Presence.PRESENT, null);
+    }
     public static void register() {
         MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, false, MaidDeathEvent.class, ContractMaidRebirthBridge::death);
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, false, MaidAndItemTransformEvent.ToItem.class, event -> {
@@ -47,6 +67,24 @@ public final class ContractMaidRebirthBridge {
         for (var level : maid.getServer().getAllLevels()) if (level.getEntity(data.getUUID("UUID")) != null) collision = true;
         if (collision) { REJECTED.add(maid); return; }
         Player owner = data.hasUUID("Owner") ? maid.getServer().getPlayerList().getPlayer(data.getUUID("Owner")) : null;
+        boolean ordinarySoulRelease = SoulTalismanService.transferred(event.getItem());
+        if (ordinarySoulRelease) {
+            if (owner == null || !SoulTalismanService.nativeReleaseAllowed(owner, event.getItem())) {
+                REJECTED.add(maid);
+                return;
+            }
+            PENDING_SOUL_RELEASE.put(maid, new PendingSoulRelease(owner.getUUID(),
+                    data.getUUID("UUID"), event.getItem().getTag()
+                            .getCompound(SoulTalismanService.RECEIPT).getString("Binding")));
+            // TLM's native slab restores the maid entity, not Contract Blade's separate
+            // weapon progress. Carry that progress on the live maid for a later new contract.
+            var progress = event.getItem().getTag().getCompound(ContractMaidKeys.FILM_PROGRESS);
+            if (!progress.isEmpty()) {
+                var forge = data.getCompound("ForgeData").copy();
+                forge.put(ContractMaidKeys.EMERGENCY_FILM_PROGRESS, progress.copy());
+                data.put("ForgeData", forge);
+            }
+        }
         boolean emergency = event.getItem().hasTag() && event.getItem().getTag().contains(SoulTalismanService.EMERGENCY);
         if (emergency) {
             var metadata = event.getItem().getTag().getCompound(SoulTalismanService.EMERGENCY);
@@ -69,7 +107,9 @@ public final class ContractMaidRebirthBridge {
         data.getCompound("ForgeData").remove("MaidWeaponRecoveryRejected");
         data.getCompound("ForgeData").remove(ContractMaidKeys.CORE_STORAGE_TRANSFER);
         data.getCompound("ForgeData").remove(ContractMaidKeys.NATIVE_STORAGE_TRANSFER);
-        if (owner != null) restoreIdentity(owner, maid, data);
+        // A deliberately released ordinary soul is free, even if the inventory still
+        // contains an older, empty copy of its previous contract weapon.
+        if (owner != null && !ordinarySoulRelease) restoreIdentity(owner, maid, data);
         // A native photo is a historical snapshot. The player explicitly requested its restoration.
         if (owner != null && net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(event.getItem().getItem()).getPath().equals("photo"))
             owner.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.recovery.historical_snapshot"), false);
