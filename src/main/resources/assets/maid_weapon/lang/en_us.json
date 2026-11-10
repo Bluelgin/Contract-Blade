@@ -398,6 +398,7 @@
   "maid_weapon.fox.button.migrate": "Move Spirit",
   "maid_weapon.fox.transfer.unavailable": "Recall your spirit first, then choose an unbound weapon at the Contract Table.",
   "maid_weapon.fox.seal.table_only": "A fox spirit rests in this soul talisman. Choose her next weapon at the contract table.",
+  "maid_weapon.soul.release_unavailable": "Cannot release this soul talisman: check ownership, its current destination, and whether the maid already exists.",
   "maid_weapon.fox.tooltip.seal": "White Fox rests here. Use the contract table to move her into a weapon without a contract.",
   "maid_weapon.fox.tooltip.resident": "White Fox dwells here. This weapon cannot be consumed by ordinary crafting.",
   "maid_weapon.fox.tooltip.original": "The original shrine White Fox blade. White Fox must reside here to enter the Black Fox challenge.",
