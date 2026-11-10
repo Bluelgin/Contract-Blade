@@ -77,6 +77,18 @@ public final class ContractStageThreeValidation {
                     new net.minecraft.world.phys.BlockHitResult(
                             net.minecraft.world.phys.Vec3.atCenterOf(floor),
                             net.minecraft.core.Direction.UP, floor, false));
+            java.util.function.Consumer<net.minecraftforge.event.entity.EntityJoinLevelEvent> cancelNative =
+                    join -> { if (join.getEntity().getUUID().equals(id)) join.setCanceled(true); };
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.addListener(cancelNative);
+            try {
+                player.getMainHandItem().getItem().useOn(context);
+            } finally { net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancelNative); }
+            check(server.overworld().getEntity(id) == null
+                    && "SEAL".equals(ContractRecoveryJournal.get(server)
+                            .transfer(id.toString()).getString("Kind"))
+                    && !ContractRecoveryJournal.get(server).isMaidPresent(id.toString()),
+                    "canceled native spawn retains sealed destination without publishing a maid");
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, seal.copy());
             check(player.getMainHandItem().getItem().useOn(context).consumesAction(),
                     "transferred ordinary soul can use native TLM placement");
         } finally { nativePlayerMap.remove(player.getUUID()); }
