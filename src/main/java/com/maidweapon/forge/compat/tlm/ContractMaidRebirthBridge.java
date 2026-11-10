@@ -17,17 +17,18 @@ import java.util.*;
 /** Thin native photo/film adapter. No backup directory reads, consumption ledger or replay transactions. */
 public final class ContractMaidRebirthBridge {
     private static final Set<Entity> REJECTED = Collections.newSetFromMap(new IdentityHashMap<>());
-    // Weak, server-thread-only handoff. The native item may be consumed only after the
-    // spawn succeeds; never mark its destination FREE_MAID at the cancellable ToMaid event.
+    // Identity, not Entity.hashCode(): the native spawn can assign a new entity ID.
+    // Cleared on both successful and rejected addEntity, never publish before success.
     private record PendingSoulRelease(UUID owner, UUID maid, String binding) { }
-    private static final Map<Entity, PendingSoulRelease> PENDING_SOUL_RELEASE = new WeakHashMap<>();
+    private static final Map<Entity, PendingSoulRelease> PENDING_SOUL_RELEASE = new IdentityHashMap<>();
     public static boolean rejected(Entity entity) { return REJECTED.remove(entity); }
     public static void clearSession() { REJECTED.clear(); PENDING_SOUL_RELEASE.clear(); }
 
-    /** Called by the successful ServerLevel.addEntity hook, never by a pre-spawn event. */
-    public static void nativeSoulAdded(Entity entity) {
+    /** Called at the end of ServerLevel.addEntity, on both success and failure. */
+    public static void nativeSoulFinished(Entity entity, boolean added) {
         var pending = PENDING_SOUL_RELEASE.remove(entity);
-        if (pending == null || entity.getServer() == null || !pending.maid().equals(entity.getUUID())
+        if (!added || pending == null || entity.getServer() == null
+                || !pending.maid().equals(entity.getUUID())
                 || !(entity instanceof net.minecraft.world.entity.TamableAnimal tamed)
                 || !pending.owner().equals(tamed.getOwnerUUID())) return;
         var journal = ContractRecoveryJournal.get(entity.getServer());
