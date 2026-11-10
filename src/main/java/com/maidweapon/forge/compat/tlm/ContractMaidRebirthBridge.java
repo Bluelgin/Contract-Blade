@@ -74,6 +74,14 @@ public final class ContractMaidRebirthBridge {
             PENDING_SOUL_RELEASE.put(maid, new PendingSoulRelease(owner.getUUID(),
                     data.getUUID("UUID"), event.getItem().getTag()
                             .getCompound(SoulTalismanService.RECEIPT).getString("Binding")));
+            // TLM's native slab restores the maid entity, not Contract Blade's separate
+            // weapon progress. Carry that progress on the live maid for a later new contract.
+            var progress = event.getItem().getTag().getCompound(ContractMaidKeys.FILM_PROGRESS);
+            if (!progress.isEmpty()) {
+                var forge = data.getCompound("ForgeData").copy();
+                forge.put(ContractMaidKeys.EMERGENCY_FILM_PROGRESS, progress.copy());
+                data.put("ForgeData", forge);
+            }
         }
         boolean emergency = event.getItem().hasTag() && event.getItem().getTag().contains(SoulTalismanService.EMERGENCY);
         if (emergency) {
