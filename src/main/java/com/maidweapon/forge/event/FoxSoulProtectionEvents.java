@@ -38,11 +38,19 @@ public final class FoxSoulProtectionEvents {
     }
 
     private static void blockSeal(PlayerInteractEvent event) {
-        if (!tableOnly(event.getItemStack())) return;
+        var item = event.getItemStack();
+        if (!tableOnly(item)) return;
+        // Ordinary migrated talismans retain TLM's native placement behavior when their
+        // owner, current destination and original UUID are safe to release.
+        if (!FoxSpiritState.isSeal(item)
+                && com.maidweapon.forge.compat.tlm.SoulTalismanService.nativeReleaseAllowed(
+                        event.getEntity(), item)) return;
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.FAIL);
         if (!event.getLevel().isClientSide()) event.getEntity().displayClientMessage(
-                Component.translatable("maid_weapon.fox.seal.table_only"), true);
+                Component.translatable(FoxSpiritState.isSeal(item)
+                        ? "maid_weapon.fox.seal.table_only"
+                        : "maid_weapon.soul.release_unavailable"), true);
     }
 
     @SubscribeEvent
