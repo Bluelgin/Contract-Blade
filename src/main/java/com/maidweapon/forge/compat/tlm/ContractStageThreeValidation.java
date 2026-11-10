@@ -48,6 +48,58 @@ public final class ContractStageThreeValidation {
         var clean=menu.getSlot(2).getItem(); var seal=menu.getSlot(3).getItem(); var staleSeal=seal.copy();
         check(SoulTalismanService.filled(seal)&&!seal.getTag().contains(SoulTalismanService.EMERGENCY), "normal talisman is not emergency film");
         check(!MaidInfusion.isInfused(clean), "ordinary unbind preserves weapon without active contract");
+        check(SoulTalismanService.nativeReleaseAllowed(player, seal),
+                "ordinary transferred soul talisman is eligible for native release");
+        var wrongBinding = seal.copy();
+        wrongBinding.getTag().getCompound(SoulTalismanService.RECEIPT).putString("Binding", "invalid");
+        check(!SoulTalismanService.nativeReleaseAllowed(player, wrongBinding),
+                "stale transfer binding cannot bypass current destination");
+        var wrongOwner = seal.copy();
+        wrongOwner.getTag().getCompound("MaidInfo").putUUID("Owner", UUID.randomUUID());
+        check(!SoulTalismanService.nativeReleaseAllowed(player, wrongOwner),
+                "ordinary soul release still requires its real owner");
+
+        // Exercise the actual TLM smart-slab item, ToMaid event and accepted ServerLevel spawn.
+        // Native TLM resolves the online owner during ToMaid; register this disposable FakePlayer.
+        menu.getSlot(2).set(ItemStack.EMPTY); menu.getSlot(3).set(ItemStack.EMPTY);
+        player.containerMenu = player.inventoryMenu;
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, seal.copy());
+        var nativePlayerField = net.minecraft.server.players.PlayerList.class.getDeclaredField("playersByUUID");
+        nativePlayerField.setAccessible(true);
+        @SuppressWarnings("unchecked") var nativePlayerMap =
+                (java.util.Map<UUID,ServerPlayer>)nativePlayerField.get(server.getPlayerList());
+        nativePlayerMap.put(player.getUUID(), player);
+        try {
+            var floor = player.blockPosition().below();
+            server.overworld().setBlockAndUpdate(floor, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            var context = new net.minecraft.world.item.context.UseOnContext(player,
+                    net.minecraft.world.InteractionHand.MAIN_HAND,
+                    new net.minecraft.world.phys.BlockHitResult(
+                            net.minecraft.world.phys.Vec3.atCenterOf(floor),
+                            net.minecraft.core.Direction.UP, floor, false));
+            check(player.getMainHandItem().getItem().useOn(context).consumesAction(),
+                    "transferred ordinary soul can use native TLM placement");
+        } finally { nativePlayerMap.remove(player.getUUID()); }
+        var nativeMaid = server.overworld().getEntity(id);
+        check(nativeMaid instanceof LivingEntity && TlmEntityAdapter.isOwnedMaid(nativeMaid, player),
+                "native soul placement restores original maid UUID and owner");
+        var nativeDestination = ContractRecoveryJournal.get(server).transfer(id.toString());
+        check("FREE_MAID".equals(nativeDestination.getString("Kind"))
+                && ContractRecoveryJournal.get(server).isMaidPresent(id.toString()),
+                "successful native release publishes a live free maid, not a stored talisman");
+        check(!SoulTalismanService.nativeReleaseAllowed(player, staleSeal),
+                "copied old talisman cannot duplicate an already live maid");
+
+        // Re-capture, then re-export by the actual table to keep validating migration.
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, weapon);
+        check(ContractLifecycleService.capture(player, nativeMaid, weapon, false),
+                "released ordinary maid can be recaptured into her original weapon");
+        menu.getSlot(0).set(weapon);
+        menu.getSlot(1).set(item("touhou_little_maid:smart_slab_empty"));
+        player.containerMenu = menu;
+        check(menu.clickMenuButton(player, 0), "re-extract native released maid through contract table");
+        seal = menu.getSlot(3).getItem();
+        check(SoulTalismanService.filled(seal), "re-extracted talisman carries the original maid");
         menu.getSlot(2).set(ItemStack.EMPTY); menu.getSlot(3).set(ItemStack.EMPTY);
         menu.getSlot(0).set(new ItemStack(Items.DIAMOND_SWORD)); menu.getSlot(1).set(seal);
         check(menu.clickMenuButton(player,0),"talisman migrates to another carrier"); weapon=menu.getSlot(2).getItem();
