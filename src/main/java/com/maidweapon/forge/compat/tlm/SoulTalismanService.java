@@ -23,6 +23,35 @@ public final class SoulTalismanService {
                 && item.hasTag() && item.getTag().contains("MaidInfo", 10) && !item.getTag().contains(EMERGENCY)
                 && !item.getTag().getCompound("MaidInfo").getCompound("ForgeData").contains("MaidWeaponEmbeddedSpirit");
     }
+    /** Native TLM release is allowed only for the current ordinary soul-talisman destination. */
+    public static boolean transferred(ItemStack item) {
+        return filled(item) && item.getCount() == 1 && item.getTag().contains(RECEIPT, 10);
+    }
+
+    public static boolean nativeReleaseAllowed(Player owner, ItemStack item) {
+        if (owner == null || !transferred(item)) return false;
+        var tag = item.getTag();
+        var maid = tag.getCompound("MaidInfo");
+        var receipt = tag.getCompound(RECEIPT);
+        String binding = receipt.getString("Binding");
+        if (binding.isBlank() || !maid.hasUUID("Owner") || !maid.hasUUID("UUID")
+                || !owner.getUUID().equals(maid.getUUID("Owner"))
+                || com.maidweapon.forge.system.ContractNbtGuard.serializedSize(tag)
+                    > com.maidweapon.common.MaidWeaponConfig.CONTRACT_NBT_MAX_DECOMPRESSED_BYTES.get()
+                || com.maidweapon.forge.system.ContractNbtGuard.depth(tag)
+                    > com.maidweapon.common.MaidWeaponConfig.CONTRACT_NBT_MAX_DEPTH.get()) return false;
+        // Clients do not have the authoritative journal. The server independently validates before native use.
+        if (owner.level().isClientSide) return true;
+        if (owner.getServer() == null) return false;
+        String maidId = maid.getUUID("UUID").toString();
+        var journal = ContractRecoveryJournal.get(owner.getServer());
+        var current = journal.transfer(maidId);
+        return journal.knownSchema() && "SEAL".equals(current.getString("Kind"))
+                && current.hasUUID("Owner") && owner.getUUID().equals(current.getUUID("Owner"))
+                && binding.equals(current.getString("Binding"))
+                && ContractWeaponLocator.mayManifest(owner, maidId);
+    }
+
     public static boolean importAllowed(Player owner, ItemStack item) {
         if (owner == null || owner.level().isClientSide || !filled(item) || item.getCount() != 1) return false;
         if (com.maidweapon.forge.system.ContractNbtGuard.serializedSize(item.getTag())
