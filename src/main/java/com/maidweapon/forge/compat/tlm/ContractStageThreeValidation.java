@@ -83,6 +83,9 @@ public final class ContractStageThreeValidation {
         var nativeMaid = server.overworld().getEntity(id);
         check(nativeMaid instanceof LivingEntity && TlmEntityAdapter.isOwnedMaid(nativeMaid, player),
                 "native soul placement restores original maid UUID and owner");
+        check(nativeMaid.getPersistentData().getCompound(ContractMaidKeys.EMERGENCY_FILM_PROGRESS)
+                .equals(seal.getTag().getCompound(ContractMaidKeys.FILM_PROGRESS)),
+                "native release retains ordinary contract progress for future rebinding");
         var nativeDestination = ContractRecoveryJournal.get(server).transfer(id.toString());
         check("FREE_MAID".equals(nativeDestination.getString("Kind"))
                 && ContractRecoveryJournal.get(server).isMaidPresent(id.toString()),
