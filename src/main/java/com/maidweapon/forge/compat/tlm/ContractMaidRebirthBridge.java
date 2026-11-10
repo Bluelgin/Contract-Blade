@@ -67,7 +67,8 @@ public final class ContractMaidRebirthBridge {
         for (var level : maid.getServer().getAllLevels()) if (level.getEntity(data.getUUID("UUID")) != null) collision = true;
         if (collision) { REJECTED.add(maid); return; }
         Player owner = data.hasUUID("Owner") ? maid.getServer().getPlayerList().getPlayer(data.getUUID("Owner")) : null;
-        if (SoulTalismanService.transferred(event.getItem())) {
+        boolean ordinarySoulRelease = SoulTalismanService.transferred(event.getItem());
+        if (ordinarySoulRelease) {
             if (owner == null || !SoulTalismanService.nativeReleaseAllowed(owner, event.getItem())) {
                 REJECTED.add(maid);
                 return;
@@ -106,7 +107,9 @@ public final class ContractMaidRebirthBridge {
         data.getCompound("ForgeData").remove("MaidWeaponRecoveryRejected");
         data.getCompound("ForgeData").remove(ContractMaidKeys.CORE_STORAGE_TRANSFER);
         data.getCompound("ForgeData").remove(ContractMaidKeys.NATIVE_STORAGE_TRANSFER);
-        if (owner != null) restoreIdentity(owner, maid, data);
+        // A deliberately released ordinary soul is free, even if the inventory still
+        // contains an older, empty copy of its previous contract weapon.
+        if (owner != null && !ordinarySoulRelease) restoreIdentity(owner, maid, data);
         // A native photo is a historical snapshot. The player explicitly requested its restoration.
         if (owner != null && net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(event.getItem().getItem()).getPath().equals("photo"))
             owner.displayClientMessage(net.minecraft.network.chat.Component.translatable("maid_weapon.recovery.historical_snapshot"), false);
