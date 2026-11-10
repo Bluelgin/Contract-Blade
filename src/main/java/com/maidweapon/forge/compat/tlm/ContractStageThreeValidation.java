@@ -40,7 +40,7 @@ public final class ContractStageThreeValidation {
         var maid = maid(player); UUID id = maid.getUUID(); var weapon = new ItemStack(Items.IRON_SWORD);
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, weapon);
         check(ContractLifecycleService.capture(player, maid, weapon, false), "capture commits before live entity removal");
-        String binding = ContractCarrierData.getBindingId(weapon);
+        String originalBinding = ContractCarrierData.getBindingId(weapon);
         check(ContractAnomalyRecoveryService.state(player,weapon)==ContractAnomalyRecoveryService.State.STORED, "stored state");
         var menu = new MaidInjectorMenu(31,player.getInventory(),player.blockPosition()); player.containerMenu=menu;
         player.getInventory().clearContent(); menu.getSlot(0).set(weapon); menu.getSlot(1).set(item("touhou_little_maid:smart_slab_empty"));
@@ -100,15 +100,19 @@ public final class ContractStageThreeValidation {
                 "native release retains ordinary contract progress for future rebinding");
         var nativeDestination = ContractRecoveryJournal.get(server).transfer(id.toString());
         check("FREE_MAID".equals(nativeDestination.getString("Kind"))
-                && ContractRecoveryJournal.get(server).isMaidPresent(id.toString()),
+                && ContractRecoveryJournal.get(server).isMaidPresent(id.toString())
+                && nativeMaid.getPersistentData().getString(ContractMaidKeys.ENTITY_BINDING_ID).isEmpty(),
                 "successful native release publishes a live free maid, not a stored talisman");
         check(!SoulTalismanService.nativeReleaseAllowed(player, staleSeal),
                 "copied old talisman cannot duplicate an already live maid");
 
-        // Re-capture, then re-export by the actual table to keep validating migration.
+        // Use the clean weapon returned by the table to create a new contract.
+        weapon = clean;
         player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, weapon);
         check(ContractLifecycleService.capture(player, nativeMaid, weapon, false),
-                "released ordinary maid can be recaptured into her original weapon");
+                "released ordinary maid can form a new contract with the clean weapon");
+        String binding = ContractCarrierData.getBindingId(weapon);
+        check(binding != null && !binding.equals(originalBinding), "recapture creates a fresh binding");
         menu.getSlot(0).set(weapon);
         menu.getSlot(1).set(item("touhou_little_maid:smart_slab_empty"));
         player.containerMenu = menu;
