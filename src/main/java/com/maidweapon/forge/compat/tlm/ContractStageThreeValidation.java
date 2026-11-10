@@ -157,7 +157,7 @@ public final class ContractStageThreeValidation {
         check(!emergency.isEmpty()&&emergency.getTag().contains(SoulTalismanService.EMERGENCY),"confirmed destroyed carrier permits emergency film");
         check(!TlmFilmService.isFilledMaidFilm(emergency)&&!SoulTalismanService.importAllowed(player,emergency),"emergency film cannot be normal talisman");
         // separate native source for legacy film migration; unknown/bound sources cannot be cleared or imported
-        var nativeMaid=maid(player); var raw=TlmEntityAdapter.save(nativeMaid); nativeMaid.discard();
+        var legacySourceMaid=maid(player); var raw=TlmEntityAdapter.save(legacySourceMaid); legacySourceMaid.discard();
         var legacy=item("touhou_little_maid:film"); legacy.getOrCreateTag().put("MaidInfo",raw);
         var legacyBefore=legacy.copy(); check(!SoulTalismanService.migrateLegacy(player,legacy).isEmpty(),"owned unbound legacy MaidInfo migration");
         check(legacy.getTag().equals(legacyBefore.getTag()),"precheck does not consume old film");
