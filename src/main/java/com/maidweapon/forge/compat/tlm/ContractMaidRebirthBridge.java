@@ -17,8 +17,27 @@ import java.util.*;
 /** Thin native photo/film adapter. No backup directory reads, consumption ledger or replay transactions. */
 public final class ContractMaidRebirthBridge {
     private static final Set<Entity> REJECTED = Collections.newSetFromMap(new IdentityHashMap<>());
+    // Weak, server-thread-only handoff. The native item may be consumed only after the
+    // spawn succeeds; never mark its destination FREE_MAID at the cancellable ToMaid event.
+    private record PendingSoulRelease(UUID owner, UUID maid, String binding) { }
+    private static final Map<Entity, PendingSoulRelease> PENDING_SOUL_RELEASE = new WeakHashMap<>();
     public static boolean rejected(Entity entity) { return REJECTED.remove(entity); }
-    public static void clearSession() { REJECTED.clear(); }
+    public static void clearSession() { REJECTED.clear(); PENDING_SOUL_RELEASE.clear(); }
+
+    /** Called by the successful ServerLevel.addEntity hook, never by a pre-spawn event. */
+    public static void nativeSoulAdded(Entity entity) {
+        var pending = PENDING_SOUL_RELEASE.remove(entity);
+        if (pending == null || entity.getServer() == null || !pending.maid().equals(entity.getUUID())
+                || !(entity instanceof net.minecraft.world.entity.TamableAnimal tamed)
+                || !pending.owner().equals(tamed.getOwnerUUID())) return;
+        var journal = ContractRecoveryJournal.get(entity.getServer());
+        var current = journal.transfer(pending.maid().toString());
+        if (!journal.knownSchema() || !"SEAL".equals(current.getString("Kind"))
+                || !current.hasUUID("Owner") || !pending.owner().equals(current.getUUID("Owner"))
+                || !pending.binding().equals(current.getString("Binding"))) return;
+        journal.destination(pending.maid().toString(), pending.owner(), pending.binding(),
+                "FREE_MAID", ContractRecoveryJournal.Presence.PRESENT, null);
+    }
     public static void register() {
         MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, false, MaidDeathEvent.class, ContractMaidRebirthBridge::death);
         MinecraftForge.EVENT_BUS.addListener(EventPriority.LOWEST, false, MaidAndItemTransformEvent.ToItem.class, event -> {
@@ -47,6 +66,15 @@ public final class ContractMaidRebirthBridge {
         for (var level : maid.getServer().getAllLevels()) if (level.getEntity(data.getUUID("UUID")) != null) collision = true;
         if (collision) { REJECTED.add(maid); return; }
         Player owner = data.hasUUID("Owner") ? maid.getServer().getPlayerList().getPlayer(data.getUUID("Owner")) : null;
+        if (SoulTalismanService.transferred(event.getItem())) {
+            if (owner == null || !SoulTalismanService.nativeReleaseAllowed(owner, event.getItem())) {
+                REJECTED.add(maid);
+                return;
+            }
+            PENDING_SOUL_RELEASE.put(maid, new PendingSoulRelease(owner.getUUID(),
+                    data.getUUID("UUID"), event.getItem().getTag()
+                            .getCompound(SoulTalismanService.RECEIPT).getString("Binding")));
+        }
         boolean emergency = event.getItem().hasTag() && event.getItem().getTag().contains(SoulTalismanService.EMERGENCY);
         if (emergency) {
             var metadata = event.getItem().getTag().getCompound(SoulTalismanService.EMERGENCY);
