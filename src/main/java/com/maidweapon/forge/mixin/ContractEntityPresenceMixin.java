@@ -15,7 +15,9 @@ public abstract class ContractEntityPresenceMixin {
     @Inject(method = {"addEntity(Lnet/minecraft/world/entity/Entity;)Z", "m_8872_(Lnet/minecraft/world/entity/Entity;)Z"},
             at = @At("RETURN"), require = 1)
     private void contractblade$added(Entity entity, CallbackInfoReturnable<Boolean> result) {
-        if (result.getReturnValueZ() && TlmEntityAdapter.isMaidEntity(entity))
+        if (result.getReturnValueZ() && TlmEntityAdapter.isMaidEntity(entity)) {
             ContractRecoveryJournal.get(entity.getServer()).markMaidPresent(entity.getStringUUID());
+            com.maidweapon.forge.compat.tlm.ContractMaidRebirthBridge.nativeSoulAdded(entity);
+        }
     }
 }
