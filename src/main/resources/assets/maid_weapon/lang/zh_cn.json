@@ -400,6 +400,7 @@
   "maid_weapon.fox.button.migrate": "刀灵迁居",
   "maid_weapon.fox.transfer.unavailable": "请先收回剑灵，再在缔结台选择一把尚无契约的武器。",
   "maid_weapon.fox.seal.table_only": "狐灵暂居在魂符中，请通过契约缔结台为她选择武器。",
+  "maid_weapon.soul.release_unavailable": "此魂符暂不能释放：请确认主人、当前存放位置及女仆是否已经存在。",
   "maid_weapon.fox.tooltip.seal": "白狐暂居其中，可在契约缔结台迁入一把尚无契约的武器。",
   "maid_weapon.fox.tooltip.resident": "白狐栖居于此，不能将这件武器作为普通合成材料。",
   "maid_weapon.fox.tooltip.original": "神社白狐的原刀。进入黑狐挑战时，白狐需要仍栖居于此。",
