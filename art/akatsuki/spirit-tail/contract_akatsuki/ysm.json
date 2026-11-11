@@ -1,0 +1,120 @@
+{
+  "spec": 2,
+  "metadata": {
+    "name": "赤月 · 灵尾",
+    "tips": "挥剑时掠过暗红斜月。戴上头盔时三条灵尾在身后展开。",
+    "authors": [
+      {
+        "name": "TartaricAcid / 酒石酸菌及 Wine Fox contributors",
+        "role": "原酒狐模型"
+      },
+      {
+        "name": "Blade Tetra contributors / 用户提供角色包",
+        "role": "角色及模型适配"
+      },
+      {
+        "name": "哥斯拉",
+        "role": "YSM 基础动作 · 模型"
+      },
+      {
+        "name": "端木一动不动",
+        "role": "YSM 基础动作 · 动画"
+      },
+      {
+        "name": "甜粽子",
+        "role": "YSM 基础动作 · 动画"
+      },
+      {
+        "name": "星屑海螺",
+        "role": "YSM 基础动作 · 动画"
+      },
+      {
+        "name": "蓝玫瑰",
+        "role": "YSM 基础动作 · 材质/模型"
+      },
+      {
+        "name": "艾雷克亚",
+        "role": "YSM 基础动作 · 铁魔法动画"
+      },
+      {
+        "name": "完美冻结",
+        "role": "大正酒狐来源 · 模型原作"
+      },
+      {
+        "name": "星屑海螺",
+        "role": "大正酒狐来源 · 动画原作"
+      },
+      {
+        "name": "哥斯拉（映素团队）",
+        "role": "大正酒狐来源 · 模型修改"
+      },
+      {
+        "name": "白帆小喵",
+        "role": "大正酒狐来源 · 新版材质"
+      },
+      {
+        "name": "蓝玫瑰",
+        "role": "大正酒狐来源 · UI 材质/贴图"
+      },
+      {
+        "name": "墨染逝羽",
+        "role": "大正酒狐来源 · 面具模型"
+      },
+      {
+        "name": "Maks怜悯",
+        "role": "大正酒狐来源 · 载具模型"
+      },
+      {
+        "name": "浅陌菌",
+        "role": "大正酒狐来源 · 模型修改"
+      },
+      {
+        "name": "祸御神",
+        "role": "大正酒狐来源 · 动画修改"
+      },
+      {
+        "name": "羊毛",
+        "role": "大正酒狐来源 · 音效/动画修改"
+      }
+    ],
+    "license": {
+      "type": "CC BY-NC-SA 4.0",
+      "desc": "非商业使用；转载保留署名，修改版采用相同许可。完整来源与条款随包附带。"
+    }
+  },
+  "properties": {
+    "height_scale": 0.7,
+    "width_scale": 0.7,
+    "preview_animation": "akatsuki_spirit_gui",
+    "default_texture": "default",
+    "free": true
+  },
+  "files": {
+    "player": {
+      "model": {
+        "main": "models/main.json",
+        "arm": "models/arm.json"
+      },
+      "animation": {
+        "main": "animations/main.animation.json",
+        "arm": "animations/arm.animation.json",
+        "extra": "animations/extra.animation.json",
+        "tac": "animations/tac.animation.json",
+        "carryon": "animations/carryon.animation.json",
+        "parcool": "animations/parcool.animation.json",
+        "swem": "animations/swem.animation.json",
+        "slashblade": "animations/slashblade.animation.json",
+        "tlm": "animations/tlm.animation.json",
+        "immersive_melodies": "animations/immersive_melodies.animation.json",
+        "irons_spell_books": "animations/irons_spell_books.animation.json",
+        "fp_arm": "animations/fp_arm.animation.json"
+      },
+      "texture": [
+        "textures/default.png"
+      ],
+      "animation_controllers": [
+        "controllers/spirit_tail.json"
+      ]
+    }
+  }
+}
