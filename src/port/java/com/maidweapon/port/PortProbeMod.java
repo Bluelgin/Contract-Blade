@@ -1,6 +1,7 @@
 package com.maidweapon.port;
 
 import com.mojang.logging.LogUtils;
+import com.maidweapon.port.init.ProbeItems;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -13,6 +14,7 @@ public final class PortProbeMod {
     private static final Logger LOG = LogUtils.getLogger();
 
     public PortProbeMod(IEventBus bus, ModContainer container) {
-        LOG.warn("Contract Blade 1.21.1 PORT PROBE; gameplay and world migration are NOT implemented.");
+        ProbeItems.ITEMS.register(bus);
+        LOG.warn("Contract Blade NeoForge port probe loaded; this build contains NO release gameplay.");
     }
 }

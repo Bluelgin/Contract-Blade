@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: contract-neoforge-port
+  group: contract-neoforge-port-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
