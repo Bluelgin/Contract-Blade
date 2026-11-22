@@ -4,14 +4,14 @@ Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 
 ## M0: toolchain and API (current)
 - [x] Java 21 + ModDevGradle build and JUnit 5 on CI (Actions run 45004250302)
-- [ ] Bootstrapping in clean NeoForge 1.21.1 dedicated server with TLM
+- [x] Bootstrapping in clean NeoForge 1.21.1 dedicated server with TLM (Actions 45004595146)
 - [ ] TLM recognizes external ILittleMaid extension in running dedicated server
 - [x] 1.20.1 Java/resource sourceSets excluded from probe build (static boundary + CI)
 - [ ] Data Components does not lose foreign fields (unit + native tests)
 
 ## M1: storage
 - [ ] Full owned-key inventory for all weapons, channels and archives
-- [ ] Byte-equivalent v1 snapshot round-trip on real TLM data
+- [ ] v1 snapshot round-trip on native TLM entity (CI pending); old 1.20.1 golden fixtures still required
 - [ ] New/old SavedData world schema upgrade and identity
 - [ ] Invalid data or unsupported format remains untouched
 - [ ] Carrier storage preserves all 1.21.1 non-CUSTOM_DATA components

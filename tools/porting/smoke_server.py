@@ -2,7 +2,6 @@
 """Opt-in native server smoke. Never operates on or copies a player world."""
 import os
 import queue
-import re
 import signal
 import subprocess
 import sys
@@ -23,7 +22,7 @@ WORLD.mkdir(parents=True, exist_ok=True)
 output = queue.Queue()
 cmd = ["./gradlew", "--no-daemon", "runServer"]
 print("Launching isolated NeoForge + TLM probe in run/port-smoke-server", flush=True)
-proc = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+proc = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT, text=True, bufsize=1, start_new_session=True)
 
 def reader():
@@ -65,6 +64,29 @@ try:
         print("PORT_NATIVE_SERVER_FAIL: " + failure, file=sys.stderr)
         raise SystemExit(1)
     print("PORT_NATIVE_SERVER_READY: NeoForge 1.21.1 + TLM + probe booted", flush=True)
+    proc.stdin.write("contractportverify\n")
+    proc.stdin.flush()
+    test_deadline = time.monotonic() + 100
+    verified = False
+    while time.monotonic() < test_deadline:
+        try:
+            line = output.get(timeout=0.5)
+        except queue.Empty:
+            if proc.poll() is not None:
+                break
+            continue
+        if line is None:
+            break
+        if "PORT_NATIVE_TLM_ROUNDTRIP_PASS" in line:
+            verified = True
+            break
+        if "PORT_NATIVE_TLM_ROUNDTRIP_FAIL" in line:
+            failure = "Native TLM snapshot round-trip rejected"
+            break
+    if not verified:
+        print("PORT_NATIVE_ROUNDTRIP_FAIL: " + (failure or "No round-trip success marker"), file=sys.stderr)
+        raise SystemExit(1)
+    print("PORT_NATIVE_ROUNDTRIP_READY: full native TLM NBT test passed", flush=True)
 finally:
     if proc.poll() is None:
         try:
