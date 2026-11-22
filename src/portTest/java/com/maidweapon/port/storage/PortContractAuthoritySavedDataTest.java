@@ -67,6 +67,14 @@ class PortContractAuthoritySavedDataTest {
             () -> reloaded.beginManifest(MAID, OWNER, BINDING, UUID.randomUUID()));
     }
 
+    @Test void unversionedPopulatedWorldDataIsPreservedWithoutMutation() {
+        CompoundTag mystery = new CompoundTag();
+        mystery.putString("UnrecognizedRecord", "must-survive");
+        var ledger = PortContractAuthoritySavedData.load(mystery, null);
+        assertFalse(ledger.writable());
+        assertEquals(mystery, ledger.save(new CompoundTag(), null));
+    }
+
     @Test void futureSchemaIsStrictlyReadOnlyAndPreserved() {
         CompoundTag future = new CompoundTag();
         future.putInt("SchemaVersion", 100);

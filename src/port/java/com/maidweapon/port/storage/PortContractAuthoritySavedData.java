@@ -40,7 +40,7 @@ public final class PortContractAuthoritySavedData extends SavedData {
     public static PortContractAuthoritySavedData load(CompoundTag root, HolderLookup.Provider registries) {
         if (root == null) throw new IllegalArgumentException("Missing authority data");
         int version = root.getInt("SchemaVersion");
-        if (version > SCHEMA_VERSION || (root.contains(RECORDS) && version != SCHEMA_VERSION)) {
+        if (version > SCHEMA_VERSION || (!root.isEmpty() && version != SCHEMA_VERSION)) {
             return new PortContractAuthoritySavedData(new CompoundTag(), root.copy());
         }
         return new PortContractAuthoritySavedData(root.getCompound(RECORDS).copy(), null);
