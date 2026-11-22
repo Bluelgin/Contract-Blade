@@ -17,7 +17,7 @@ public final class ContractStackDataAccess {
         "MaidEntityDataUncompressedSize", "MaidEntityDataChecksum",
         "MaidWeaponExternalContract", "MaidWeaponIntrinsicSpirits",
         "MaidWeaponEmbeddedSpirit", "MaidWeaponEmbeddedSpiritName",
-        "MaidWeaponEmbeddedSpiritDormant",
+        "MaidWeaponEmbeddedSpiritDormant", "ContractCarrierStorageVersion",
         "MaidInfusionOriginalTask", "MaidInfusionOriginalSchedule",
         "MaidDeploymentLocation", "MaidDeploymentRecoveryFailed",
         "MaidInfusionMagicTaskFailure", "MaidInfusionSlashBladeTaskFailure",
@@ -46,6 +46,8 @@ public final class ContractStackDataAccess {
     public static CompoundTag mergeOwned(CompoundTag original, CompoundTag replacement) {
         Objects.requireNonNull(original, "original");
         Objects.requireNonNull(replacement, "replacement");
+        requireSupportedSchema(original);
+        requireSupportedSchema(replacement);
         for (String key : replacement.getAllKeys()) {
             if (!OWNED_KEYS.contains(key))
                 throw new IllegalArgumentException("Refusing foreign key: " + key);
@@ -55,6 +57,19 @@ public final class ContractStackDataAccess {
         for (String key : replacement.getAllKeys())
             next.put(key, replacement.get(key).copy());
         return next;
+    }
+
+    /**
+     * Refuse destructive writes if future versions own the data. Reading the
+     * raw root is still permitted for diagnostics and backups.
+     */
+    public static void requireSupportedSchema(CompoundTag root) {
+        Objects.requireNonNull(root, "root");
+        String version = "ContractCarrierStorageVersion";
+        if (!root.contains(version)) return; // historical version-zero carrier
+        if (!root.contains(version, net.minecraft.nbt.Tag.TAG_INT)
+                || root.getInt(version) < 0 || root.getInt(version) > 1)
+            throw new IllegalStateException("Unsupported contract carrier storage schema");
     }
 
     public static void replaceContract(ItemStack stack, CompoundTag replacement) {

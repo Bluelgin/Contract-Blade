@@ -43,6 +43,18 @@ class ContractStackDataAccessTest {
     }
 
     @Test
+    void refusesDestructiveWritesForUnknownFutureSchema() {
+        CompoundTag previous = new CompoundTag();
+        previous.putInt("ContractCarrierStorageVersion", 3);
+        previous.putString("MaidUUID", "preserve-me");
+        CompoundTag next = new CompoundTag();
+        next.putInt("ContractCarrierStorageVersion", 1);
+        assertThrows(IllegalStateException.class,
+            () -> ContractStackDataAccess.mergeOwned(previous, next));
+        assertEquals("preserve-me", previous.getString("MaidUUID"));
+    }
+
+    @Test
     void knownFieldsCanBeClearedWithoutDeletingUnknownOnes() {
         CompoundTag root = new CompoundTag();
         root.putString("MaidUUID", "original");
