@@ -28,7 +28,11 @@ neoForge {
     version = project.neo_version
     runs {
         client { client() }
-        server { server(); programArgument '--nogui' }
+        server {
+            server()
+            gameDirectory = project.file('run/port-smoke-server')
+            programArgument '--nogui'
+        }
         gameTestServer { type = 'gameTestServer' }
     }
     mods { maid_weapon_port_probe { sourceSet sourceSets.main } }

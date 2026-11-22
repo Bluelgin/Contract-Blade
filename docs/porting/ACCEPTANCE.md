@@ -3,10 +3,10 @@
 Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 
 ## M0: toolchain and API (current)
-- [ ] Java 21 + ModDevGradle build and JUnit 5 on CI
+- [x] Java 21 + ModDevGradle build and JUnit 5 on CI (Actions run 45004250302)
 - [ ] Bootstrapping in clean NeoForge 1.21.1 dedicated server with TLM
-- [ ] TLM recognizes external ILittleMaid extension
-- [ ] All old Java and resource files excluded from probe JAR
+- [ ] TLM recognizes external ILittleMaid extension in running dedicated server
+- [x] 1.20.1 Java/resource sourceSets excluded from probe build (static boundary + CI)
 - [ ] Data Components does not lose foreign fields (unit + native tests)
 
 ## M1: storage
