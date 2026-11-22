@@ -32,10 +32,16 @@ neoForge {
         gameTestServer { type = 'gameTestServer' }
     }
     mods { maid_weapon_port_probe { sourceSet sourceSets.main } }
+    // ModDevGradle does not put transformed Minecraft on plain Gradle test classpath.
+    unitTest {
+        enable()
+        testedMod = mods.maid_weapon_port_probe
+    }
 }
 dependencies {
     implementation 'maven.modrinth:touhou-little-maid:1.5.3-neoforge+mc1.21.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.withType(Test).configureEach { useJUnitPlatform() }
 tasks.named('jar', Jar).configure {
