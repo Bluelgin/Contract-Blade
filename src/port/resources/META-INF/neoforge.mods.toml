@@ -1,0 +1,27 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+[[mods]]
+modId = "maid_weapon_port_probe"
+version = "0.0.0-port-dev"
+displayName = "Contract Blade 1.21.1 Port API Probe (NOT FOR PLAY)"
+authors = "_Cazs_"
+description = '''Internal porting probe. No gameplay items. NEVER install in an existing Contract Blade world.'''
+[[dependencies.maid_weapon_port_probe]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.219,)"
+ordering = "NONE"
+side = "BOTH"
+[[dependencies.maid_weapon_port_probe]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "BOTH"
+[[dependencies.maid_weapon_port_probe]]
+modId = "touhou_little_maid"
+type = "required"
+versionRange = "[1.5.3,)"
+ordering = "AFTER"
+side = "BOTH"
