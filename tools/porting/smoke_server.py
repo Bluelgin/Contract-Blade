@@ -68,6 +68,7 @@ try:
     proc.stdin.flush()
     test_deadline = time.monotonic() + 100
     verified = False
+    world_verified = False
     while time.monotonic() < test_deadline:
         try:
             line = output.get(timeout=0.5)
@@ -79,14 +80,17 @@ try:
             break
         if "PORT_NATIVE_TLM_ROUNDTRIP_PASS" in line:
             verified = True
+        if "PORT_NATIVE_TLM_WORLD_TRANSFER_PASS" in line:
+            world_verified = True
+        if verified and world_verified:
             break
         if "PORT_NATIVE_TLM_ROUNDTRIP_FAIL" in line:
             failure = "Native TLM snapshot round-trip rejected"
             break
-    if not verified:
+    if not verified or not world_verified:
         print("PORT_NATIVE_ROUNDTRIP_FAIL: " + (failure or "No round-trip success marker"), file=sys.stderr)
         raise SystemExit(1)
-    print("PORT_NATIVE_ROUNDTRIP_READY: full native TLM NBT test passed", flush=True)
+    print("PORT_NATIVE_ROUNDTRIP_READY: in-memory and real-world TLM transfer tests passed", flush=True)
 finally:
     if proc.poll() is None:
         try:

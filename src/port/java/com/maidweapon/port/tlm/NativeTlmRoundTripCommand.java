@@ -77,10 +77,51 @@ public final class NativeTlmRoundTripCommand {
             require(again.contains(EntityMaid.MAID_INVENTORY_TAG), "Second snapshot lacks inventory");
             require(again.contains(EntityMaid.MAID_BAUBLE_INVENTORY_TAG), "Second snapshot lacks baubles");
             LOGGER.info("PORT_NATIVE_TLM_ROUNDTRIP_PASS: UUID, owner, 23 diamonds, bauble, favorability, XP, model, foreign custom data");
+            verifyWorldTransfer(context.getLevel());
+            LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
             return 1;
         } catch (Throwable failure) {
             LOGGER.error("PORT_NATIVE_TLM_ROUNDTRIP_FAIL: {}", failure.toString(), failure);
             return 0;
+        }
+    }
+
+    /**
+     * Disposable server-world integration fixture: this is a genuine TLM
+     * spawn/discard/respawn, but NEVER a production player's maid.
+     */
+    private static void verifyWorldTransfer(net.minecraft.server.level.ServerLevel level) throws Exception {
+        java.util.UUID unique = java.util.UUID.randomUUID();
+        EntityMaid published = new EntityMaid(level);
+        published.setUUID(unique);
+        published.setOwnerUUID(OWNER);
+        published.setFavorability(13);
+        published.setExperience(37);
+        published.getMaidInv().setStackInSlot(0, new ItemStack(Items.DIAMOND, 17));
+        net.minecraft.core.BlockPos pos = level.getSharedSpawnPos().above(3);
+        published.moveTo(pos, 0, 0);
+        ItemStack carrier = new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        EntityMaid restored = null;
+        if (!level.addFreshEntity(published) || level.getEntity(unique) != published)
+            throw new IllegalStateException("Test TLM entity could not enter the server world");
+        try {
+            require(PortContractLifecycleTrial.capture(level, published, OWNER, "ProbeOwner", carrier),
+                "Native world capture refused");
+            require(published.isRemoved(), "Capture left the live entity published");
+            ItemStack duplicatedItem = carrier.copy();
+            restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
+            require(restored != null, "Native world manifestation rejected");
+            require(level.getEntity(unique) == restored, "Restored world entity identity lost");
+            require(restored.getMaidInv().getStackInSlot(0).getCount() == 17,
+                "World transfer lost diamond count");
+            require(restored.getExperience() == 37, "World transfer lost experience");
+            require(PortContractLifecycleTrial.manifest(level, pos.above(2), OWNER, duplicatedItem) == null,
+                "Duplicated item created a second maid");
+            require(ContractStackDataAccess.readContract(carrier).isEmpty(),
+                "Successfully manifested carrier still contains a snapshot");
+        } finally {
+            if (!published.isRemoved()) published.discard();
+            if (restored != null && !restored.isRemoved()) restored.discard();
         }
     }
 

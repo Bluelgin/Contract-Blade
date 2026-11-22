@@ -51,3 +51,19 @@ M5: Restore maid_weapon mod ID only after full parity and data safety passes;
     publish beta with explicit save migration status.
 
 See SAVE_COMPATIBILITY.md, ACCEPTANCE.md and MAINTENANCE.md.
+
+## Developer-only native lifecycle trial (NOT for production worlds)
+
+The temporary \`maid_weapon_port_probe:contract_carrier\` item is for a
+**disposable NeoForge 1.21.1 test world only**. Right-click an owned TLM maid to
+run a guarded full-snapshot capture, then use on an empty block-adjacent
+position to manifest. The server owns the UUID, owner and binding checks.
+A global probe-only SavedData journal rejects duplicate carriers and leaves
+crash-interrupted handoffs blocked pending reconciliation.
+
+The CI command \`contractportverify\` first tests an in-memory native round
+trip, then spawns a synthetic maid in its disposable test world and verifies
+capture/manifest, inventory quantity, UUID and duplicate-item rejection.
+**Even if the native test passes, this is NOT proof of crash safety or
+1.20.1 save upgrade compatibility.** The probe test uses its own item namespace
+and world ledger; do not put it in a survival world.

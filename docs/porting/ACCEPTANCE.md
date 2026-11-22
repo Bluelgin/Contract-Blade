@@ -17,7 +17,7 @@ Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 - [ ] Carrier storage preserves all 1.21.1 non-CUSTOM_DATA components
 
 ## M2: lifecycle
-- [ ] Capture / manifest / recall, same UUID, no loss
+- [ ] Production capture / manifest / recall, same UUID, no loss (isolated developer-only trial pending CI)
 - [ ] Model, inventory, equipment, task, bauble, favorability conserved
 - [ ] Duplicate item cannot create duplicate live maid
 - [ ] Spawn cancellation retains the weapon snapshot
