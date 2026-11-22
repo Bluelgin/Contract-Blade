@@ -16,6 +16,8 @@ public final class ContractStackDataAccess {
         "MaidEntityData", "MaidEntityDataCompressed", "MaidEntityDataFormat",
         "MaidEntityDataUncompressedSize", "MaidEntityDataChecksum",
         "MaidWeaponExternalContract", "MaidWeaponIntrinsicSpirits",
+        "MaidWeaponEmbeddedSpirit", "MaidWeaponEmbeddedSpiritName",
+        "MaidWeaponEmbeddedSpiritDormant",
         "MaidInfusionOriginalTask", "MaidInfusionOriginalSchedule",
         "MaidDeploymentLocation", "MaidDeploymentRecoveryFailed",
         "MaidInfusionMagicTaskFailure", "MaidInfusionSlashBladeTaskFailure",
