@@ -44,7 +44,7 @@ public final class NativeTlmRoundTripCommand {
             original.getMaidInv().setStackInSlot(0, new ItemStack(Items.DIAMOND, 23));
             original.getMaidBauble().setStackInSlot(0, new ItemStack(ProbeItems.CONTRACT_BAUBLE.get()));
 
-            CompoundTag full = VerifiedTlmSnapshot.captureCandidate(original);
+            CompoundTag full = TlmNativeTransformBridge.captureSnapshot(original, new ItemStack(ProbeItems.CONTRACT_BAUBLE.get()));
             require(full.contains(EntityMaid.MAID_INVENTORY_TAG), "Missing native inventory");
             require(full.contains(EntityMaid.MAID_BAUBLE_INVENTORY_TAG), "Missing native bauble inventory");
 
@@ -61,8 +61,8 @@ public final class NativeTlmRoundTripCommand {
                 .getString("ExternalTestKey")), "Foreign carrier custom NBT was destroyed");
             CompoundTag decoded = LegacyMaidSnapshotCodec.read(ContractStackDataAccess.readContract(carrier));
             VerifiedTlmSnapshot.requireIdentity(decoded, OWNER, MAID);
-            EntityMaid restored = new EntityMaid(context.getLevel());
-            restored.load(decoded.copy());
+            EntityMaid restored = TlmNativeTransformBridge.prepareManifestCandidate(context.getLevel(),
+                carrier, decoded, OWNER, MAID);
 
             require(restored.getUUID().equals(MAID), "Restored UUID changed");
             require(OWNER.equals(restored.getOwnerUUID()), "Restored owner changed");
