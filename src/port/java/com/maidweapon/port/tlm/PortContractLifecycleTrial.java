@@ -29,6 +29,16 @@ public final class PortContractLifecycleTrial {
 
     public static boolean capture(ServerLevel level, EntityMaid live, UUID owner,
                                   String ownerName, ItemStack carrier) {
+        try {
+            return captureInternal(level, live, owner, ownerName, carrier);
+        } catch (RuntimeException unsafe) {
+            LOGGER.error("Probe capture entry rejected corrupt/unsupported state", unsafe);
+            return false;
+        }
+    }
+
+    private static boolean captureInternal(ServerLevel level, EntityMaid live, UUID owner,
+                                           String ownerName, ItemStack carrier) {
         if (level == null || live == null || owner == null || ownerName == null
                 || !level.getServer().isSameThread() || live.level() != level
                 || live.isRemoved() || !live.isAlive()
@@ -89,9 +99,20 @@ public final class PortContractLifecycleTrial {
 
     public static EntityMaid manifest(ServerLevel level, BlockPos destination, UUID owner,
                                       ItemStack carrier) {
+        try {
+            return manifestInternal(level, destination, owner, carrier);
+        } catch (RuntimeException unsafe) {
+            LOGGER.error("Probe manifest entry rejected corrupt/unsupported state", unsafe);
+            return null;
+        }
+    }
+
+    private static EntityMaid manifestInternal(ServerLevel level, BlockPos destination,
+                                                UUID owner, ItemStack carrier) {
         if (level == null || destination == null || owner == null
                 || !level.getServer().isSameThread() || !validCarrier(carrier)) return null;
         CompoundTag contract = ContractStackDataAccess.readContract(carrier);
+        ContractStackDataAccess.requireSupportedSchema(contract);
         if (!ContractIdentityFields.isExplicitOwner(contract, owner)
                 || ContractIdentityFields.isSuperseded(contract)
                 || !LegacyMaidSnapshotCodec.contains(contract)) return null;
