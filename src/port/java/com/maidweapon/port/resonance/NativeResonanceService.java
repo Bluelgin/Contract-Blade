@@ -31,7 +31,7 @@ public final class NativeResonanceService {
     }
     private static Identity stored(MinecraftServer server,UUID owner,ItemStack stack) {
         if (!server.isSameThread() || owner==null || stack==null || stack.getCount()!=1
-            || !stack.is(ProbeItems.CONTRACT_CARRIER.get()) || !ContractStackDataAccess.readContract(stack).isEmpty()) return null;
+            || stack.has(PortDataTypes.CONTRACT_CHANNELS.get()) || !stack.is(ProbeItems.CONTRACT_CARRIER.get()) || !ContractStackDataAccess.readContract(stack).isEmpty()) return null;
         ContractReference ref=stack.get(PortDataTypes.CONTRACT_REFERENCE.get());
         if (ref==null || !owner.equals(ref.owner())) return null;
         var v=NativeContractStore.get(server).inspect(ref.maid());

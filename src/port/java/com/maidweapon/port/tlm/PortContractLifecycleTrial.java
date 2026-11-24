@@ -134,7 +134,8 @@ public final class PortContractLifecycleTrial {
 
     private static boolean validCarrier(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.getCount() == 1
-                && stack.is(ProbeItems.CONTRACT_CARRIER.get());
+                && stack.is(ProbeItems.CONTRACT_CARRIER.get())
+                && !stack.has(PortDataTypes.CONTRACT_CHANNELS.get());
     }
     private PortContractLifecycleTrial() {}
 }

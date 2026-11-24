@@ -10,6 +10,8 @@ Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 - [ ] Data Components does not lose foreign fields (unit + native tests)
 
 ## M1: storage
+- [ ] Durable intent fsync/atomic replace and restart quarantine on current head
+- [ ] Typed channel persistent and stream codecs, duplicate/mixed identity rejection; full recall/switch pending
 - [ ] Native reference persistent/stream codec and foreign components verified on current head
 - [ ] Native maid binding attachment verified through TLM serialization
 - [ ] World snapshot and ticket state reload together; stale ticket rejected after recapture

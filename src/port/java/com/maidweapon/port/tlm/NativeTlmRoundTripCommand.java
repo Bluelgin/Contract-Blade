@@ -132,6 +132,17 @@ public final class NativeTlmRoundTripCommand {
                 "Persistent item codec changed foreign data");
             require(persisted.has(DataComponents.CUSTOM_NAME), "Persistent item codec lost custom name");
             ItemStack duplicatedItem = persisted.copy();
+            // A channel component can round-trip, but must not implicitly authorize
+            // either single-channel lifecycle or resonance until live recall is implemented.
+            var mixed = persisted.copy();
+            mixed.set(PortDataTypes.CONTRACT_CHANNELS.get(), new com.maidweapon.port.storage.ContractChannels(
+                java.util.Optional.of(first), java.util.List.of(), java.util.Optional.empty()));
+            var mixedReloaded = ItemStack.parse(level.registryAccess(), mixed.save(level.registryAccess())).orElseThrow();
+            require(mixedReloaded.has(PortDataTypes.CONTRACT_CHANNELS.get()), "Channel component persistence failed");
+            require(PortContractLifecycleTrial.manifest(level,pos.above(),OWNER,mixedReloaded)==null,
+                "Mixed carrier unexpectedly granted summon authority");
+            require(NativeResonanceService.currentStored(level.getServer(),OWNER,mixedReloaded)==-1,
+                "Mixed carrier unexpectedly granted resonance authority");
             var attempt = NativeResonanceService.newAttempt();
             require(NativeResonanceService.payStored(level.getServer(), OWNER, carrier, 125, attempt) == Payment.PAID,
                 "Native resonance payment rejected");

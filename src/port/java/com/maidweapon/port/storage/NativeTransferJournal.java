@@ -29,6 +29,7 @@ public final class NativeTransferJournal {
     private static final long MAX_FILE = 40L * 1024 * 1024;
     private final Path directory;
     private final UUID session;
+    private final java.util.Set<UUID> durableThisSession=new java.util.HashSet<>();
 
     public NativeTransferJournal(Path directory, UUID session) {
         this.directory=directory; this.session=session;
@@ -45,9 +46,12 @@ public final class NativeTransferJournal {
     /** Absence is only accepted if the filesystem actually reports no file. */
     public boolean permits(UUID maid) throws IOException {
         Path file=path(maid);
+        if (durableThisSession.contains(maid)) return Files.isRegularFile(file);
         if (Files.notExists(file)) return true;
-        CompoundTag tag=read(maid);
-        return session.equals(tag.getUUID("session"));
+        // A valid pre-existing record cannot authorize a new server session.
+        // Parse once on attempted access for diagnostics; never trust its session ID.
+        read(maid);
+        return false;
     }
     public CompoundTag read(UUID maid) throws IOException {
         Path file=path(maid);
@@ -90,6 +94,7 @@ public final class NativeTransferJournal {
             // Persist the directory entry as well. Do not silently fall back to a non-durable rename.
             try(FileChannel dir=FileChannel.open(directory,StandardOpenOption.READ)) {dir.force(true);}
             try(FileChannel parent=FileChannel.open(directory.getParent(),StandardOpenOption.READ)) {parent.force(true);}
+            durableThisSession.add(ref.maid());
         } finally {Files.deleteIfExists(temp);}
     }
 }

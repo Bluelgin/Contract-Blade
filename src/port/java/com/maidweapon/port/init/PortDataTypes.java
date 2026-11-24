@@ -2,6 +2,7 @@ package com.maidweapon.port.init;
 
 import com.maidweapon.port.PortProbeMod;
 import com.maidweapon.port.storage.ContractReference;
+import com.maidweapon.port.storage.ContractChannels;
 import java.util.UUID;
 import java.util.function.Supplier;
 import net.minecraft.core.UUIDUtil;
@@ -18,6 +19,10 @@ public final class PortDataTypes {
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<ContractReference>> CONTRACT_REFERENCE =
         COMPONENTS.registerComponentType("contract_reference", builder -> builder
             .persistent(ContractReference.CODEC).networkSynchronized(ContractReference.STREAM_CODEC));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ContractChannels>> CONTRACT_CHANNELS =
+        COMPONENTS.registerComponentType("contract_channels", builder -> builder
+            .persistent(ContractChannels.CODEC).networkSynchronized(ContractChannels.STREAM_CODEC));
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
         DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, PortProbeMod.ID);
