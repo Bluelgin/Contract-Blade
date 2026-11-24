@@ -13,9 +13,25 @@ import java.util.UUID;
 /** Read-only administrator diagnostics. Missing loaded entity is UNKNOWN, never proof of absence. */
 public final class NativeRecoveryDiagnostics {
     public static void register(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("contractportacklive")
+            .requires(s->s.hasPermission(4)).then(Commands.argument("maid",UuidArgument.uuid())
+                .executes(c->ack(c.getSource(),UuidArgument.getUuid(c,"maid")))));
         event.getDispatcher().register(Commands.literal("contractportinspect")
             .requires(s->s.hasPermission(4)).then(Commands.argument("maid",UuidArgument.uuid())
                 .executes(c->inspect(c.getSource(),UuidArgument.getUuid(c,"maid")))));
+    }
+    private static int ack(net.minecraft.commands.CommandSourceStack source,UUID maid) {
+        try {
+            if(NativeLiveReconciliation.acknowledge(source.getServer(),maid)){
+                source.sendSuccess(()->Component.literal("Observed LIVE contract acknowledged for this session; no entity or item changed."),true);
+                return 1;
+            }
+        }catch(Exception failure){
+            source.sendFailure(Component.literal("LIVE acknowledgment blocked: "+failure.getClass().getSimpleName()));
+            return 0;
+        }
+        source.sendFailure(Component.literal("No matching committed live evidence; journal remains quarantined."));
+        return 0;
     }
     private static int inspect(net.minecraft.commands.CommandSourceStack source,UUID maid) {
         try {

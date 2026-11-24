@@ -30,6 +30,8 @@ public final class NativeTransferJournal {
     private final Path directory;
     private final UUID session;
     private final java.util.Set<UUID> durableThisSession=new java.util.HashSet<>();
+    private final java.util.Set<UUID> recoveredLive=new java.util.HashSet<>();
+    private final java.util.Set<UUID> denied=new java.util.HashSet<>();
 
     public NativeTransferJournal(Path directory, UUID session) {
         this.directory=directory; this.session=session;
@@ -46,11 +48,13 @@ public final class NativeTransferJournal {
     /** Absence is only accepted if the filesystem actually reports no file. */
     public boolean permits(UUID maid) throws IOException {
         Path file=path(maid);
-        if (durableThisSession.contains(maid)) return Files.isRegularFile(file);
+        if (denied.contains(maid)) return false;
+        if (durableThisSession.contains(maid) || recoveredLive.contains(maid)) return Files.isRegularFile(file);
         if (Files.notExists(file)) return true;
         // A valid pre-existing record cannot authorize a new server session.
         // Parse once on attempted access for diagnostics; never trust its session ID.
         read(maid);
+        denied.add(maid);
         return false;
     }
     public CompoundTag read(UUID maid) throws IOException {
@@ -68,6 +72,21 @@ public final class NativeTransferJournal {
         ContractNbtBoundsGuard.validate(snapshot);
         VerifiedTlmSnapshot.requireIdentity(snapshot,tag.getUUID("owner"),maid);
         return tag;
+    }
+    /**
+     * Called only after the server has observed exactly one matching, published live maid
+     * and a committed LIVE ledger entry. No entity is spawned, deleted or deserialized.
+     * A recovered authorization is session-local; next restart requires fresh evidence.
+     */
+    public boolean acknowledgeObservedLive(NativeContractStore.View live) throws IOException {
+        if(live==null || live.phase()!=NativeContractStore.Phase.LIVE) return false;
+        CompoundTag tag=read(live.maid());
+        if(!Kind.MANIFEST.name().equals(tag.getString("kind"))
+            || !live.owner().equals(tag.getUUID("owner")) || !live.binding().equals(tag.getUUID("binding"))
+            || session.equals(tag.getUUID("session"))) return false;
+        recoveredLive.add(live.maid());
+        denied.remove(live.maid());
+        return true;
     }
     /** Returns only after fsync + atomic replacement. Unsupported filesystem fails closed. */
     public void writeIntent(ContractReference ref,UUID operation,Kind kind,CompoundTag snapshot) throws IOException {
@@ -93,11 +112,14 @@ public final class NativeTransferJournal {
             // Revoke cached permission before replacing; a failed fsync must quarantine even
             // if an earlier intent in this session had already succeeded.
             durableThisSession.remove(ref.maid());
+            recoveredLive.remove(ref.maid());
+            denied.add(ref.maid());
             Files.move(temp,path(ref.maid()),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
             // Persist the directory entry as well. Do not silently fall back to a non-durable rename.
             try(FileChannel dir=FileChannel.open(directory,StandardOpenOption.READ)) {dir.force(true);}
             try(FileChannel parent=FileChannel.open(directory.getParent(),StandardOpenOption.READ)) {parent.force(true);}
             durableThisSession.add(ref.maid());
+            denied.remove(ref.maid());
         } finally {Files.deleteIfExists(temp);}
     }
 }

@@ -28,6 +28,20 @@ class NativeTransferJournalTest {
         assertThrows(java.io.IOException.class,()->restarted.writeIntent(ref,UUID.randomUUID(),NativeTransferJournal.Kind.MANIFEST,snapshot));
         assertEquals(op,restarted.read(maid).getUUID("operation"));
     }
+    @Test void previousManifestCanBeAcknowledgedOnlyAsMatchingLive() throws Exception {
+        var maid=UUID.randomUUID();var owner=UUID.randomUUID();var binding=UUID.randomUUID();
+        var ref=new ContractReference(maid,owner,binding,UUID.randomUUID());
+        var s=new CompoundTag();s.putUUID("UUID",maid);s.putUUID("Owner",owner);
+        var dir=temp.resolve("journal");var a=new NativeTransferJournal(dir,UUID.randomUUID());
+        a.writeIntent(ref,UUID.randomUUID(),NativeTransferJournal.Kind.MANIFEST,s);
+        var b=new NativeTransferJournal(dir,UUID.randomUUID());
+        assertFalse(b.permits(maid));
+        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.STORED,ref.ticket(),null)));
+        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,UUID.randomUUID(),NativeContractStore.Phase.LIVE,null,null)));
+        assertTrue(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.LIVE,null,null)));
+        assertTrue(b.permits(maid));
+        assertFalse(new NativeTransferJournal(dir,UUID.randomUUID()).permits(maid));
+    }
     @Test void malformedJournalDoesNotAuthorize() throws Exception {
         var maid=UUID.randomUUID(); var dir=temp.resolve("journal"); Files.createDirectories(dir);
         Files.writeString(dir.resolve(maid+".nbt"),"corrupt");

@@ -31,3 +31,6 @@ ContractChannels is a bounded, immutable external/intrinsic reference collection
 
 ## Shared core and native adapter increment
 Java 17 shared source boundary, generic ability engine and server-only no-op verification skill with real resonance payment/cooldown, native read-only status request/reply payload (held carrier only, rate limited), and permission-4 read-only contractportinspect command. No client HUD/input, real spirit abilities, automatic recovery, or loaded/unloaded reconciliation is claimed. Reference NeoForge 1.21.1 networking docs: https://docs.neoforged.net/docs/1.21.1/networking/payload/ .
+
+## Restricted live reconciliation
+`contractportacklive <maid UUID>` (permission 4) reauthorizes only an observed, matching, committed LIVE contract from a prior MANIFEST intent. No entity/item writes, no spawn and no restoration from a backup; missing or mismatched loaded entity, pending/STORED phase, CAPTURE intent and corrupt records stay blocked. Acknowledgment is session-local, not a proof of global absence or full crash reconciliation. Administrator must verify the world/backup before use. Prior-session quarantine is cached to avoid repeatedly decompressing snapshots; successful explicit acknowledgment clears the cache. Normal restart of stored contracts remains blocked.
