@@ -32,18 +32,6 @@ RCON_PASSWORD = secrets.token_hex(24)
     "motd=Contract Blade port test - disposable world\n"
     "enable-command-block=false\n"
     "max-players=1\n", encoding="utf-8")
-output = queue.Queue()
-cmd = ["./gradlew", "--no-daemon", "runServer"]
-print("Launching isolated NeoForge + TLM probe in run/port-smoke-server", flush=True)
-proc = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT, text=True, bufsize=1, start_new_session=True)
-
-def reader():
-    for line in proc.stdout:
-        print(line, end="", flush=True)
-        output.put(line)
-    output.put(None)
-
 def recv_exact(sock, size):
     data = bytearray()
     while len(data) < size:
@@ -86,83 +74,87 @@ def rcon_command(command):
         if request_id != 2 or kind != 0:
             raise OSError("RCON command acknowledgement missing")
 
-threading.Thread(target=reader, daemon=True).start()
-deadline = time.monotonic() + 330
-loaded = False
-ready = False
-failure = ""
-try:
-    while time.monotonic() < deadline:
-        try:
-            line = output.get(timeout=0.5)
-        except queue.Empty:
-            if proc.poll() is not None:
-                failure = "NeoForge process exited before the server was ready"
-                break
-            continue
-        if line is None:
-            failure = "Server output closed before successful startup"
-            break
-        if "Contract Blade NeoForge port probe loaded" in line:
-            loaded = True
-        if "Done (" in line and "For help" in line:
-            ready = True
-            break
-        if "Crash report saved" in line or "Failed to start the minecraft server" in line:
-            failure = "Native dedicated server reported startup crash"
-            break
-    if not failure and not ready:
-        failure = "Native dedicated server startup deadline exceeded"
-    if ready and not loaded:
-        failure = "Server booted but the Contract Blade port probe did not register"
-    if failure:
-        print("PORT_NATIVE_SERVER_FAIL: " + failure, file=sys.stderr)
-        raise SystemExit(1)
-    print("PORT_NATIVE_SERVER_READY: NeoForge 1.21.1 + TLM + probe booted", flush=True)
-    # Gradle's run task need not forward stdin to Minecraft. Use an explicit
-    # acknowledged local command transport, then require both test markers.
+def boot_and_verify(command, markers):
+    output = queue.Queue()
+    print(f"Launching isolated NeoForge + TLM: {command}", flush=True)
+    proc = subprocess.Popen(["./gradlew", "--no-daemon", "runServer"], cwd=ROOT,
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, bufsize=1, start_new_session=True)
+
+    def reader():
+        for line in proc.stdout:
+            print(line, end="", flush=True)
+            output.put(line)
+        output.put(None)
+
+    threading.Thread(target=reader, daemon=True).start()
+    success = False
     try:
-        rcon_command("contractportverify")
-    except OSError as error:
-        print("PORT_NATIVE_COMMAND_FAIL: " + str(error), file=sys.stderr)
-        raise SystemExit(1)
-    print("PORT_NATIVE_COMMAND_ACK: contractportverify", flush=True)
-    test_deadline = time.monotonic() + 100
-    verified = False
-    world_verified = False
-    channels_verified = False
-    ultimate_verified = False
-    while time.monotonic() < test_deadline:
-        try:
-            line = output.get(timeout=0.5)
-        except queue.Empty:
-            if proc.poll() is not None:
+        deadline = time.monotonic() + 330
+        loaded = ready = False
+        while time.monotonic() < deadline:
+            try:
+                line = output.get(timeout=.5)
+            except queue.Empty:
+                if proc.poll() is not None:
+                    raise RuntimeError("Server exited during startup")
+                continue
+            if line is None:
+                raise RuntimeError("Server output closed during startup")
+            if "Contract Blade NeoForge port probe loaded" in line:
+                loaded = True
+            if "Done (" in line and "For help" in line:
+                ready = True
                 break
-            continue
-        if line is None:
-            break
-        if "PORT_NATIVE_TLM_ROUNDTRIP_PASS" in line:
-            verified = True
-        if "PORT_NATIVE_TLM_WORLD_TRANSFER_PASS" in line:
-            world_verified = True
-        if "PORT_NATIVE_CHANNEL_LIFECYCLE_PASS" in line:
-            channels_verified = True
-        if "PORT_NATIVE_ULTIMATE_BAUBLES_PASS" in line:
-            ultimate_verified = True
-        if verified and world_verified and channels_verified and ultimate_verified:
-            break
-        if "PORT_NATIVE_TLM_ROUNDTRIP_FAIL" in line:
-            failure = "Native TLM snapshot round-trip rejected"
-            break
-    if not verified or not world_verified or not channels_verified or not ultimate_verified:
-        print("PORT_NATIVE_ROUNDTRIP_FAIL: " + (failure or "No round-trip success marker"), file=sys.stderr)
-        raise SystemExit(1)
-    print("PORT_NATIVE_ROUNDTRIP_READY: in-memory and real-world TLM transfer tests passed", flush=True)
-finally:
-    if proc.poll() is None:
+            if "Crash report saved" in line or "Failed to start the minecraft server" in line:
+                raise RuntimeError("Server startup crash")
+        if not loaded or not ready:
+            raise RuntimeError("Native NeoForge + TLM startup failed")
+        rcon_command(command)
+        print("PORT_NATIVE_COMMAND_ACK: " + command, flush=True)
+        missing = set(markers)
+        deadline = time.monotonic() + 120
+        while missing and time.monotonic() < deadline:
+            try:
+                line = output.get(timeout=.5)
+            except queue.Empty:
+                if proc.poll() is not None:
+                    break
+                continue
+            if line is None:
+                break
+            if "PORT_NATIVE_TLM_ROUNDTRIP_FAIL" in line or "PORT_NATIVE_RESTART_FAIL" in line:
+                raise RuntimeError("Native verification failed")
+            missing = {marker for marker in missing if marker not in line}
+        if missing:
+            raise RuntimeError("Missing verification markers: " + ", ".join(sorted(missing)))
+        # Explicit clean stop, not SIGTERM, before restarting the SAME world.
         try:
-            os.killpg(proc.pid, signal.SIGTERM)
-            proc.wait(timeout=12)
-        except (ProcessLookupError, subprocess.TimeoutExpired):
-            try: os.killpg(proc.pid, signal.SIGKILL)
-            except ProcessLookupError: pass
+            rcon_command("stop")
+        except OSError:
+            # The server may close its RCON connection during shutdown.
+            pass
+        if proc.wait(timeout=90) != 0:
+            raise RuntimeError("Native server did not exit cleanly")
+        success = True
+        print("PORT_NATIVE_CLEAN_STOP: " + command, flush=True)
+    finally:
+        if not success and proc.poll() is None:
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+                proc.wait(timeout=12)
+            except (ProcessLookupError, subprocess.TimeoutExpired):
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+
+boot_and_verify("contractportverify", {
+    "PORT_NATIVE_TLM_ROUNDTRIP_PASS",
+    "PORT_NATIVE_TLM_WORLD_TRANSFER_PASS",
+    "PORT_NATIVE_CHANNEL_LIFECYCLE_PASS",
+    "PORT_NATIVE_ULTIMATE_BAUBLES_PASS",
+    "PORT_NATIVE_RESTART_FIXTURE_PREPARED",
+})
+boot_and_verify("contractportverifyrestart", {"PORT_NATIVE_RESTART_PASS"})
+print("PORT_NATIVE_ROUNDTRIP_READY: native transfer, channels, baubles and actual clean restart verified", flush=True)

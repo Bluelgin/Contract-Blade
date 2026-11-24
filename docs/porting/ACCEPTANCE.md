@@ -71,3 +71,8 @@ Commit 65e610c passed both compile/JUnit and native TLM server smoke in Actions 
 - [ ] Inventory/menu independent recovery including dormant and loaded live channels, duplicate deduplication; actual player tick test.
 - [ ] Mastery Lv1-10 defaults, persistent progression and direct verified damage/death attribution; actual combat test; optional indirect attribution pending.
 - [ ] Native preset origin registration, creation/transfer, ordinary restart and crash recovery, full production registry and spirit gameplay still release blockers.
+
+## Oath, baubles and checkpoint increment
+- [ ] Real native TLM ultimate bauble slot registration, stored/live waiver, burn bypass and ticket-cache rotation; required smoke marker.
+- [ ] Oath O-key activation, one live companion, 2.5%/second burn, interruption/recall, per-maid online rest and backlash. Actual player/client combat test required; cooperation/effect/config and recovery gaps remain.
+- [ ] Actual clean stop and second boot of the same disposable world. Reload persisted item and ledger, 29 diamonds, 53 XP, 863 resonance, manifest/recall and stale-ticket rejection; required smoke marker. No unclean power-loss recovery claim.

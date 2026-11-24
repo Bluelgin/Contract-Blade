@@ -42,6 +42,8 @@ public final class NativeTlmRoundTripCommand {
         event.getDispatcher().register(Commands.literal("contractportverify")
             .requires(source -> source.hasPermission(4))
             .executes(ctx -> run(ctx.getSource())));
+        event.getDispatcher().register(Commands.literal("contractportverifyrestart")
+            .requires(source->source.hasPermission(4)).executes(ctx->verifyRestart(ctx.getSource())));
     }
 
     private static int run(CommandSourceStack context) {
@@ -90,6 +92,7 @@ public final class NativeTlmRoundTripCommand {
             verifyWorldTransfer(context.getLevel());
             verifyChannelLifecycle(context.getLevel());
             verifyUltimateBaubles(context.getLevel());
+            prepareRestartFixture(context.getLevel());
             require(com.maidweapon.port.recovery.NativeCheckpointService.checkpoint(context.getServer())>0,"No sealed checkpoints persisted");
             LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
             return 1;
@@ -298,6 +301,51 @@ public final class NativeTlmRoundTripCommand {
             require(NativeResonanceService.currentStored(server,OWNER,carrier)==800,"Ultimate account continuity lost");
             LOGGER.info("PORT_NATIVE_ULTIMATE_BAUBLES_PASS: native registration, first slot, stored/live waiver, burn bypass, cache rotation");
         }finally{var current=level.getEntity(id);if(current!=null)current.discard();}
+    }
+    private static java.nio.file.Path restartFixture(net.minecraft.server.MinecraftServer server){
+        return server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("contract-port-restart-fixture.nbt");
+    }
+    private static void prepareRestartFixture(net.minecraft.server.level.ServerLevel level) throws Exception{
+        var server=level.getServer();var path=restartFixture(server);
+        require(java.nio.file.Files.notExists(path),"Previous restart fixture exists; use fresh disposable world");
+        var pos=level.getSharedSpawnPos().above(4);
+        var maid=new EntityMaid(level);maid.setOwnerUUID(OWNER);maid.moveTo(pos,0,0);
+        maid.getMaidInv().setStackInSlot(0,new ItemStack(Items.DIAMOND,29));
+        maid.setExperience(53);
+        var carrier=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        try{
+            require(level.addFreshEntity(maid),"Restart fixture spawn failed");
+            require(PortContractLifecycleTrial.capture(level,maid,OWNER,"ProbeOwner",carrier),"Restart capture failed");
+            require(NativeChannelService.convertExternal(server,OWNER,carrier),"Restart channel conversion failed");
+            require(NativeResonanceService.payStored(server,OWNER,carrier,137,NativeResonanceService.newAttempt())==Payment.PAID,"Restart pool payment failed");
+            var root=new CompoundTag();root.put("carrier",carrier.save(level.registryAccess()));root.putUUID("maid",maid.getUUID());
+            net.minecraft.nbt.NbtIo.writeCompressed(root,path);
+            LOGGER.info("PORT_NATIVE_RESTART_FIXTURE_PREPARED: saved carrier, 29 diamonds, 53 XP, 863 resonance");
+        }finally{if(!maid.isRemoved())maid.discard();}
+    }
+    private static int verifyRestart(CommandSourceStack source){
+        var level=source.getLevel();var server=level.getServer();EntityMaid live=null;
+        try{
+            var path=restartFixture(server);
+            var tag=net.minecraft.nbt.NbtIo.readCompressed(path,net.minecraft.nbt.NbtAccounter.create(2L*1024*1024));
+            var carrier=ItemStack.parse(level.registryAccess(),tag.getCompound("carrier")).orElseThrow();
+            var stale=carrier.copy();var ref=NativeChannelService.selected(server,OWNER,carrier);
+            require(ref!=null&&ref.maid().equals(tag.getUUID("maid")),"Saved checkpoint was not reauthorized");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==863,"Restart lost pool balance");
+            require(NativeResonanceService.currentStored(server,UUID.randomUUID(),carrier)==-1,"Restart granted foreign authority");
+            live=PortContractLifecycleTrial.manifest(level,level.getSharedSpawnPos().above(4),OWNER,carrier);
+            require(live!=null&&ref.maid().equals(live.getUUID()),"Restart manifestation failed");
+            require(live.getMaidInv().getStackInSlot(0).getCount()==29&&live.getExperience()==53,"Restart lost entity data");
+            require(NativeResonanceService.currentLive(server,OWNER,live)==863,"Restart live balance wrong");
+            require(PortContractLifecycleTrial.capture(level,live,OWNER,"ProbeOwner",carrier),"Restart recall failed");
+            require(NativeChannelService.selected(server,OWNER,stale)==null,"Pre-restart ticket survived recall");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==863,"Restart recall reset pool");
+            java.nio.file.Files.delete(path);
+            LOGGER.info("PORT_NATIVE_RESTART_PASS: actual second boot, item and ledger reload, native inventory and pool, recall and stale ticket");
+            return 1;
+        }catch(Throwable failure){
+            LOGGER.error("PORT_NATIVE_RESTART_FAIL",failure);return 0;
+        }finally{if(live!=null&&!live.isRemoved())live.discard();}
     }
     private static void require(boolean accepted, String message) {
         if (!accepted) throw new IllegalStateException(message);
