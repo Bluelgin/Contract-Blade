@@ -4,6 +4,7 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.maidweapon.port.init.ProbeItems;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.storage.NativeContractStore;
+import com.maidweapon.port.storage.NativeTransferJournal;
 import com.maidweapon.port.resonance.NativeResonanceService;
 import com.maidweapon.port.domain.resonance.ResonanceRules.Payment;
 import com.maidweapon.port.storage.ContractIdentityFields;
@@ -118,6 +119,9 @@ public final class NativeTlmRoundTripCommand {
             require(published.isRemoved(), "Capture left the live entity published");
             var first = carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
             require(first != null, "Native reference absent");
+            var journal = NativeTransferJournal.get(level.getServer());
+            require(journal.read(unique).getUUID("ticket").equals(first.ticket()), "Durable capture intent missing");
+            require(journal.read(unique).getString("kind").equals("CAPTURE"), "Wrong capture intent");
             require(ContractStackDataAccess.readContract(carrier).isEmpty(), "Snapshot leaked into legacy item NBT");
             require(NativeContractStore.get(level.getServer()).readStored(first).hasUUID("UUID"),
                 "World snapshot missing");
@@ -137,6 +141,7 @@ public final class NativeTlmRoundTripCommand {
                 "Foreign owner obtained resonance");
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Native world manifestation rejected");
+            require(journal.read(unique).getString("kind").equals("MANIFEST"), "Durable manifest intent missing");
             require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 875,
                 "Resonance balance lost between stored and live forms");
             require(NativeResonanceService.currentStored(level.getServer(), OWNER, duplicatedItem) == -1,

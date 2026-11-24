@@ -22,3 +22,6 @@ Compile/test CI, real TLM capture/manifest, attachment round trip, no item snaps
 
 ## Resonance domain increment
 Pure rules and a small independent native balance store now exist, with server authorization in stored/live forms and single-use payment attempts. The disposable world test exercises balance continuity across two captures. No automatic recovery ticks, oath waiver, client payload or gameplay connection yet. See PARITY_MATRIX.md for the full feature gap.
+
+## Durable intent increment (probe only)
+Per-maid compressed intent backup is atomically replaced and fsynced before destructive item/entity publication. Prior-session or corrupt journals block transfer and resonance; even a normal restart intentionally quarantines the record pending an operator reconciliation protocol. This is not full crash recovery, does not prove unloaded UUID absence, and is not a playable restart workflow. Filesystems lacking atomic rename or directory fsync fail closed. The journal is not deleted automatically. Aggregate quota, indexed lookup, explicit reconciliation and durable completion checkpoints remain release gates. CI tests exercise actual write/read and simulated session changes.

@@ -1,0 +1,37 @@
+package com.maidweapon.port.storage;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import net.minecraft.nbt.CompoundTag;
+import static org.junit.jupiter.api.Assertions.*;
+
+class NativeTransferJournalTest {
+    @TempDir Path temp;
+    @Test void durableBackupAndRestartQuarantine() throws Exception {
+        var maid=UUID.randomUUID(); var owner=UUID.randomUUID();
+        var ref=new ContractReference(maid,owner,UUID.randomUUID(),UUID.randomUUID());
+        var snapshot=new CompoundTag(); snapshot.putUUID("UUID",maid); snapshot.putUUID("Owner",owner);
+        snapshot.putString("foreign","keep");
+        var dir=temp.resolve("journal"); var first=new NativeTransferJournal(dir,UUID.randomUUID());
+        assertTrue(first.permits(maid));
+        var op=UUID.randomUUID();
+        first.writeIntent(ref,op,NativeTransferJournal.Kind.CAPTURE,snapshot);
+        snapshot.remove("foreign");
+        assertTrue(first.permits(maid));
+        assertEquals("keep",first.read(maid).getCompound("snapshot").getString("foreign"));
+        assertEquals(op,first.read(maid).getUUID("operation"));
+        var restarted=new NativeTransferJournal(dir,UUID.randomUUID());
+        assertFalse(restarted.permits(maid));
+        assertThrows(java.io.IOException.class,()->restarted.writeIntent(ref,UUID.randomUUID(),NativeTransferJournal.Kind.MANIFEST,snapshot));
+        assertEquals(op,restarted.read(maid).getUUID("operation"));
+    }
+    @Test void malformedJournalDoesNotAuthorize() throws Exception {
+        var maid=UUID.randomUUID(); var dir=temp.resolve("journal"); Files.createDirectories(dir);
+        Files.writeString(dir.resolve(maid+".nbt"),"corrupt");
+        var journal=new NativeTransferJournal(dir,UUID.randomUUID());
+        assertThrows(java.io.IOException.class,()->journal.permits(maid));
+    }
+}

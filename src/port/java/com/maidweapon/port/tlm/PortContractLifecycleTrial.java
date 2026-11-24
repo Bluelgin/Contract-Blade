@@ -6,6 +6,7 @@ import com.maidweapon.port.init.ProbeItems;
 import com.maidweapon.port.storage.ContractReference;
 import com.maidweapon.port.storage.ContractStackDataAccess;
 import com.maidweapon.port.storage.NativeContractStore;
+import com.maidweapon.port.storage.NativeTransferJournal;
 import com.mojang.logging.LogUtils;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -31,6 +32,8 @@ public final class PortContractLifecycleTrial {
                     || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
             store = NativeContractStore.get(level.getServer());
             UUID maid = live.getUUID();
+            var journal = NativeTransferJournal.get(level.getServer());
+            if (!journal.permits(maid)) return false;
             var v = store.inspect(maid);
             UUID binding;
             if (v == null) {
@@ -51,6 +54,7 @@ public final class PortContractLifecycleTrial {
                     || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
                     || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
             ref = store.beginCapture(maid, owner, binding, op, snapshot);
+            journal.writeIntent(ref, op, NativeTransferJournal.Kind.CAPTURE, snapshot);
             carrier.set(PortDataTypes.CONTRACT_REFERENCE.get(), ref);
             live.discard();
             if (!live.isRemoved()) throw new IllegalStateException("Entity not removed");
@@ -91,9 +95,12 @@ public final class PortContractLifecycleTrial {
             for (ServerLevel world : level.getServer().getAllLevels())
                 if (world.getEntity(ref.maid()) != null) return null;
             store = NativeContractStore.get(level.getServer());
+            var journal = NativeTransferJournal.get(level.getServer());
+            if (!journal.permits(ref.maid())) return null;
             CompoundTag snapshot = store.readStored(ref);
             store.beginManifest(ref, op);
             began = true;
+            journal.writeIntent(ref, op, NativeTransferJournal.Kind.MANIFEST, snapshot);
             candidate = TlmNativeTransformBridge.prepareManifestCandidate(level, carrier.copy(),
                 snapshot, owner, ref.maid());
             if (!candidate.hasData(PortDataTypes.MAID_BINDING)

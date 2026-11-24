@@ -9,6 +9,7 @@ import com.maidweapon.port.storage.ContractReference;
 import com.maidweapon.port.storage.ContractStackDataAccess;
 import com.maidweapon.port.storage.NativeContractStore;
 import com.maidweapon.port.storage.NativeResonanceSavedData;
+import com.maidweapon.port.storage.NativeTransferJournal;
 import java.util.UUID;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -24,6 +25,10 @@ public final class NativeResonanceService {
     }
     public static Attempt newAttempt() { return new Attempt(); }
     private record Identity(UUID maid,UUID owner,UUID binding) {}
+    private static boolean journalAllows(MinecraftServer server,UUID maid) {
+        try {return NativeTransferJournal.get(server).permits(maid);}
+        catch(java.io.IOException rejected){return false;}
+    }
     private static Identity stored(MinecraftServer server,UUID owner,ItemStack stack) {
         if (!server.isSameThread() || owner==null || stack==null || stack.getCount()!=1
             || !stack.is(ProbeItems.CONTRACT_CARRIER.get()) || !ContractStackDataAccess.readContract(stack).isEmpty()) return null;
@@ -32,7 +37,7 @@ public final class NativeResonanceService {
         var v=NativeContractStore.get(server).inspect(ref.maid());
         if (v==null || v.phase()!=NativeContractStore.Phase.STORED || !owner.equals(v.owner())
             || !ref.binding().equals(v.binding()) || !ref.ticket().equals(v.ticket())) return null;
-        return new Identity(v.maid(),v.owner(),v.binding());
+        return journalAllows(server,v.maid()) ? new Identity(v.maid(),v.owner(),v.binding()) : null;
     }
     private static Identity live(MinecraftServer server,UUID owner,EntityMaid maid) {
         if (!server.isSameThread() || owner==null || maid==null || maid.isRemoved() || !maid.isAlive()
@@ -42,7 +47,7 @@ public final class NativeResonanceService {
         var v=NativeContractStore.get(server).inspect(maid.getUUID());
         if (v==null || v.phase()!=NativeContractStore.Phase.LIVE || !owner.equals(v.owner())
             || !v.binding().equals(maid.getData(PortDataTypes.MAID_BINDING))) return null;
-        return new Identity(v.maid(),v.owner(),v.binding());
+        return journalAllows(server,v.maid()) ? new Identity(v.maid(),v.owner(),v.binding()) : null;
     }
     private static int current(MinecraftServer server,Identity i) {
         return i==null ? -1 : NativeResonanceSavedData.get(server).current(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT);
