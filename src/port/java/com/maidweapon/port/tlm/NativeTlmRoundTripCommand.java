@@ -90,6 +90,7 @@ public final class NativeTlmRoundTripCommand {
             verifyWorldTransfer(context.getLevel());
             verifyChannelLifecycle(context.getLevel());
             verifyUltimateBaubles(context.getLevel());
+            require(com.maidweapon.port.recovery.NativeCheckpointService.checkpoint(context.getServer())>0,"No sealed checkpoints persisted");
             LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
             return 1;
         } catch (Throwable failure) {

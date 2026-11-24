@@ -19,10 +19,11 @@ public final class NativeChannelService {
     }
     private static boolean sealed(MinecraftServer server,UUID owner,ContractReference ref) throws java.io.IOException {
         if(ref==null || !owner.equals(ref.owner())) return false;
-        var v=NativeContractStore.get(server).inspect(ref.maid());
+        var store=NativeContractStore.get(server);
+        var v=store.inspect(ref.maid());
         return v!=null && v.phase()==NativeContractStore.Phase.STORED && owner.equals(v.owner())
             && ref.binding().equals(v.binding()) && ref.ticket().equals(v.ticket())
-            && NativeTransferJournal.get(server).permits(ref.maid());
+            && NativeTransferJournal.get(server).permitsStored(store,ref);
     }
     private static boolean allSealed(MinecraftServer server,UUID owner,ContractChannels channels) throws java.io.IOException {
         if(channels.external().isPresent() && !sealed(server,owner,channels.external().get()))return false;

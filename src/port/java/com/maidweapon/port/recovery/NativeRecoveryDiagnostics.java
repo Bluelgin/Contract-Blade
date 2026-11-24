@@ -13,6 +13,11 @@ import java.util.UUID;
 /** Read-only administrator diagnostics. Missing loaded entity is UNKNOWN, never proof of absence. */
 public final class NativeRecoveryDiagnostics {
     public static void register(RegisterCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("contractportcheckpoint").requires(s->s.hasPermission(4))
+            .executes(c->{
+                int count=NativeCheckpointService.checkpoint(c.getSource().getServer());
+                c.getSource().sendSuccess(()->Component.literal("Stored contract checkpoints: "+count),true);return count;
+            }));
         event.getDispatcher().register(Commands.literal("contractportacklive")
             .requires(s->s.hasPermission(4)).then(Commands.argument("maid",UuidArgument.uuid())
                 .executes(c->ack(c.getSource(),UuidArgument.getUuid(c,"maid")))));
@@ -38,7 +43,9 @@ public final class NativeRecoveryDiagnostics {
             var server=source.getServer();
             var view=NativeContractStore.get(server).inspect(maid);
             var journal=NativeTransferJournal.get(server);
-            boolean permitted=journal.permits(maid);
+            boolean permitted=view!=null&&view.phase()==NativeContractStore.Phase.STORED
+                ?journal.permitsStored(NativeContractStore.get(server),new com.maidweapon.port.storage.ContractReference(maid,view.owner(),view.binding(),view.ticket()))
+                :journal.permits(maid);
             String disk;
             try {var tag=journal.read(maid);disk=tag.getString("kind")+" / "+tag.getUUID("operation");}
             catch(java.nio.file.NoSuchFileException absent){disk="none";}

@@ -34,6 +34,7 @@ public final class PortProbeMod {
         NeoForge.EVENT_BUS.addListener(NativeOathService::dimension);
         NeoForge.EVENT_BUS.addListener(NativeOathService::death);
         NeoForge.EVENT_BUS.addListener(NativeOathService::stop);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,com.maidweapon.port.recovery.NativeCheckpointService::stop);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeCombatCredits::damaged);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeCombatCredits::death);
         NeoForge.EVENT_BUS.addListener(NativeTlmRoundTripCommand::register);

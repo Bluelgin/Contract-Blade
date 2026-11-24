@@ -42,6 +42,26 @@ class NativeTransferJournalTest {
         assertTrue(b.permits(maid));
         assertFalse(new NativeTransferJournal(dir,UUID.randomUUID()).permits(maid));
     }
+    @Test void flushedCaptureRequiresExactLedgerAndIsInvalidatedByNextIntent() throws Exception{
+        var maid=UUID.randomUUID();var owner=UUID.randomUUID();var binding=UUID.randomUUID();
+        var s=new CompoundTag();s.putUUID("UUID",maid);s.putUUID("Owner",owner);
+        var store=new NativeContractStore();store.registerLive(maid,owner,binding);
+        var op=UUID.randomUUID();var ref=store.beginCapture(maid,owner,binding,op,s);
+        var dir=temp.resolve("checkpoint");var a=new NativeTransferJournal(dir,UUID.randomUUID());
+        a.writeIntent(ref,op,NativeTransferJournal.Kind.CAPTURE,s);
+        assertThrows(IllegalStateException.class,()->a.markStoredAfterFlush(store,ref));
+        store.completeCapture(ref,op);
+        var before=new NativeTransferJournal(dir,UUID.randomUUID());
+        assertFalse(before.permitsStored(store,ref));
+        assertTrue(a.markStoredAfterFlush(store,ref));
+        var reloaded=NativeContractStore.load(store.save(new CompoundTag(),null),null);
+        var b=new NativeTransferJournal(dir,UUID.randomUUID());
+        assertTrue(b.permitsStored(reloaded,ref));
+        assertFalse(b.permitsStored(reloaded,new ContractReference(maid,owner,binding,UUID.randomUUID())));
+        var manifest=UUID.randomUUID();
+        b.writeIntent(ref,manifest,NativeTransferJournal.Kind.MANIFEST,s);
+        assertFalse(new NativeTransferJournal(dir,UUID.randomUUID()).permitsStored(reloaded,ref));
+    }
     @Test void malformedJournalDoesNotAuthorize() throws Exception {
         var maid=UUID.randomUUID(); var dir=temp.resolve("journal"); Files.createDirectories(dir);
         Files.writeString(dir.resolve(maid+".nbt"),"corrupt");

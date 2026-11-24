@@ -31,6 +31,7 @@ public final class NativeTransferJournal {
     private final UUID session;
     private final java.util.Set<UUID> durableThisSession=new java.util.HashSet<>();
     private final java.util.Set<UUID> recoveredLive=new java.util.HashSet<>();
+    private final java.util.Map<UUID,ContractReference> checkpointRestored=new java.util.HashMap<>();
     private final java.util.Set<UUID> denied=new java.util.HashSet<>();
 
     public NativeTransferJournal(Path directory, UUID session) {
@@ -49,12 +50,11 @@ public final class NativeTransferJournal {
     public boolean permits(UUID maid) throws IOException {
         Path file=path(maid);
         if (denied.contains(maid)) return false;
-        if (durableThisSession.contains(maid) || recoveredLive.contains(maid)) return Files.isRegularFile(file);
+        if (durableThisSession.contains(maid) || recoveredLive.contains(maid) || checkpointRestored.containsKey(maid)) return Files.isRegularFile(file);
         if (Files.notExists(file)) return true;
         // A valid pre-existing record cannot authorize a new server session.
         // Parse once on attempted access for diagnostics; never trust its session ID.
-        read(maid);
-        denied.add(maid);
+        try {read(maid);} finally {denied.add(maid);}
         return false;
     }
     public CompoundTag read(UUID maid) throws IOException {
@@ -88,6 +88,43 @@ public final class NativeTransferJournal {
         denied.remove(live.maid());
         return true;
     }
+    /** Candidates are only captures that this process itself durably began. */
+    public java.util.Set<UUID> currentIntents(){return java.util.Set.copyOf(durableThisSession);}
+    private static boolean matchesCapture(CompoundTag tag,ContractReference ref,CompoundTag snapshot){
+        return Kind.CAPTURE.name().equals(tag.getString("kind"))
+            &&ref.maid().equals(tag.getUUID("maid"))&&ref.owner().equals(tag.getUUID("owner"))
+            &&ref.binding().equals(tag.getUUID("binding"))&&ref.ticket().equals(tag.getUUID("ticket"))
+            &&snapshot.equals(tag.getCompound("snapshot"));
+    }
+    /**
+     * Call only after the server-thread world/player/entity flush completed and
+     * the committed STORED ledger still agrees. An unchecked journal cannot self-certify.
+     * This is a normal save checkpoint, not a proof of hardware power-loss consistency.
+     */
+    public boolean markStoredAfterFlush(NativeContractStore store,ContractReference ref) throws IOException{
+        if(!durableThisSession.contains(ref.maid()))return false;
+        var tag=read(ref.maid());
+        if(!session.equals(tag.getUUID("session"))||!matchesCapture(tag,ref,store.readStored(ref)))return false;
+        tag.putBoolean("saved_checkpoint",true);
+        replaceRecord(ref.maid(),tag);
+        return true;
+    }
+    /** Previous-session authorization only from matching flushed capture and ledger. */
+    public boolean permitsStored(NativeContractStore store,ContractReference ref) throws IOException{
+        var v=store.inspect(ref.maid());
+        if(v==null||v.phase()!=NativeContractStore.Phase.STORED||!ref.owner().equals(v.owner())
+            ||!ref.binding().equals(v.binding())||!ref.ticket().equals(v.ticket()))return false;
+        if(durableThisSession.contains(ref.maid()))return Files.isRegularFile(path(ref.maid()));
+        if(ref.equals(checkpointRestored.get(ref.maid())))return Files.isRegularFile(path(ref.maid()));
+        // No journal = no evidence for a stored entity, including old pre-journal probes.
+        if(Files.notExists(path(ref.maid())))return false;
+        var tag=read(ref.maid());
+        if(!tag.contains("saved_checkpoint",Tag.TAG_BYTE)||!tag.getBoolean("saved_checkpoint")
+            ||!matchesCapture(tag,ref,store.readStored(ref)))return false;
+        checkpointRestored.put(ref.maid(),ref);
+        denied.remove(ref.maid());
+        return true;
+    }
     /** Returns only after fsync + atomic replacement. Unsupported filesystem fails closed. */
     public void writeIntent(ContractReference ref,UUID operation,Kind kind,CompoundTag snapshot) throws IOException {
         if (!permits(ref.maid())) throw new IOException("Prior session requires reconciliation");
@@ -98,6 +135,9 @@ public final class NativeTransferJournal {
         tag.putUUID("owner",ref.owner()); tag.putUUID("binding",ref.binding());
         tag.putUUID("ticket",ref.ticket()); tag.putUUID("operation",operation);
         tag.putString("kind",kind.name()); tag.put("snapshot",snapshot.copy());
+        replaceRecord(ref.maid(),tag);
+    }
+    private void replaceRecord(UUID maid,CompoundTag tag) throws IOException {
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();
         NbtIo.writeCompressed(tag,bytes);
         if (bytes.size()>MAX_FILE) throw new IOException("Journal file too large");
@@ -111,15 +151,16 @@ public final class NativeTransferJournal {
             }
             // Revoke cached permission before replacing; a failed fsync must quarantine even
             // if an earlier intent in this session had already succeeded.
-            durableThisSession.remove(ref.maid());
-            recoveredLive.remove(ref.maid());
-            denied.add(ref.maid());
-            Files.move(temp,path(ref.maid()),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+            durableThisSession.remove(maid);
+            recoveredLive.remove(maid);
+            checkpointRestored.remove(maid);
+            denied.add(maid);
+            Files.move(temp,path(maid),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
             // Persist the directory entry as well. Do not silently fall back to a non-durable rename.
             try(FileChannel dir=FileChannel.open(directory,StandardOpenOption.READ)) {dir.force(true);}
             try(FileChannel parent=FileChannel.open(directory.getParent(),StandardOpenOption.READ)) {parent.force(true);}
-            durableThisSession.add(ref.maid());
-            denied.remove(ref.maid());
+            durableThisSession.add(maid);
+            denied.remove(maid);
         } finally {Files.deleteIfExists(temp);}
     }
 }

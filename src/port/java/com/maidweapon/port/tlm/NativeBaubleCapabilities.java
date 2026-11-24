@@ -36,7 +36,7 @@ public final class NativeBaubleCapabilities {
             var store=NativeContractStore.get(server);var view=store.inspect(ref.maid());
             if(view==null||view.phase()!=NativeContractStore.Phase.STORED||!ref.owner().equals(view.owner())
                 ||!ref.binding().equals(view.binding())||!ref.ticket().equals(view.ticket())
-                ||!NativeTransferJournal.get(server).permits(ref.maid()))return Ultimate.NONE;
+                ||!NativeTransferJournal.get(server).permitsStored(store,ref))return Ultimate.NONE;
             var cache=CACHE.computeIfAbsent(server,s->new java.util.HashMap<>());
             var previous=cache.get(ref.maid());
             if(previous!=null&&previous.ref().equals(ref))return previous.ultimate();
