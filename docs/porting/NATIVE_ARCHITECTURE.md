@@ -43,3 +43,6 @@ The selected channel can now manifest and retain a server-validated live ticket,
 
 ## Client and live resonance
 Client-only HUD subscribes to NeoForge 1.21.1 tick/render events. Protocol v2 reports selected ticket, stored/live phase and balance, 26 bytes when authorized; outdated or mismatched responses are hidden. Requests limited to held reference and ten-tick intervals. The held selected live channel can recover at the idle rate; combat, oath, offhand and unheld recovery are NOT implemented. Real client acceptance is required. Dedicated-server smoke now requires a separate two-channel lifecycle marker.
+
+## Mastery and direct combat credit
+Shared immutable mastery rules and vanilla tier map retain default Forge level requirements through Lv10 and custom rule representation. Native probe SavedData and actual direct hit/death listeners credit selected stored carriers or the selected manifested TLM maid, deduplicate targets and add the original scaled kill reward; direct attacks report 100-tick combat activity. Projectile, custom ability provenance, config-defined levels, death penalties, skill unlock/data reload and damage bonus are not yet connected. Existing Forge mastery remains unchanged; shared synchronization needs its own reviewed patch. Tests cover full progression and persistence; native combat attribution needs player/maid combat acceptance.

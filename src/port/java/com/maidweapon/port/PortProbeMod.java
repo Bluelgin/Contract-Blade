@@ -5,6 +5,7 @@ import com.maidweapon.port.init.ProbeItems;
 import com.maidweapon.port.network.PortStatusNetwork;
 import com.maidweapon.port.recovery.NativeRecoveryDiagnostics;
 import com.maidweapon.port.resonance.NativeRecoveryTick;
+import com.maidweapon.port.mastery.NativeCombatCredits;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.tlm.NativeTlmRoundTripCommand;
 import net.neoforged.bus.api.IEventBus;
@@ -26,6 +27,8 @@ public final class PortProbeMod {
         bus.addListener(PortStatusNetwork::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryDiagnostics::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryTick::post);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeCombatCredits::damaged);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeCombatCredits::death);
         NeoForge.EVENT_BUS.addListener(NativeTlmRoundTripCommand::register);
         LOG.warn("Contract Blade NeoForge port probe loaded; this build contains NO release gameplay.");
     }

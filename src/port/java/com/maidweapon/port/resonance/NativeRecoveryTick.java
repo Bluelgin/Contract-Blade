@@ -35,7 +35,9 @@ public final class NativeRecoveryTick {
             var rules=ResonanceRules.DEFAULT;
             double multiplier=SpiritVeinRules.multiplier(NativeSpiritVeinData.get(server).stage(player.getUUID()));
             int restored=session.accumulator().tick(server.overworld().getGameTime(),
-                rules.recoveryUnits(live!=null,live!=null?ResonanceRules.Activity.MANIFESTED_IDLE:ResonanceRules.Activity.STORED,multiplier),current,rules.maximum());
+                rules.recoveryUnits(live!=null,((live!=null&&live.getTarget()!=null&&live.getTarget().isAlive())
+                    ||com.maidweapon.port.mastery.NativeCombatCredits.fighting(player,ref.maid(),server.overworld().getGameTime()))
+                    ?ResonanceRules.Activity.COMBAT:live!=null?ResonanceRules.Activity.MANIFESTED_IDLE:ResonanceRules.Activity.STORED,multiplier),current,rules.maximum());
             if(restored>0){
                 if(live==null)NativeResonanceService.recoverStored(server,player.getUUID(),carrier,restored);
                 else NativeResonanceService.recoverLive(server,player.getUUID(),live,restored);
