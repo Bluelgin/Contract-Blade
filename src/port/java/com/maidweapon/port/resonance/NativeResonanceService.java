@@ -73,5 +73,11 @@ public final class NativeResonanceService {
             return i==null || amount<0 ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
         } catch(RuntimeException rejected){return -1;}
     }
+    public static int recoverLive(MinecraftServer server,UUID owner,EntityMaid maid,int amount) {
+        try {
+            Identity i=live(server,owner,maid);
+            return i==null || amount<0 ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
+        }catch(RuntimeException rejected){return -1;}
+    }
     private NativeResonanceService(){}
 }

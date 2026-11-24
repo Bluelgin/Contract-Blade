@@ -2,10 +2,11 @@ package com.maidweapon.port.network;
 
 import com.maidweapon.port.PortProbeMod;
 import com.maidweapon.port.domain.resonance.ResonanceRules;
-import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.resonance.NativeResonanceService;
+import com.maidweapon.port.storage.NativeChannelService;
 import io.netty.buffer.ByteBuf;
 import java.util.Map;
+import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -15,48 +16,61 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/** Read-only, request/reply status. No client-provided UUID, cost, snapshot or target.
- * No Minecraft client classes loaded by a dedicated server. Cache is per actual client player object.
- */
+/** Read-only server status, correlated by opaque selected ticket, never a client-supplied identity. */
 public final class PortStatusNetwork {
     public record Request() implements CustomPacketPayload {
         public static final Type<Request> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"status_request"));
         public static final StreamCodec<ByteBuf,Request> CODEC=StreamCodec.of((b,v)->{},b->new Request());
         @Override public Type<Request> type(){return TYPE;}
     }
-    public record Status(boolean authorized,int current,int maximum) implements CustomPacketPayload {
+    public record Status(boolean authorized,boolean manifested,int current,int maximum,UUID ticket) implements CustomPacketPayload {
         public static final Type<Status> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"status"));
         public Status {
-            if(maximum<1 || maximum>1_000_000 || current<0 || current>maximum || (!authorized && current!=0))
+            if(maximum<1 || maximum>1_000_000 || current<0 || current>maximum
+                || authorized!=(ticket!=null) || (!authorized&&(current!=0||manifested)))
                 throw new IllegalArgumentException("Invalid status");
         }
-        public static final StreamCodec<ByteBuf,Status> CODEC=StreamCodec.of(
-            (b,v)->{b.writeBoolean(v.authorized);b.writeInt(v.current);b.writeInt(v.maximum);},
-            b->new Status(b.readBoolean(),b.readInt(),b.readInt()));
+        public static final StreamCodec<ByteBuf,Status> CODEC=StreamCodec.of((b,v)->{
+            b.writeBoolean(v.authorized);b.writeBoolean(v.manifested);b.writeInt(v.current);b.writeInt(v.maximum);
+            if(v.authorized){b.writeLong(v.ticket.getMostSignificantBits());b.writeLong(v.ticket.getLeastSignificantBits());}
+        },b->{
+            boolean ok=b.readBoolean(),live=b.readBoolean();int current=b.readInt(),max=b.readInt();
+            return new Status(ok,live,current,max,ok?new UUID(b.readLong(),b.readLong()):null);
+        });
         @Override public Type<Status> type(){return TYPE;}
     }
+    private record Cached(Status status,long receivedNanos){}
     private static final Map<ServerPlayer,Long> LAST_REQUEST=new WeakHashMap<>();
-    private static final Map<Player,Status> CLIENT_CACHE=new WeakHashMap<>();
+    private static final Map<Player,Cached> CLIENT_CACHE=new WeakHashMap<>();
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar=event.registrar("1");
+        var registrar=event.registrar("2");
         registrar.playToServer(Request.TYPE,Request.CODEC,PortStatusNetwork::request);
         registrar.playToClient(Status.TYPE,Status.CODEC,PortStatusNetwork::receive);
     }
     private static void request(Request ignored,IPayloadContext context) {
-        if(!(context.player() instanceof ServerPlayer player) || player.getServer()==null || !player.getServer().isSameThread()) return;
-        long now=player.getServer().overworld().getGameTime();
+        if(!(context.player() instanceof ServerPlayer player)||player.getServer()==null||!player.getServer().isSameThread())return;
+        var server=player.getServer();
+        long now=server.overworld().getGameTime();
         Long last=LAST_REQUEST.get(player);
-        if(last!=null && now>=last && now-last<10) return;
+        if(last!=null&&now>=last&&now-last<10)return;
         LAST_REQUEST.put(player,now);
-        int current=NativeResonanceService.currentStored(player.getServer(),player.getUUID(),player.getMainHandItem());
-        context.reply(new Status(current>=0,Math.max(0,current),ResonanceRules.DEFAULT.maximum()));
+        var stack=player.getMainHandItem();var owner=player.getUUID();
+        int current=NativeResonanceService.currentStored(server,owner,stack);
+        var live=current<0?NativeChannelService.selectedLive(server,owner,stack):null;
+        if(live!=null)current=NativeResonanceService.currentLive(server,owner,live);
+        var ref=NativeChannelService.displayReference(stack);
+        boolean ok=current>=0&&ref!=null;
+        context.reply(new Status(ok,ok&&live!=null,ok?current:0,ResonanceRules.DEFAULT.maximum(),ok?ref.ticket():null));
     }
     private static void receive(Status status,IPayloadContext context) {
         Player player=context.player();
-        if(player.level().isClientSide) synchronized(CLIENT_CACHE){CLIENT_CACHE.put(player,status);}
+        if(player.level().isClientSide)synchronized(CLIENT_CACHE){CLIENT_CACHE.put(player,new Cached(status,System.nanoTime()));}
     }
     public static Status cached(Player player) {
-        synchronized(CLIENT_CACHE){return CLIENT_CACHE.get(player);}
+        synchronized(CLIENT_CACHE){
+            var c=CLIENT_CACHE.get(player);
+            return c==null||System.nanoTime()-c.receivedNanos()>3_000_000_000L?null:c.status();
+        }
     }
     private PortStatusNetwork(){}
 }

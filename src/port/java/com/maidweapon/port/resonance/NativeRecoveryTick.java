@@ -11,8 +11,8 @@ import java.util.WeakHashMap;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-/** Probe-only recovery of the selected STORED carrier. No inventory/world scan,
- * no offline catch-up, no live/combat/oath recovery until their adapters exist.
+/** Probe recovery of the held selected sealed/live carrier. No full entity scan,
+ * no offline catch-up. Live rate is idle-only; combat/oath adapters remain pending.
  */
 public final class NativeRecoveryTick {
     private record Session(ContractReference ref,ResonanceAccumulator accumulator){}
@@ -21,9 +21,11 @@ public final class NativeRecoveryTick {
         if(!(event.getEntity() instanceof ServerPlayer player)||player.getServer()==null)return;
         var server=player.getServer();
         var carrier=player.getMainHandItem();
-        var ref=NativeChannelService.selected(server,player.getUUID(),carrier);
+        var ref=NativeChannelService.displayReference(carrier);
         if(ref==null){SESSIONS.remove(player);return;}
         int current=NativeResonanceService.currentStored(server,player.getUUID(),carrier);
+        var live=current<0?NativeChannelService.selectedLive(server,player.getUUID(),carrier):null;
+        if(live!=null)current=NativeResonanceService.currentLive(server,player.getUUID(),live);
         if(current<0){SESSIONS.remove(player);return;}
         try{
             var session=SESSIONS.get(player);
@@ -33,8 +35,11 @@ public final class NativeRecoveryTick {
             var rules=ResonanceRules.DEFAULT;
             double multiplier=SpiritVeinRules.multiplier(NativeSpiritVeinData.get(server).stage(player.getUUID()));
             int restored=session.accumulator().tick(server.overworld().getGameTime(),
-                rules.recoveryUnits(false,ResonanceRules.Activity.STORED,multiplier),current,rules.maximum());
-            if(restored>0)NativeResonanceService.recoverStored(server,player.getUUID(),carrier,restored);
+                rules.recoveryUnits(live!=null,live!=null?ResonanceRules.Activity.MANIFESTED_IDLE:ResonanceRules.Activity.STORED,multiplier),current,rules.maximum());
+            if(restored>0){
+                if(live==null)NativeResonanceService.recoverStored(server,player.getUUID(),carrier,restored);
+                else NativeResonanceService.recoverLive(server,player.getUUID(),live,restored);
+            }
         }catch(RuntimeException invalid){SESSIONS.remove(player);}
     }
     private NativeRecoveryTick(){}

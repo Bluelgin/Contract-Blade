@@ -237,13 +237,16 @@ public final class NativeTlmRoundTripCommand {
             a=PortContractLifecycleTrial.manifest(level,pos,OWNER,carrier);
             require(a!=null&&au.equals(a.getUUID()),"External channel manifestation failed");
             require(a.getMaidInv().getStackInSlot(0).getCount()==7,"External inventory lost");
+            require(NativeChannelService.selectedLive(server,OWNER,carrier)==a,"Live selected channel not resolved");
+            require(NativeResonanceService.recoverLive(server,OWNER,a,5)==880,"Live resonance recovery failed");
             require(!NativeChannelService.select(server,OWNER,carrier,java.util.Optional.of(spiritId)),"Switched while live");
             require(PortContractLifecycleTrial.manifest(level,pos,OWNER,stale)==null,"Duplicate channel spawned");
             require(!PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",new ItemStack(ProbeItems.CONTRACT_CARRIER.get())),
                 "Empty carrier stole live channel lease");
             require(PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",carrier),"External recall failed");
-            require(NativeResonanceService.currentStored(server,OWNER,carrier)==875,"External pool reset");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==880,"External pool reset");
             require(NativeChannelService.selected(server,OWNER,stale)==null,"Old copied channel remained authorized");
+            require(NativeChannelService.selectedLive(server,OWNER,stale)==null,"Old copied channel retained live authority");
             require(NativeChannelService.cycle(server,OWNER,carrier),"Intrinsic channel selection failed");
             require(NativeResonanceService.currentStored(server,OWNER,carrier)==1000,"Intrinsic pool not independent");
             b=PortContractLifecycleTrial.manifest(level,pos.above(),OWNER,carrier);
@@ -251,7 +254,7 @@ public final class NativeTlmRoundTripCommand {
             require(b.getMaidInv().getStackInSlot(0).getCount()==11,"Intrinsic inventory lost");
             require(PortContractLifecycleTrial.capture(level,b,OWNER,"ProbeOwner",carrier),"Intrinsic recall failed");
             require(NativeChannelService.cycle(server,OWNER,carrier),"Return to external failed");
-            require(NativeResonanceService.currentStored(server,OWNER,carrier)==875,"External balance lost after switching");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==880,"External balance lost after switching");
             require(NativeChannelService.selected(server,OWNER,second)==null,"Old intrinsic reference remained valid");
             LOGGER.info("PORT_NATIVE_CHANNEL_LIFECYCLE_PASS: independent pools, real two-channel spawn/recall, stale tickets, live switch denial");
         } finally {

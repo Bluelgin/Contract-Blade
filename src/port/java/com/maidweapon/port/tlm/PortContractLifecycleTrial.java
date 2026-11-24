@@ -129,6 +129,7 @@ public final class PortContractLifecycleTrial {
                 || (channels==null && !ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
                 || (channels!=null && carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())))
                 throw new IllegalStateException("Carrier changed during transform");
+            if (!level.noCollision(candidate)) throw new IllegalStateException("Manifestation collision");
             publicationAttempted = true;
             if (!level.addFreshEntity(candidate) || level.getEntity(ref.maid()) != candidate)
                 throw new IllegalStateException("World publication rejected");

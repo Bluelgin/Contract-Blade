@@ -1,4 +1,9 @@
 {
-  "item.maid_weapon_port_probe.contract_bauble": "契约之刃移植探针饰品（仅供开发）",
-  "item.maid_weapon_port_probe.contract_carrier": "仅开发测试：契约封存载体"
+  "item.maid_weapon_port_probe.contract_bauble": "契约饰品（开发测试）",
+  "item.maid_weapon_port_probe.contract_carrier": "契约载体（开发测试）",
+  "item.maid_weapon_port_probe.vein_one": "灵脉·初醒（开发测试）",
+  "item.maid_weapon_port_probe.vein_two": "灵脉·流转（开发测试）",
+  "item.maid_weapon_port_probe.vein_three": "灵脉·无尽（开发测试）",
+  "maid_weapon_port_probe.hud.live": "显现 · %s / %s",
+  "maid_weapon_port_probe.hud.stored": "封存 · %s / %s"
 }

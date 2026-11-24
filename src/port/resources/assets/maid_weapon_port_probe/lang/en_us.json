@@ -3,5 +3,7 @@
   "item.maid_weapon_port_probe.contract_carrier": "DEV ONLY: Contract Transfer Trial",
   "item.maid_weapon_port_probe.vein_one": "DEV ONLY: Awakening Spirit Vein",
   "item.maid_weapon_port_probe.vein_two": "DEV ONLY: Flow Spirit Vein",
-  "item.maid_weapon_port_probe.vein_three": "DEV ONLY: Endless Spirit Vein"
+  "item.maid_weapon_port_probe.vein_three": "DEV ONLY: Endless Spirit Vein",
+  "maid_weapon_port_probe.hud.live": "Manifested · %s / %s",
+  "maid_weapon_port_probe.hud.stored": "Stored · %s / %s"
 }

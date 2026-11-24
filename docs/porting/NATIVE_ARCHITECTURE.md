@@ -40,3 +40,6 @@ NativeChannelService validates all external/intrinsic references against the ser
 
 ## Selected channel lifecycle
 The selected channel can now manifest and retain a server-validated live ticket, recall into the same channel, rotate its ticket, and switch when all channels are sealed. Empty single carriers cannot capture a leased live channel. Sneak-use in air converts a sealed single reference or cycles channels. The smoke fixture exercises two actual TLM maids with separate inventories and resonance balances. Intrinsic origin creation and addon registration are not implemented: only the test constructs a multi-channel carrier. Cross-session recovery limitations still apply.
+
+## Client and live resonance
+Client-only HUD subscribes to NeoForge 1.21.1 tick/render events. Protocol v2 reports selected ticket, stored/live phase and balance, 26 bytes when authorized; outdated or mismatched responses are hidden. Requests limited to held reference and ten-tick intervals. The held selected live channel can recover at the idle rate; combat, oath, offhand and unheld recovery are NOT implemented. Real client acceptance is required. Dedicated-server smoke now requires a separate two-channel lifecycle marker.

@@ -63,6 +63,30 @@ public final class NativeChannelService {
         int index=options.indexOf(channels.selectedIntrinsic());
         return select(server,owner,stack,options.get((index+1)%options.size()));
     }
+    /** Client-side display hint only. Never use to grant gameplay authority. */
+    public static ContractReference displayReference(ItemStack stack) {
+        if(stack==null || stack.isEmpty())return null;
+        var single=stack.get(PortDataTypes.CONTRACT_REFERENCE.get());
+        var channels=stack.get(PortDataTypes.CONTRACT_CHANNELS.get());
+        return channels==null?single:single==null?channels.selected().orElse(null):null;
+    }
+    /** Resolve actual selected live maid on the server, with dormant channels validated. */
+    public static com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid selectedLive(
+        MinecraftServer server,UUID owner,ItemStack stack) {
+        if(!valid(server,owner,stack)||stack.has(PortDataTypes.CONTRACT_REFERENCE.get()))return null;
+        var ref=displayReference(stack);
+        if(ref==null||recall(server,owner,stack,ref.maid())==null)return null;
+        com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid found=null;
+        for(var level:server.getAllLevels()){
+            var entity=level.getEntity(ref.maid());
+            if(entity==null)continue;
+            if(found!=null||!(entity instanceof com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid m)
+                ||m.isRemoved()||!m.isAlive()||!owner.equals(m.getOwnerUUID())||!m.hasData(PortDataTypes.MAID_BINDING)
+                ||!ref.binding().equals(m.getData(PortDataTypes.MAID_BINDING)))return null;
+            found=m;
+        }
+        return found;
+    }
     public static ContractReference selected(MinecraftServer server,UUID owner,ItemStack stack) {
         try{
             if(!valid(server,owner,stack))return null;
