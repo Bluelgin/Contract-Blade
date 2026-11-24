@@ -2,6 +2,8 @@ package com.maidweapon.port.tlm;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.maidweapon.port.init.ProbeItems;
+import com.maidweapon.port.ability.NativeAbilityService;
+import com.maidweapon.port.domain.ability.AbilityEngine;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.storage.NativeContractStore;
 import com.maidweapon.port.storage.NativeTransferJournal;
@@ -143,6 +145,12 @@ public final class NativeTlmRoundTripCommand {
                 "Mixed carrier unexpectedly granted summon authority");
             require(NativeResonanceService.currentStored(level.getServer(),OWNER,mixedReloaded)==-1,
                 "Mixed carrier unexpectedly granted resonance authority");
+            require(NativeAbilityService.executeProbe(level.getServer(),UUID.randomUUID(),carrier)==AbilityEngine.Result.UNAUTHORIZED,
+                "Foreign owner executed probe skill");
+            require(NativeAbilityService.executeProbe(level.getServer(),OWNER,carrier)==AbilityEngine.Result.SUCCESS,
+                "Unified ability execution failed");
+            require(NativeAbilityService.executeProbe(level.getServer(),OWNER,carrier)==AbilityEngine.Result.COOLDOWN,
+                "Unified ability cooldown bypassed");
             var attempt = NativeResonanceService.newAttempt();
             require(NativeResonanceService.payStored(level.getServer(), OWNER, carrier, 125, attempt) == Payment.PAID,
                 "Native resonance payment rejected");
@@ -153,7 +161,7 @@ public final class NativeTlmRoundTripCommand {
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Native world manifestation rejected");
             require(journal.read(unique).getString("kind").equals("MANIFEST"), "Durable manifest intent missing");
-            require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 875,
+            require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 850,
                 "Resonance balance lost between stored and live forms");
             require(NativeResonanceService.currentStored(level.getServer(), OWNER, duplicatedItem) == -1,
                 "Stale carrier retained resonance authority");
@@ -171,7 +179,7 @@ public final class NativeTlmRoundTripCommand {
                 "Old ticket became valid again after recapture");
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Second manifest refused");
-            require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 875,
+            require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 850,
                 "Recapture reset the resonance account");
             require(foreign.equals(ContractStackDataAccess.readRoot(carrier)), "Foreign data changed in lifecycle");
             require(carrier.has(DataComponents.CUSTOM_NAME), "Foreign vanilla component removed");

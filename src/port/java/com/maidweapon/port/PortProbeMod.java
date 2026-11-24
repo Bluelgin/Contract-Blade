@@ -2,6 +2,8 @@ package com.maidweapon.port;
 
 import com.mojang.logging.LogUtils;
 import com.maidweapon.port.init.ProbeItems;
+import com.maidweapon.port.network.PortStatusNetwork;
+import com.maidweapon.port.recovery.NativeRecoveryDiagnostics;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.tlm.NativeTlmRoundTripCommand;
 import net.neoforged.bus.api.IEventBus;
@@ -20,6 +22,8 @@ public final class PortProbeMod {
         PortDataTypes.COMPONENTS.register(bus);
         PortDataTypes.ATTACHMENTS.register(bus);
         ProbeItems.ITEMS.register(bus);
+        bus.addListener(PortStatusNetwork::register);
+        NeoForge.EVENT_BUS.addListener(NativeRecoveryDiagnostics::register);
         NeoForge.EVENT_BUS.addListener(NativeTlmRoundTripCommand::register);
         LOG.warn("Contract Blade NeoForge port probe loaded; this build contains NO release gameplay.");
     }
