@@ -1,4 +1,7 @@
 {
   "item.maid_weapon_port_probe.contract_bauble": "Contract Port Bauble (DEV ONLY)",
-  "item.maid_weapon_port_probe.contract_carrier": "DEV ONLY: Contract Transfer Trial"
+  "item.maid_weapon_port_probe.contract_carrier": "DEV ONLY: Contract Transfer Trial",
+  "item.maid_weapon_port_probe.vein_one": "DEV ONLY: Awakening Spirit Vein",
+  "item.maid_weapon_port_probe.vein_two": "DEV ONLY: Flow Spirit Vein",
+  "item.maid_weapon_port_probe.vein_three": "DEV ONLY: Endless Spirit Vein"
 }

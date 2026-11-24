@@ -58,3 +58,9 @@ Commit 65e610c passed both compile/JUnit and native TLM server smoke in Actions 
 - [ ] Native status payload codec, registration and actual client roundtrip (client test still required)
 - [ ] Persistent spirit vein progression and selected stored carrier tick recovery (client/player test still required)
 - [ ] Recovery inspection; no mutation, cross-session reconciliation still unimplemented
+
+## Follow-up increment
+- [ ] Forge draft PR #39 shared policy integration; native Forge CI required.
+- [ ] Prior MANIFEST / committed LIVE operator acknowledgement, no spawn; STORED and pending restart recovery remain blocked.
+- [ ] Sealed channel shared resonance and cooldown, mixed/stale denial; live recall/creation/manifestation still unavailable.
+- [ ] Probe spirit vein upgrade items consume only on sequential success; actual player test required, production recipes and migration pending.
