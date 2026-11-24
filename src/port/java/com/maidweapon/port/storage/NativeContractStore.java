@@ -91,6 +91,7 @@ public final class NativeContractStore extends SavedData {
         var e=entry(maid);
         if(!e.contains("origin"))return id.isEmpty()&&!e.contains("grant");
         return e.contains("origin",Tag.TAG_STRING)&&e.hasUUID("grant")&&id.isPresent()
+            &&maid.equals(intrinsicMaid(e.getUUID("grant")))
             &&id.get().toString().equals(e.getString("origin"));
     }
     /** Deterministic receipt identity prevents replay of the same server-issued grant. */

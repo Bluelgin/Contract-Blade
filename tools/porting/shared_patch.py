@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export only shared code/tests from a known baseline to a source ref.
+"""Export only shared code/tests/resources from a known baseline to a source ref.
 Run from the target worktree. Default: check applicability; --apply stages nothing.
 Never changes branches, platform sources, or pushes anything.
 """
@@ -14,7 +14,7 @@ args=p.parse_args()
 root=Path(subprocess.check_output(["git","rev-parse","--show-toplevel"],text=True).strip())
 if subprocess.check_output(["git","status","--porcelain"],cwd=root).strip():
     raise SystemExit("Refusing non-clean target worktree")
-patch=subprocess.check_output(["git","diff","--binary",args.baseline,args.source,"--","src/shared/java","src/sharedTest/java"],cwd=root)
+patch=subprocess.check_output(["git","diff","--binary",args.baseline,args.source,"--","src/shared/java","src/sharedTest/java","src/shared/resources"],cwd=root)
 if not patch:
     print("No shared changes");raise SystemExit(0)
 subprocess.run(["git","apply","--check","-"],input=patch,cwd=root,check=True)
