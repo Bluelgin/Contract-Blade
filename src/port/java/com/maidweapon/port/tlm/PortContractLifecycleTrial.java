@@ -47,6 +47,7 @@ public final class PortContractLifecycleTrial {
             // Events receive a staged copy; foreign carrier modifications are not committed by this probe.
             CompoundTag snapshot = TlmNativeTransformBridge.captureSnapshot(live, carrier.copy());
             if (live.isRemoved() || level.getEntity(maid) != live || !owner.equals(live.getOwnerUUID())
+                    || !validCarrier(carrier)
                     || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
                     || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
             ref = store.beginCapture(maid, owner, binding, op, snapshot);
@@ -79,6 +80,7 @@ public final class PortContractLifecycleTrial {
         EntityMaid candidate = null;
         UUID op = UUID.randomUUID();
         boolean began = false;
+        boolean publicationAttempted = false;
         try {
             ref = carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
             if (ref == null || !owner.equals(ref.owner())
@@ -100,6 +102,7 @@ public final class PortContractLifecycleTrial {
             candidate.moveTo(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5, 0, 0);
             if (!ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
                 throw new IllegalStateException("Carrier changed during transform");
+            publicationAttempted = true;
             if (!level.addFreshEntity(candidate) || level.getEntity(ref.maid()) != candidate)
                 throw new IllegalStateException("World publication rejected");
             store.completeManifest(ref, op);
@@ -107,8 +110,9 @@ public final class PortContractLifecycleTrial {
             return candidate;
         } catch (Exception failure) {
             LOG.warn("Native manifest rejected; snapshot retained unless publication committed", failure);
-            // Do not roll back when an entity with this UUID is known published in ANY loaded dimension.
-            if (began && ref != null && store != null) {
+            // Once publication has been attempted, an exception may hide a partial spawn.
+            // Preserve the pending snapshot rather than trusting absence in loaded chunks.
+            if (began && !publicationAttempted && ref != null && store != null) {
                 boolean absent = true;
                 for (ServerLevel world : level.getServer().getAllLevels())
                     if (world.getEntity(ref.maid()) != null) absent = false;

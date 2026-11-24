@@ -103,6 +103,10 @@ public final class NativeTlmRoundTripCommand {
         net.minecraft.core.BlockPos pos = level.getSharedSpawnPos().above(3);
         published.moveTo(pos, 0, 0);
         ItemStack carrier = new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        CompoundTag foreign = new CompoundTag();
+        foreign.putString("third_party", "preserve");
+        carrier.set(DataComponents.CUSTOM_DATA, CustomData.of(foreign));
+        carrier.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Native probe"));
         EntityMaid restored = null;
         if (!level.addFreshEntity(published) || level.getEntity(unique) != published)
             throw new IllegalStateException("Test TLM entity could not enter the server world");
@@ -115,7 +119,13 @@ public final class NativeTlmRoundTripCommand {
             require(ContractStackDataAccess.readContract(carrier).isEmpty(), "Snapshot leaked into legacy item NBT");
             require(NativeContractStore.get(level.getServer()).readStored(first).hasUUID("UUID"),
                 "World snapshot missing");
-            ItemStack duplicatedItem = carrier.copy();
+            ItemStack persisted = ItemStack.parse(level.registryAccess(), carrier.save(level.registryAccess())).orElseThrow();
+            require(first.equals(persisted.get(PortDataTypes.CONTRACT_REFERENCE.get())),
+                "Native item persistent codec lost reference");
+            require(foreign.equals(ContractStackDataAccess.readRoot(persisted)),
+                "Persistent item codec changed foreign data");
+            require(persisted.has(DataComponents.CUSTOM_NAME), "Persistent item codec lost custom name");
+            ItemStack duplicatedItem = persisted.copy();
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Native world manifestation rejected");
             require(level.getEntity(unique) == restored, "Restored world entity identity lost");
@@ -132,6 +142,9 @@ public final class NativeTlmRoundTripCommand {
                 "Old ticket became valid again after recapture");
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Second manifest refused");
+            require(foreign.equals(ContractStackDataAccess.readRoot(carrier)), "Foreign data changed in lifecycle");
+            require(carrier.has(DataComponents.CUSTOM_NAME), "Foreign vanilla component removed");
+            require(restored.hasData(PortDataTypes.MAID_BINDING), "Binding attachment lost");
         } finally {
             if (!published.isRemoved()) published.discard();
             if (restored != null && !restored.isRemoved()) restored.discard();

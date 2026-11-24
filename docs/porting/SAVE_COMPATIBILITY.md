@@ -2,7 +2,7 @@
 
 Three independent versions must not be confused:
 1. The old 1.20.1 ItemStack tag is no longer the primary 1.21.1 item API.
-   Use DataComponents.CUSTOM_DATA to preserve legacy keys. Do not delete
+   Read DataComponents.CUSTOM_DATA only at the legacy migration boundary. New native carriers use a typed reference and world-owned snapshot; mixed/unmigrated carriers are rejected without modification. Do not delete
    unrelated SlashBlade data, components, equipment or third-party NBT.
 2. The existing business contract identity uses MaidUUID, MaidBindingId,
    OwnerUUID, MaidData and world-wide mastery. Preserve these identifiers.

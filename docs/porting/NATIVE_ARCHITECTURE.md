@@ -6,7 +6,7 @@ Do not merge into master, publish, or use in existing worlds.
 - One atomic immutable `contract_reference` component (maid/owner/binding/ticket), with persistent Codec and fixed 64-byte StreamCodec. A new ticket is issued for each capture. Identity and ticket must be checked against server authority, never trusted from a client.
 - Persistent `maid_binding` entity attachment; no automatic death copy or client sync. TLM native entity serialization must round-trip it.
 - NativeContractStore: overworld SavedData holds phase, transaction, ticket and full native TLM NBT snapshot in the same record. The carrier never contains the snapshot. No compression format inherited from 1.20.1. Old-format readers remain isolated to compatibility tests and rejection of unmigrated carriers.
-- Owner, binding, ticket, phase and operation checks; loaded dimensions checked before publication. Pending records are blocked, not automatically reset.
+- Owner, binding, ticket, phase and operation checks; loaded dimensions checked before publication. Pending records are blocked, not automatically reset. Once publication is attempted, even an exception/negative result leaves the snapshot pending; only pre-publication failures can return to STORED automatically.
 - Staged TLM transform event carrier copy avoids side effects on real items during the probe; third-party event mutations to that copy are NOT yet merged, and require production policy and integration tests.
 
 ## Deliberate limits / release blockers
@@ -18,4 +18,4 @@ Do not merge into master, publish, or use in existing worlds.
 - Native item references are not portable across worlds. A separately authorized export/import flow is a future decision.
 
 ## Acceptance
-Compile/test CI, real TLM capture/manifest, attachment round trip, no item snapshot, duplicate & stale ticket rejection, foreign components unchanged, then restart/crash and multiplayer fixtures. The new head has NOT been verified until its own CI succeeds.
+Compile/test CI, real TLM capture/manifest, attachment round trip, no item snapshot, duplicate & stale ticket rejection, foreign components unchanged, then restart/crash and multiplayer fixtures. The new head has NOT been verified until its own CI succeeds. Smoke test uses authenticated loopback RCON instead of relying on Gradle stdin; the previous CI failure only established that success markers were absent, not the underlying cause.

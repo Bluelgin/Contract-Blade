@@ -3,6 +3,9 @@
 import os
 import queue
 import signal
+import secrets
+import socket
+import struct
 import subprocess
 import sys
 import threading
@@ -12,9 +15,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 WORLD = ROOT / "run" / "port-smoke-server"
 WORLD.mkdir(parents=True, exist_ok=True)
+# Keep RCON on the local disposable CI server; never expose or log credentials.
+with socket.socket() as reserved:
+    reserved.bind(("127.0.0.1", 0))
+    RCON_PORT = reserved.getsockname()[1]
+RCON_PASSWORD = secrets.token_hex(24)
 (WORLD / "eula.txt").write_text("eula=true\n", encoding="utf-8")
 (WORLD / "server.properties").write_text(
     "online-mode=false\n"
+    "server-ip=127.0.0.1\n"
+    "enable-rcon=true\n"
+    f"rcon.port={RCON_PORT}\n"
+    f"rcon.password={RCON_PASSWORD}\n"
+    "broadcast-rcon-to-ops=false\n"
     "level-name=contract-port-smoke-world\n"
     "motd=Contract Blade port test - disposable world\n"
     "enable-command-block=false\n"
@@ -22,7 +35,7 @@ WORLD.mkdir(parents=True, exist_ok=True)
 output = queue.Queue()
 cmd = ["./gradlew", "--no-daemon", "runServer"]
 print("Launching isolated NeoForge + TLM probe in run/port-smoke-server", flush=True)
-proc = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+proc = subprocess.Popen(cmd, cwd=ROOT, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT, text=True, bufsize=1, start_new_session=True)
 
 def reader():
@@ -30,6 +43,48 @@ def reader():
         print(line, end="", flush=True)
         output.put(line)
     output.put(None)
+
+def recv_exact(sock, size):
+    data = bytearray()
+    while len(data) < size:
+        part = sock.recv(size - len(data))
+        if not part:
+            raise OSError("RCON connection closed")
+        data.extend(part)
+    return bytes(data)
+
+def send_packet(sock, request_id, kind, value):
+    data = struct.pack("<ii", request_id, kind) + value.encode("utf-8") + b"\x00\x00"
+    sock.sendall(struct.pack("<i", len(data)) + data)
+
+def read_packet(sock):
+    size = struct.unpack("<i", recv_exact(sock, 4))[0]
+    if not 10 <= size <= 65536:
+        raise OSError("Invalid RCON packet size")
+    data = recv_exact(sock, size)
+    request_id, kind = struct.unpack("<ii", data[:8])
+    return request_id, kind
+
+def rcon_command(command):
+    deadline = time.monotonic() + 15
+    while True:
+        try:
+            connection = socket.create_connection(("127.0.0.1", RCON_PORT), timeout=2)
+            break
+        except OSError:
+            if time.monotonic() >= deadline:
+                raise
+            time.sleep(0.25)
+    with connection as sock:
+        sock.settimeout(110)
+        send_packet(sock, 1, 3, RCON_PASSWORD)
+        request_id, kind = read_packet(sock)
+        if request_id != 1 or kind != 2:
+            raise OSError("RCON authentication rejected")
+        send_packet(sock, 2, 2, command)
+        request_id, kind = read_packet(sock)
+        if request_id != 2 or kind != 0:
+            raise OSError("RCON command acknowledgement missing")
 
 threading.Thread(target=reader, daemon=True).start()
 deadline = time.monotonic() + 330
@@ -64,8 +119,14 @@ try:
         print("PORT_NATIVE_SERVER_FAIL: " + failure, file=sys.stderr)
         raise SystemExit(1)
     print("PORT_NATIVE_SERVER_READY: NeoForge 1.21.1 + TLM + probe booted", flush=True)
-    proc.stdin.write("contractportverify\n")
-    proc.stdin.flush()
+    # Gradle's run task need not forward stdin to Minecraft. Use an explicit
+    # acknowledged local command transport, then require both test markers.
+    try:
+        rcon_command("contractportverify")
+    except OSError as error:
+        print("PORT_NATIVE_COMMAND_FAIL: " + str(error), file=sys.stderr)
+        raise SystemExit(1)
+    print("PORT_NATIVE_COMMAND_ACK: contractportverify", flush=True)
     test_deadline = time.monotonic() + 100
     verified = False
     world_verified = False

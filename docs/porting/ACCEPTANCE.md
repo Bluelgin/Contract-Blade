@@ -10,6 +10,11 @@ Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 - [ ] Data Components does not lose foreign fields (unit + native tests)
 
 ## M1: storage
+- [ ] Native reference persistent/stream codec and foreign components verified on current head
+- [ ] Native maid binding attachment verified through TLM serialization
+- [ ] World snapshot and ticket state reload together; stale ticket rejected after recapture
+- [ ] RCON command acknowledgment and both native markers on current head
+- [ ] Durable crash journal, aggregate storage limits and reconciliation across entity/player/world files
 - [ ] Full owned-key inventory for all weapons, channels and archives
 - [ ] v1 snapshot round-trip on native TLM entity (CI pending); old 1.20.1 golden fixtures still required
 - [ ] New/old SavedData world schema upgrade and identity

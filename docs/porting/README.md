@@ -23,6 +23,8 @@ The probe has its own temporary mod id: maid_weapon_port_probe.
 It must NEVER be distributed as a gameplay mod or used to upgrade a world.
 No legacy registries, contracts, skills or other feature parity is claimed.
 
+Current native architecture: see [NATIVE_ARCHITECTURE.md](NATIVE_ARCHITECTURE.md). The current lifecycle uses native component references and world snapshots; the following older experiments are retained as migration fixtures.
+
 Implemented exploration:
 - A version-specific Data Components CUSTOM_DATA reader/writer skeleton.
 - An explicit whitelist of known contract root keys, foreign-key preservation.
@@ -56,9 +58,9 @@ See SAVE_COMPATIBILITY.md, ACCEPTANCE.md and MAINTENANCE.md.
 
 The temporary \`maid_weapon_port_probe:contract_carrier\` item is for a
 **disposable NeoForge 1.21.1 test world only**. Right-click an owned TLM maid to
-run a guarded full-snapshot capture, then use on an empty block-adjacent
+run a guarded world-stored full-snapshot capture, then use on an empty block-adjacent
 position to manifest. The server owns the UUID, owner and binding checks.
-A global probe-only SavedData journal rejects duplicate carriers and leaves
+A global probe-only SavedData journal and per-capture ticket reject duplicate or stale carriers and leave
 crash-interrupted handoffs blocked pending reconciliation.
 
 The CI command \`contractportverify\` first tests an in-memory native round
