@@ -72,5 +72,11 @@ public final class NativeResonanceService {
     public static Payment payLive(MinecraftServer server,UUID owner,EntityMaid maid,int cost,Attempt attempt) {
         try{return pay(server,live(server,owner,maid),cost,attempt);}catch(RuntimeException rejected){return Payment.UNAUTHORIZED;}
     }
+    public static int recoverStored(MinecraftServer server,UUID owner,ItemStack stack,int amount) {
+        try {
+            Identity i=stored(server,owner,stack);
+            return i==null || amount<0 ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
+        } catch(RuntimeException rejected){return -1;}
+    }
     private NativeResonanceService(){}
 }
