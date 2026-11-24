@@ -64,3 +64,10 @@ Commit 65e610c passed both compile/JUnit and native TLM server smoke in Actions 
 - [ ] Prior MANIFEST / committed LIVE operator acknowledgement, no spawn; STORED and pending restart recovery remain blocked.
 - [ ] Sealed channel shared resonance and cooldown, mixed/stale denial; live recall/creation/manifestation still unavailable.
 - [ ] Probe spirit vein upgrade items consume only on sequential success; actual player test required, production recipes and migration pending.
+
+## Selected-channel and gameplay migration
+- [ ] Native two-channel manifest/recall/selection, separate inventory and pool continuity, live lease and stale ticket rejection (required smoke marker).
+- [ ] Client HUD in actual multiplayer, 26-byte authorized status, ticket correlation and expiry.
+- [ ] Inventory/menu independent recovery including dormant and loaded live channels, duplicate deduplication; actual player tick test.
+- [ ] Mastery Lv1-10 defaults, persistent progression and direct verified damage/death attribution; actual combat test; optional indirect attribution pending.
+- [ ] Native preset origin registration, creation/transfer, ordinary restart and crash recovery, full production registry and spirit gameplay still release blockers.

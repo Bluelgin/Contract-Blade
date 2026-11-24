@@ -87,6 +87,31 @@ public final class NativeChannelService {
         }
         return found;
     }
+    /** Every authoritative channel for one server-observed inventory stack. */
+    public record RecoveryEntry(ContractReference reference,
+        com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid live){}
+    public static java.util.List<RecoveryEntry> recoveryEntries(MinecraftServer server,UUID owner,ItemStack stack) {
+        try{
+            if(!valid(server,owner,stack))return java.util.List.of();
+            var single=stack.get(PortDataTypes.CONTRACT_REFERENCE.get());
+            var channels=stack.get(PortDataTypes.CONTRACT_CHANNELS.get());
+            if(channels==null)return sealed(server,owner,single)?java.util.List.of(new RecoveryEntry(single,null)):java.util.List.of();
+            if(single!=null)return java.util.List.of();
+            var refs=new java.util.ArrayList<ContractReference>();
+            channels.external().ifPresent(refs::add);
+            for(var c:channels.intrinsic())refs.add(c.reference());
+            var selected=channels.selected().orElse(null);
+            var result=new java.util.ArrayList<RecoveryEntry>();
+            for(var r:refs){
+                if(sealed(server,owner,r)){result.add(new RecoveryEntry(r,null));continue;}
+                if(!r.equals(selected)||recall(server,owner,stack,r.maid())==null)return java.util.List.of();
+                var live=selectedLive(server,owner,stack);
+                if(live!=null)result.add(new RecoveryEntry(r,live));
+                // Unloaded selected live entity earns no recovery. Dormant sealed channels remain valid.
+            }
+            return java.util.List.copyOf(result);
+        }catch(java.io.IOException|RuntimeException rejected){return java.util.List.of();}
+    }
     public static ContractReference selected(MinecraftServer server,UUID owner,ItemStack stack) {
         try{
             if(!valid(server,owner,stack))return null;

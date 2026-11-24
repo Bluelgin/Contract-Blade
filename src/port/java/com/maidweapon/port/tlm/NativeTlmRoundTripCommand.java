@@ -238,6 +238,8 @@ public final class NativeTlmRoundTripCommand {
             require(a!=null&&au.equals(a.getUUID()),"External channel manifestation failed");
             require(a.getMaidInv().getStackInSlot(0).getCount()==7,"External inventory lost");
             require(NativeChannelService.selectedLive(server,OWNER,carrier)==a,"Live selected channel not resolved");
+            var entries=NativeChannelService.recoveryEntries(server,OWNER,carrier);
+            require(entries.size()==2&&entries.stream().anyMatch(e->e.live()!=null)&&entries.stream().anyMatch(e->e.live()==null),"Live and dormant recovery entries not resolved independently");
             require(NativeResonanceService.recoverLive(server,OWNER,a,5)==880,"Live resonance recovery failed");
             require(!NativeChannelService.select(server,OWNER,carrier,java.util.Optional.of(spiritId)),"Switched while live");
             require(PortContractLifecycleTrial.manifest(level,pos,OWNER,stale)==null,"Duplicate channel spawned");
@@ -246,6 +248,7 @@ public final class NativeTlmRoundTripCommand {
             require(PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",carrier),"External recall failed");
             require(NativeResonanceService.currentStored(server,OWNER,carrier)==880,"External pool reset");
             require(NativeChannelService.selected(server,OWNER,stale)==null,"Old copied channel remained authorized");
+            require(NativeChannelService.recoveryEntries(server,OWNER,stale).isEmpty(),"Stale channel recovered resources");
             require(NativeChannelService.selectedLive(server,OWNER,stale)==null,"Old copied channel retained live authority");
             require(NativeChannelService.cycle(server,OWNER,carrier),"Intrinsic channel selection failed");
             require(NativeResonanceService.currentStored(server,OWNER,carrier)==1000,"Intrinsic pool not independent");
