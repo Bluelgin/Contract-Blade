@@ -25,6 +25,7 @@ public final class PortProbeMod {
         PortDataTypes.COMPONENTS.register(bus);
         PortDataTypes.ATTACHMENTS.register(bus);
         ProbeItems.ITEMS.register(bus);
+        com.maidweapon.port.tlm.NativeIntrinsicSpirits.registerProbe();
         bus.addListener(PortStatusNetwork::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryDiagnostics::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryTick::post);

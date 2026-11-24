@@ -12,5 +12,7 @@
   "key.categories.maid_weapon_port_probe": "契约之刃（测试）",
   "maid_weapon_port_probe.oath.started": "誓约显现",
   "maid_weapon_port_probe.oath.ended": "誓约结束",
-  "maid_weapon_port_probe.oath.exhausted": "誓约反噬"
+  "maid_weapon_port_probe.oath.exhausted": "誓约反噬",
+  "item.maid_weapon_port_probe.spirit_crystal": "剑灵结晶（开发测试）",
+  "maid_weapon_port_probe.spirit.created": "固有剑灵已缔结"
 }

@@ -85,6 +85,33 @@ public final class NativeContractStore extends SavedData {
         return v!=null && v.phase()==Phase.LIVE && v.owner().equals(ref.owner()) && v.binding().equals(ref.binding())
             && entry(ref.maid()).hasUUID("live_ticket") && entry(ref.maid()).getUUID("live_ticket").equals(ref.ticket());
     }
+    /** Intrinsic origin lives in the ledger, never inferred from item channel text. */
+    public boolean originMatches(UUID maid,java.util.Optional<net.minecraft.resources.ResourceLocation> id){
+        if(inspect(maid)==null)return false;
+        var e=entry(maid);
+        if(!e.contains("origin"))return id.isEmpty()&&!e.contains("grant");
+        return e.contains("origin",Tag.TAG_STRING)&&e.hasUUID("grant")&&id.isPresent()
+            &&id.get().toString().equals(e.getString("origin"));
+    }
+    /** Deterministic receipt identity prevents replay of the same server-issued grant. */
+    public static UUID intrinsicMaid(UUID grant){
+        return UUID.nameUUIDFromBytes(("contract-port-intrinsic:"+grant).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+    public ContractReference beginIntrinsic(UUID owner,UUID binding,UUID grant,
+        net.minecraft.resources.ResourceLocation origin,UUID operation,CompoundTag snapshot) throws IOException{
+        Objects.requireNonNull(grant);Objects.requireNonNull(origin);
+        if(origin.toString().length()>128)throw new IllegalArgumentException("Origin too long");
+        UUID maid=intrinsicMaid(grant);
+        if(inspect(maid)!=null)throw new IllegalStateException("Intrinsic grant already consumed");
+        VerifiedTlmSnapshot.requireIdentity(snapshot,owner,maid);
+        ContractNbtBoundsGuard.validate(snapshot);
+        UUID ticket=UUID.randomUUID();
+        var e=new CompoundTag();e.putUUID("owner",owner);e.putUUID("binding",binding);
+        e.putString("origin",origin.toString());e.putUUID("grant",grant);
+        e.putUUID("ticket",ticket);e.putUUID("operation",operation);e.put("snapshot",snapshot.copy());
+        e.putString("phase",Phase.CAPTURING.name());put(maid,e);
+        return new ContractReference(maid,owner,binding,ticket);
+    }
     public void registerLive(UUID maid, UUID owner, UUID binding) {
         if (inspect(maid) != null) throw new IllegalStateException("Duplicate maid");
         CompoundTag e = new CompoundTag();

@@ -42,7 +42,7 @@ public final class PortContractLifecycleTrial {
             var v = store.inspect(maid);
             if (priorChannels != null) {
                 if (NativeChannelService.recall(level.getServer(),owner,carrier,maid)==null) return false;
-            } else if (store.hasLiveLease(maid)) return false;
+            } else if (store.hasLiveLease(maid)||(v!=null&&!store.originMatches(maid,java.util.Optional.empty()))) return false;
             UUID binding;
             if (v == null) {
                 if (live.hasData(PortDataTypes.MAID_BINDING)) return false;

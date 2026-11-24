@@ -217,25 +217,30 @@ public final class NativeTlmRoundTripCommand {
     private static void verifyChannelLifecycle(net.minecraft.server.level.ServerLevel level) throws Exception {
         var server=level.getServer();
         var pos=level.getSharedSpawnPos().above(3);
-        var a=new EntityMaid(level);var b=new EntityMaid(level);
-        a.setOwnerUUID(OWNER);b.setOwnerUUID(OWNER);
+        var a=new EntityMaid(level);EntityMaid b=null;
+        a.setOwnerUUID(OWNER);
         a.getMaidInv().setStackInSlot(0,new ItemStack(Items.DIAMOND,7));
-        b.getMaidInv().setStackInSlot(0,new ItemStack(Items.EMERALD,11));
-        a.moveTo(pos,0,0);b.moveTo(pos.above(),0,0);
-        UUID au=a.getUUID(),bu=b.getUUID();
+        a.moveTo(pos,0,0);
+        UUID au=a.getUUID(),grant=UUID.randomUUID(),bu=NativeContractStore.intrinsicMaid(grant);
         var carrier=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
         var second=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
-        var spiritId=net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("maid_weapon_port_probe","fixture_spirit");
+        var spiritId=NativeIntrinsicSpirits.PROBE_ID;
+        var definition=new NativeIntrinsicSpirits.Definition(spiritId,"Fixture Spirit",(p,s)->false,m->m.getMaidInv().setStackInSlot(0,new ItemStack(Items.EMERALD,11)));
         try {
-            require(level.addFreshEntity(a)&&level.addFreshEntity(b),"Two channel fixtures could not spawn");
+            require(level.addFreshEntity(a),"External fixture could not spawn");
             require(PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",carrier),"External capture failed");
-            require(PortContractLifecycleTrial.capture(level,b,OWNER,"ProbeOwner",second),"Intrinsic fixture capture failed");
             require(NativeChannelService.convertExternal(server,OWNER,carrier),"External conversion failed");
+            require(NativeIntrinsicSpirits.create(level,OWNER,carrier,definition,grant),"Native intrinsic creation failed");
+            require(!NativeIntrinsicSpirits.create(level,OWNER,second,definition,grant),"Intrinsic grant replay succeeded");
             var old=carrier.get(PortDataTypes.CONTRACT_CHANNELS.get());
-            var intrinsic=second.get(PortDataTypes.CONTRACT_REFERENCE.get());
-            // Fixture-only assembly. No general intrinsic creation or origin authorization is implied.
-            carrier.set(PortDataTypes.CONTRACT_CHANNELS.get(),new ContractChannels(old.external(),
-                java.util.List.of(new ContractChannels.Intrinsic(spiritId,intrinsic)),java.util.Optional.empty()));
+            var intrinsic=old.intrinsic().getFirst().reference();
+            second.set(PortDataTypes.CONTRACT_REFERENCE.get(),intrinsic);
+            require(NativeChannelService.selected(server,OWNER,second)==null,"Intrinsic accepted as external");
+            var forged=carrier.copy();
+            var fakeId=net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("maid_weapon_port_probe","forged");
+            forged.set(PortDataTypes.CONTRACT_CHANNELS.get(),new ContractChannels(old.external(),
+                java.util.List.of(new ContractChannels.Intrinsic(fakeId,intrinsic)),java.util.Optional.of(fakeId)));
+            require(NativeChannelService.selected(server,OWNER,forged)==null,"Forged origin accepted");
             var stale=carrier.copy();
             require(NativeResonanceService.payStored(server,OWNER,carrier,125,NativeResonanceService.newAttempt())==Payment.PAID,
                 "External pool payment failed");

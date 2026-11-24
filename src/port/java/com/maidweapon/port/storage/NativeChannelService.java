@@ -17,17 +17,17 @@ public final class NativeChannelService {
             && stack.getCount()==1 && stack.is(ProbeItems.CONTRACT_CARRIER.get())
             && ContractStackDataAccess.readContract(stack).isEmpty();
     }
-    private static boolean sealed(MinecraftServer server,UUID owner,ContractReference ref) throws java.io.IOException {
+    private static boolean sealed(MinecraftServer server,UUID owner,ContractReference ref,Optional<ResourceLocation> origin) throws java.io.IOException {
         if(ref==null || !owner.equals(ref.owner())) return false;
         var store=NativeContractStore.get(server);
         var v=store.inspect(ref.maid());
         return v!=null && v.phase()==NativeContractStore.Phase.STORED && owner.equals(v.owner())
             && ref.binding().equals(v.binding()) && ref.ticket().equals(v.ticket())
-            && NativeTransferJournal.get(server).permitsStored(store,ref);
+            && store.originMatches(ref.maid(),origin) && NativeTransferJournal.get(server).permitsStored(store,ref);
     }
     private static boolean allSealed(MinecraftServer server,UUID owner,ContractChannels channels) throws java.io.IOException {
-        if(channels.external().isPresent() && !sealed(server,owner,channels.external().get()))return false;
-        for(var channel:channels.intrinsic()) if(!sealed(server,owner,channel.reference()))return false;
+        if(channels.external().isPresent() && !sealed(server,owner,channels.external().get(),Optional.empty()))return false;
+        for(var channel:channels.intrinsic()) if(!sealed(server,owner,channel.reference(),Optional.of(channel.id())))return false;
         return true;
     }
     /** Validate dormant entries and selected live lease before recall. */
@@ -38,9 +38,9 @@ public final class NativeChannelService {
             if(channels==null)return null;
             var ref=channels.selected().orElse(null);
             if(ref==null||!owner.equals(ref.owner())||!maid.equals(ref.maid())
-                ||!NativeContractStore.get(server).matchesLiveLease(ref)||!NativeTransferJournal.get(server).permits(maid))return null;
-            if(channels.external().isPresent()&&!channels.external().get().equals(ref)&&!sealed(server,owner,channels.external().get()))return null;
-            for(var c:channels.intrinsic())if(!c.reference().equals(ref)&&!sealed(server,owner,c.reference()))return null;
+                ||!NativeContractStore.get(server).matchesLiveLease(ref)||!NativeContractStore.get(server).originMatches(maid,channels.selectedIntrinsic())||!NativeTransferJournal.get(server).permits(maid))return null;
+            if(channels.external().isPresent()&&!channels.external().get().equals(ref)&&!sealed(server,owner,channels.external().get(),Optional.empty()))return null;
+            for(var c:channels.intrinsic())if(!c.reference().equals(ref)&&!sealed(server,owner,c.reference(),Optional.of(c.id())))return null;
             return ref;
         }catch(java.io.IOException|RuntimeException rejected){return null;}
     }
@@ -96,15 +96,16 @@ public final class NativeChannelService {
             if(!valid(server,owner,stack))return java.util.List.of();
             var single=stack.get(PortDataTypes.CONTRACT_REFERENCE.get());
             var channels=stack.get(PortDataTypes.CONTRACT_CHANNELS.get());
-            if(channels==null)return sealed(server,owner,single)?java.util.List.of(new RecoveryEntry(single,null)):java.util.List.of();
+            if(channels==null)return sealed(server,owner,single,Optional.empty())?java.util.List.of(new RecoveryEntry(single,null)):java.util.List.of();
             if(single!=null)return java.util.List.of();
-            var refs=new java.util.ArrayList<ContractReference>();
-            channels.external().ifPresent(refs::add);
-            for(var c:channels.intrinsic())refs.add(c.reference());
+            var refs=new java.util.LinkedHashMap<ContractReference,Optional<ResourceLocation>>();
+            channels.external().ifPresent(r->refs.put(r,Optional.empty()));
+            for(var c:channels.intrinsic())refs.put(c.reference(),Optional.of(c.id()));
             var selected=channels.selected().orElse(null);
             var result=new java.util.ArrayList<RecoveryEntry>();
-            for(var r:refs){
-                if(sealed(server,owner,r)){result.add(new RecoveryEntry(r,null));continue;}
+            for(var entry:refs.entrySet()){
+                var r=entry.getKey();
+                if(sealed(server,owner,r,entry.getValue())){result.add(new RecoveryEntry(r,null));continue;}
                 if(!r.equals(selected)||recall(server,owner,stack,r.maid())==null)return java.util.List.of();
                 var live=selectedLive(server,owner,stack);
                 if(live!=null)result.add(new RecoveryEntry(r,live));
@@ -118,7 +119,7 @@ public final class NativeChannelService {
             if(!valid(server,owner,stack))return null;
             var single=stack.get(PortDataTypes.CONTRACT_REFERENCE.get());
             var channels=stack.get(PortDataTypes.CONTRACT_CHANNELS.get());
-            if(channels==null)return sealed(server,owner,single)?single:null;
+            if(channels==null)return sealed(server,owner,single,Optional.empty())?single:null;
             if(single!=null || !allSealed(server,owner,channels))return null;
             return channels.selected().orElse(null);
         }catch(java.io.IOException|RuntimeException rejected){return null;}

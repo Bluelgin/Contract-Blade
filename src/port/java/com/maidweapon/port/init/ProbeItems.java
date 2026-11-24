@@ -22,5 +22,6 @@ public final class ProbeItems {
     public static final DeferredItem<ProbeSpiritVeinItem> VEIN_THREE=ITEMS.register("vein_three",()->new ProbeSpiritVeinItem(3));
     public static final DeferredItem<Item> OATH_RING=ITEMS.registerSimpleItem("oath_ring",new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> ENDLESS_CONTRACT=ITEMS.registerSimpleItem("endless_contract",new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.maidweapon.port.item.ProbeSpiritCrystalItem> SPIRIT_CRYSTAL=ITEMS.register("spirit_crystal",com.maidweapon.port.item.ProbeSpiritCrystalItem::new);
     private ProbeItems() {}
 }
