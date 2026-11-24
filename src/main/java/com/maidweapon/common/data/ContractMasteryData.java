@@ -63,6 +63,22 @@ public final class ContractMasteryData {
             return true;
         }
 
+        // Valid default route delegates to shared progression. The caller already
+        // owns total-kill counting, so do not apply the shared total twice.
+        if (defeatedTier >= 0 && defeatedTier <= 5 && unlockedTier <= 5) {
+            var shared = new com.maidweapon.port.domain.mastery.MasteryProgress(level,totalKills,unlockedTier,
+                enderDragonKills,witherKills,java.util.Arrays.stream(upgradeProgress).boxed().toList());
+            // Preserve the old explicit boss booleans rather than trusting a mismatched id.
+            String bossId = isEnderDragon ? "minecraft:ender_dragon" : isWither ? "minecraft:wither" : "";
+            // An impossible simultaneous dragon/wither report keeps historical fallback below.
+            if (!(isEnderDragon && isWither)) {
+                var next=shared.credit(defeatedTier,bossId,null);
+                boolean upgraded=next.level()>level;
+                level=next.level();unlockedTier=next.unlockedTier();
+                enderDragonKills=next.dragonKills();witherKills=next.witherKills();
+                return upgraded;
+            }
+        }
         int requiredTier = TIER_REQUIREMENT[level - 1];
 
         // 基本条件：击杀怪物的Tier必须达到要求
