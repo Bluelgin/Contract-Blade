@@ -26,3 +26,6 @@ The current resonance defaults reflect master: pool 1000 / legacy 200; rates in 
 
 ## Release gates
 P0: current-head CI, durable journal across world/entity/player saves, unloaded entity presence, migration and recovery fixtures. P1: gameplay parity, native config/payloads, dependency gates. P2: performance, client/multiplayer, real-world acceptance. Probe namespace must not be released.
+
+### Increment after verified 65e610c
+A durable per-maid intent journal and backup now precede item/entity publication. Cross-session records are deliberately quarantined; safe normal-restart reconciliation remains unimplemented. Typed sealed channels are registered with codec tests, but rejected by current single-channel lifecycle until live identity and switching are implemented. Both changes require current-head CI.

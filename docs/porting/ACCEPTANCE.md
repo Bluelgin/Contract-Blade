@@ -48,3 +48,6 @@ Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 - [ ] Upgrade copied 1.20.1 world; no lost items/maids
 - [ ] Replace probe ID with stable maid_weapon, preserve registry names
 - [ ] Published jar free of test/probe/old-world incompatible classes
+
+## Historical verified baseline
+Commit 65e610c passed both compile/JUnit and native TLM server smoke in Actions run 45411250887. This verifies the previous single-reference lifecycle, native component persistence, stale-ticket rejection and resonance continuity, not the new journal/channel changes or real-world restart safety.

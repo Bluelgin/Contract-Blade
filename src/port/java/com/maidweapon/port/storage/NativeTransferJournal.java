@@ -90,6 +90,9 @@ public final class NativeTransferJournal {
                 while(buf.hasRemaining()) out.write(buf);
                 out.force(true);
             }
+            // Revoke cached permission before replacing; a failed fsync must quarantine even
+            // if an earlier intent in this session had already succeeded.
+            durableThisSession.remove(ref.maid());
             Files.move(temp,path(ref.maid()),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
             // Persist the directory entry as well. Do not silently fall back to a non-durable rename.
             try(FileChannel dir=FileChannel.open(directory,StandardOpenOption.READ)) {dir.force(true);}
