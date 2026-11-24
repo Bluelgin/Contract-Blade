@@ -2,7 +2,7 @@ package com.maidweapon.port.tlm;
 
 import com.github.tartaricacid.touhoulittlemaid.api.event.MaidAndItemTransformEvent;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
-import com.maidweapon.port.storage.LegacyMaidSnapshotCodec;
+import com.maidweapon.port.storage.ContractNbtBoundsGuard;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
@@ -30,7 +30,7 @@ public final class TlmNativeTransformBridge {
         UUID uuid = maid.getUUID();
         NeoForge.EVENT_BUS.post(new MaidAndItemTransformEvent.ToItem(maid, carrier, full));
         VerifiedTlmSnapshot.requireIdentity(full, owner, uuid);
-        LegacyMaidSnapshotCodec.validateEntity(full);
+        ContractNbtBoundsGuard.validate(full);
         requireInventory(full);
         return full.copy();
     }
@@ -45,14 +45,14 @@ public final class TlmNativeTransformBridge {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(carrier, "carrier");
         VerifiedTlmSnapshot.requireIdentity(snapshot, owner, maidUuid);
-        LegacyMaidSnapshotCodec.validateEntity(snapshot);
+        ContractNbtBoundsGuard.validate(snapshot);
         requireInventory(snapshot);
         CompoundTag candidateData = snapshot.copy();
         EntityMaid candidate = new EntityMaid(level);
         try {
             NeoForge.EVENT_BUS.post(new MaidAndItemTransformEvent.ToMaid(candidate, carrier, candidateData));
             VerifiedTlmSnapshot.requireIdentity(candidateData, owner, maidUuid);
-            LegacyMaidSnapshotCodec.validateEntity(candidateData);
+            ContractNbtBoundsGuard.validate(candidateData);
             requireInventory(candidateData);
             candidate.load(candidateData.copy());
             if (!maidUuid.equals(candidate.getUUID())

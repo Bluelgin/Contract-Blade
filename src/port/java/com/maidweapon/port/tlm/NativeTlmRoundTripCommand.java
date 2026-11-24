@@ -2,6 +2,8 @@ package com.maidweapon.port.tlm;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.maidweapon.port.init.ProbeItems;
+import com.maidweapon.port.init.PortDataTypes;
+import com.maidweapon.port.storage.NativeContractStore;
 import com.maidweapon.port.storage.ContractIdentityFields;
 import com.maidweapon.port.storage.ContractStackDataAccess;
 import com.maidweapon.port.storage.LegacyMaidSnapshotCodec;
@@ -108,6 +110,11 @@ public final class NativeTlmRoundTripCommand {
             require(PortContractLifecycleTrial.capture(level, published, OWNER, "ProbeOwner", carrier),
                 "Native world capture refused");
             require(published.isRemoved(), "Capture left the live entity published");
+            var first = carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
+            require(first != null, "Native reference absent");
+            require(ContractStackDataAccess.readContract(carrier).isEmpty(), "Snapshot leaked into legacy item NBT");
+            require(NativeContractStore.get(level.getServer()).readStored(first).hasUUID("UUID"),
+                "World snapshot missing");
             ItemStack duplicatedItem = carrier.copy();
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Native world manifestation rejected");
@@ -117,8 +124,14 @@ public final class NativeTlmRoundTripCommand {
             require(restored.getExperience() == 37, "World transfer lost experience");
             require(PortContractLifecycleTrial.manifest(level, pos.above(2), OWNER, duplicatedItem) == null,
                 "Duplicated item created a second maid");
-            require(ContractStackDataAccess.readContract(carrier).isEmpty(),
-                "Successfully manifested carrier still contains a snapshot");
+            require(!carrier.has(PortDataTypes.CONTRACT_REFERENCE.get()),
+                "Successfully manifested carrier still contains a reference");
+            require(PortContractLifecycleTrial.capture(level, restored, OWNER, "ProbeOwner", carrier),
+                "Second capture refused");
+            require(PortContractLifecycleTrial.manifest(level, pos.above(2), OWNER, duplicatedItem) == null,
+                "Old ticket became valid again after recapture");
+            restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
+            require(restored != null, "Second manifest refused");
         } finally {
             if (!published.isRemoved()) published.discard();
             if (restored != null && !restored.isRemoved()) restored.discard();

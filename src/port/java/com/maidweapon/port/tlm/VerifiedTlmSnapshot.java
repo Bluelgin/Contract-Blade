@@ -1,7 +1,7 @@
 package com.maidweapon.port.tlm;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
-import com.maidweapon.port.storage.LegacyMaidSnapshotCodec;
+import com.maidweapon.port.storage.ContractNbtBoundsGuard;
 import java.io.IOException;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
@@ -20,7 +20,7 @@ public final class VerifiedTlmSnapshot {
         CompoundTag snapshot = maid.saveWithoutId(new CompoundTag());
         requireIdentity(snapshot, owner, uuid);
         sanitizeMotion(snapshot);
-        LegacyMaidSnapshotCodec.validateEntity(snapshot);
+        ContractNbtBoundsGuard.validate(snapshot);
         return snapshot;
     }
 

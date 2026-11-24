@@ -1,178 +1,122 @@
 package com.maidweapon.port.tlm;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.init.ProbeItems;
-import com.maidweapon.port.storage.ContractIdentityFields;
+import com.maidweapon.port.storage.ContractReference;
 import com.maidweapon.port.storage.ContractStackDataAccess;
-import com.maidweapon.port.storage.LegacyMaidSnapshotCodec;
-import com.maidweapon.port.storage.PortContractAuthoritySavedData;
+import com.maidweapon.port.storage.NativeContractStore;
 import com.mojang.logging.LogUtils;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 import org.slf4j.Logger;
 
-/**
- * Developer-only capture/manifest transaction prototype, on the isolated
- * maid_weapon_port_probe carrier. NEVER migrate a player world with it.
- *
- * All authority mutations happen on a server thread; incomplete transactions
- * stay blocked after restart. They are NOT auto-rolled back without evidence.
- */
+/** Native component + server-side snapshot transfer, disposable worlds ONLY. */
 public final class PortContractLifecycleTrial {
-    private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Logger LOG = LogUtils.getLogger();
 
     public static boolean capture(ServerLevel level, EntityMaid live, UUID owner,
                                   String ownerName, ItemStack carrier) {
+        if (level == null || live == null || owner == null || !level.getServer().isSameThread()) return false;
+        ContractReference ref = null;
+        NativeContractStore store = null;
+        UUID op = UUID.randomUUID();
         try {
-            return captureInternal(level, live, owner, ownerName, carrier);
-        } catch (RuntimeException unsafe) {
-            LOGGER.error("Probe capture entry rejected corrupt/unsupported state", unsafe);
-            return false;
-        }
-    }
-
-    private static boolean captureInternal(ServerLevel level, EntityMaid live, UUID owner,
-                                           String ownerName, ItemStack carrier) {
-        if (level == null || live == null || owner == null || ownerName == null
-                || !level.getServer().isSameThread() || live.level() != level
-                || live.isRemoved() || !live.isAlive()
-                || !owner.equals(live.getOwnerUUID()) || !validCarrier(carrier)
-                || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
-
-        var ledger = PortContractAuthoritySavedData.get(level.getServer());
-        UUID maid = live.getUUID();
-        var existing = ledger.inspect(maid);
-        UUID binding;
-        if (existing == null) {
-            binding = UUID.randomUUID();
-            ledger.registerVerifiedLive(maid, owner, binding);
-        } else {
-            if (!existing.owner().equals(owner)
-                    || existing.phase() != PortContractAuthoritySavedData.Phase.LIVE)
-                return false;
-            binding = existing.binding();
-        }
-
-        CustomData previousComponent = carrier.get(DataComponents.CUSTOM_DATA);
-        UUID operation = UUID.randomUUID();
-        boolean began = false;
-        try {
-            CompoundTag full = TlmNativeTransformBridge.captureSnapshot(live, carrier);
-            CompoundTag contract = ContractIdentityFields.bindOnce(
-                new CompoundTag(), owner, ownerName, maid, binding);
-            contract.put("MaidData", new CompoundTag());
-            contract.putInt("ContractCarrierStorageVersion", 1);
-            LegacyMaidSnapshotCodec.write(contract, full);
-            ledger.beginCapture(maid, owner, binding, operation);
-            began = true;
-            ContractStackDataAccess.replaceContract(carrier, contract);
-
+            if (live.level() != level || live.isRemoved() || !live.isAlive()
+                    || level.getEntity(live.getUUID()) != live || !owner.equals(live.getOwnerUUID())
+                    || !validCarrier(carrier) || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
+                    || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
+            store = NativeContractStore.get(level.getServer());
+            UUID maid = live.getUUID();
+            var v = store.inspect(maid);
+            UUID binding;
+            if (v == null) {
+                if (live.hasData(PortDataTypes.MAID_BINDING)) return false;
+                binding = UUID.randomUUID();
+                store.registerLive(maid, owner, binding);
+                live.setData(PortDataTypes.MAID_BINDING, binding);
+            } else {
+                if (v.phase() != NativeContractStore.Phase.LIVE || !owner.equals(v.owner())
+                        || !live.hasData(PortDataTypes.MAID_BINDING)
+                        || !v.binding().equals(live.getData(PortDataTypes.MAID_BINDING))) return false;
+                binding = v.binding();
+            }
+            // Events receive a staged copy; foreign carrier modifications are not committed by this probe.
+            CompoundTag snapshot = TlmNativeTransformBridge.captureSnapshot(live, carrier.copy());
+            if (live.isRemoved() || level.getEntity(maid) != live || !owner.equals(live.getOwnerUUID())
+                    || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
+                    || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
+            ref = store.beginCapture(maid, owner, binding, op, snapshot);
+            carrier.set(PortDataTypes.CONTRACT_REFERENCE.get(), ref);
             live.discard();
-            if (!live.isRemoved()) throw new IllegalStateException("Entity discard did not remove live maid");
-            ledger.completeCapture(maid, owner, binding, operation);
+            if (!live.isRemoved()) throw new IllegalStateException("Entity not removed");
+            store.completeCapture(ref, op);
             return true;
         } catch (Exception failure) {
-            LOGGER.error("Probe capture failed for maid {}: {}", maid, failure.toString(), failure);
-            if (!live.isRemoved()) {
-                if (previousComponent == null) carrier.remove(DataComponents.CUSTOM_DATA);
-                else carrier.set(DataComponents.CUSTOM_DATA, previousComponent);
-                if (began) {
-                    try { ledger.abortCaptureWithVerifiedLiveEntity(maid, owner, binding, operation); }
-                    catch (RuntimeException unresolved) {
-                        LOGGER.error("Probe capture rollback left unresolved ledger state", unresolved);
-                    }
+            LOG.error("Native capture failed; pending records require evidence", failure);
+            if (ref != null && store != null && !live.isRemoved()
+                    && level.getEntity(live.getUUID()) == live) {
+                try {
+                    store.abortCaptureWithLiveEvidence(ref, op);
+                    if (ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
+                        carrier.remove(PortDataTypes.CONTRACT_REFERENCE.get());
+                } catch (RuntimeException unresolved) {
+                    LOG.error("Native capture rollback unresolved", unresolved);
                 }
-            } else {
-                // Never pretend the live entity exists after a failed post-removal callback.
-                // Item snapshot and transaction marker remain for manual reconciliation.
-                LOGGER.error("Entity was removed; retaining stored snapshot and pending ledger for manual recovery");
             }
             return false;
         }
     }
 
-    public static EntityMaid manifest(ServerLevel level, BlockPos destination, UUID owner,
-                                      ItemStack carrier) {
+    public static EntityMaid manifest(ServerLevel level, BlockPos destination, UUID owner, ItemStack carrier) {
+        if (level == null || destination == null || owner == null || !level.getServer().isSameThread()
+                || !validCarrier(carrier)) return null;
+        ContractReference ref = null;
+        NativeContractStore store = null;
+        EntityMaid candidate = null;
+        UUID op = UUID.randomUUID();
+        boolean began = false;
         try {
-            return manifestInternal(level, destination, owner, carrier);
-        } catch (RuntimeException unsafe) {
-            LOGGER.error("Probe manifest entry rejected corrupt/unsupported state", unsafe);
-            return null;
-        }
-    }
-
-    private static EntityMaid manifestInternal(ServerLevel level, BlockPos destination,
-                                                UUID owner, ItemStack carrier) {
-        if (level == null || destination == null || owner == null
-                || !level.getServer().isSameThread() || !validCarrier(carrier)) return null;
-        CompoundTag contract = ContractStackDataAccess.readContract(carrier);
-        ContractStackDataAccess.requireSupportedSchema(contract);
-        if (!ContractIdentityFields.isExplicitOwner(contract, owner)
-                || ContractIdentityFields.isSuperseded(contract)
-                || !LegacyMaidSnapshotCodec.contains(contract)) return null;
-        UUID maid;
-        UUID binding;
-        try {
-            maid = UUID.fromString(contract.getString("MaidUUID"));
-            binding = UUID.fromString(contract.getString("MaidBindingId"));
-        } catch (IllegalArgumentException invalid) {
-            return null;
-        }
-
-        var ledger = PortContractAuthoritySavedData.get(level.getServer());
-        var authority = ledger.inspect(maid);
-        if (authority == null || authority.phase() != PortContractAuthoritySavedData.Phase.STORED
-                || !owner.equals(authority.owner()) || !binding.equals(authority.binding()))
-            return null;
-
-        if (!level.getWorldBorder().isWithinBounds(destination)
-                || !level.getBlockState(destination).isAir()
-                || !level.getBlockState(destination.above()).isAir())
-            return null;
-
-        for (ServerLevel loadedWorld : level.getServer().getAllLevels())
-            if (loadedWorld.getEntity(maid) != null) return null;
-
-        EntityMaid candidate;
-        try {
-            CompoundTag stored = LegacyMaidSnapshotCodec.read(contract);
-            candidate = TlmNativeTransformBridge.prepareManifestCandidate(level, carrier, stored, owner, maid);
+            ref = carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
+            if (ref == null || !owner.equals(ref.owner())
+                    || !ContractStackDataAccess.readContract(carrier).isEmpty()) return null;
+            if (!level.getWorldBorder().isWithinBounds(destination) || !level.hasChunkAt(destination)
+                    || !level.getBlockState(destination).isAir()
+                    || !level.getBlockState(destination.above()).isAir()) return null;
+            for (ServerLevel world : level.getServer().getAllLevels())
+                if (world.getEntity(ref.maid()) != null) return null;
+            store = NativeContractStore.get(level.getServer());
+            CompoundTag snapshot = store.readStored(ref);
+            store.beginManifest(ref, op);
+            began = true;
+            candidate = TlmNativeTransformBridge.prepareManifestCandidate(level, carrier.copy(),
+                snapshot, owner, ref.maid());
+            if (!candidate.hasData(PortDataTypes.MAID_BINDING)
+                    || !ref.binding().equals(candidate.getData(PortDataTypes.MAID_BINDING)))
+                throw new IllegalStateException("Native snapshot binding attachment lost or changed");
             candidate.moveTo(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5, 0, 0);
-        } catch (Exception invalid) {
-            LOGGER.warn("Probe manifest rejected invalid stored maid {}", maid, invalid);
-            return null;
-        }
-
-        UUID operation = UUID.randomUUID();
-        ledger.beginManifest(maid, owner, binding, operation);
-        boolean published = false;
-        try {
-            boolean accepted = level.addFreshEntity(candidate);
-            published = level.getEntity(maid) == candidate;
-            if (!accepted || !published) {
-                if (published) throw new IllegalStateException("Spawn result inconsistent");
-                ledger.abortManifestWithVerifiedStoredSnapshot(maid, owner, binding, operation);
-                return null;
-            }
-
-            ledger.completeManifest(maid, owner, binding, operation);
-            ContractStackDataAccess.replaceContract(carrier, new CompoundTag());
+            if (!ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
+                throw new IllegalStateException("Carrier changed during transform");
+            if (!level.addFreshEntity(candidate) || level.getEntity(ref.maid()) != candidate)
+                throw new IllegalStateException("World publication rejected");
+            store.completeManifest(ref, op);
+            carrier.remove(PortDataTypes.CONTRACT_REFERENCE.get());
             return candidate;
         } catch (Exception failure) {
-            LOGGER.error("Probe manifest failed for maid {}: {}", maid, failure.toString(), failure);
-            if (!published && level.getEntity(maid) != candidate) {
-                try { ledger.abortManifestWithVerifiedStoredSnapshot(maid, owner, binding, operation); }
-                catch (RuntimeException unresolved) {
-                    LOGGER.error("Probe manifest rollback left unresolved ledger state", unresolved);
+            LOG.warn("Native manifest rejected; snapshot retained unless publication committed", failure);
+            // Do not roll back when an entity with this UUID is known published in ANY loaded dimension.
+            if (began && ref != null && store != null) {
+                boolean absent = true;
+                for (ServerLevel world : level.getServer().getAllLevels())
+                    if (world.getEntity(ref.maid()) != null) absent = false;
+                if (absent) {
+                    try { store.abortManifestWithStoredEvidence(ref, op); }
+                    catch (RuntimeException unresolved) { LOG.error("Native manifest rollback unresolved", unresolved); }
                 }
             }
-            // If published, preserve LIVE or MANIFESTING state; never try spawn again.
             return null;
         }
     }
