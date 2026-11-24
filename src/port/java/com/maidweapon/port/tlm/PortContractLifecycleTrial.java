@@ -4,6 +4,9 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.init.ProbeItems;
 import com.maidweapon.port.storage.ContractReference;
+import com.maidweapon.port.storage.ContractChannels;
+import com.maidweapon.port.storage.NativeChannelService;
+import java.util.Objects;
 import com.maidweapon.port.storage.ContractStackDataAccess;
 import com.maidweapon.port.storage.NativeContractStore;
 import com.maidweapon.port.storage.NativeTransferJournal;
@@ -25,6 +28,8 @@ public final class PortContractLifecycleTrial {
         ContractReference ref = null;
         NativeContractStore store = null;
         UUID op = UUID.randomUUID();
+        ContractChannels priorChannels = carrier == null ? null : carrier.get(PortDataTypes.CONTRACT_CHANNELS.get());
+        ContractChannels writtenChannels = null;
         try {
             if (live.level() != level || live.isRemoved() || !live.isAlive()
                     || level.getEntity(live.getUUID()) != live || !owner.equals(live.getOwnerUUID())
@@ -35,6 +40,9 @@ public final class PortContractLifecycleTrial {
             var journal = NativeTransferJournal.get(level.getServer());
             if (!journal.permits(maid)) return false;
             var v = store.inspect(maid);
+            if (priorChannels != null) {
+                if (NativeChannelService.recall(level.getServer(),owner,carrier,maid)==null) return false;
+            } else if (store.hasLiveLease(maid)) return false;
             UUID binding;
             if (v == null) {
                 if (live.hasData(PortDataTypes.MAID_BINDING)) return false;
@@ -52,10 +60,16 @@ public final class PortContractLifecycleTrial {
             if (live.isRemoved() || level.getEntity(maid) != live || !owner.equals(live.getOwnerUUID())
                     || !validCarrier(carrier)
                     || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
-                    || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
+                    || !ContractStackDataAccess.readContract(carrier).isEmpty()
+                    || !Objects.equals(priorChannels,carrier.get(PortDataTypes.CONTRACT_CHANNELS.get()))
+                    || (priorChannels!=null && NativeChannelService.recall(level.getServer(),owner,carrier,maid)==null)) return false;
             ref = store.beginCapture(maid, owner, binding, op, snapshot);
             journal.writeIntent(ref, op, NativeTransferJournal.Kind.CAPTURE, snapshot);
-            carrier.set(PortDataTypes.CONTRACT_REFERENCE.get(), ref);
+            if (priorChannels == null) carrier.set(PortDataTypes.CONTRACT_REFERENCE.get(), ref);
+            else {
+                writtenChannels=priorChannels.replaceSelected(ref);
+                carrier.set(PortDataTypes.CONTRACT_CHANNELS.get(),writtenChannels);
+            }
             live.discard();
             if (!live.isRemoved()) throw new IllegalStateException("Entity not removed");
             store.completeCapture(ref, op);
@@ -68,6 +82,8 @@ public final class PortContractLifecycleTrial {
                     store.abortCaptureWithLiveEvidence(ref, op);
                     if (ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
                         carrier.remove(PortDataTypes.CONTRACT_REFERENCE.get());
+                    if (writtenChannels!=null && writtenChannels.equals(carrier.get(PortDataTypes.CONTRACT_CHANNELS.get())))
+                        carrier.set(PortDataTypes.CONTRACT_CHANNELS.get(),priorChannels);
                 } catch (RuntimeException unresolved) {
                     LOG.error("Native capture rollback unresolved", unresolved);
                 }
@@ -86,7 +102,8 @@ public final class PortContractLifecycleTrial {
         boolean began = false;
         boolean publicationAttempted = false;
         try {
-            ref = carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
+            ContractChannels channels = carrier.get(PortDataTypes.CONTRACT_CHANNELS.get());
+            ref = NativeChannelService.selected(level.getServer(),owner,carrier);
             if (ref == null || !owner.equals(ref.owner())
                     || !ContractStackDataAccess.readContract(carrier).isEmpty()) return null;
             if (!level.getWorldBorder().isWithinBounds(destination) || !level.hasChunkAt(destination)
@@ -107,13 +124,16 @@ public final class PortContractLifecycleTrial {
                     || !ref.binding().equals(candidate.getData(PortDataTypes.MAID_BINDING)))
                 throw new IllegalStateException("Native snapshot binding attachment lost or changed");
             candidate.moveTo(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5, 0, 0);
-            if (!ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
+            if (!validCarrier(carrier) || !ContractStackDataAccess.readContract(carrier).isEmpty()
+                || !Objects.equals(channels,carrier.get(PortDataTypes.CONTRACT_CHANNELS.get()))
+                || (channels==null && !ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
+                || (channels!=null && carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())))
                 throw new IllegalStateException("Carrier changed during transform");
             publicationAttempted = true;
             if (!level.addFreshEntity(candidate) || level.getEntity(ref.maid()) != candidate)
                 throw new IllegalStateException("World publication rejected");
-            store.completeManifest(ref, op);
-            carrier.remove(PortDataTypes.CONTRACT_REFERENCE.get());
+            store.completeManifest(ref, op, channels!=null);
+            if (channels==null) carrier.remove(PortDataTypes.CONTRACT_REFERENCE.get());
             return candidate;
         } catch (Exception failure) {
             LOG.warn("Native manifest rejected; snapshot retained unless publication committed", failure);
@@ -135,7 +155,7 @@ public final class PortContractLifecycleTrial {
     private static boolean validCarrier(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.getCount() == 1
                 && stack.is(ProbeItems.CONTRACT_CARRIER.get())
-                && !stack.has(PortDataTypes.CONTRACT_CHANNELS.get());
+                && !(stack.has(PortDataTypes.CONTRACT_CHANNELS.get()) && stack.has(PortDataTypes.CONTRACT_REFERENCE.get()));
     }
     private PortContractLifecycleTrial() {}
 }

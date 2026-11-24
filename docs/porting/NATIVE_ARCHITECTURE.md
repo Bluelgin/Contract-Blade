@@ -37,3 +37,6 @@ Java 17 shared source boundary, generic ability engine and server-only no-op ver
 
 ## Sealed-only channel execution
 NativeChannelService validates all external/intrinsic references against the server ledger and journal, and can select a sealed channel by immutable pointer. Resonance and the verification skill now share this resolver; mixed single-reference/channel carriers remain rejected. No intrinsic creation, item transfer, live recall or multi-channel manifestation is enabled. The server smoke exercises shared balance/cooldown, wrong-owner and stale-reference rejection. This is not full intrinsic spirit parity.
+
+## Selected channel lifecycle
+The selected channel can now manifest and retain a server-validated live ticket, recall into the same channel, rotate its ticket, and switch when all channels are sealed. Empty single carriers cannot capture a leased live channel. Sneak-use in air converts a sealed single reference or cycles channels. The smoke fixture exercises two actual TLM maids with separate inventories and resonance balances. Intrinsic origin creation and addon registration are not implemented: only the test constructs a multi-channel carrier. Cross-session recovery limitations still apply.

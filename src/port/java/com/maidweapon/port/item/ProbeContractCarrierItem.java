@@ -2,6 +2,10 @@ package com.maidweapon.port.item;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.maidweapon.port.tlm.PortContractLifecycleTrial;
+import com.maidweapon.port.storage.NativeChannelService;
+import com.maidweapon.port.init.PortDataTypes;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -34,6 +38,20 @@ public final class ProbeContractCarrierItem extends Item {
             ? "[Port Probe] Snapshot stored and entity removed."
             : "[Port Probe] Capture rejected. Check owner, carrier and authority log."));
         return stored ? InteractionResult.SUCCESS : InteractionResult.FAIL;
+    }
+
+    /** Sneak-right-click air converts the ordinary sealed carrier or cycles sealed channels. */
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand) {
+        ItemStack stack=player.getItemInHand(hand);
+        if(!player.isShiftKeyDown())return InteractionResultHolder.pass(stack);
+        if(level.isClientSide)return InteractionResultHolder.success(stack);
+        if(!(player instanceof ServerPlayer sp)||sp.getServer()==null
+            ||!NativeChannelService.cycle(sp.getServer(),player.getUUID(),stack))
+            return InteractionResultHolder.fail(stack);
+        var channels=stack.get(PortDataTypes.CONTRACT_CHANNELS.get());
+        player.displayClientMessage(Component.literal("[Port Probe] Channel: "+channels.selectedIntrinsic().map(Object::toString).orElse("external")),true);
+        return InteractionResultHolder.success(stack);
     }
 
     @Override

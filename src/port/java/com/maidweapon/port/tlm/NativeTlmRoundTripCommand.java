@@ -7,6 +7,8 @@ import com.maidweapon.port.domain.ability.AbilityEngine;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.storage.NativeContractStore;
 import com.maidweapon.port.storage.NativeChannelService;
+import com.maidweapon.port.storage.ContractChannels;
+import com.maidweapon.port.storage.ContractReference;
 import com.maidweapon.port.storage.NativeTransferJournal;
 import com.maidweapon.port.resonance.NativeResonanceService;
 import com.maidweapon.port.domain.resonance.ResonanceRules.Payment;
@@ -86,6 +88,7 @@ public final class NativeTlmRoundTripCommand {
             require(again.contains(EntityMaid.MAID_BAUBLE_INVENTORY_TAG), "Second snapshot lacks baubles");
             LOGGER.info("PORT_NATIVE_TLM_ROUNDTRIP_PASS: UUID, owner, 23 diamonds, bauble, favorability, XP, model, foreign custom data");
             verifyWorldTransfer(context.getLevel());
+            verifyChannelLifecycle(context.getLevel());
             LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
             return 1;
         } catch (Throwable failure) {
@@ -154,8 +157,7 @@ public final class NativeTlmRoundTripCommand {
                 "Sealed channel did not resolve the shared resonance account");
             require(NativeResonanceService.currentStored(level.getServer(),UUID.randomUUID(),sealedView)==-1,
                 "Foreign owner accessed sealed channel");
-            require(PortContractLifecycleTrial.manifest(level,pos.above(),OWNER,sealedView)==null,
-                "Sealed-only channel unexpectedly granted spawn");
+            // The sealed view now supports manifestation. Leave the original single-reference fixture intact.
             require(NativeAbilityService.executeProbe(level.getServer(),UUID.randomUUID(),carrier)==AbilityEngine.Result.UNAUTHORIZED,
                 "Foreign owner executed probe skill");
             require(NativeAbilityService.executeProbe(level.getServer(),OWNER,carrier)==AbilityEngine.Result.SUCCESS,
@@ -204,6 +206,57 @@ public final class NativeTlmRoundTripCommand {
         } finally {
             if (!published.isRemoved()) published.discard();
             if (restored != null && !restored.isRemoved()) restored.discard();
+        }
+    }
+
+    private static void verifyChannelLifecycle(net.minecraft.server.level.ServerLevel level) throws Exception {
+        var server=level.getServer();
+        var pos=level.getSharedSpawnPos().above(3);
+        var a=new EntityMaid(level);var b=new EntityMaid(level);
+        a.setOwnerUUID(OWNER);b.setOwnerUUID(OWNER);
+        a.getMaidInv().setStackInSlot(0,new ItemStack(Items.DIAMOND,7));
+        b.getMaidInv().setStackInSlot(0,new ItemStack(Items.EMERALD,11));
+        a.moveTo(pos,0,0);b.moveTo(pos.above(),0,0);
+        UUID au=a.getUUID(),bu=b.getUUID();
+        var carrier=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        var second=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        var spiritId=net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("maid_weapon_port_probe","fixture_spirit");
+        try {
+            require(level.addFreshEntity(a)&&level.addFreshEntity(b),"Two channel fixtures could not spawn");
+            require(PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",carrier),"External capture failed");
+            require(PortContractLifecycleTrial.capture(level,b,OWNER,"ProbeOwner",second),"Intrinsic fixture capture failed");
+            require(NativeChannelService.convertExternal(server,OWNER,carrier),"External conversion failed");
+            var old=carrier.get(PortDataTypes.CONTRACT_CHANNELS.get());
+            var intrinsic=second.get(PortDataTypes.CONTRACT_REFERENCE.get());
+            // Fixture-only assembly. No general intrinsic creation or origin authorization is implied.
+            carrier.set(PortDataTypes.CONTRACT_CHANNELS.get(),new ContractChannels(old.external(),
+                java.util.List.of(new ContractChannels.Intrinsic(spiritId,intrinsic)),java.util.Optional.empty()));
+            var stale=carrier.copy();
+            require(NativeResonanceService.payStored(server,OWNER,carrier,125,NativeResonanceService.newAttempt())==Payment.PAID,
+                "External pool payment failed");
+            a=PortContractLifecycleTrial.manifest(level,pos,OWNER,carrier);
+            require(a!=null&&au.equals(a.getUUID()),"External channel manifestation failed");
+            require(a.getMaidInv().getStackInSlot(0).getCount()==7,"External inventory lost");
+            require(!NativeChannelService.select(server,OWNER,carrier,java.util.Optional.of(spiritId)),"Switched while live");
+            require(PortContractLifecycleTrial.manifest(level,pos,OWNER,stale)==null,"Duplicate channel spawned");
+            require(!PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",new ItemStack(ProbeItems.CONTRACT_CARRIER.get())),
+                "Empty carrier stole live channel lease");
+            require(PortContractLifecycleTrial.capture(level,a,OWNER,"ProbeOwner",carrier),"External recall failed");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==875,"External pool reset");
+            require(NativeChannelService.selected(server,OWNER,stale)==null,"Old copied channel remained authorized");
+            require(NativeChannelService.cycle(server,OWNER,carrier),"Intrinsic channel selection failed");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==1000,"Intrinsic pool not independent");
+            b=PortContractLifecycleTrial.manifest(level,pos.above(),OWNER,carrier);
+            require(b!=null&&bu.equals(b.getUUID()),"Intrinsic fixture manifestation failed");
+            require(b.getMaidInv().getStackInSlot(0).getCount()==11,"Intrinsic inventory lost");
+            require(PortContractLifecycleTrial.capture(level,b,OWNER,"ProbeOwner",carrier),"Intrinsic recall failed");
+            require(NativeChannelService.cycle(server,OWNER,carrier),"Return to external failed");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==875,"External balance lost after switching");
+            require(NativeChannelService.selected(server,OWNER,second)==null,"Old intrinsic reference remained valid");
+            LOGGER.info("PORT_NATIVE_CHANNEL_LIFECYCLE_PASS: independent pools, real two-channel spawn/recall, stale tickets, live switch denial");
+        } finally {
+            var x=level.getEntity(au);if(x!=null)x.discard();
+            var y=level.getEntity(bu);if(y!=null)y.discard();
         }
     }
 

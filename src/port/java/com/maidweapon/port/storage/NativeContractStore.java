@@ -71,7 +71,19 @@ public final class NativeContractStore extends SavedData {
                 || (e.contains("operation") && operation == null)
                 || (!sealed && e.contains("snapshot")))
             throw new IllegalStateException("Corrupt contract transition");
+        if (e.contains("live_ticket") && (!e.hasUUID("live_ticket") || (phase != Phase.LIVE && phase != Phase.CAPTURING)))
+            throw new IllegalStateException("Invalid live carrier lease");
         return new View(maid, e.getUUID("owner"), e.getUUID("binding"), phase, ticket, operation);
+    }
+    /** Only the retained selected carrier may recall this published entity. */
+    public boolean hasLiveLease(UUID maid) {
+        View v=inspect(maid);
+        return v!=null && v.phase()==Phase.LIVE && entry(maid).hasUUID("live_ticket");
+    }
+    public boolean matchesLiveLease(ContractReference ref) {
+        View v=inspect(ref.maid());
+        return v!=null && v.phase()==Phase.LIVE && v.owner().equals(ref.owner()) && v.binding().equals(ref.binding())
+            && entry(ref.maid()).hasUUID("live_ticket") && entry(ref.maid()).getUUID("live_ticket").equals(ref.ticket());
     }
     public void registerLive(UUID maid, UUID owner, UUID binding) {
         if (inspect(maid) != null) throw new IllegalStateException("Duplicate maid");
@@ -131,7 +143,14 @@ public final class NativeContractStore extends SavedData {
         put(ref.maid(), next);
     }
     public void completeManifest(ContractReference ref, UUID op) {
+        completeManifest(ref, op, false);
+    }
+    public void completeManifest(ContractReference ref, UUID op, boolean retainCarrierLease) {
         finish(ref, op, Phase.MANIFESTING, Phase.LIVE);
+        if (retainCarrierLease) {
+            entry(ref.maid()).putUUID("live_ticket",ref.ticket());
+            setDirty();
+        }
     }
     public void abortManifestWithStoredEvidence(ContractReference ref, UUID op) {
         finish(ref, op, Phase.MANIFESTING, Phase.STORED);
@@ -143,6 +162,7 @@ public final class NativeContractStore extends SavedData {
         CompoundTag next = entry(ref.maid()).copy();
         next.putString("phase", nextPhase.name());
         next.remove("operation");
+        if (nextPhase == Phase.STORED) next.remove("live_ticket");
         if (nextPhase == Phase.LIVE) {
             next.remove("ticket");
             next.remove("snapshot");

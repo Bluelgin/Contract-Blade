@@ -60,6 +60,21 @@ class NativeContractStoreTest {
             maid, UUID.randomUUID(), binding, second.ticket())));
         assertEquals(snapshot(), reloaded.readStored(second));
     }
+    @Test void retainedLiveLeaseSurvivesAbortAndRotatesOnRecall() throws Exception {
+        var store=new NativeContractStore();store.registerLive(maid,owner,binding);
+        var op=UUID.randomUUID();var first=store.beginCapture(maid,owner,binding,op,snapshot());
+        store.completeCapture(first,op);
+        var manifest=UUID.randomUUID();store.beginManifest(first,manifest);store.completeManifest(first,manifest,true);
+        assertTrue(store.matchesLiveLease(first));
+        var retry=UUID.randomUUID();var next=store.beginCapture(maid,owner,binding,retry,snapshot());
+        store.abortCaptureWithLiveEvidence(next,retry);
+        assertTrue(store.matchesLiveLease(first));
+        var again=UUID.randomUUID();var newest=store.beginCapture(maid,owner,binding,again,snapshot());
+        store.completeCapture(newest,again);
+        assertFalse(store.matchesLiveLease(first));
+        assertThrows(IllegalStateException.class,()->store.readStored(first));
+        assertEquals(snapshot(),store.readStored(newest));
+    }
     @Test void unknownSchemaPreservedAndInvalidSnapshotDoesNotMutate() {
         var future = new CompoundTag();
         future.putInt("schema", 99);

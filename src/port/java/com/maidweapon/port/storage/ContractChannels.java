@@ -80,6 +80,15 @@ public record ContractChannels(Optional<ContractReference> external, List<Intrin
         if(selectedIntrinsic.isEmpty()) return external;
         return intrinsic.stream().filter(c->c.id().equals(selectedIntrinsic.get())).map(Intrinsic::reference).findFirst();
     }
+    /** Rotate only the selected ticket after a successful recall. */
+    public ContractChannels replaceSelected(ContractReference next) {
+        var prior=selected().orElseThrow();
+        if(!prior.maid().equals(next.maid()) || !prior.owner().equals(next.owner()) || !prior.binding().equals(next.binding()))
+            throw new IllegalArgumentException("Cannot replace channel identity");
+        if(selectedIntrinsic.isEmpty()) return new ContractChannels(Optional.of(next),intrinsic,selectedIntrinsic);
+        return new ContractChannels(external,intrinsic.stream().map(c->c.id().equals(selectedIntrinsic.get())
+            ?new Intrinsic(c.id(),next):c).toList(),selectedIntrinsic);
+    }
     /** Only prepares a selection; caller must verify all refs STORED and recall any live deployment first. */
     public ContractChannels select(Optional<ResourceLocation> id) {
         return new ContractChannels(external,intrinsic,id);
