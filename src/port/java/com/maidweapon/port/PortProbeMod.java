@@ -26,6 +26,9 @@ public final class PortProbeMod {
         PortDataTypes.ATTACHMENTS.register(bus);
         ProbeItems.ITEMS.register(bus);
         com.maidweapon.port.tlm.NativeIntrinsicSpirits.registerProbe();
+        com.maidweapon.port.ability.progression.NativeGrowthBootstrap.register();
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.ability.progression.ContractAbilityReloadListener::register);
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.ability.progression.ContractAbilityReloadListener::stopped);
         bus.addListener(PortStatusNetwork::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryDiagnostics::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryTick::post);
