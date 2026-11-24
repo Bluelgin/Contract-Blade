@@ -31,13 +31,7 @@ public final class NativeOathService {
     private record Session(ContractReference ref,EntityMaid maid){}
     private static final Map<ServerPlayer,Session> ACTIVE=new WeakHashMap<>();
     private static boolean ring(EntityMaid maid){
-        var slots=maid.getMaidBauble();
-        for(int i=0;i<slots.getSlots();i++){
-            var item=slots.getStackInSlot(i);
-            if(item.is(ProbeItems.ENDLESS_CONTRACT.get()))return false; // first ultimate wins
-            if(item.is(ProbeItems.OATH_RING.get()))return true;
-        }
-        return false;
+        return com.maidweapon.port.tlm.NativeBaubleCapabilities.live(maid)==com.maidweapon.port.tlm.NativeBaubleCapabilities.Ultimate.OATH;
     }
     private static ItemStack carrier(ServerPlayer p,Session session){
         var inv=p.getInventory();
@@ -90,9 +84,7 @@ public final class NativeOathService {
             }
             if(live==null){
                 if(NativeResonanceService.currentStored(server,p.getUUID(),held)<=0)return false;
-                var snapshot=NativeContractStore.get(server).readStored(stored);
-                var probe=new EntityMaid(p.serverLevel());probe.load(snapshot);
-                if(!stored.maid().equals(probe.getUUID())||!p.getUUID().equals(probe.getOwnerUUID())||!ring(probe))return false;
+                if(com.maidweapon.port.tlm.NativeBaubleCapabilities.stored(server,stored)!=com.maidweapon.port.tlm.NativeBaubleCapabilities.Ultimate.OATH)return false;
                 if(!held.has(com.maidweapon.port.init.PortDataTypes.CONTRACT_CHANNELS.get())
                     &&!NativeChannelService.convertExternal(server,p.getUUID(),held))return false;
                 live=PortContractLifecycleTrial.manifest(p.serverLevel(),p.blockPosition().relative(p.getDirection()),p.getUUID(),held);
@@ -113,7 +105,7 @@ public final class NativeOathService {
             if(current==0){end(p,true);return;}
             if(!valid(p,s)){end(p,false);return;}
             var step=OathRules.tick(ResonanceRules.DEFAULT.maximum(),OathRules.BURN,data.remainder(p.getUUID(),s.ref().maid()));
-            if(step.cost()>0&&NativeResonanceService.payLive(p.getServer(),p.getUUID(),s.maid(),
+            if(step.cost()>0&&NativeResonanceService.burnLive(p.getServer(),p.getUUID(),s.maid(),
                 Math.min(current,step.cost()),NativeResonanceService.newAttempt())!=Payment.PAID){end(p,false);return;}
             data.remainder(p.getUUID(),s.ref().maid(),step.remainder());
             if(NativeResonanceService.currentLive(p.getServer(),p.getUUID(),s.maid())==0)end(p,true);
@@ -140,6 +132,7 @@ public final class NativeOathService {
     public static void damage(LivingIncomingDamageEvent e){
         if(e.getEntity().level().isClientSide||e.isCanceled()||!(e.getAmount()>0)||!Float.isFinite(e.getAmount()))return;
         if(e.getEntity() instanceof EntityMaid maid&&empowered(maid)){e.setCanceled(true);return;}
+        try {
         double multiplier=1;
         var source=e.getSource();var actor=source.getEntity();
         boolean direct=actor!=null&&actor==source.getDirectEntity();
@@ -154,6 +147,7 @@ public final class NativeOathService {
         // Unknown mod target caps are not safe to amplify. Vanilla-only positive bonus for this probe.
         if(multiplier>1&&!net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(e.getEntity().getType()).getNamespace().equals("minecraft"))multiplier=1;
         e.setAmount((float)Math.min(Float.MAX_VALUE,e.getAmount()*multiplier));
+        }catch(RuntimeException rejected){ /* Unknown data must not grant an effect. */ }
     }
     private NativeOathService(){}
 }

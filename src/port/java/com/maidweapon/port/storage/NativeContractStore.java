@@ -129,6 +129,18 @@ public final class NativeContractStore extends SavedData {
         VerifiedTlmSnapshot.requireIdentity(snapshot, ref.owner(), ref.maid());
         return snapshot.copy();
     }
+    /** Narrow server-owned bauble view. A previously validated native snapshot
+     * need not be copied or inflated in full for an accessory capability check. */
+    public CompoundTag readStoredBaubles(ContractReference ref) {
+        require(ref,Phase.STORED);
+        var snapshot=entry(ref.maid()).getCompound("snapshot");
+        String key=com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid.MAID_BAUBLE_INVENTORY_TAG;
+        if(!snapshot.contains(key,Tag.TAG_COMPOUND))throw new IllegalStateException("Missing native baubles");
+        var baubles=snapshot.getCompound(key);
+        if(!baubles.contains("Size",Tag.TAG_INT)||baubles.getInt("Size")<0||baubles.getInt("Size")>64)
+            throw new IllegalStateException("Malformed bauble inventory");
+        return baubles.copy();
+    }
     public void completeCapture(ContractReference ref, UUID op) {
         finish(ref, op, Phase.CAPTURING, Phase.STORED);
     }

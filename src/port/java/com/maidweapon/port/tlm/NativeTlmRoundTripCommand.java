@@ -89,6 +89,7 @@ public final class NativeTlmRoundTripCommand {
             LOGGER.info("PORT_NATIVE_TLM_ROUNDTRIP_PASS: UUID, owner, 23 diamonds, bauble, favorability, XP, model, foreign custom data");
             verifyWorldTransfer(context.getLevel());
             verifyChannelLifecycle(context.getLevel());
+            verifyUltimateBaubles(context.getLevel());
             LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
             return 1;
         } catch (Throwable failure) {
@@ -266,6 +267,37 @@ public final class NativeTlmRoundTripCommand {
         }
     }
 
+    private static void verifyUltimateBaubles(net.minecraft.server.level.ServerLevel level) throws Exception {
+        var server=level.getServer();
+        var pos=level.getSharedSpawnPos().above(4);
+        var maid=new EntityMaid(level);maid.setOwnerUUID(OWNER);maid.moveTo(pos,0,0);
+        UUID id=maid.getUUID();
+        var carrier=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        var oath=new ItemStack(ProbeItems.OATH_RING.get());
+        var endless=new ItemStack(ProbeItems.ENDLESS_CONTRACT.get());
+        require(maid.getMaidBauble().isItemValid(0,oath)&&maid.getMaidBauble().isItemValid(0,endless),
+            "Native TLM ultimate baubles not registered");
+        require(maid.getMaidBauble().getSlots()>=2,"Fixture requires two native bauble slots");
+        maid.getMaidBauble().setStackInSlot(0,endless);
+        maid.getMaidBauble().setStackInSlot(1,oath);
+        try{
+            require(level.addFreshEntity(maid),"Ultimate fixture spawn failed");
+            require(PortContractLifecycleTrial.capture(level,maid,OWNER,"ProbeOwner",carrier),"Ultimate capture failed");
+            var first=NativeResonanceService.newAttempt();
+            require(NativeResonanceService.payStored(server,OWNER,carrier,100,first)==Payment.WAIVED,"Endless stored waiver missing");
+            require(NativeResonanceService.payStored(server,OWNER,carrier,100,first)==Payment.ALREADY_PAID,"Waived attempt settled twice");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==1000,"Waiver drained resource");
+            maid=PortContractLifecycleTrial.manifest(level,pos,OWNER,carrier);
+            require(maid!=null,"Ultimate manifest failed");
+            require(NativeResonanceService.payLive(server,OWNER,maid,100,NativeResonanceService.newAttempt())==Payment.WAIVED,"Endless live waiver missing");
+            require(NativeResonanceService.burnLive(server,OWNER,maid,100,NativeResonanceService.newAttempt())==Payment.PAID,"Upkeep bypassed payment");
+            maid.getMaidBauble().setStackInSlot(0,oath);maid.getMaidBauble().setStackInSlot(1,endless);
+            require(PortContractLifecycleTrial.capture(level,maid,OWNER,"ProbeOwner",carrier),"Ultimate recapture failed");
+            require(NativeResonanceService.payStored(server,OWNER,carrier,100,NativeResonanceService.newAttempt())==Payment.PAID,"Stale bauble cache or wrong slot order");
+            require(NativeResonanceService.currentStored(server,OWNER,carrier)==800,"Ultimate account continuity lost");
+            LOGGER.info("PORT_NATIVE_ULTIMATE_BAUBLES_PASS: native registration, first slot, stored/live waiver, burn bypass, cache rotation");
+        }finally{var current=level.getEntity(id);if(current!=null)current.discard();}
+    }
     private static void require(boolean accepted, String message) {
         if (!accepted) throw new IllegalStateException(message);
     }

@@ -33,7 +33,7 @@ public final class NativeAbilityService {
             && NativeResonanceService.currentStored(server,owner,carrier)>=0;
         var attempt=NativeResonanceService.newAttempt();
         return e.execute(PROBE,new AbilityEngine.Identity(owner,ref.maid(),ref.binding()),now,
-            authorized,()->true,()->NativeResonanceService.payStored(server,owner,carrier,e.definition(PROBE).cost(),attempt)==Payment.PAID,
+            authorized,()->true,()->{var payment=NativeResonanceService.payStored(server,owner,carrier,e.definition(PROBE).cost(),attempt);return payment==Payment.PAID||payment==Payment.WAIVED;},
             ()->true);
     }
     private NativeAbilityService(){}

@@ -53,19 +53,34 @@ public final class NativeResonanceService {
     public static int currentLive(MinecraftServer server,UUID owner,EntityMaid maid) {
         try{return current(server,live(server,owner,maid));}catch(RuntimeException rejected){return -1;}
     }
-    private static Payment pay(MinecraftServer server,Identity i,int cost,Attempt attempt) {
+    private static Payment pay(MinecraftServer server,Identity i,int cost,Attempt attempt,boolean waived) {
         if(i==null || attempt==null) return Payment.UNAUTHORIZED;
         if(attempt.completed) return Payment.ALREADY_PAID;
         if(cost<0) return Payment.INVALID_COST;
-        Payment p=NativeResonanceSavedData.get(server).pay(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,cost,false);
+        Payment p=NativeResonanceSavedData.get(server).pay(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,cost,waived);
         if(p==Payment.PAID || p==Payment.WAIVED) attempt.completed=true;
         return p;
     }
     public static Payment payStored(MinecraftServer server,UUID owner,ItemStack stack,int cost,Attempt attempt) {
-        try{return pay(server,stored(server,owner,stack),cost,attempt);}catch(RuntimeException rejected){return Payment.UNAUTHORIZED;}
+        try{
+            var ref=NativeChannelService.selected(server,owner,stack);
+            var i=ref==null?null:new Identity(ref.maid(),ref.owner(),ref.binding());
+            boolean waived=i!=null&&com.maidweapon.port.tlm.NativeBaubleCapabilities.stored(server,ref)==com.maidweapon.port.tlm.NativeBaubleCapabilities.Ultimate.ENDLESS;
+            return pay(server,i,cost,attempt,waived);
+        }catch(RuntimeException rejected){return Payment.UNAUTHORIZED;}
     }
     public static Payment payLive(MinecraftServer server,UUID owner,EntityMaid maid,int cost,Attempt attempt) {
-        try{return pay(server,live(server,owner,maid),cost,attempt);}catch(RuntimeException rejected){return Payment.UNAUTHORIZED;}
+        try{
+            var i=live(server,owner,maid);
+            boolean waived=i!=null&&(com.maidweapon.port.tlm.NativeBaubleCapabilities.live(maid)==com.maidweapon.port.tlm.NativeBaubleCapabilities.Ultimate.ENDLESS
+                ||com.maidweapon.port.oath.NativeOathService.burning(server,i.owner,i.maid,i.binding));
+            return pay(server,i,cost,attempt,waived);
+        }catch(RuntimeException rejected){return Payment.UNAUTHORIZED;}
+    }
+    /** Oath upkeep never consumes the general ability waiver. */
+    public static Payment burnLive(MinecraftServer server,UUID owner,EntityMaid maid,int cost,Attempt attempt){
+        try{return pay(server,live(server,owner,maid),cost,attempt,false);}
+        catch(RuntimeException rejected){return Payment.UNAUTHORIZED;}
     }
     public static int recoverStored(MinecraftServer server,UUID owner,ItemStack stack,int amount) {
         try {
