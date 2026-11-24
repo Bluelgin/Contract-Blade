@@ -4,6 +4,8 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.maidweapon.port.init.ProbeItems;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.storage.NativeContractStore;
+import com.maidweapon.port.resonance.NativeResonanceService;
+import com.maidweapon.port.domain.resonance.ResonanceRules.Payment;
 import com.maidweapon.port.storage.ContractIdentityFields;
 import com.maidweapon.port.storage.ContractStackDataAccess;
 import com.maidweapon.port.storage.LegacyMaidSnapshotCodec;
@@ -126,8 +128,19 @@ public final class NativeTlmRoundTripCommand {
                 "Persistent item codec changed foreign data");
             require(persisted.has(DataComponents.CUSTOM_NAME), "Persistent item codec lost custom name");
             ItemStack duplicatedItem = persisted.copy();
+            var attempt = NativeResonanceService.newAttempt();
+            require(NativeResonanceService.payStored(level.getServer(), OWNER, carrier, 125, attempt) == Payment.PAID,
+                "Native resonance payment rejected");
+            require(NativeResonanceService.payStored(level.getServer(), OWNER, duplicatedItem, 125, attempt) == Payment.ALREADY_PAID,
+                "Native resonance attempt charged twice");
+            require(NativeResonanceService.currentStored(level.getServer(), UUID.randomUUID(), carrier) == -1,
+                "Foreign owner obtained resonance");
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Native world manifestation rejected");
+            require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 875,
+                "Resonance balance lost between stored and live forms");
+            require(NativeResonanceService.currentStored(level.getServer(), OWNER, duplicatedItem) == -1,
+                "Stale carrier retained resonance authority");
             require(level.getEntity(unique) == restored, "Restored world entity identity lost");
             require(restored.getMaidInv().getStackInSlot(0).getCount() == 17,
                 "World transfer lost diamond count");
@@ -142,6 +155,8 @@ public final class NativeTlmRoundTripCommand {
                 "Old ticket became valid again after recapture");
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Second manifest refused");
+            require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 875,
+                "Recapture reset the resonance account");
             require(foreign.equals(ContractStackDataAccess.readRoot(carrier)), "Foreign data changed in lifecycle");
             require(carrier.has(DataComponents.CUSTOM_NAME), "Foreign vanilla component removed");
             require(restored.hasData(PortDataTypes.MAID_BINDING), "Binding attachment lost");

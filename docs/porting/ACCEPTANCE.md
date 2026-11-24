@@ -31,6 +31,8 @@ Unchecked = NOT demonstrated by source presence. Do not publish the probe.
 - [ ] Unauthorized clients cannot mutate contracts
 
 ## M3: feature parity
+- [ ] Native resonance unit + server integration on current head (payment, owner, duplicate attempt, live/stored balance continuity)
+- [ ] Native resonance tick, progression, config, oath/waiver, events, HUD and old pool migration
 - [ ] Resonance, oath, projection, mastery
 - [ ] White Fox, Black Fox and Akatsuki
 - [ ] Manka and independent ability systems

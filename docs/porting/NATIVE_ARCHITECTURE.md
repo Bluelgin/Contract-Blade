@@ -19,3 +19,6 @@ Do not merge into master, publish, or use in existing worlds.
 
 ## Acceptance
 Compile/test CI, real TLM capture/manifest, attachment round trip, no item snapshot, duplicate & stale ticket rejection, foreign components unchanged, then restart/crash and multiplayer fixtures. The new head has NOT been verified until its own CI succeeds. Smoke test uses authenticated loopback RCON instead of relying on Gradle stdin; the previous CI failure only established that success markers were absent, not the underlying cause.
+
+## Resonance domain increment
+Pure rules and a small independent native balance store now exist, with server authorization in stored/live forms and single-use payment attempts. The disposable world test exercises balance continuity across two captures. No automatic recovery ticks, oath waiver, client payload or gameplay connection yet. See PARITY_MATRIX.md for the full feature gap.
