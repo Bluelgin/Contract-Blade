@@ -11,10 +11,10 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 sourceSets {
     main {
-        java.setSrcDirs(['src/port/java'])
+        java.setSrcDirs(['src/port/java', 'src/shared/java'])
         resources.setSrcDirs(['src/port/resources'])
     }
-    test { java.setSrcDirs(['src/portTest/java']) }
+    test { java.setSrcDirs(['src/portTest/java', 'src/sharedTest/java']) }
 }
 repositories {
     mavenCentral()

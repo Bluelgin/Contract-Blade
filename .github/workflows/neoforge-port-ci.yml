@@ -29,6 +29,7 @@ jobs:
       - name: Check port isolation and inventory old APIs
         run: |
           python3 tools/porting/check_probe.py
+          python3 tools/porting/check_shared.py
           python3 tools/porting/audit_legacy.py
       - name: Compile NeoForge/TLM probe and run unit tests
         run: ./gradlew --no-daemon build --stacktrace
