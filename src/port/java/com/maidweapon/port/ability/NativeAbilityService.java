@@ -2,7 +2,7 @@ package com.maidweapon.port.ability;
 
 import com.maidweapon.port.domain.ability.AbilityEngine;
 import com.maidweapon.port.domain.resonance.ResonanceRules.Payment;
-import com.maidweapon.port.init.PortDataTypes;
+import com.maidweapon.port.storage.NativeChannelService;
 import com.maidweapon.port.resonance.NativeResonanceService;
 import java.util.Map;
 import java.util.UUID;
@@ -24,12 +24,12 @@ public final class NativeAbilityService {
     }
     public static AbilityEngine.Result executeProbe(MinecraftServer server,UUID owner,ItemStack carrier) {
         if(!server.isSameThread() || owner==null || carrier==null) return AbilityEngine.Result.UNAUTHORIZED;
-        var ref=carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
+        var ref=NativeChannelService.selected(server,owner,carrier);
         if(ref==null || !owner.equals(ref.owner())) return AbilityEngine.Result.UNAUTHORIZED;
         var e=engine(server);
         long now=server.overworld().getGameTime();
         e.prune(now);
-        BooleanSupplier authorized=()->ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get()))
+        BooleanSupplier authorized=()->ref.equals(NativeChannelService.selected(server,owner,carrier))
             && NativeResonanceService.currentStored(server,owner,carrier)>=0;
         var attempt=NativeResonanceService.newAttempt();
         return e.execute(PROBE,new AbilityEngine.Identity(owner,ref.maid(),ref.binding()),now,

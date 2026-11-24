@@ -3,7 +3,7 @@ package com.maidweapon.port.resonance;
 import com.maidweapon.port.domain.resonance.ResonanceAccumulator;
 import com.maidweapon.port.domain.resonance.ResonanceRules;
 import com.maidweapon.port.domain.resonance.SpiritVeinRules;
-import com.maidweapon.port.init.PortDataTypes;
+import com.maidweapon.port.storage.NativeChannelService;
 import com.maidweapon.port.storage.ContractReference;
 import com.maidweapon.port.storage.NativeSpiritVeinData;
 import java.util.Map;
@@ -21,7 +21,7 @@ public final class NativeRecoveryTick {
         if(!(event.getEntity() instanceof ServerPlayer player)||player.getServer()==null)return;
         var server=player.getServer();
         var carrier=player.getMainHandItem();
-        var ref=carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());
+        var ref=NativeChannelService.selected(server,player.getUUID(),carrier);
         if(ref==null){SESSIONS.remove(player);return;}
         int current=NativeResonanceService.currentStored(server,player.getUUID(),carrier);
         if(current<0){SESSIONS.remove(player);return;}

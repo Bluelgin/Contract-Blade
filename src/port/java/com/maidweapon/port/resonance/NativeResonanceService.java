@@ -10,6 +10,7 @@ import com.maidweapon.port.storage.ContractStackDataAccess;
 import com.maidweapon.port.storage.NativeContractStore;
 import com.maidweapon.port.storage.NativeResonanceSavedData;
 import com.maidweapon.port.storage.NativeTransferJournal;
+import com.maidweapon.port.storage.NativeChannelService;
 import java.util.UUID;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -30,14 +31,8 @@ public final class NativeResonanceService {
         catch(java.io.IOException rejected){return false;}
     }
     private static Identity stored(MinecraftServer server,UUID owner,ItemStack stack) {
-        if (!server.isSameThread() || owner==null || stack==null || stack.getCount()!=1
-            || stack.has(PortDataTypes.CONTRACT_CHANNELS.get()) || !stack.is(ProbeItems.CONTRACT_CARRIER.get()) || !ContractStackDataAccess.readContract(stack).isEmpty()) return null;
-        ContractReference ref=stack.get(PortDataTypes.CONTRACT_REFERENCE.get());
-        if (ref==null || !owner.equals(ref.owner())) return null;
-        var v=NativeContractStore.get(server).inspect(ref.maid());
-        if (v==null || v.phase()!=NativeContractStore.Phase.STORED || !owner.equals(v.owner())
-            || !ref.binding().equals(v.binding()) || !ref.ticket().equals(v.ticket())) return null;
-        return journalAllows(server,v.maid()) ? new Identity(v.maid(),v.owner(),v.binding()) : null;
+        ContractReference ref=NativeChannelService.selected(server,owner,stack);
+        return ref==null?null:new Identity(ref.maid(),ref.owner(),ref.binding());
     }
     private static Identity live(MinecraftServer server,UUID owner,EntityMaid maid) {
         if (!server.isSameThread() || owner==null || maid==null || maid.isRemoved() || !maid.isAlive()

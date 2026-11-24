@@ -6,6 +6,7 @@ import com.maidweapon.port.ability.NativeAbilityService;
 import com.maidweapon.port.domain.ability.AbilityEngine;
 import com.maidweapon.port.init.PortDataTypes;
 import com.maidweapon.port.storage.NativeContractStore;
+import com.maidweapon.port.storage.NativeChannelService;
 import com.maidweapon.port.storage.NativeTransferJournal;
 import com.maidweapon.port.resonance.NativeResonanceService;
 import com.maidweapon.port.domain.resonance.ResonanceRules.Payment;
@@ -145,12 +146,24 @@ public final class NativeTlmRoundTripCommand {
                 "Mixed carrier unexpectedly granted summon authority");
             require(NativeResonanceService.currentStored(level.getServer(),OWNER,mixedReloaded)==-1,
                 "Mixed carrier unexpectedly granted resonance authority");
+            var sealedView=mixedReloaded.copy();
+            sealedView.remove(PortDataTypes.CONTRACT_REFERENCE.get());
+            require(NativeChannelService.select(level.getServer(),OWNER,sealedView,java.util.Optional.empty()),
+                "Sealed external selection rejected");
+            require(NativeResonanceService.currentStored(level.getServer(),OWNER,sealedView)==1000,
+                "Sealed channel did not resolve the shared resonance account");
+            require(NativeResonanceService.currentStored(level.getServer(),UUID.randomUUID(),sealedView)==-1,
+                "Foreign owner accessed sealed channel");
+            require(PortContractLifecycleTrial.manifest(level,pos.above(),OWNER,sealedView)==null,
+                "Sealed-only channel unexpectedly granted spawn");
             require(NativeAbilityService.executeProbe(level.getServer(),UUID.randomUUID(),carrier)==AbilityEngine.Result.UNAUTHORIZED,
                 "Foreign owner executed probe skill");
             require(NativeAbilityService.executeProbe(level.getServer(),OWNER,carrier)==AbilityEngine.Result.SUCCESS,
                 "Unified ability execution failed");
             require(NativeAbilityService.executeProbe(level.getServer(),OWNER,carrier)==AbilityEngine.Result.COOLDOWN,
                 "Unified ability cooldown bypassed");
+            require(NativeAbilityService.executeProbe(level.getServer(),OWNER,sealedView)==AbilityEngine.Result.COOLDOWN,
+                "Channel view bypassed the shared ability cooldown");
             var attempt = NativeResonanceService.newAttempt();
             require(NativeResonanceService.payStored(level.getServer(), OWNER, carrier, 125, attempt) == Payment.PAID,
                 "Native resonance payment rejected");
@@ -158,8 +171,12 @@ public final class NativeTlmRoundTripCommand {
                 "Native resonance attempt charged twice");
             require(NativeResonanceService.currentStored(level.getServer(), UUID.randomUUID(), carrier) == -1,
                 "Foreign owner obtained resonance");
+            require(NativeResonanceService.currentStored(level.getServer(),OWNER,sealedView)==850,
+                "Channel view diverged from the authoritative pool");
             restored = PortContractLifecycleTrial.manifest(level, pos.above(), OWNER, carrier);
             require(restored != null, "Native world manifestation rejected");
+            require(NativeResonanceService.currentStored(level.getServer(),OWNER,sealedView)==-1,
+                "Stale sealed channel retained authority");
             require(journal.read(unique).getString("kind").equals("MANIFEST"), "Durable manifest intent missing");
             require(NativeResonanceService.currentLive(level.getServer(), OWNER, restored) == 850,
                 "Resonance balance lost between stored and live forms");

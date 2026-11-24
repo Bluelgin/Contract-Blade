@@ -34,3 +34,6 @@ Java 17 shared source boundary, generic ability engine and server-only no-op ver
 
 ## Restricted live reconciliation
 `contractportacklive <maid UUID>` (permission 4) reauthorizes only an observed, matching, committed LIVE contract from a prior MANIFEST intent. No entity/item writes, no spawn and no restoration from a backup; missing or mismatched loaded entity, pending/STORED phase, CAPTURE intent and corrupt records stay blocked. Acknowledgment is session-local, not a proof of global absence or full crash reconciliation. Administrator must verify the world/backup before use. Prior-session quarantine is cached to avoid repeatedly decompressing snapshots; successful explicit acknowledgment clears the cache. Normal restart of stored contracts remains blocked.
+
+## Sealed-only channel execution
+NativeChannelService validates all external/intrinsic references against the server ledger and journal, and can select a sealed channel by immutable pointer. Resonance and the verification skill now share this resolver; mixed single-reference/channel carriers remain rejected. No intrinsic creation, item transfer, live recall or multi-channel manifestation is enabled. The server smoke exercises shared balance/cooldown, wrong-owner and stale-reference rejection. This is not full intrinsic spirit parity.
