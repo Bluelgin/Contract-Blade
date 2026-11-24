@@ -23,6 +23,11 @@ public final class PortStatusNetwork {
         public static final StreamCodec<ByteBuf,Request> CODEC=StreamCodec.of((b,v)->{},b->new Request());
         @Override public Type<Request> type(){return TYPE;}
     }
+    public record OathToggle() implements CustomPacketPayload {
+        public static final Type<OathToggle> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"oath_toggle"));
+        public static final StreamCodec<ByteBuf,OathToggle> CODEC=StreamCodec.of((b,v)->{},b->new OathToggle());
+        @Override public Type<OathToggle> type(){return TYPE;}
+    }
     public record Status(boolean authorized,boolean manifested,int current,int maximum,UUID ticket) implements CustomPacketPayload {
         public static final Type<Status> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"status"));
         public Status {
@@ -43,9 +48,17 @@ public final class PortStatusNetwork {
     private static final Map<ServerPlayer,Long> LAST_REQUEST=new WeakHashMap<>();
     private static final Map<Player,Cached> CLIENT_CACHE=new WeakHashMap<>();
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar=event.registrar("2");
+        var registrar=event.registrar("3");
         registrar.playToServer(Request.TYPE,Request.CODEC,PortStatusNetwork::request);
+        registrar.playToServer(OathToggle.TYPE,OathToggle.CODEC,PortStatusNetwork::oath);
         registrar.playToClient(Status.TYPE,Status.CODEC,PortStatusNetwork::receive);
+    }
+    private static final Map<ServerPlayer,Long> LAST_OATH=new WeakHashMap<>();
+    private static void oath(OathToggle ignored,IPayloadContext context){
+        if(!(context.player() instanceof ServerPlayer p)||p.getServer()==null||!p.getServer().isSameThread())return;
+        long now=p.getServer().overworld().getGameTime();Long old=LAST_OATH.get(p);
+        if(old!=null&&now>=old&&now-old<10)return;LAST_OATH.put(p,now);
+        com.maidweapon.port.oath.NativeOathService.toggle(p);
     }
     private static void request(Request ignored,IPayloadContext context) {
         if(!(context.player() instanceof ServerPlayer player)||player.getServer()==null||!player.getServer().isSameThread())return;

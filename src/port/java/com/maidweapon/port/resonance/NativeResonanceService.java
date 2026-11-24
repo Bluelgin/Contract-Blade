@@ -70,7 +70,7 @@ public final class NativeResonanceService {
     public static int recoverStored(MinecraftServer server,UUID owner,ItemStack stack,int amount) {
         try {
             Identity i=stored(server,owner,stack);
-            return i==null || amount<0 ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
+            return i==null || amount<0 || com.maidweapon.port.oath.NativeOathService.burning(server,i.owner,i.maid,i.binding) ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
         } catch(RuntimeException rejected){return -1;}
     }
     public static int recoverLive(MinecraftServer server,UUID owner,EntityMaid maid,int amount) {

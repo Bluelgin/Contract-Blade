@@ -5,5 +5,12 @@
   "item.maid_weapon_port_probe.vein_two": "灵脉·流转（开发测试）",
   "item.maid_weapon_port_probe.vein_three": "灵脉·无尽（开发测试）",
   "maid_weapon_port_probe.hud.live": "显现 · %s / %s",
-  "maid_weapon_port_probe.hud.stored": "封存 · %s / %s"
+  "maid_weapon_port_probe.hud.stored": "封存 · %s / %s",
+  "item.maid_weapon_port_probe.oath_ring": "誓约之戒（测试）",
+  "item.maid_weapon_port_probe.endless_contract": "无尽契约（测试）",
+  "key.maid_weapon_port_probe.oath": "誓约显现",
+  "key.categories.maid_weapon_port_probe": "契约之刃（测试）",
+  "maid_weapon_port_probe.oath.started": "誓约显现",
+  "maid_weapon_port_probe.oath.ended": "誓约结束",
+  "maid_weapon_port_probe.oath.exhausted": "誓约反噬"
 }

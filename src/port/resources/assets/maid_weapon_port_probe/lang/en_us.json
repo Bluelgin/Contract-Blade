@@ -5,5 +5,12 @@
   "item.maid_weapon_port_probe.vein_two": "DEV ONLY: Flow Spirit Vein",
   "item.maid_weapon_port_probe.vein_three": "DEV ONLY: Endless Spirit Vein",
   "maid_weapon_port_probe.hud.live": "Manifested · %s / %s",
-  "maid_weapon_port_probe.hud.stored": "Stored · %s / %s"
+  "maid_weapon_port_probe.hud.stored": "Stored · %s / %s",
+  "item.maid_weapon_port_probe.oath_ring": "Oath Ring (DEV)",
+  "item.maid_weapon_port_probe.endless_contract": "Endless Contract (DEV)",
+  "key.maid_weapon_port_probe.oath": "Toggle Oath",
+  "key.categories.maid_weapon_port_probe": "Contract Blade Probe",
+  "maid_weapon_port_probe.oath.started": "Oath manifested",
+  "maid_weapon_port_probe.oath.ended": "Oath ended",
+  "maid_weapon_port_probe.oath.exhausted": "Oath exhausted"
 }

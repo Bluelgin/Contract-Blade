@@ -55,6 +55,7 @@ public final class PortContractLifecycleTrial {
                         || !v.binding().equals(live.getData(PortDataTypes.MAID_BINDING))) return false;
                 binding = v.binding();
             }
+            if(com.maidweapon.port.oath.NativeOathService.burning(level.getServer(),owner,maid,binding))return false;
             // Events receive a staged copy; foreign carrier modifications are not committed by this probe.
             CompoundTag snapshot = TlmNativeTransformBridge.captureSnapshot(live, carrier.copy());
             if (live.isRemoved() || level.getEntity(maid) != live || !owner.equals(live.getOwnerUUID())

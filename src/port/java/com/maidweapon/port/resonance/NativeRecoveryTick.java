@@ -38,6 +38,7 @@ public final class NativeRecoveryTick {
                     var ref=entry.reference();var live=entry.live();
                     if(seen.size()>=MAX_ACTIVE)break;
                     if(!seen.add(ref.maid()))continue;
+                    if(com.maidweapon.port.oath.NativeOathService.burning(server,ref.owner(),ref.maid(),ref.binding())){sessions.remove(ref.maid());continue;}
                     try{
                         int current=pool.current(ref.maid(),ref.owner(),ref.binding(),rules);
                         var session=sessions.get(ref.maid());
