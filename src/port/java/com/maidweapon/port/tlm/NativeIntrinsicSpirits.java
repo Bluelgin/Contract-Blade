@@ -23,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class NativeIntrinsicSpirits {
     public static final ResourceLocation PROBE_ID=ResourceLocation.fromNamespaceAndPath("maid_weapon_port_probe","spirit");
+    public static final ResourceLocation WHITE_TEST_ID=ResourceLocation.fromNamespaceAndPath("maid_weapon_port_probe","white_fox_test");
     public record Definition(ResourceLocation id,String displayName,BiPredicate<ServerPlayer,ItemStack> eligible,
                              Consumer<EntityMaid> initialize){
         public Definition{
@@ -40,6 +41,8 @@ public final class NativeIntrinsicSpirits {
         register(new Definition(PROBE_ID,"Contract Spirit",
             (p,carrier)->p.getMainHandItem().is(ProbeItems.SPIRIT_CRYSTAL.get())||p.getOffhandItem().is(ProbeItems.SPIRIT_CRYSTAL.get()),
             maid->{}));
+        register(new Definition(WHITE_TEST_ID,"White Fox (DEV)",
+            (p,carrier)->p.getMainHandItem().is(ProbeItems.WHITE_FOX_CRYSTAL.get())||p.getOffhandItem().is(ProbeItems.WHITE_FOX_CRYSTAL.get()),maid->{}));
     }
     public static boolean createForGrant(ServerPlayer p,ItemStack carrier,ResourceLocation id,UUID grant){
         if(p==null||p.getServer()==null||!p.getServer().isSameThread()||!p.isAlive()||p.isSpectator()

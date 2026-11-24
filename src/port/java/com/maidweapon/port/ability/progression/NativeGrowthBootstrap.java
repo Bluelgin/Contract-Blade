@@ -17,7 +17,7 @@ public final class NativeGrowthBootstrap {
     public static void register(){
         // Deliberately deny production routes until their actual victory/original-home/awakening
         // providers are migrated. Datapacks cannot turn these into authorization.
-        ContractAbilityRegistry.register(WhiteFoxBlessingGrowth.ID,(p,s)->false,WhiteFoxBlessingGrowth.FEATURES,
+        ContractAbilityRegistry.register(WhiteFoxBlessingGrowth.ID,(p,s)->selectedOrigin(p,s,"maid_weapon_port_probe:white_fox_test"),WhiteFoxBlessingGrowth.FEATURES,
             WhiteFoxBlessingGrowth.PARAMETERS,WhiteFoxBlessingGrowth.fallback());
         ContractAbilityRegistry.register(BlackFoxSwordCoreGrowth.ABILITY,(p,s)->false,BlackFoxSwordCoreGrowth.FEATURES,
             BlackFoxSwordCoreGrowth.PARAMETERS,BlackFoxSwordCoreGrowth.fallback());

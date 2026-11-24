@@ -32,6 +32,13 @@ public final class PortProbeMod {
         bus.addListener(PortStatusNetwork::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryDiagnostics::register);
         NeoForge.EVENT_BUS.addListener(NativeRecoveryTick::post);
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.fox.NativeWhiteFoxService::tick);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,com.maidweapon.port.fox.NativeWhiteFoxService::beforeDamage);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,com.maidweapon.port.fox.NativeWhiteFoxService::afterDamage);
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.fox.NativeWhiteFoxService::logout);
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.fox.NativeWhiteFoxService::death);
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.fox.NativeWhiteFoxService::dimension);
+        NeoForge.EVENT_BUS.addListener(com.maidweapon.port.fox.NativeWhiteFoxService::stop);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGHEST,NativeOathService::tick);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.HIGHEST,NativeOathService::damage);
         NeoForge.EVENT_BUS.addListener(NativeOathService::logout);

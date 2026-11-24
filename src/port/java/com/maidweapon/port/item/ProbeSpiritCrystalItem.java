@@ -11,13 +11,15 @@ import net.minecraft.network.chat.Component;
 import java.util.UUID;
 /** Dev-only real creation entry: crystal in one hand, carrier in other; consume on success. */
 public final class ProbeSpiritCrystalItem extends Item{
-    public ProbeSpiritCrystalItem(){super(new Properties().stacksTo(1));}
+    private final net.minecraft.resources.ResourceLocation origin;
+    public ProbeSpiritCrystalItem(){this(NativeIntrinsicSpirits.PROBE_ID);}
+    public ProbeSpiritCrystalItem(net.minecraft.resources.ResourceLocation origin){super(new Properties().stacksTo(1));this.origin=origin;}
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         var stack=player.getItemInHand(hand);
         if(level.isClientSide)return InteractionResultHolder.success(stack);
         if(!(player instanceof ServerPlayer p))return InteractionResultHolder.fail(stack);
         var carrier=p.getItemInHand(hand==InteractionHand.MAIN_HAND?InteractionHand.OFF_HAND:InteractionHand.MAIN_HAND);
-        if(!NativeIntrinsicSpirits.createForGrant(p,carrier,NativeIntrinsicSpirits.PROBE_ID,UUID.randomUUID()))
+        if(!NativeIntrinsicSpirits.createForGrant(p,carrier,origin,UUID.randomUUID()))
             return InteractionResultHolder.fail(stack);
         if(!p.getAbilities().instabuild)stack.shrink(1);
         p.displayClientMessage(Component.translatable("maid_weapon_port_probe.spirit.created"),true);

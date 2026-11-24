@@ -14,5 +14,7 @@
   "maid_weapon_port_probe.oath.ended": "Oath ended",
   "maid_weapon_port_probe.oath.exhausted": "Oath exhausted",
   "item.maid_weapon_port_probe.spirit_crystal": "Spirit Crystal (DEV)",
-  "maid_weapon_port_probe.spirit.created": "Intrinsic spirit bound"
+  "maid_weapon_port_probe.spirit.created": "Intrinsic spirit bound",
+  "item.maid_weapon_port_probe.white_fox_crystal": "White Fox Crystal (DEV)",
+  "maid_weapon_port_probe.white.rescue": "Fox's Oath"
 }

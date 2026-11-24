@@ -23,5 +23,6 @@ public final class ProbeItems {
     public static final DeferredItem<Item> OATH_RING=ITEMS.registerSimpleItem("oath_ring",new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> ENDLESS_CONTRACT=ITEMS.registerSimpleItem("endless_contract",new Item.Properties().stacksTo(1));
     public static final DeferredItem<com.maidweapon.port.item.ProbeSpiritCrystalItem> SPIRIT_CRYSTAL=ITEMS.register("spirit_crystal",com.maidweapon.port.item.ProbeSpiritCrystalItem::new);
+    public static final DeferredItem<com.maidweapon.port.item.ProbeSpiritCrystalItem> WHITE_FOX_CRYSTAL=ITEMS.register("white_fox_crystal",()->new com.maidweapon.port.item.ProbeSpiritCrystalItem(com.maidweapon.port.tlm.NativeIntrinsicSpirits.WHITE_TEST_ID));
     private ProbeItems() {}
 }
