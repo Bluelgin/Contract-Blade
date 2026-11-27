@@ -62,6 +62,7 @@ for name, flags, markers in fixtures:
         missing = [marker for marker in markers if marker not in content]
         if result.returncode or missing or '_FAIL' in content:
             failed.append(name); print(f'{name}: FAIL missing={missing}; {log}',flush=True)
+            print('\n'.join(content.splitlines()[-120:]), flush=True)
         else:
             print(f'{name}: PASS ({", ".join(markers)})',flush=True)
             if name in ['resonance','recovery','blessing','akatsuki-provider']:
