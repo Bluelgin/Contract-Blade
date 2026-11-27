@@ -148,24 +148,43 @@ public final class NativeWhiteFoxService {
             }
         }
         if(!(e.getEntity() instanceof ServerPlayer p)||!p.isAlive()||e.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY))return;
-        var c=context(p);if(c==null)return;var f=c.profile();var state=state(p);float amount=e.getNewDamage();
+        var c=context(p);if(c==null)return;
+        // Pre is BEFORE absorption in NeoForge 1.21.1. Run the old final-health
+        // defense at the absorption boundary, after other reduction callbacks.
+        // Keep absorption consumption separate from our reduction; never set health.
+        e.getContainer().addModifier(net.neoforged.neoforge.common.damagesource.DamageContainer.Reduction.ABSORPTION,
+            (container, absorption)->WhiteFoxDamageBoundary.afterAbsorption(container,absorption,damage->{
+                var previousShield=p.getEffect(MobEffects.ABSORPTION);
+                float defended=defend(p,c,(float)damage);
+                // Vanilla consumes the already determined absorption AFTER this
+                // callback. A replacement oath shield belongs to the next hit;
+                // compensate only our newly installed effect for that pending
+                // consumption, so the old shield's cost is not charged twice.
+                var nextShield=p.getEffect(MobEffects.ABSORPTION);
+                if(nextShield!=null&&nextShield!=previousShield&&absorption>0)
+                    p.setAbsorptionAmount(p.getAbsorptionAmount()+absorption);
+                return defended;
+            }));
+    }
+    private static float defend(ServerPlayer p,Context c,float amount){
+        var f=c.profile();var state=state(p);
         if(f.has("blessing_guard")&&state.consume(GUARD,now(p),f.ticks("guard_cooldown"))){
             amount=f.guardedDamage(amount);cue(p);
             if(f.has("blessing_mobility"))state.move(now(p),f.ticks("move_ticks"));
             if(f.has("blessing_lantern"))shield(p,f.ticks("guard_shield_ticks"));refresh(p,c);
         }
         if(f.has("blessing_oath")&&state.protectedNow(now(p)))amount*=1-(float)f.number("protection_reduction");
-        e.setNewDamage(amount);
         if(amount>=p.getHealth()){
             if(!f.has("blessing_oath")||p.getMainHandItem().is(Items.TOTEM_OF_UNDYING)||p.getOffhandItem().is(Items.TOTEM_OF_UNDYING)
-                ||!WhiteFoxBlessingCooldownData.get(p.getServer()).consume(p.getUUID(),now(p),f.ticks("oath_cooldown")))return;
-            e.setNewDamage(Math.max(0,p.getHealth()-1));
+                ||!WhiteFoxBlessingCooldownData.get(p.getServer()).consume(p.getUUID(),now(p),f.ticks("oath_cooldown")))return amount;
+            amount=Math.max(0,p.getHealth()-1);
             if(charge(p,c,SpiritCosts.Action.WHITE_OATH)){
                 cleanse(p);clearShield(p);shield(p,f.ticks("oath_shield_ticks"));state.protect(now(p),f.ticks("protection_ticks"));
             }
             p.getServer().overworld().getDataStorage().save();cue(p);
             p.displayClientMessage(Component.translatable("maid_weapon_port_probe.white.rescue"),true);
         }else crisis(p,c,p.getHealth()-amount);
+        return amount;
     }
     public static void afterDamage(LivingDamageEvent.Post e){
         if(e.getEntity().level().isClientSide||!(e.getNewDamage()>0)||!Float.isFinite(e.getNewDamage()))return;
