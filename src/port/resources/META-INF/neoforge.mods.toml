@@ -6,7 +6,7 @@ modId = "maid_weapon_port_probe"
 version = "0.0.0-port-dev"
 displayName = "Contract Blade 1.21.1 Port API Probe (NOT FOR PLAY)"
 authors = "_Cazs_"
-description = '''Internal porting probe. No gameplay items. NEVER install in an existing Contract Blade world.'''
+description = '''Internal development fixtures for native data, lifecycle and partial abilities. NOT a complete gameplay port. NEVER install in an existing Contract Blade world.'''
 [[dependencies.maid_weapon_port_probe]]
 modId = "neoforge"
 type = "required"
