@@ -16,5 +16,11 @@
   "item.maid_weapon_port_probe.spirit_crystal": "剑灵结晶（开发测试）",
   "maid_weapon_port_probe.spirit.created": "固有剑灵已缔结",
   "item.maid_weapon_port_probe.white_fox_crystal": "白狐结晶（开发测试）",
-  "maid_weapon_port_probe.white.rescue": "狐之誓约"
+  "maid_weapon_port_probe.white.rescue": "狐之誓约",
+  "maid_weapon_port_probe.carrier.recalled": "女仆已归刃",
+  "maid_weapon_port_probe.carrier.recall_failed": "女仆归刃被拒绝",
+  "maid_weapon_port_probe.carrier.captured": "女仆已封存",
+  "maid_weapon_port_probe.carrier.capture_failed": "女仆捕获被拒绝",
+  "maid_weapon_port_probe.carrier.manifested": "女仆已显现",
+  "maid_weapon_port_probe.carrier.manifest_failed": "女仆显现被拒绝"
 }

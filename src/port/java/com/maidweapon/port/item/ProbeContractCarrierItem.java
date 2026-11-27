@@ -32,11 +32,12 @@ public final class ProbeContractCarrierItem extends Item {
         if (player.level().isClientSide) return InteractionResult.SUCCESS;
         if (!(player instanceof ServerPlayer serverPlayer)
                 || !(player.level() instanceof ServerLevel level)) return InteractionResult.FAIL;
+        if(!serverPlayer.isAlive()||serverPlayer.isSpectator())return InteractionResult.FAIL;
         boolean stored = PortContractLifecycleTrial.capture(level, maid,
             player.getUUID(), player.getScoreboardName(), stack);
-        serverPlayer.sendSystemMessage(Component.literal(stored
-            ? "[Port Probe] Snapshot stored and entity removed."
-            : "[Port Probe] Capture rejected. Check owner, carrier and authority log."));
+        serverPlayer.sendSystemMessage(Component.translatable(stored
+            ? "maid_weapon_port_probe.carrier.captured"
+            : "maid_weapon_port_probe.carrier.capture_failed"));
         return stored ? InteractionResult.SUCCESS : InteractionResult.FAIL;
     }
 
@@ -44,7 +45,17 @@ public final class ProbeContractCarrierItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand) {
         ItemStack stack=player.getItemInHand(hand);
-        if(!player.isShiftKeyDown())return InteractionResultHolder.pass(stack);
+        if(!player.isShiftKeyDown()) {
+            if(level.isClientSide)return NativeChannelService.displayReference(stack)==null
+                ?InteractionResultHolder.pass(stack):InteractionResultHolder.success(stack);
+            if(!(player instanceof ServerPlayer sp)||!sp.isAlive()||sp.isSpectator())
+                return InteractionResultHolder.fail(stack);
+            var live=NativeChannelService.selectedLive(sp.getServer(),sp.getUUID(),stack);
+            if(live==null)return InteractionResultHolder.pass(stack);
+            boolean recalled=PortContractLifecycleTrial.capture(sp.serverLevel(),live,sp.getUUID(),sp.getScoreboardName(),stack);
+            sp.displayClientMessage(Component.translatable(recalled?"maid_weapon_port_probe.carrier.recalled":"maid_weapon_port_probe.carrier.recall_failed"),true);
+            return recalled?InteractionResultHolder.success(stack):InteractionResultHolder.fail(stack);
+        }
         if(level.isClientSide)return InteractionResultHolder.success(stack);
         if(!(player instanceof ServerPlayer sp)||sp.getServer()==null
             ||!NativeChannelService.cycle(sp.getServer(),player.getUUID(),stack))
@@ -61,12 +72,20 @@ public final class ProbeContractCarrierItem extends Item {
         if (player.level().isClientSide) return InteractionResult.SUCCESS;
         if (!(player instanceof ServerPlayer serverPlayer)
                 || !(player.level() instanceof ServerLevel level)) return InteractionResult.FAIL;
+        if(!serverPlayer.isAlive()||serverPlayer.isSpectator())return InteractionResult.FAIL;
+        // Ordinary captures start with the original single reference. Promote it
+        // through the authority-checked adapter before publishing a live lease,
+        // so the same carrier retains its identity for HUD, oath and recall.
+        var stack=context.getItemInHand();
+        if(stack.has(PortDataTypes.CONTRACT_REFERENCE.get())
+            &&!NativeChannelService.convertExternal(level.getServer(),player.getUUID(),stack))
+            return InteractionResult.FAIL;
         BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
         EntityMaid manifested = PortContractLifecycleTrial.manifest(
             level, pos, serverPlayer.getUUID(), context.getItemInHand());
-        serverPlayer.sendSystemMessage(Component.literal(manifested != null
-            ? "[Port Probe] Candidate entity published; carrier snapshot consumed."
-            : "[Port Probe] Manifest rejected; no duplicate spawn authorized."));
+        serverPlayer.sendSystemMessage(Component.translatable(manifested != null
+            ? "maid_weapon_port_probe.carrier.manifested"
+            : "maid_weapon_port_probe.carrier.manifest_failed"));
         return manifested != null ? InteractionResult.SUCCESS : InteractionResult.FAIL;
     }
 }

@@ -9,7 +9,7 @@ Forge 列表示正式源码的实际实现，不代表本轮已经重新验证�
 | 功能 | Forge 1.20.1 实现证据 | NeoForge 1.21.1 状态与验收缺口 |
 |---|---|---|
 | 契约缔结台及 GUI | `init/ModBlocks`, `ModMenus`, 配方序列化器与 shrine 模块 | **未移植**；缺正式 block/menu/recipe 注册 |
-| 普通女仆捕获/显现/归刃 | `system/contract/ContractLifecycleService` | **部分**；`tlm/PortContractLifecycleTrial` 与开发载体交互；需正式入口和完整权限验收 |
+| 普通女仆捕获/显现/归刃 | `system/contract/ContractLifecycleService` | **部分**；`tlm/PortContractLifecycleTrial` 与开发载体交互；普通载体显现自动转为通道引用，保留 live HUD，支持右键空气归刃；需正式入口和完整权限验收 |
 | UUID、主人与账本权威 | `ContractCarrierData`, `ContractRecoveryJournal` | **核心未验证**；`storage/NativeContractStore`, 引用组件、实体附件、快照与事务日志；需本轮启动/重启验证 |
 | 多契约通道 | `ContractChannelStorage`, `IntrinsicSpiritOriginData` | **部分**；`NativeChannelService` 支持封存选择和开发物品循环；显现中拒绝切换，缺正式 UI |
 | 内置剑灵来源 | `IntrinsicSpiritOriginData`、白狐/黑狐祭坛获得路径 | **部分**；确定性 grant 账本与开发预设；水晶不是正式获得方式 |

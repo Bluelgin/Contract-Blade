@@ -158,6 +158,7 @@ boot_and_verify("contractportverify", {
     "PORT_NATIVE_TLM_WORLD_TRANSFER_PASS",
     "PORT_NATIVE_CHANNEL_LIFECYCLE_PASS",
     "PORT_NATIVE_ULTIMATE_BAUBLES_PASS",
+    "PORT_NATIVE_PLAYER_CARRIER_PASS",
     "PORT_NATIVE_RESTART_FIXTURE_PREPARED",
 })
 boot_and_verify("contractportverifyrestart", {"PORT_NATIVE_RESTART_PASS"})

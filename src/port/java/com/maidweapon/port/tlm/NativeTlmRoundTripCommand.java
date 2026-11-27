@@ -92,6 +92,7 @@ public final class NativeTlmRoundTripCommand {
             verifyWorldTransfer(context.getLevel());
             verifyChannelLifecycle(context.getLevel());
             verifyUltimateBaubles(context.getLevel());
+            verifyCarrierInteraction(context.getLevel());
             prepareRestartFixture(context.getLevel());
             require(com.maidweapon.port.recovery.NativeCheckpointService.checkpoint(context.getServer())>0,"No sealed checkpoints persisted");
             LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
@@ -99,6 +100,46 @@ public final class NativeTlmRoundTripCommand {
         } catch (Throwable failure) {
             LOGGER.error("PORT_NATIVE_TLM_ROUNDTRIP_FAIL: {}", failure.toString(), failure);
             return 0;
+        }
+    }
+
+    /** Exercise the actual item entry points, not just the lifecycle service. */
+    private static void verifyCarrierInteraction(net.minecraft.server.level.ServerLevel level) throws Exception {
+        var player=net.neoforged.neoforge.common.util.FakePlayerFactory.get(level,
+            new com.mojang.authlib.GameProfile(UUID.randomUUID(),"CarrierFixture"));
+        player.getInventory().clearContent();player.getInventory().selected=0;
+        var stack=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        player.getInventory().setItem(0,stack);
+        var maid=new EntityMaid(level);maid.setOwnerUUID(player.getUUID());
+        var base=level.getSharedSpawnPos().above(20);
+        var id=maid.getUUID();maid.moveTo(base.getX()+.5,base.getY(),base.getZ()+.5,0,0);
+        level.getChunkAt(maid.blockPosition());
+        require(level.addFreshEntity(maid)&&level.getEntity(id)==maid,"Player fixture maid not published in loaded chunk");
+        require(player.isAlive()&&!player.isSpectator(),"Player fixture must be alive and non-spectating");
+        var item=ProbeItems.CONTRACT_CARRIER.get();
+        var hand=net.minecraft.world.InteractionHand.MAIN_HAND;
+        try {
+            require(item.interactLivingEntity(stack,player,maid,hand).consumesAction(),"Item capture failed");
+            require(NativeResonanceService.payStored(level.getServer(),player.getUUID(),stack,125,NativeResonanceService.newAttempt())==Payment.PAID,"Item fixture payment failed");
+            var stale=stack.copy();
+            var before=NativeChannelService.displayReference(stack);
+            var pos=base.offset(1,0,1);
+            level.getChunkAt(pos);
+            var hit=new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(pos.below()),
+                net.minecraft.core.Direction.UP,pos.below(),false);
+            require(item.useOn(new net.minecraft.world.item.context.UseOnContext(player,hand,hit)).consumesAction(),"Item manifest failed");
+            require(before.equals(NativeChannelService.displayReference(stack)),"Item manifest lost display identity");
+            var live=NativeChannelService.selectedLive(level.getServer(),player.getUUID(),stack);
+            require(live!=null&&live.getUUID().equals(id),"Item live lease unavailable to HUD/oath");
+            require(NativeResonanceService.currentLive(level.getServer(),player.getUUID(),live)==875,"Live HUD balance reset or unavailable");
+            require(item.use(level,player,hand).getResult().consumesAction(),"Air recall failed");
+            require(level.getEntity(id)==null&&NativeChannelService.selected(level.getServer(),player.getUUID(),stack)!=null,"Air recall left entity or lost authority");
+            require(NativeChannelService.selected(level.getServer(),player.getUUID(),stale)==null,"Pre-manifest carrier copy revived");
+            require(NativeResonanceService.currentStored(level.getServer(),player.getUUID(),stack)==875,"Recall reset resonance");
+            LOGGER.info("PORT_NATIVE_PLAYER_CARRIER_PASS: item capture, persistent live identity, HUD balance, air recall, stale copy rejected");
+        } finally {
+            player.getInventory().clearContent();
+            var remaining=level.getEntity(id);if(remaining!=null)remaining.discard();
         }
     }
 
