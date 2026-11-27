@@ -43,6 +43,7 @@ jobs:
             build/reports/tests/
             build/test-results/
             build/libs/*PORT-PROBE*
+            docs/porting/evidence/2026-11-27/
           retention-days: 7
           if-no-files-found: warn
 

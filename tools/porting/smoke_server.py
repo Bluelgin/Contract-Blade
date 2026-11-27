@@ -24,6 +24,10 @@ RCON_PASSWORD = secrets.token_hex(24)
 (WORLD / "server.properties").write_text(
     "online-mode=false\n"
     "server-ip=127.0.0.1\n"
+    "level-type=minecraft:flat\n"
+    "generate-structures=false\n"
+    "view-distance=2\n"
+    "simulation-distance=2\n"
     "enable-rcon=true\n"
     f"rcon.port={RCON_PORT}\n"
     f"rcon.password={RCON_PASSWORD}\n"
