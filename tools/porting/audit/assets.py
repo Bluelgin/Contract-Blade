@@ -96,4 +96,29 @@ with (a.output/'PROCEDURAL_VISUALS.csv').open('w',newline='',encoding='utf-8-sig
   w.writerow([relative,hashlib.sha256(path.read_bytes()).hexdigest(),';'.join(ids),'需迁移事件/Buffer/RenderType/实体与网络触发；旧源集不进入 NeoForge 编译','参照具体技能/GUI运行链及实机画面；文件存在不等于行为接通'])
 meta={str(j):hashlib.sha256(j.read_bytes()).hexdigest() for j in (a.master_jar,a.neo_jar,a.release_jar)}
 (a.output/'JAR_PROVENANCE.json').write_text(json.dumps(meta,indent=2)+'\n')
+# Keep exact source arguments (including custom ranges/defaults), not guessed evaluated values.
+with (a.output/'CONFIG_GAPS.csv').open('w',newline='',encoding='utf-8-sig') as f:
+ w=csv.writer(f,lineterminator='\n');w.writerow(['source','line','field_symbol','key','declaration_context_source','definition_arguments_source','old_usage_candidates','neo_status','acceptance'])
+ for path in sorted((a.master/'src/main/java/com/maidweapon/common').glob('*Config.java')):
+  body=path.read_text()
+  for match in re.finditer(r'\.define(?:InRange|ListAllowEmpty|List|Enum)?\s*\(',body):
+   pos=match.end();end=pos;depth=1;quoted=False;escaped=False
+   while end<len(body) and depth:
+    char=body[end]
+    if quoted:
+     if escaped:escaped=False
+     elif char=='\\':escaped=True
+     elif char=='"':quoted=False
+    elif char=='"':quoted=True
+    elif char=='(':depth+=1
+    elif char==')':depth-=1
+    end+=1
+   arguments=body[pos:end-1]
+   key=re.match(r'\s*"([^"\n]+)"',arguments)
+   # Comments may contain semicolons; don't split a declaration on their punctuation.
+   symbols=list(re.finditer(r'\b([A-Z][A-Z0-9_]+)\s*=',body[:match.start()]))
+   symbol=symbols[-1].group(1) if symbols else ''
+   context=body[symbols[-1].start():match.start()] if symbols else ''
+   candidates=';'.join(name for name,text in texts if name!=path.relative_to(a.master).as_posix() and symbol and path.stem+'.'+symbol in text)
+   w.writerow([path.relative_to(a.master),body.count('\n',0,match.start())+1,symbol,key.group(1) if key else '动态key；看原定义',context,arguments,candidates or '需追踪getter/静态导入；非完整可达性证明','未建立同键原生配置入口；共享默认规则不等于用户配置已迁移','核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为'])
 print(f'Wrote {len(rows)} entries (including nested model-pack entries); no completion percentage inferred.')

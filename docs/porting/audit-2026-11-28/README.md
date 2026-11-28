@@ -15,6 +15,7 @@ NeoForge 的 `sourceSets` 只编译 `src/port/java`、`src/shared/java`，只打
 - [功能完整链路](FEATURE_FLOW_AUDIT.md)：按正常玩家操作追踪入口、执行、存储/网络、显示和验收；与 [主功能矩阵](../PARITY_MATRIX.md) 配合。
 - [实际注册、Mixin与联动边界](REGISTRY_AND_COMPAT.md)：旧版运行快照与新平台源码对照，列出原有桥接Mod和Boss专用适配。
 - [安全、数据与性能边界](SAFETY_AND_PERFORMANCE.md)：区分普通支付setDirty与转移日志fsync、正常重启与崩溃安全、现有网络与正式同步缺口。
+- [配置逐项缺口](CONFIG_GAPS.csv)：八个实际配置类中的定义参数原文、字段/键与旧调用候选；不把共享默认值当成已迁移用户配置。
 - [美术与资源审计](ART_AUDIT.md)：当前运行、历史源素材、撤下内容及许可边界。
 - [逐文件清单](ASSET_INVENTORY.csv)：每个资源和模型 ZIP 内部文件的来源、ID、哈希、三种 JAR 分发状态、引用候选、许可、缺口及验收方法。
 - [源素材/历史清单](AUTHORING_INVENTORY.csv)、[代码生成视觉清单](PROCEDURAL_VISUALS.csv)：不把仓库预览、源文件或 Java 绘图遗漏，也不整目录发布。

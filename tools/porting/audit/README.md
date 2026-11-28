@@ -15,4 +15,6 @@ The audit walks resources and authoring files directly, including files hidden b
 
 Literal string references are candidates, **not reachability analysis**: dynamic ResourceLocations, framework conventions and generated geometry require manual source tracing. Class-name based procedural visuals are likewise an index, not proof of completeness. The Markdown flow audit records reviewed runtime chains and explicit remaining evidence. Classification of history uses the master's art/README and known distribution exclusions, with unresolved source material retained as such rather than declared shipped.
 
+`CONFIG_GAPS.csv` retains the original definition arguments and declaration comments from the eight real common config classes, plus field/key and old usage candidates. It does not evaluate Java expressions or infer config push/pop hierarchy. Deprecated compatibility keys need actual getter/call-site review; declaration alone is not a request to revive an inactive mechanic. Neo's shared defaults do not constitute a custom-config adapter.
+
 `visual/` contains opt-in isolated native-client prototypes, not product source. See its README before running. No new art is generated and no whole art/source directory is packaged.

@@ -24,7 +24,8 @@ if git('rev-parse', 'HEAD') != expected:
 if subprocess.check_output(['git', '-C', str(master), 'rev-parse', 'HEAD'], text=True).strip() != 'd1429a46492783c4e773d6ccb17b606ca48f5113':
     p.error('unexpected master resource source')
 here = Path(__file__).resolve().parent
-runtime = target / 'run/tlm_custom_pack/contract-fox-1.0.1.zip'
+pack_name = 'contract-fox-1.0.1.zip' if a.platform == 'neo' else 'contract-blade-fox-1.0.0.zip'
+runtime = target / 'run/tlm_custom_pack' / pack_name
 if runtime.exists():
     p.error('runtime model pack already exists; refusing to replace a user pack')
 name = 'NeoVisualAudit' if a.platform == 'neo' else 'ForgeVisualAudit'

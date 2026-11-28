@@ -12,10 +12,12 @@
 |世界|旧版原生 fixture 副本，仅在1.20.1运行|一次性 dedicated 测试世界，服务器为不含覆盖层的#38|
 |画面|1180×812窗口，GUI scale2，云桌面软件OpenGL|同左；不是实体机GPU兼容性矩阵|
 |截图|[重载完成后](evidence/forge-models-after-reload.png)|[重载前](evidence/neo-clean-before-reload.png)、[重载后](evidence/neo-clean-after-reload.png)|
-|原始桌面短录屏|[12秒](evidence/forge-native-motion.mp4)，录制时包含资源重载画面，不单独证明重载完成|[重载后12秒](evidence/neo-native-motion.mp4)，覆盖至少三个初醒图标完整周期|
+|原始桌面短录屏|[12秒](evidence/forge-native-motion.mp4)，录制时包含资源重载画面，不单独证明重载完成|[重载后12秒](evidence/neo-native-motion.mp4)，足以观察初醒图标的完整4秒周期|
 |运行日志|[forge-client.log.gz](evidence/forge-client.log.gz)|[neo-client.log.gz](evidence/neo-client.log.gz)|
 
 屏幕上始终标出 `AUDIT PROTOTYPE - original assets, no production gameplay`。两只狐是 `EntityMaid` **客户端库存预览对象**，不是服务器上取得/绑定/战斗的剑灵。未改动其原模型和贴图。原型仅更新预览计时/行走动画输入以观察绘制，不代表真实 AI/战斗触发已实现。
+
+模型ZIP实物SHA256为 `1d00d56b59c3f96deef08a6c53461f3d4c1ecf25ba5c95778f187113082ede21`。Forge实际由原bootstrap装到托管文件名 `contract-blade-fox-1.0.0.zip`，Neo隔离目录名为 `contract-fox-1.0.1.zip`；两份均与master当前1.0.1原包字节一致，未同时安装旧重复包。隔离复制的shader/PNG/mcmeta也逐字节核对过原源文件。
 
 ## 结果、推荐和限制
 

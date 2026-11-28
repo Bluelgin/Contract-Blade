@@ -1,0 +1,339 @@
+﻿source,line,field_symbol,key,declaration_context_source,definition_arguments_source,old_usage_candidates,neo_status,acceptance
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,43,ENABLED,enabled,ENABLED = b,"""enabled"", true",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainAuthorization.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,44,RADIUS,radius,RADIUS = b,"""radius"", 9d, 4d, 16d",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,45,BUDGET_WINDOW,budgetWindowTicks,BUDGET_WINDOW = b,"""budgetWindowTicks"", 220, 20, 1200",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,46,CONTACT_GAP,contactMaintainTicks,CONTACT_GAP = b,"""contactMaintainTicks"", 40, 10, 100",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,47,RAMPAGE_ENTER,rampageEnterFraction,RAMPAGE_ENTER = b,"""rampageEnterFraction"", .50, .05, .95",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,48,RAMPAGE_EXIT,rampageExitFraction,RAMPAGE_EXIT = b,"""rampageExitFraction"", .55, .05, 1d",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,49,RESCUE,rescueEnabled,RESCUE = b,"""rescueEnabled"", true",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,50,RESCUE_THRESHOLD,rescueThresholdFraction,RESCUE_THRESHOLD = b,"""rescueThresholdFraction"", .10, .01, .40",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,51,RESCUE_HEALTH,rescueHealthFraction,RESCUE_HEALTH = b,"""rescueHealthFraction"", .25, .01, 1d",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,52,RESCUE_COOLDOWN,rescueCooldownTicks,RESCUE_COOLDOWN = b,"""rescueCooldownTicks"", 3600, 20, 72000",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,53,PROTECTION_TICKS,rescueProtectionTicks,PROTECTION_TICKS = b,"""rescueProtectionTicks"", 40, 1, 100",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,54,COLLAPSE_TICKS,rescueCollapseTicks,COLLAPSE_TICKS = b,"""rescueCollapseTicks"", 12, 1, 20",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,55,REIGNITE_TICKS,rescueReigniteTicks,REIGNITE_TICKS = b,"""rescueReigniteTicks"", 4, 1, 10",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,56,EDGE_INTERVAL,afterimageInterval,EDGE_INTERVAL = b,"""afterimageInterval"", 20, 10, 100",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,57,SWORD_INTERVAL,swordInterval,SWORD_INTERVAL = b,"""swordInterval"", 30, 10, 200",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,58,RING_INTERVAL,ringInterval,RING_INTERVAL = b,"""ringInterval"", 60, 20, 300",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,59,COUNTER_INTERVAL,counterInterval,COUNTER_INTERVAL = b,"""counterInterval"", 40, 20, 200",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,60,CHAIN_INTERVAL,chainInterval,CHAIN_INTERVAL = b,"""chainInterval"", 30, 20, 200",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,61,RAIN_INTERVAL,rainInterval,RAIN_INTERVAL = b,"""rainInterval"", 100, 40, 400",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,64,RAIN_COUNT,rainBlades,"RAIN_COUNT =
+        b.comment(""Client blades per rain cue; NOT damage calls."")
+            ","""rainBlades"", 48, 8, 96",src/main/java/com/maidweapon/forge/network/AkatsukiDomainNetwork.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,65,MAX_TARGETS,maximumTargetsPerPulse,MAX_TARGETS = b,"""maximumTargetsPerPulse"", 4, 1, 8",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,67,RATIO_5,limitFractionLevel5,RATIO_5 = b,"""limitFractionLevel5"", .10, 0, .20",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,68,RATIO_9,limitFractionLevel9,RATIO_9 = b,"""limitFractionLevel9"", .15, 0, .20",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,69,RATIO_10,limitFractionLevel10,RATIO_10 = b,"""limitFractionLevel10"", .20, 0, .20",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,70,HIT_CAP,absoluteHitCapHP,HIT_CAP = b,"""absoluteHitCapHP"", 4d, .1, 4d",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,71,TARGET_SECOND,sharedTargetPerSecondHP,TARGET_SECOND = b,"""sharedTargetPerSecondHP"", 4d, .1, 4d",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,72,PLAYER_SECOND,playerPerSecondHP,PLAYER_SECOND = b,"""playerPerSecondHP"", 6d, .1, 6d",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,77,DOMAIN_CAP,combatWindowHP,"DOMAIN_CAP =
+        b.comment(
+                ""DEPRECATED: legacy 24 HP combat budget; soul recovery uses SoulDamageConfig safety""
+                    + "" caps."")
+            ","""combatWindowHP"", 24d, 1d, 24d",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,78,FALLBACK_HIT,unknownLimitHitHP,FALLBACK_HIT = b,"""unknownLimitHitHP"", .5, .1, .5",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,79,FALLBACK_SECOND,unknownLimitPerSecondHP,FALLBACK_SECOND = b,"""unknownLimitPerSecondHP"", 1d, .1, 1d",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,80,STRONG,allowAbsoluteChannel,STRONG = b,"""allowAbsoluteChannel"", true",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,83,BOSS_ADAPTERS,bossAdapters,"BOSS_ADAPTERS =
+        b.comment(""Read-only public damageCap/DpsCap adapters; unknown revisions fall back."")
+            ","""bossAdapters"", true",src/main/java/com/maidweapon/forge/compat/DomainTargetCompatibility.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,85,CHANNELS,channels,"CHANNELS =
+        b","
+            ""channels"",
+            java.util.List.of(""slash"", ""rapid"", ""piercing"", ""arcane"", ""absolute""),
+            v ->
+                v instanceof String s
+                    && java.util.Set.of(""slash"", ""rapid"", ""piercing"", ""arcane"", ""absolute"")
+                        .contains(s)",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,97,QUALITY,quality,"QUALITY =
+        client
+            .comment(""0 minimal, 1 balanced, 2 full. Server combat is unchanged."")
+            ","""quality"", 1, 0, 2",src/main/java/com/maidweapon/forge/client/AkatsukiVisualCapture.java;src/main/java/com/maidweapon/forge/client/SoulEclipseVisuals.java;src/main/java/com/maidweapon/forge/client/SoulAnchorRenderer.java;src/main/java/com/maidweapon/forge/client/AkatsukiDomainVisuals.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,98,DENSITY,visualDensity,DENSITY = client,"""visualDensity"", 1d, .1, 1d",src/main/java/com/maidweapon/forge/client/AkatsukiDomainVisuals.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/AkatsukiDomainConfig.java,102,TINT,rampageTint,"TINT =
+        client
+            .comment(""Uses BladeTetra tint only; disable for shader packs or minimal visuals."")
+            ","""rampageTint"", true",src/main/java/com/maidweapon/forge/client/AkatsukiDomainVisuals.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/BlackFoxClientConfig.java,14,PARRY_SHAKE,parryShakeStrength,"PARRY_SHAKE = builder.comment(""Parry camera shake strength. Set 0 to disable; does not change aiming or combat."")
+                ","""parryShakeStrength"", .65, 0, 1",src/main/java/com/maidweapon/forge/client/BlackFoxCameraShake.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/BlackFoxClientConfig.java,16,BOSS_IMPACT_SHAKE,bossImpactShake,"BOSS_IMPACT_SHAKE = builder.comment(""Also shake briefly for nearby heavy Boss cuts. Parry shake strength controls both."")
+                ","""bossImpactShake"", true",src/main/java/com/maidweapon/forge/client/BlackFoxCameraShake.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/BlackFoxServerConfig.java,19,DAMAGE_MULTIPLIER,damageMultiplier,"DAMAGE_MULTIPLIER = builder.comment(
+                ""Multiplier applied once before armor to all Boss damage against its challenger."",
+                ""1.0 = rebalanced defaults; 0.75 = 25% less damage; 0 = no damage."",
+                ""全部 Boss 伤害的统一倍率；1.0 为本版降伤后的默认值。可热重载。"")
+                ","""damageMultiplier"", 1.0, 0.0, 10.0",src/main/java/com/maidweapon/forge/event/BlackFoxCombatEvents.java;src/main/java/com/maidweapon/forge/compat/fox/BlackFoxDifficultyValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/BlackFoxServerConfig.java,23,HP,maxHealth,"HP = 1 heart). Existing Bosses keep their health."",
+                ""新挑战的最大生命值。默认 400；已生成的 Boss 不会被重置或回血。范围受原版属性上限限制。"")
+                ","""maxHealth"", 400.0, 1.0, 1024.0",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,30,MAX_FOLLOWERS,maxFollowingMaids,"MAX_FOLLOWERS = b.comment(""同时跟随的契约女仆上限；家模式/待命不计入。超限时拒绝召唤或恢复驻留。"")
+                ","""maxFollowingMaids"", 1, 1, 8",src/main/java/com/maidweapon/forge/system/deployment/ContractCompanionService.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractMultiCompanionValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,32,AUTO_MANIFEST,autoManifestWhenHurt,"AUTO_MANIFEST = b.comment(""旧版自动护主开关；仅在 autoManifestMode=migrate 时用于迁移，true 保留无需饰品护主。"")
+                ","""autoManifestWhenHurt"", false",src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractMultiCompanionValidation.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractRulesValidation.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractCompanionValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,35,AUTO_MANIFEST_MODE,autoManifestMode,"AUTO_MANIFEST_MODE = b.comment(""自动护主：disabled 关闭 / bauble 需要护主结 / always 无需饰品。"",
+                ""默认 migrate：旧 autoManifestWhenHurt=true 保留无需饰品；否则采用 bauble。显式选择前三项后忽略旧开关。"")
+                ","""autoManifestMode"", ""migrate"", value -> value instanceof String s && List.of(""migrate"", ""disabled"", ""bauble"", ""always"").contains(s)",src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,37,HURT_COOLDOWN,hurtCooldownTicks,"HURT_COOLDOWN = b.comment(""自动显现冷却，单位 tick（20 tick = 1 秒）。"")
+                ","""hurtCooldownTicks"", 200, 0, 72000",src/main/java/com/maidweapon/forge/system/deployment/ContractCompanionService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,39,HURT_MIN_RESONANCE,hurtMinimumResonance,"HURT_MIN_RESONANCE = b.comment(""自动显现所需最低共鸣；仍须满足正常显现条件。"")
+                ","""hurtMinimumResonance"", 1, 0, 1000000",src/main/java/com/maidweapon/forge/system/deployment/ContractCompanionService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,42,AUTO_COMBAT,combatTask,"AUTO_COMBAT = b.comment(""Legacy compatibility key; ignored since 1.2.0. Projection baubles never select work or schedules."")
+                ","""combatTask"", false",src/main/java/com/maidweapon/forge/compat/tlm/ContractProjectionValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,44,AUTO_FEED,feedingTask,"AUTO_FEED = b.comment(""Legacy compatibility key; ignored since 1.2.0. Choose feeding work manually in the maid UI."")
+                ","""feedingTask"", false",src/main/java/com/maidweapon/forge/system/MaidCareTaskSystem.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractProjectionValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,48,MAX_RESONANCE,maximum,"MAX_RESONANCE = b.comment(""共鸣上限。提高上限不会补满已有契约；旧存档缺失字段仍按 200 处理。"",
+                ""恢复/消耗倍率继续使用 config/maid_weapon-common.toml 的 ContractResonance 配置。"")
+                ","""maximum"", 200, 1, 1000000",src/main/java/com/maidweapon/forge/system/resonance/ResonanceService.java;src/main/java/com/maidweapon/forge/system/resonance/ResonancePoolSavedData.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,50,POOL_MAX_RESONANCE,poolMaximum,"POOL_MAX_RESONANCE = b.comment(""Server-owned maid resonance pool maximum. Legacy maximum remains unchanged for migration."")
+                 ","""poolMaximum"", 1000, 1, 1000000",src/main/java/com/maidweapon/forge/compat/tlm/ContractResonanceValidation.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractRulesValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,52,KILL_REWARD,killRecovery,"KILL_REWARD = b.comment(""契约武器合格击杀后的共鸣恢复量；0 关闭击杀恢复。"")
+                ","""killRecovery"", 5, 0, 1000000",src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,55,GROWTH_HIT_WINDOW,baubleHitWindowTicks,"GROWTH_HIT_WINDOW = b.comment(""同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。"")
+                ","""baubleHitWindowTicks"", 10, 1, 200",src/main/java/com/maidweapon/forge/system/mastery/ContractBaubleCombat.java;src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,59,GROWTH_HIT_WINDOW,mode,"GROWTH_HIT_WINDOW = b.comment(""同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。"")
+                .defineInRange(""baubleHitWindowTicks"", 10, 1, 200);
+        for (int level = 1; level <= 10; level++) {
+            b.push(""level"" + level);
+            var mode = b.comment(""升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。"")
+                    ","""mode"", ""legacy"", value -> value instanceof String s
+                            && List.of(""legacy"", ""tier"", ""entities"").contains(s)",src/main/java/com/maidweapon/forge/system/mastery/ContractBaubleCombat.java;src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,61,GROWTH_HIT_WINDOW,requiredTier,"GROWTH_HIT_WINDOW = b.comment(""同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。"")
+                .defineInRange(""baubleHitWindowTicks"", 10, 1, 200);
+        for (int level = 1; level <= 10; level++) {
+            b.push(""level"" + level);
+            var mode = b.comment(""升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。"")
+                    .define(""mode"", ""legacy"", value -> value instanceof String s
+                            && List.of(""legacy"", ""tier"", ""entities"").contains(s));
+            var tier = b","""requiredTier"", Math.min(5, Math.max(1, level - 1)), 0, 5",src/main/java/com/maidweapon/forge/system/mastery/ContractBaubleCombat.java;src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,63,GROWTH_HIT_WINDOW,requiredKills,"GROWTH_HIT_WINDOW = b.comment(""同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。"")
+                .defineInRange(""baubleHitWindowTicks"", 10, 1, 200);
+        for (int level = 1; level <= 10; level++) {
+            b.push(""level"" + level);
+            var mode = b.comment(""升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。"")
+                    .define(""mode"", ""legacy"", value -> value instanceof String s
+                            && List.of(""legacy"", ""tier"", ""entities"").contains(s));
+            var tier = b.defineInRange(""requiredTier"", Math.min(5, Math.max(1, level - 1)), 0, 5);
+            var kills = b.comment(""自定义规则需要的合格击杀次数，仅计算当前等级的击杀。"")
+                    ","""requiredKills"", 1, 1, 1000000",src/main/java/com/maidweapon/forge/system/mastery/ContractBaubleCombat.java;src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,65,GROWTH_HIT_WINDOW,entityIds,"GROWTH_HIT_WINDOW = b.comment(""同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。"")
+                .defineInRange(""baubleHitWindowTicks"", 10, 1, 200);
+        for (int level = 1; level <= 10; level++) {
+            b.push(""level"" + level);
+            var mode = b.comment(""升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。"")
+                    .define(""mode"", ""legacy"", value -> value instanceof String s
+                            && List.of(""legacy"", ""tier"", ""entities"").contains(s));
+            var tier = b.defineInRange(""requiredTier"", Math.min(5, Math.max(1, level - 1)), 0, 5);
+            var kills = b.comment(""自定义规则需要的合格击杀次数，仅计算当前等级的击杀。"")
+                    .defineInRange(""requiredKills"", 1, 1, 1000000);
+            var ids = b.comment(""entities 模式使用实体注册 ID，例如 minecraft:wither；空列表不会升级。"")
+                    ","""entityIds"", List.<String>of(), value -> value instanceof String s
+                            && ResourceLocation.tryParse(s) != null",src/main/java/com/maidweapon/forge/system/mastery/ContractBaubleCombat.java;src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractRulesConfig.java,68,GROWTH_HIT_WINDOW,damageBonus,"GROWTH_HIT_WINDOW = b.comment(""同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。"")
+                .defineInRange(""baubleHitWindowTicks"", 10, 1, 200);
+        for (int level = 1; level <= 10; level++) {
+            b.push(""level"" + level);
+            var mode = b.comment(""升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。"")
+                    .define(""mode"", ""legacy"", value -> value instanceof String s
+                            && List.of(""legacy"", ""tier"", ""entities"").contains(s));
+            var tier = b.defineInRange(""requiredTier"", Math.min(5, Math.max(1, level - 1)), 0, 5);
+            var kills = b.comment(""自定义规则需要的合格击杀次数，仅计算当前等级的击杀。"")
+                    .defineInRange(""requiredKills"", 1, 1, 1000000);
+            var ids = b.comment(""entities 模式使用实体注册 ID，例如 minecraft:wither；空列表不会升级。"")
+                    .defineListAllowEmpty(""entityIds"", List.<String>of(), value -> value instanceof String s
+                            && ResourceLocation.tryParse(s) != null);
+            var damage = b.comment(""本级额外攻击力；-1 使用原 common 配置的等级公式。不是原武器总伤害。"")
+                    ","""damageBonus"", -1.0, -1.0, 10000.0",src/main/java/com/maidweapon/forge/system/mastery/ContractBaubleCombat.java;src/main/java/com/maidweapon/forge/system/mastery/ContractSupportBaubleValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,24,ENABLED,enabled,"ENABLED = b.comment(
+                ""Use TLM's built-in LittleMaid PECO voice in the survival inventory."",
+                ""No voice files are included; the sword never plays a system item-get sound."")
+                ","""enabled"", true",src/main/java/com/maidweapon/forge/client/voice/ContractInventoryVoiceEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,26,VOLUME,volume,"VOLUME = b.comment(""Respects Minecraft's Neutral sound slider."")
+                ","""volume"", .60, 0, 1",src/main/java/com/maidweapon/forge/compat/tlm/TlmPecoVoiceBridge.java;src/main/java/com/maidweapon/forge/client/voice/ContractInventoryVoiceEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,28,GREETING_CHANCE,greetingChance,"GREETING_CHANCE = b.comment(""Chance to respond to the first real pickup."")
+                ","""greetingChance"", .40, 0, 1",src/main/java/com/maidweapon/forge/client/voice/ContractInventoryVoiceEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,30,CURIOUS_CHANCE,curiousChance,"CURIOUS_CHANCE = b.comment(""Chance to respond to quickly lifting the SAME blade again."")
+                ","""curiousChance"", .80, 0, 1",src/main/java/com/maidweapon/forge/client/voice/ContractInventoryVoiceEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,32,PLAYFUL_CHANCE,playfulChance,"PLAYFUL_CHANCE = b.comment(""Chance for a rare reaction on 3+ rapid lifts."")
+                ","""playfulChance"", .35, 0, 1",src/main/java/com/maidweapon/forge/client/voice/ContractInventoryVoiceEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,37,AUTO_SHORTLIST,acousticShortlist,"AUTO_SHORTLIST = b.comment(
+                ""Choose a small subset (up to 8/6/5 samples) by PCM length, loudness,"",
+                ""silence and duplicate checks; this does NOT recognize spoken Japanese."",
+                ""Manual sample index overrides the automatic shortlist."")
+                ","""acousticShortlist"", true",src/main/java/com/maidweapon/forge/compat/tlm/TlmPecoVoiceBridge.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,41,GREETING_VARIANT,greetingVariant,GREETING_VARIANT = b,"""greetingVariant"", -1, -1, 255",src/main/java/com/maidweapon/forge/compat/tlm/TlmPecoVoiceBridge.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,42,CURIOUS_VARIANT,curiousVariant,CURIOUS_VARIANT = b,"""curiousVariant"", -1, -1, 255",src/main/java/com/maidweapon/forge/compat/tlm/TlmPecoVoiceBridge.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/ContractVoiceClientConfig.java,43,PLAYFUL_VARIANT,playfulVariant,PLAYFUL_VARIANT = b,"""playfulVariant"", -1, -1, 255",src/main/java/com/maidweapon/forge/compat/tlm/TlmPecoVoiceBridge.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,94,SHRINE_WHITE_FOX_KILLS,whiteFoxRequiredKills,"SHRINE_WHITE_FOX_KILLS = builder
+                .comment(""Total kill count on carried SlashBlades required before offering one cake to White Fox"")
+                ","""whiteFoxRequiredKills"", 520, 0, Integer.MAX_VALUE",src/main/java/com/maidweapon/forge/system/fox/ShrineOfferingService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,98,RESONANCE_STORED_RECOVERY,storedRecoveryPerSecondV2,RESONANCE_STORED_RECOVERY = builder,"""storedRecoveryPerSecondV2"", 0.5, 0.0, 200.0",src/main/java/com/maidweapon/forge/system/resonance/ResonanceRecoveryEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,99,RESONANCE_COMBAT_RECOVERY,combatRecoveryPerSecondV2,RESONANCE_COMBAT_RECOVERY = builder,"""combatRecoveryPerSecondV2"", 0.0, 0.0, 200.0",src/main/java/com/maidweapon/forge/system/resonance/ResonanceRecoveryEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,100,RESONANCE_ABILITY_IDLE_RECOVERY,abilityIdleRecoveryPerSecondV2,RESONANCE_ABILITY_IDLE_RECOVERY = builder,"""abilityIdleRecoveryPerSecondV2"", 0.5, 0.0, 200.0",src/main/java/com/maidweapon/forge/system/resonance/ResonanceRecoveryEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,102,RESONANCE_MANIFESTED_COMBAT_RECOVERY,manifestedCombatRecoveryPerSecond,"RESONANCE_MANIFESTED_COMBAT_RECOVERY = builder.comment(""Manifested combat recovery in legacy units/second; replaces stored combat recovery while live"")
+                ","""manifestedCombatRecoveryPerSecond"", 2.0, 0.0, 200.0",src/main/java/com/maidweapon/forge/system/resonance/ResonanceRecoveryEvents.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,104,RESONANCE_PROGRESS_MULTIPLIERS,spiritVeinMultipliers,"RESONANCE_PROGRESS_MULTIPLIERS = builder.comment(""Ordered global spirit-vein multipliers, including unupgraded stage 0"")
+                ","""spiritVeinMultipliers"", java.util.List.of(1.0, 1.25, 1.60, 2.0),
+                        value -> value instanceof Double d && Double.isFinite(d) && d >= 1 && d <= 100",src/main/java/com/maidweapon/forge/system/resonance/ResonanceProgressService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,108,RESONANCE_COMBAT_DRAIN_INTERVAL,combatDrainInterval,"RESONANCE_COMBAT_DRAIN_INTERVAL = builder
+                .comment(""Deprecated compatibility key; manifestation no longer drains resonance"")
+                ","""combatDrainInterval"", 80, 20, 1200",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,111,RESONANCE_RECOVERY_DELAY,recoveryDelay,"RESONANCE_RECOVERY_DELAY = builder
+                .comment(""Combat activity timeout in ticks; recovery continues at the combat rate"")
+                ","""recoveryDelay"", 100, 0, 2400",src/main/java/com/maidweapon/forge/event/MaidBondCombatHandler.java;src/main/java/com/maidweapon/forge/system/resonance/ResonanceAttackCosts.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,114,RESONANCE_PASSIVE_RECOVERY,manifestedIdleRecoveryV2,"RESONANCE_PASSIVE_RECOVERY = builder
+                .comment(""Manifested idle recovery in legacy units/second; replaces stored recovery"")
+                ","""manifestedIdleRecoveryV2"", 4, 0, 200",src/main/java/com/maidweapon/forge/system/resonance/ResonanceRecoveryEvents.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractCompanionValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,117,RESONANCE_COOP_REWARD,cooperationReward,"RESONANCE_COOP_REWARD = builder
+                .comment(""主人与女仆协同命中同一目标时恢复的共鸣，每秒至多一次"")
+                ","""cooperationReward"", 3, 0, 200",src/main/java/com/maidweapon/forge/event/MaidBondCombatHandler.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractMultiCompanionValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,120,RESONANCE_DEATH_PENALTY,challengeDeathPenalty,"RESONANCE_DEATH_PENALTY = builder
+                .comment(""主人在成长挑战中死亡时损失的共鸣"")
+                ","""challengeDeathPenalty"", 30, 0, 200",src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,123,RESONANCE_MAID_EMERGENCY_COST,maidEmergencyCost,"RESONANCE_MAID_EMERGENCY_COST = builder
+                .comment(""Deprecated compatibility key; protective recall no longer spends resonance"")
+                ","""maidEmergencyCost"", 20, 0, 200",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,126,RESONANCE_FOOD_MULTIPLIER,foodRecoveryMultiplier,"RESONANCE_FOOD_MULTIPLIER = builder
+                .comment(""主人进食时，共鸣恢复 = 饱食度增量 × 此倍率"")
+                ","""foodRecoveryMultiplier"", 1.0, 0.0, 100.0",src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java;src/main/java/com/maidweapon/common/system/ResonanceSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,129,RESONANCE_HEAL_MULTIPLIER,healRecoveryMultiplier,"RESONANCE_HEAL_MULTIPLIER = builder
+                .comment(""主人回血时，共鸣恢复 = 血量增量 × 此倍率"")
+                ","""healRecoveryMultiplier"", 1.0, 0.0, 100.0",src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java;src/main/java/com/maidweapon/common/system/ResonanceSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,132,RESONANCE_OWNER_HURT_MULTIPLIER,ownerHurtRecoveryMultiplier,"RESONANCE_OWNER_HURT_MULTIPLIER = builder
+                .comment(""主人受伤时，共鸣恢复 = 失去血量 × 此倍率"")
+                ","""ownerHurtRecoveryMultiplier"", 0.0, 0.0, 10.0",src/main/java/com/maidweapon/forge/event/ContractCombatEventHandler.java;src/main/java/com/maidweapon/common/system/ResonanceSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,139,MANIFEST_DEPLOY_DELAY,deployDelayTicks,"MANIFEST_DEPLOY_DELAY = builder
+                .comment(""切到自动契约武器后延迟显现的 tick；用于过滤滚轮快速划过"")
+                ","""deployDelayTicks"", 8, 0, 200",src/main/java/com/maidweapon/forge/compat/tlm/ContractCarrierValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,142,MANIFEST_RECALL_DELAY,recallDelayTicks,"MANIFEST_RECALL_DELAY = builder
+                .comment(""离开自动契约武器后延迟收回的 tick；期间切回可取消收回"")
+                ","""recallDelayTicks"", 30, 0, 400",src/main/java/com/maidweapon/forge/compat/tlm/ContractCarrierValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,145,MANIFEST_HANDOVER_DELAY,handoverDelayTicks,"MANIFEST_HANDOVER_DELAY = builder
+                .comment(""从一名契约女仆切换到另一名契约女仆时的交接 tick"")
+                ","""handoverDelayTicks"", 12, 0, 200",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,152,CONTRACT_NBT_WARNING_BYTES,warningBytes,"CONTRACT_NBT_WARNING_BYTES = builder
+                .comment(""Warn when the complete contract item NBT reaches this uncompressed size"")
+                ","""warningBytes"", 262144, 65536, 8388608",src/main/java/com/maidweapon/forge/system/ContractNbtGuard.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,155,CONTRACT_NBT_HIGH_WARNING_BYTES,highWarningBytes,"CONTRACT_NBT_HIGH_WARNING_BYTES = builder
+                .comment(""Second-level warning for complete contract item NBT"")
+                ","""highWarningBytes"", 524288, 131072, 8388608",src/main/java/com/maidweapon/forge/system/ContractNbtGuard.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,158,CONTRACT_NBT_CRITICAL_WARNING_BYTES,criticalWarningBytes,"CONTRACT_NBT_CRITICAL_WARNING_BYTES = builder
+                .comment(""Critical warning for complete contract item NBT; recall is still attempted"")
+                ","""criticalWarningBytes"", 1048576, 262144, 16777216",src/main/java/com/maidweapon/forge/system/ContractNbtGuard.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,161,CONTRACT_NBT_MAX_DECOMPRESSED_BYTES,maxDecompressedMaidBytes,"CONTRACT_NBT_MAX_DECOMPRESSED_BYTES = builder
+                .comment(""Absolute decompressed MaidEntityData safety limit used against compression bombs"")
+                ","""maxDecompressedMaidBytes"", 16777216, 1048576, 67108864",src/main/java/com/maidweapon/forge/system/MaidEntityDataCodec.java;src/main/java/com/maidweapon/forge/system/fox/FoxSpiritTransferService.java;src/main/java/com/maidweapon/forge/compat/tlm/SoulTalismanService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,164,CONTRACT_NBT_MAX_STORED_BYTES,maxStoredContractBytes,"CONTRACT_NBT_MAX_STORED_BYTES = builder
+                .comment(""Maximum complete stored contract tag size; rejected writes preserve the existing contract."")
+                ","""maxStoredContractBytes"", 2097152, 262144, 16777216",src/main/java/com/maidweapon/forge/system/MaidEntityDataCodec.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractCarrierLossValidation.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractStageThreeValidation.java;src/main/java/com/maidweapon/forge/compat/tlm/ContractArchitectureValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,167,CONTRACT_NBT_MAX_DEPTH,maxDepth,"CONTRACT_NBT_MAX_DEPTH = builder
+                .comment(""Maximum permitted nesting depth inside compressed maid entity data"")
+                ","""maxDepth"", 128, 16, 512",src/main/java/com/maidweapon/forge/system/MaidEntityDataCodec.java;src/main/java/com/maidweapon/forge/system/fox/FoxSpiritTransferService.java;src/main/java/com/maidweapon/forge/compat/tlm/SoulTalismanService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,170,CONTRACT_NBT_MAX_INTRINSIC_SPIRITS,maxIntrinsicSpirits,"CONTRACT_NBT_MAX_INTRINSIC_SPIRITS = builder
+                .comment(""Maximum number of complete intrinsic spirit contracts on one weapon"")
+                ","""maxIntrinsicSpirits"", 8, 1, 64",src/main/java/com/maidweapon/forge/api/IntrinsicSpiritApi.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,177,ENABLE_SAFE_FEEDING,enabled,"ENABLE_SAFE_FEEDING = builder
+                .comment(""安全且主人饥饿时，显现女仆是否临时切换为喂食工作模式"")
+                ","""enabled"", true",src/main/java/com/maidweapon/forge/system/MaidCareTaskSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,180,SAFE_FEEDING_HUNGER_THRESHOLD,hungerThreshold,"SAFE_FEEDING_HUNGER_THRESHOLD = builder
+                .comment(""玩家饥饿值不高于此值时，安全状态下触发喂食任务"")
+                ","""hungerThreshold"", 14, 0, 19",src/main/java/com/maidweapon/forge/system/MaidCareTaskSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,183,SAFE_FEEDING_DELAY,safeDelayTicks,"SAFE_FEEDING_DELAY = builder
+                .comment(""最后一次发现危险后，等待多少 tick 才允许进入喂食模式"")
+                ","""safeDelayTicks"", 120, 0, 1200",src/main/java/com/maidweapon/forge/system/MaidCareTaskSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,186,SAFE_FEEDING_DANGER_RADIUS,dangerRadius,"SAFE_FEEDING_DANGER_RADIUS = builder
+                .comment(""检查敌对生物的安全半径"")
+                ","""dangerRadius"", 12.0, 2.0, 64.0",src/main/java/com/maidweapon/forge/system/MaidCareTaskSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,193,ENABLE_ATTENTION_REMINDERS,enabled,"ENABLE_ATTENTION_REMINDERS = builder
+                .comment(""女仆长时间未显现时，是否通过契约提醒主人"")
+                ","""enabled"", true",src/main/java/com/maidweapon/forge/system/MaidAttentionSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,196,ATTENTION_DELAY_TICKS,attentionDelayTicks,"ATTENTION_DELAY_TICKS = builder
+                .comment(""女仆在主人背包中累计多少 tick 未显现后想要得到关注；48000 为两个游戏日"")
+                ","""attentionDelayTicks"", 48000, 1200, 7200000",src/main/java/com/maidweapon/forge/system/MaidAttentionSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,199,ATTENTION_CHIME,playChime,"ATTENTION_CHIME = builder
+                .comment(""首次契约回响是否伴随轻微的紫水晶提示音"")
+                ","""playChime"", true",src/main/java/com/maidweapon/forge/system/MaidAttentionSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,202,ATTENTION_VOICE_ON_MANIFEST,voiceAfterManifest,"ATTENTION_VOICE_ON_MANIFEST = builder
+                .comment(""回应提醒后成功显现时，是否播放 TLM 原生待机语音"")
+                ","""voiceAfterManifest"", true",src/main/java/com/maidweapon/forge/system/MaidAttentionSystem.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,209,LEVEL_DAMAGE_PER_LEVEL,levelDamagePerLevel,"LEVEL_DAMAGE_PER_LEVEL = builder
+                .comment(""每级攻击力加成"", ""默认 1.0"")
+                ","""levelDamagePerLevel"", 1.0, 0.0, 100.0",src/main/java/com/maidweapon/common/data/ContractMasteryData.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,213,LEVEL_MAX_BONUS,levelMaxBonus,"LEVEL_MAX_BONUS = builder
+                .comment(""满级额外攻击力"", ""默认 3.0"")
+                ","""levelMaxBonus"", 3.0, 0.0, 100.0",src/main/java/com/maidweapon/common/data/ContractMasteryData.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,220,FAV_BASE_MULTIPLIER,favorabilityBaseMultiplierV2,"FAV_BASE_MULTIPLIER = builder
+                .comment(""好感度只提供额外伤害；0 好感不削弱原始伤害"")
+                ","""favorabilityBaseMultiplierV2"", 1.0, 0.0, 10.0",src/main/java/com/maidweapon/common/data/MaidWeaponData.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,224,FAV_SLOPE_MULTIPLIER,favorabilityMaxBonusV2,"FAV_SLOPE_MULTIPLIER = builder
+                .comment(""满好感时的额外契约伤害倍率，默认 +25%"")
+                ","""favorabilityMaxBonusV2"", 0.25, 0.0, 10.0",src/main/java/com/maidweapon/common/data/MaidWeaponData.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,231,SHOW_RESONANCE_HUD,showContractResonanceHud,"SHOW_RESONANCE_HUD = builder
+                .comment(""是否显示契约共鸣条"")
+                ","""showContractResonanceHud"", true",src/main/java/com/maidweapon/forge/client/MaidFavorabilityOverlay.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/MaidWeaponConfig.java,235,RESONANCE_HUD_OFFSET_Y,contractResonanceHudOffsetY,"RESONANCE_HUD_OFFSET_Y = builder
+                .comment(""契约共鸣条向上偏移的像素数；与其他 Mod HUD 冲突时可调大"")
+                ","""contractResonanceHudOffsetY"", 0, -100, 200",src/main/java/com/maidweapon/forge/client/MaidFavorabilityOverlay.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,8,PLAYER_DAMAGE,playerDamageBonus,PLAYER_DAMAGE = B,"""playerDamageBonus"", .20, 0, 10",src/main/java/com/maidweapon/forge/system/oath/OathCombat.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,9,PLAYER_DEFENSE,playerDamageReduction,PLAYER_DEFENSE = B,"""playerDamageReduction"", .10, 0, 1",src/main/java/com/maidweapon/forge/system/oath/OathCombat.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,10,MAID_DAMAGE,maidDamageBonus,MAID_DAMAGE = B,"""maidDamageBonus"", .30, 0, 10",src/main/java/com/maidweapon/forge/system/oath/OathCombat.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,11,COOP_DAMAGE,cooperationDamageBonus,COOP_DAMAGE = B,"""cooperationDamageBonus"", .15, 0, 10",src/main/java/com/maidweapon/forge/system/oath/OathCombat.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,12,COOP_INTERVAL,cooperationIntervalTicks,COOP_INTERVAL = B,"""cooperationIntervalTicks"", 20, 1, 1200",src/main/java/com/maidweapon/forge/event/MaidBondCombatHandler.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,13,BURN,poolFractionBurnedPerSecond,BURN = B,"""poolFractionBurnedPerSecond"", .025, .000001, 1",src/main/java/com/maidweapon/forge/system/oath/OathService.java;src/main/java/com/maidweapon/forge/compat/tlm/OathValidation.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,14,BACKLASH_OUT,backlashDamageReductionPerLevel,BACKLASH_OUT = B,"""backlashDamageReductionPerLevel"", .10, 0, .20",src/main/java/com/maidweapon/forge/system/oath/OathCombat.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,15,BACKLASH_IN,backlashDamageTakenPerLevel,BACKLASH_IN = B,"""backlashDamageTakenPerLevel"", .10, 0, 10",src/main/java/com/maidweapon/forge/system/oath/OathCombat.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/OathConfig.java,16,BACKLASH_DURATION,backlashDurationTicks,BACKLASH_DURATION = B,"""backlashDurationTicks"", 3600, 1, 72000",src/main/java/com/maidweapon/forge/system/oath/OathService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,45,STRATEGY,strategy,STRATEGY = b,"""strategy"", Strategy.AGGRESSIVE",src/main/java/com/maidweapon/forge/system/akatsuki/SoulProvenanceValidation.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,46,EVENT_OVERRIDE,aggressiveEventOverride,EVENT_OVERRIDE = b,"""aggressiveEventOverride"", true",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,47,KNOWN_ADAPTERS,knownBossAdapters,KNOWN_ADAPTERS = b,"""knownBossAdapters"", true",src/main/java/com/maidweapon/forge/compat/DomainTargetCompatibility.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,48,DIAGNOSTICS,damageDiagnostics,DIAGNOSTICS = b,"""damageDiagnostics"", false",src/main/java/com/maidweapon/forge/mixin/SoulWroughtnautMixin.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulBurstService.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorService.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulEclipseChallenge.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageDebtService.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorProjectileService.java;src/main/java/com/maidweapon/forge/system/akatsuki/provenance/DamageObservationService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,51,CREATIVE_DAMAGE,allowCreativeDomainDamage,"CREATIVE_DAMAGE =
+        b.comment(""Allow valid awakened Akatsuki owners to deal domain damage in Creative."")
+            ","""allowCreativeDomainDamage"", true",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorBinding.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java;src/main/java/com/maidweapon/forge/system/akatsuki/provenance/DamageProvenanceResolver.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,54,TRAINING_TARGETS,allowTrainingDummyTargets,"TRAINING_TARGETS =
+        b.comment(""Allow explicitly struck dummy entities; no friendly area scans."")
+            ","""allowTrainingDummyTargets"", true",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,57,EXTRA_TRAINING_TYPES,additionalTrainingEntityTypes,"EXTRA_TRAINING_TYPES =
+        b.comment(""Additional exact namespace:path entity IDs treated as training targets."")
+            ","
+                ""additionalTrainingEntityTypes"",
+                java.util.List.of(),
+                v -> v instanceof String s
+                    && s.contains("":"")
+                    && net.minecraft.resources.ResourceLocation.tryParse(s) != null",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,65,CUT_MULTIPLIER,spaceCutAttackMultiplier,CUT_MULTIPLIER = b,"""spaceCutAttackMultiplier"", 1.25, .1, 16",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,66,CAP_FACTOR,knownHitCapBreakthroughFactor,CAP_FACTOR = b,"""knownHitCapBreakthroughFactor"", 1.75, 1, 8",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,68,HIT_CEILING,singleAttemptSafetyHP,"HIT_CEILING = b.comment(""Deprecated compatibility key; no longer limits live Akatsuki HP."")
+        ","""singleAttemptSafetyHP"", 128d, 1, 4096",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainValidation.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,70,TARGET_SECOND,sharedTargetPer20TicksHP,"TARGET_SECOND = b.comment(""Deprecated compatibility key; no longer limits live Akatsuki HP."")
+        ","""sharedTargetPer20TicksHP"", 512d, 1, 8192",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,72,PLAYER_SECOND,playerPer20TicksHP,"PLAYER_SECOND = b.comment(""Deprecated compatibility key; no longer limits live Akatsuki HP."")
+        ","""playerPer20TicksHP"", 384d, 1, 8192",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,74,TARGET_WINDOW,sharedTargetPer200TicksHP,"TARGET_WINDOW = b.comment(""Deprecated compatibility key; no longer limits live Akatsuki HP."")
+        ","""sharedTargetPer200TicksHP"", 3072d, 1, 65536",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,76,PLAYER_WINDOW,playerPer200TicksHP,"PLAYER_WINDOW = b.comment(""Deprecated compatibility key; no longer limits live Akatsuki HP."")
+        ","""playerPer200TicksHP"", 2048d, 1, 65536",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,77,CUT_GAP,sharedTargetSpaceCutGapTicks,CUT_GAP = b,"""sharedTargetSpaceCutGapTicks"", 4, 1, 40",src/main/java/com/maidweapon/forge/system/akatsuki/AkatsukiDomainService.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,79,BURST_MULTIPLIER,soulBurstAttackMultiplier,"BURST_MULTIPLIER = b.comment(""Deprecated: no longer adds independent soul-core damage."")
+        ","""soulBurstAttackMultiplier"", 5d, 1, 32",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,81,BURST_HEALTH_FRACTION,soulBurstMaxHealthFraction,"BURST_HEALTH_FRACTION = b.comment(""Deprecated: no longer adds independent soul-core damage."")
+        ","""soulBurstMaxHealthFraction"", .005, 0, .05",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,83,BURST_CEILING,soulBurstTotalSafetyHP,"BURST_CEILING = b.comment(""Deprecated compatibility key; no longer limits live Akatsuki HP."")
+        ","""soulBurstTotalSafetyHP"", 512d, 1, 8192",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,84,BURST_STAGES,soulBurstStages,BURST_STAGES = b,"""soulBurstStages"", 4, 3, 5",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulBurstService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,85,BURST_DURATION,soulBurstDurationTicks,BURST_DURATION = b,"""soulBurstDurationTicks"", 10, 8, 12",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulBurstService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,86,BURST_COOLDOWN,sharedTargetBurstCooldownTicks,BURST_COOLDOWN = b,"""sharedTargetBurstCooldownTicks"", 60, 20, 400",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageEngine.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,87,ANCHOR_LIFETIME,soulAnchorLifetimeTicks,ANCHOR_LIFETIME = b,"""soulAnchorLifetimeTicks"", 90, 20, 200",src/main/java/com/maidweapon/forge/system/akatsuki/SoulProvenanceValidation.java;src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,88,ANCHOR_INTERVAL,soulAnchorCreationIntervalTicks,ANCHOR_INTERVAL = b,"""soulAnchorCreationIntervalTicks"", 60, 10, 400",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,89,OWNER_ANCHORS,maximumAnchorsPerPlayer,OWNER_ANCHORS = b,"""maximumAnchorsPerPlayer"", 4, 1, 8",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,90,LINK_RANGE,soulAnchorMaximumLinkRange,LINK_RANGE = b,"""soulAnchorMaximumLinkRange"", 128d, 16, 256",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorBinding.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,91,RECOVERY_GAP,sharedTargetRecoveryGapTicks,RECOVERY_GAP = b,"""sharedTargetRecoveryGapTicks"", 12, 1, 100",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulDamageDebtService.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,92,BASE_CUT_FRACTION,baseSpaceCutAttackFraction,BASE_CUT_FRACTION = b,"""baseSpaceCutAttackFraction"", .05, 0, 1",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,93,BASE_CUT_MAXIMUM,baseSpaceCutMaximumHP,BASE_CUT_MAXIMUM = b,"""baseSpaceCutMaximumHP"", .5, 0, 8",需追踪getter/静态导入；非完整可达性证明,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,95,ANCHOR_HEAD_OFFSET,aerialAnchorHeadOffset,"ANCHOR_HEAD_OFFSET = b.comment(""Vertical gap above the boss hitbox; summoned swords can hit from below."")
+        ","""aerialAnchorHeadOffset"", 5d, 4, 10",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorPlacement.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,97,ANCHOR_MIN_HEIGHT,aerialAnchorMinimumHeight,"ANCHOR_MIN_HEIGHT = b.comment(""Minimum anchor altitude above target feet, if higher than head clearance."")
+        ","""aerialAnchorMinimumHeight"", 6d, 4, 12",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorPlacement.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为
+src/main/java/com/maidweapon/common/SoulDamageConfig.java,99,ANCHOR_MAX_HEIGHT,aerialAnchorGiantSideHeight,"ANCHOR_MAX_HEIGHT = b.comment(""Legacy cap above target feet; tall bosses still retain >=4 blocks head clearance."")
+        ","""aerialAnchorGiantSideHeight"", 18d, 8, 36",src/main/java/com/maidweapon/forge/system/akatsuki/soul/SoulAnchorPlacement.java,未建立同键原生配置入口；共享默认规则不等于用户配置已迁移,核对是否仍在使用（含deprecated兼容键）；活跃自定义值/范围/单位经adapter保留；不得由DEFAULT覆盖或恢复已停用行为

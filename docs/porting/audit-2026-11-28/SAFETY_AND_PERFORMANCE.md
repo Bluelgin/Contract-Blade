@@ -2,6 +2,10 @@
 
 这些结论来自当前#38实际实现，除注明的夹具外不表示做过崩溃/性能验收。
 
+配置定义在 `src/main/java/com/maidweapon/common` 的 MaidWeaponConfig、ContractRulesConfig、OathConfig、AkatsukiDomainConfig、SoulDamageConfig、BlackFoxServerConfig、BlackFoxClientConfig、ContractVoiceClientConfig。逐键来源/默认值/范围原文见 [CONFIG_GAPS.csv](CONFIG_GAPS.csv)；Neo目前没有对应完整原生config注册。比如旧版 `poolMaximum=1000` 与旧量纲 `maximum=200` 共存，共鸣恢复/成长/无尽/反噬/语音/Boss/魂核安全预算均可配置，不能只抄一组DEFAULT。原参数保留表达式与predicate，CSV不猜测其求值或配置层级；层级以源文件push/pop为准。
+
+定义还含明确deprecated兼容键，如 manifestation 的旧 combatDrainInterval、赤月旧 domain-budget。保留定义不是它仍在影响玩法的证明，不能机械重开旧扣费或用旧预算替代当前SoulDamageConfig安全限制。CSV保留字段声明/注释及getter检索候选，活跃性须沿实际调用核对，不把全部声明都当必须恢复的行为。
+
 |边界|已经存在的实现|仍需补齐与验收|
 |---|---|---|
 |物品权威|不可变 ContractReference/ContractChannels，persistent Codec及必要StreamCodec；intrinsic最多64，选择/身份/混合/旧票校验；完整女仆快照不放物品也不发HUD|Schema升级、正式契约独立设置完整覆盖、所有入口的持有者/主人/载体校验；未知未来数据保留并拒绝写入|

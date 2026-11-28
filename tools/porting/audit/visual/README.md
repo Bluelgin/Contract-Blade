@@ -10,7 +10,7 @@ git worktree add --detach /tmp/cb-neo-audit 2955432290cb6475e8dfceb960e9a0c388be
 python tools/porting/audit/visual/prepare.py --master /tmp/cb-forge-audit --target /tmp/cb-neo-audit --platform neo --disposable-checkout
 ```
 
-Prepare Forge with another clean master source checkout and `--platform forge` (the source and target must differ). Preserve original credits/licenses; this is a local experiment copying already present project assets, not permission to redistribute them under a different license.
+Prepare Forge with another clean master source checkout and `--platform forge` (the source and target must differ). Its runtime pack uses the production-managed filename `contract-blade-fox-1.0.0.zip`, with the **current1.0.1 contents**, so the normal bootstrap does not install a second pack with the same model IDs. Neo uses `contract-fox-1.0.1.zip`. Preserve original credits/licenses; this is a local experiment copying already present project assets, not permission to redistribute them under a different license.
 
 Neo: JDK21, project pinned NeoForge21.1.219/TLM1.5.3-neoforge+mc1.21.1; run `./gradlew --no-daemon runClient`. Forge: JDK17, pinned Forge47.4.10, native TLM1.5.3 and SlashBladeResharped1.9.65; use the repository's existing `libs` and `tmp/compat-test` dependency setup, then `./gradlew --no-daemon runClient -Pci=true -PtlmRuntimeTest=true -PcompatTest=slashblade`. The Forge sample calls the original production BlackFoxEnergyShader and therefore requires its SlashBlade registration path. Do not invent new dependency coordinates.
 
