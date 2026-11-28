@@ -42,7 +42,7 @@ public final class NativeCombatCredits {
         long now=c.owner().getServer().overworld().getGameTime();
         var map=COMBAT.computeIfAbsent(c.owner(),p->new java.util.HashMap<>());
         map.values().removeIf(t->t<=now);
-        if(map.size()<512||map.containsKey(c.ref().maid()))map.put(c.ref().maid(),now+100);
+        if(map.size()<512||map.containsKey(c.ref().maid()))map.put(c.ref().maid(),now+com.maidweapon.port.config.NativeRules.combatTimeout());
     }
     public static boolean fighting(ServerPlayer p,UUID maid,long now){
         var map=COMBAT.get(p);return map!=null&&map.getOrDefault(maid,0L)>now;
@@ -73,10 +73,10 @@ public final class NativeCombatCredits {
             var data=NativeMasteryData.get(server);
             int before=data.read(p.getUUID()).level();
             var next=data.credit(p.getUUID(),tier,id);
-            int reward=ResonanceRules.DEFAULT.legacyUnits(5);
+            int reward=com.maidweapon.port.config.NativeRules.killReward();
             if(kill.live()==null)NativeResonanceService.recoverStored(server,p.getUUID(),p.getMainHandItem(),reward);
             else NativeResonanceService.recoverLive(server,p.getUUID(),kill.live(),reward);
-            if(next.level()>before)p.displayClientMessage(Component.literal("[Port Probe] Contract mastery Lv."+next.level()),true);
+            if(next.level()>before)p.displayClientMessage(Component.translatable("maid_weapon.native.mastery.upgraded",next.level()),true);
         }catch(RuntimeException rejected){ /* Unknown schema fails closed; no retry of a settled target. */ }
     }
     private NativeCombatCredits(){}

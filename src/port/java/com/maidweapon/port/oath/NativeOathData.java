@@ -47,9 +47,9 @@ public final class NativeOathData extends SavedData {
         var o=owner(owner);return o.getInt("backlash_ticks")>0?Math.max(0,Math.min(5,o.getInt("backlash_levels"))):0;
     }
     public void exhaust(UUID owner,UUID maid){
-        var o=owner(owner);var rests=o.getCompound("rests");rests.putInt(maid.toString(),OathRules.BACKLASH_TICKS);
+        var o=owner(owner);var rests=o.getCompound("rests");rests.putInt(maid.toString(),com.maidweapon.port.config.NativeRules.backlashTicks());
         o.put("rests",rests);o.putInt("backlash_levels",Math.min(5,penalty(owner)+1));
-        o.putInt("backlash_ticks",OathRules.BACKLASH_TICKS);put(owner,o);
+        o.putInt("backlash_ticks",com.maidweapon.port.config.NativeRules.backlashTicks());put(owner,o);
     }
     public void tick(UUID owner){
         var o=owner(owner);var rests=o.getCompound("rests");int ticks=o.getInt("backlash_ticks");

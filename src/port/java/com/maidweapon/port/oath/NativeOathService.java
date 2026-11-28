@@ -93,7 +93,7 @@ public final class NativeOathService {
             ref=NativeChannelService.displayReference(held);
             if(ref==null||live.level()!=p.level()||!ring(live)||NativeResonanceService.currentLive(server,p.getUUID(),live)<=0)return false;
             ACTIVE.put(p,new Session(ref,live));
-            p.displayClientMessage(Component.translatable("maid_weapon_port_probe.oath.started"),true);return true;
+            p.displayClientMessage(Component.translatable("maid_weapon.native.oath.started"),true);return true;
         }catch(Exception rejected){return false;}
     }
     public static void tick(PlayerTickEvent.Pre e){
@@ -104,7 +104,7 @@ public final class NativeOathService {
             int current=NativeResonanceService.currentLive(p.getServer(),p.getUUID(),s.maid());
             if(current==0){end(p,true);return;}
             if(!valid(p,s)){end(p,false);return;}
-            var step=OathRules.tick(ResonanceRules.DEFAULT.maximum(),OathRules.BURN,data.remainder(p.getUUID(),s.ref().maid()));
+            var step=OathRules.tick(com.maidweapon.port.config.NativeRules.resonance().maximum(),com.maidweapon.port.config.NativeRules.oath(com.maidweapon.port.config.OathConfig.BURN,OathRules.BURN),data.remainder(p.getUUID(),s.ref().maid()));
             if(step.cost()>0&&NativeResonanceService.burnLive(p.getServer(),p.getUUID(),s.maid(),
                 Math.min(current,step.cost()),NativeResonanceService.newAttempt())!=Payment.PAID){end(p,false);return;}
             data.remainder(p.getUUID(),s.ref().maid(),step.remainder());
@@ -118,7 +118,7 @@ public final class NativeOathService {
             var stack=carrier(p,s);
             if(!stack.isEmpty()&&s.maid().level() instanceof ServerLevel level)
                 PortContractLifecycleTrial.capture(level,s.maid(),p.getUUID(),p.getScoreboardName(),stack);
-            p.displayClientMessage(Component.translatable(exhausted?"maid_weapon_port_probe.oath.exhausted":"maid_weapon_port_probe.oath.ended"),true);
+            p.displayClientMessage(Component.translatable(exhausted?"maid_weapon.native.oath.exhausted":"maid_weapon.native.oath.ended"),true);
         }catch(RuntimeException failure){com.mojang.logging.LogUtils.getLogger().warn("Oath safe end failed",failure);}
     }
     public static void logout(PlayerEvent.PlayerLoggedOutEvent e){if(e.getEntity() instanceof ServerPlayer p)end(p,false);}
@@ -137,12 +137,12 @@ public final class NativeOathService {
         var source=e.getSource();var actor=source.getEntity();
         boolean direct=actor!=null&&actor==source.getDirectEntity();
         if(direct&&actor instanceof ServerPlayer p){
-            if(active(p))multiplier*=1+OathRules.PLAYER_DAMAGE;
-            multiplier*=OathRules.outgoingPenalty(NativeOathData.get(p.getServer()).penalty(p.getUUID()));
-        }else if(direct&&actor instanceof EntityMaid maid&&empowered(maid))multiplier*=1+OathRules.MAID_DAMAGE;
+            if(active(p))multiplier*=1+com.maidweapon.port.config.NativeRules.oath(com.maidweapon.port.config.OathConfig.PLAYER_DAMAGE,OathRules.PLAYER_DAMAGE);
+            multiplier*=(1-Math.min(.5,NativeOathData.get(p.getServer()).penalty(p.getUUID())*com.maidweapon.port.config.NativeRules.oath(com.maidweapon.port.config.OathConfig.BACKLASH_OUT,OathRules.BACKLASH_OUT)));
+        }else if(direct&&actor instanceof EntityMaid maid&&empowered(maid))multiplier*=1+com.maidweapon.port.config.NativeRules.oath(com.maidweapon.port.config.OathConfig.MAID_DAMAGE,OathRules.MAID_DAMAGE);
         if(e.getEntity() instanceof ServerPlayer p){
-            if(active(p))multiplier*=1-OathRules.PLAYER_DEFENSE;
-            multiplier*=OathRules.incomingPenalty(NativeOathData.get(p.getServer()).penalty(p.getUUID()));
+            if(active(p))multiplier*=1-com.maidweapon.port.config.NativeRules.oath(com.maidweapon.port.config.OathConfig.PLAYER_DEFENSE,OathRules.PLAYER_DEFENSE);
+            multiplier*=(1+Math.min(.5,NativeOathData.get(p.getServer()).penalty(p.getUUID())*com.maidweapon.port.config.NativeRules.oath(com.maidweapon.port.config.OathConfig.BACKLASH_IN,OathRules.BACKLASH_IN)));
         }
         // Unknown mod target caps are not safe to amplify. Vanilla-only positive bonus for this probe.
         if(multiplier>1&&!net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(e.getEntity().getType()).getNamespace().equals("minecraft"))multiplier=1;

@@ -53,7 +53,7 @@ public final class NativeIntrinsicSpirits {
     /** Package-private for the native server fixture. Never publishes the candidate. */
     static boolean create(ServerLevel level,UUID owner,ItemStack carrier,Definition definition,UUID grant){
         if(level==null||owner==null||grant==null||carrier==null||!level.getServer().isSameThread()
-            ||carrier.getCount()!=1||!carrier.is(ProbeItems.CONTRACT_CARRIER.get())||!ContractStackDataAccess.readContract(carrier).isEmpty())return false;
+            ||carrier.getCount()!=1||!com.maidweapon.port.item.NativeCarriers.accepts(carrier)||ContractStackDataAccess.hasOwnedData(carrier))return false;
         try{
             var server=level.getServer();
             var single=carrier.get(PortDataTypes.CONTRACT_REFERENCE.get());

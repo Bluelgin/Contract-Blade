@@ -6,7 +6,7 @@ plugins {
 }
 group = mod_group_id
 version = mod_version
-base { archivesName = 'contract-blade-1.21.1-PORT-PROBE-NOT-FOR-PLAY' }
+base { archivesName = 'contract-blade-1.21.1-DEV-INCOMPLETE' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 sourceSets {
@@ -27,19 +27,25 @@ repositories {
 neoForge {
     version = project.neo_version
     runs {
-        client { client() }
+        client {
+            client()
+            if (project.hasProperty('nativeQuickJoin')) {
+                programArgument '--quickPlayMultiplayer'
+                programArgument project.property('nativeQuickJoin').toString()
+            }
+        }
         server {
             server()
-            gameDirectory = project.file('run/port-smoke-server')
+            gameDirectory = project.file('run/native-gameplay-server')
             programArgument '--nogui'
         }
         gameTestServer { type = 'gameTestServer' }
     }
-    mods { maid_weapon_port_probe { sourceSet sourceSets.main } }
+    mods { maid_weapon { sourceSet sourceSets.main } }
     // ModDevGradle does not put transformed Minecraft on plain Gradle test classpath.
     unitTest {
         enable()
-        testedMod = mods.maid_weapon_port_probe
+        testedMod = mods.maid_weapon
     }
 }
 dependencies {
@@ -49,8 +55,46 @@ dependencies {
 }
 tasks.withType(Test).configureEach { useJUnitPlatform() }
 tasks.named('jar', Jar).configure {
-    from('LICENSE') { rename { 'LICENSE_maid_weapon_port_probe' } }
+    from('LICENSE') { rename { 'LICENSE_maid_weapon' } }
     manifest {
-        attributes('Implementation-Title': 'Contract Blade port API probe, not a gameplay build')
+        attributes('Implementation-Title': 'Contract Blade native development, incomplete migration')
+    }
+}
+
+// Reuse current runtime art from its maintained source. Historical packs/music stay excluded.
+def nativeGeneratedResources = layout.buildDirectory.dir('generated/nativeResources')
+tasks.register('generateNativeResources') {
+    inputs.dir('src/main/resources/assets/maid_weapon/lang')
+    inputs.dir('src/main/resources/data/maid_weapon/recipes')
+    inputs.dir('src/port/lang')
+    outputs.dir(nativeGeneratedResources)
+    doLast {
+        def destination = nativeGeneratedResources.get().asFile
+        delete(destination)
+        ['en_us','zh_cn'].each { language ->
+            def text = new groovy.json.JsonSlurper().parse(file("src/main/resources/assets/maid_weapon/lang/${language}.json"))
+            def overlay = file("src/port/lang/${language}.json")
+            if (overlay.exists()) text.putAll(new groovy.json.JsonSlurper().parse(overlay))
+            def output = new File(destination,"assets/maid_weapon/lang/${language}.json")
+            output.parentFile.mkdirs()
+            output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(new TreeMap(text))) + '\n'
+        }
+        ['maid_sword','maid_injector','maid_heavy','maid_fast','altar/spirit_crystal','altar/awakening_vein','altar/flowing_vein','altar/endless_vein'].each { name ->
+            def recipe = new groovy.json.JsonSlurper().parse(file("src/main/resources/data/maid_weapon/recipes/${name}.json"))
+            if (recipe.type == 'touhou_little_maid:altar_crafting') {
+                recipe = [type:'touhou_little_maid:altar_recipe_serializers',category:'misc',entity:'minecraft:item',group:'altar_recipe',ingredients:recipe.ingredients,power:recipe.power,lang:'jei.touhou_little_maid.altar_craft.item_craft.result',result:[id:recipe.output.nbt.Item.id,count:recipe.output.nbt.Item.Count]]
+            } else { recipe.result.id=recipe.result.remove('item') }
+            def output = new File(destination,"data/maid_weapon/recipe/${name}.json")
+            output.parentFile.mkdirs()
+            output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(recipe)) + '\n'
+        }
+    }
+}
+tasks.named('processResources', ProcessResources).configure {
+    dependsOn('generateNativeResources')
+    from(nativeGeneratedResources)
+    from('src/main/resources') {
+        include 'assets/maid_weapon/**', 'licenses/**', 'modelpacks/contract-fox-1.0.1.zip'
+        exclude 'assets/maid_weapon/lang/**', 'assets/maid_weapon/sounds/black_fox/epicbattle_j_*.ogg', 'licenses/black_fox_music/**'
     }
 }

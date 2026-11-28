@@ -1,0 +1,149 @@
+package com.maidweapon.port.fox;
+
+import com.google.gson.JsonParser;
+import com.mojang.logging.LogUtils;
+import net.neoforged.fml.loading.FMLPaths;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.zip.ZipFile;
+
+/** Install the credited runtime pack; only an exact known managed original may be upgraded. */
+public final class FoxModelPackBootstrap {
+    public static final String WHITE_MODEL = "contract_fox:fox_white";
+    public static final String BLACK_MODEL = "contract_fox:fox_black";
+    private static final String RESOURCE = "/modelpacks/contract-fox-1.0.1.zip";
+    private static final String ORIGINAL_SHA256 = "7fc3517d572a09964e97fe42ae68f45c3ad98b108a44b170039341dc0afbe308";
+    private static final String METADATA = "assets/contract_fox/maid_model.json";
+    private static final int METADATA_LIMIT = 65536;
+
+    public static void install() {
+        if (!supportsLoader()) return;
+        try {
+            install(FMLPaths.GAMEDIR.get().resolve("tlm_custom_pack"));
+        } catch (IOException | RuntimeException failure) {
+            LogUtils.getLogger().error("[MaidWeapon] Could not prepare fox model pack; existing packs were preserved", failure);
+        }
+    }
+
+    public static void install(Path directory) throws IOException {
+        Files.createDirectories(directory);
+        // Keep the existing managed filename so upgrades cannot register the same IDs twice.
+        Path target = directory.resolve("contract-blade-fox-1.0.0.zip");
+        boolean upgrade = Files.isRegularFile(target) && isManagedOriginal(target);
+        Set<String> existing = new HashSet<>();
+        try (var paths = Files.list(directory)) {
+            for (Path path : paths.toList()) {
+                if (upgrade && path.equals(target)) continue;
+                try {
+                    if (Files.isDirectory(path)) {
+                        Path metadata = path.resolve(METADATA);
+                        if (Files.isRegularFile(metadata) && Files.size(metadata) <= METADATA_LIMIT)
+                            collect(Files.readAllBytes(metadata), existing);
+                    } else if (path.getFileName().toString().endsWith(".zip")) {
+                        try (ZipFile zip = new ZipFile(path.toFile())) {
+                            var entry = zip.getEntry(METADATA);
+                            if (entry != null) try (var stream = zip.getInputStream(entry)) {
+                                collect(stream.readNBytes(METADATA_LIMIT + 1), existing);
+                            }
+                        }
+                    }
+                } catch (IOException | RuntimeException failure) {
+                    LogUtils.getLogger().warn("[MaidWeapon] Could not inspect a custom model pack; leaving it unchanged", failure);
+                }
+            }
+        }
+        // User-installed originals win. Never duplicate these IDs or replace edited assets.
+        if (existing.contains(WHITE_MODEL) || existing.contains(BLACK_MODEL)) {
+            if (!existing.containsAll(Set.of(WHITE_MODEL, BLACK_MODEL)))
+                LogUtils.getLogger().warn("[MaidWeapon] Partial fox model pack found; automatic installation skipped to avoid duplicate IDs");
+            return;
+        }
+        if (Files.exists(target) && !upgrade) {
+            LogUtils.getLogger().warn("[MaidWeapon] Existing managed fox pack was not overwritten; inspect it if models are missing");
+            return;
+        }
+        // A current managed pack is already the desired result. Rewriting it
+        // on every boot creates identical backups without an actual upgrade.
+        if (upgrade && bundledMatches(target)) return;
+        Path temporary = Files.createTempFile(directory, ".contract-fox-", ".tmp");
+        try (var source = FoxModelPackBootstrap.class.getResourceAsStream(RESOURCE)) {
+            if (source == null) throw new IOException("Missing bundled fox model archive");
+            Files.copy(source, temporary, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            if (upgrade) {
+                // Recheck immediately before replacing; preserve edited packs and a recoverable original.
+                if (!isManagedOriginal(target)) return;
+                Path backup = Files.createTempFile(directory, ".contract-fox-original-", ".bak");
+                Files.copy(target, backup, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                try {
+                    Files.move(temporary, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                            java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+                } catch (java.nio.file.AtomicMoveNotSupportedException ignored) {
+                    Files.move(temporary, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            } else {
+                Files.move(temporary, target); // Preserve a concurrently installed pack.
+            }
+            LogUtils.getLogger().info("[MaidWeapon] Installed credited White/Black Fox pack for the native TLM loader");
+        } finally {
+            Files.deleteIfExists(temporary);
+        }
+    }
+
+    private static boolean bundledMatches(Path target) throws IOException {
+        try (var source = FoxModelPackBootstrap.class.getResourceAsStream(RESOURCE)) {
+            if (source == null) throw new IOException("Missing bundled fox model archive");
+            byte[] bundled = source.readAllBytes();
+            return Files.size(target) == bundled.length
+                    && java.util.Arrays.equals(bundled, Files.readAllBytes(target));
+        }
+    }
+
+    private static boolean isManagedOriginal(Path path) throws IOException {
+        if (Files.size(path) > 16L * 1024 * 1024) return false; // None of the known managed originals exceeds this.
+        try {
+            return Set.of(ORIGINAL_SHA256, "2d4563d5afd573e1ee85fedffaf28184bd70890bfc2f629374cabacd08ee6289",
+                    "a369393325c064bc9f8cb40ffc73f9f27b134696dc69d616ad8f7dc28cdb4e90",
+                    "9c907d7583939b1576fca9ba9c3eb77ee2738e000653c0095054e391cd09d6e9",
+                    "99dbec3f847173ace1e2c5d946c6187689a421675285cfacf8684feffb7e8b31",
+                    "cbff29358e1b4d918045b5795c716ae9ca9d6ec3ada4fada94af263dbc92c886",
+                    "9f0dabf01a62e9d64a7ea3a272dfe5bc4dfb89fdb6b967c2865a70442a9a8bf0",
+                    "49807e70c4eddb95321a8b1ada8fbfa9d6be6eb43c8a7d991744055fa3bd4bd4",
+                    "cf1b17abe896e83d20987858e28d41f2cb3c55a1024d0a4126880ba03098d732",
+                    "8c713434e70c14869164a67f2634c3de764800dd3b1248daaaf93e4906abbf8d",
+                    "c66d9de40369de9b52b54bd7836757f33d169cbdfa06212760fa5f309c63c24d",
+                    "1d00d56b59c3f96deef08a6c53461f3d4c1ecf25ba5c95778f187113082ede21")
+                    .contains(java.util.HexFormat.of().formatHex(
+                    java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path))));
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
+    }
+
+    private static void collect(byte[] bytes, Set<String> models) {
+        if (bytes.length > METADATA_LIMIT) return;
+        var list = JsonParser.parseString(new String(bytes, StandardCharsets.UTF_8))
+                .getAsJsonObject().getAsJsonArray("model_list");
+        if (list == null) return;
+        for (var entry : list) models.add(entry.getAsJsonObject().get("model_id").getAsString());
+    }
+
+    /** Server-safe metadata availability; never loads client rendering classes. */
+    public static boolean isRegistered(String model) {
+        if (!supportsLoader()) return false;
+        return com.github.tartaricacid.touhoulittlemaid.entity.info.models.ServerMaidModels.getInstance().containsInfo(model);
+    }
+
+    private static boolean supportsLoader() {
+        return net.neoforged.fml.ModList.get().getModContainerById("touhou_little_maid")
+                .map(container -> container.getModInfo().getVersion().compareTo(
+                        new org.apache.maven.artifact.versioning.DefaultArtifactVersion("1.5.3")) >= 0)
+                .orElse(false);
+    }
+
+    private FoxModelPackBootstrap() { }
+}

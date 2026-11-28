@@ -42,7 +42,8 @@ public final class NativeMasteryData extends SavedData {
     }
     /** Caller must settle a genuine, once-only server combat credit. */
     public MasteryProgress credit(UUID owner,int tier,String id){
-        var p=read(owner).credit(tier,id,null);
+        var before=read(owner);
+        var p=before.credit(tier,id,com.maidweapon.port.config.NativeRules.masteryRule(before.level()+1));
         var t=new CompoundTag();t.putInt("level",p.level());t.putInt("kills",p.totalKills());t.putInt("tier",p.unlockedTier());
         t.putInt("dragon",p.dragonKills());t.putInt("wither",p.witherKills());
         t.putIntArray("progress",p.progress().stream().mapToInt(Integer::intValue).toArray());

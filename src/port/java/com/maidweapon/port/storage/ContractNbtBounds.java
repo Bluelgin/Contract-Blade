@@ -11,7 +11,7 @@ import net.minecraft.nbt.Tag;
 /** Version-specific, bounded 1.21.1 implementation of the old NBT size rules. */
 public final class ContractNbtBounds {
     private static final int MAX_SCAN_NODES = 65536;
-    private static final int MAX_SAFE_DEPTH = 128;
+    private static final int MAX_SAFE_DEPTH = 512;
 
     public static long serializedSize(CompoundTag tag) {
         if (tag == null) return 0;

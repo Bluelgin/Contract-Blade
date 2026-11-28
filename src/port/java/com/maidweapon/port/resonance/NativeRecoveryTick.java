@@ -26,9 +26,9 @@ public final class NativeRecoveryTick {
         long now=server.overworld().getGameTime();
         if(now%20!=0)return;
         try{
-            var rules=ResonanceRules.DEFAULT;
+            var rules=com.maidweapon.port.config.NativeRules.resonance();
             var pool=NativeResonanceSavedData.get(server);
-            double multiplier=SpiritVeinRules.multiplier(NativeSpiritVeinData.get(server).stage(player.getUUID()));
+            double multiplier=com.maidweapon.port.config.NativeRules.vein(NativeSpiritVeinData.get(server).stage(player.getUUID()));
             var sessions=SESSIONS.computeIfAbsent(player,p->new java.util.HashMap<>());
             var seen=new java.util.HashSet<UUID>();
             var inv=player.getInventory();

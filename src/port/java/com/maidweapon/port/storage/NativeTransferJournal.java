@@ -26,7 +26,7 @@ import com.maidweapon.port.tlm.VerifiedTlmSnapshot;
 public final class NativeTransferJournal {
     public enum Kind { CAPTURE, MANIFEST }
     private static final WeakHashMap<MinecraftServer, NativeTransferJournal> SESSIONS = new WeakHashMap<>();
-    private static final long MAX_FILE = 40L * 1024 * 1024;
+    private static final long MAX_FILE = 80L * 1024 * 1024;
     private final Path directory;
     private final UUID session;
     private final java.util.Set<UUID> durableThisSession=new java.util.HashSet<>();

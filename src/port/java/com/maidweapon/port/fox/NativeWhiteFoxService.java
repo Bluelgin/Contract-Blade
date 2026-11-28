@@ -50,7 +50,7 @@ public final class NativeWhiteFoxService {
     }
     private static long now(ServerPlayer p){return p.getServer().overworld().getGameTime();}
     private static WhiteFoxGuardRuntime state(ServerPlayer p){return RUNTIME.computeIfAbsent(p,k->new WhiteFoxGuardRuntime());}
-    private static int cost(SpiritCosts.Action action){return SpiritCosts.scaledPoints(ResonanceRules.DEFAULT.maximum(),action.basisPoints);}
+    private static int cost(SpiritCosts.Action action){return SpiritCosts.scaledPoints(com.maidweapon.port.config.NativeRules.resonance().maximum(),action.basisPoints);}
     private static boolean affordable(ServerPlayer p,Context c,SpiritCosts.Action action){
         var server=p.getServer();var ref=NativeChannelService.selected(server,p.getUUID(),c.carrier());
         if(ref!=null)return NativeBaubleCapabilities.stored(server,ref)==NativeBaubleCapabilities.Ultimate.ENDLESS
@@ -182,7 +182,7 @@ public final class NativeWhiteFoxService {
                 cleanse(p);clearShield(p);shield(p,f.ticks("oath_shield_ticks"));state.protect(now(p),f.ticks("protection_ticks"));
             }
             p.getServer().overworld().getDataStorage().save();cue(p);
-            p.displayClientMessage(Component.translatable("maid_weapon_port_probe.white.rescue"),true);
+            p.displayClientMessage(Component.translatable("maid_weapon.native.white.rescue"),true);
         }else crisis(p,c,p.getHealth()-amount);
         return amount;
     }

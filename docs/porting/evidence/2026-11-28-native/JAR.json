@@ -1,0 +1,13 @@
+{
+  "filename": "contract-blade-1.21.1-DEV-INCOMPLETE-0.0.0-port-dev.jar",
+  "sha256": "ac661d1f8cd526bec84ae4a4532ff632df2b83f54a00c6ab05726091b18adb11",
+  "java": 21,
+  "minecraft": "1.21.1",
+  "neoforge": "21.1.219",
+  "tlm": "1.5.3-neoforge+mc1.21.1",
+  "status": "incomplete native gameplay development; not a release",
+  "build_tests": 59,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0
+}

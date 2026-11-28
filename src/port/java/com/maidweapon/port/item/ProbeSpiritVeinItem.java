@@ -29,11 +29,13 @@ public final class ProbeSpiritVeinItem extends Item {
             var data=NativeSpiritVeinData.get(serverPlayer.getServer());
             var result=data.upgrade(player.getUUID(),stage);
             if(result!=SpiritVeinRules.Upgrade.SUCCESS){
-                player.displayClientMessage(Component.literal("[Port Probe] Upgrade rejected: "+result),true);
+                player.displayClientMessage(Component.translatable("maid_weapon.native.vein.rejected",result),true);
                 return InteractionResultHolder.fail(stack);
             }
             if(!player.getAbilities().instabuild)stack.shrink(1);
-            player.displayClientMessage(Component.literal("[Port Probe] Spirit vein "+stage+" / x"+SpiritVeinRules.multiplier(stage)),true);
+            player.displayClientMessage(Component.translatable("maid_weapon.native.vein.upgraded",stage,com.maidweapon.port.config.NativeRules.vein(stage)),true);
+            level.playSound(null,player.blockPosition(),net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,net.minecraft.sounds.SoundSource.PLAYERS,1,1+stage*.1f);
+            serverPlayer.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.ENCHANT,player.getX(),player.getY()+1,player.getZ(),24,.4,.5,.4,.05);
             return InteractionResultHolder.success(stack);
         }catch(RuntimeException rejected){
             return InteractionResultHolder.fail(stack);

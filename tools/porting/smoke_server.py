@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-WORLD = ROOT / "run" / "port-smoke-server"
+WORLD = ROOT / "run" / "native-gameplay-server"
 WORLD.mkdir(parents=True, exist_ok=True)
 # Keep RCON on the local disposable CI server; never expose or log credentials.
 with socket.socket() as reserved:
@@ -26,6 +26,7 @@ RCON_PASSWORD = secrets.token_hex(24)
     "server-ip=127.0.0.1\n"
     "level-type=minecraft:flat\n"
     "generate-structures=false\n"
+    'generator-settings={"layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"biome":"minecraft:plains"}\n'
     "view-distance=2\n"
     "simulation-distance=2\n"
     "enable-rcon=true\n"
@@ -105,7 +106,7 @@ def boot_and_verify(command, markers):
                 continue
             if line is None:
                 raise RuntimeError("Server output closed during startup")
-            if "Contract Blade NeoForge port probe loaded" in line:
+            if "Contract Blade native development build loaded" in line:
                 loaded = True
             if "Done (" in line and "For help" in line:
                 ready = True
@@ -158,7 +159,7 @@ boot_and_verify("contractportverify", {
     "PORT_NATIVE_TLM_WORLD_TRANSFER_PASS",
     "PORT_NATIVE_CHANNEL_LIFECYCLE_PASS",
     "PORT_NATIVE_ULTIMATE_BAUBLES_PASS",
-    "PORT_NATIVE_PLAYER_CARRIER_PASS",
+    "PORT_NATIVE_PLAYER_CARRIER_PASS", "NATIVE_FORMAL_ALTAR_PASS", "NATIVE_CONFIGURATION_PASS",
     "PORT_NATIVE_RESTART_FIXTURE_PREPARED",
 })
 boot_and_verify("contractportverifyrestart", {"PORT_NATIVE_RESTART_PASS"})

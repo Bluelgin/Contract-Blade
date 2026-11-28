@@ -1,25 +1,25 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
-license = "MIT"
+license = "MIT (code); bundled assets retain their own licenses"
 [[mods]]
-modId = "maid_weapon_port_probe"
+modId = "maid_weapon"
 version = "0.0.0-port-dev"
-displayName = "Contract Blade 1.21.1 Port API Probe (NOT FOR PLAY)"
+displayName = "Contract Blade 1.21.1 Native Development (NOT FOR PLAY)"
 authors = "_Cazs_"
-description = '''Internal development fixtures for native data, lifecycle and partial abilities. NOT a complete gameplay port. NEVER install in an existing Contract Blade world.'''
-[[dependencies.maid_weapon_port_probe]]
+description = '''Incomplete native gameplay port with isolated development fixtures. NOT a complete gameplay port. NEVER install in an existing Contract Blade world.'''
+[[dependencies.maid_weapon]]
 modId = "neoforge"
 type = "required"
 versionRange = "[21.1.219,)"
 ordering = "NONE"
 side = "BOTH"
-[[dependencies.maid_weapon_port_probe]]
+[[dependencies.maid_weapon]]
 modId = "minecraft"
 type = "required"
 versionRange = "[1.21.1,1.21.2)"
 ordering = "NONE"
 side = "BOTH"
-[[dependencies.maid_weapon_port_probe]]
+[[dependencies.maid_weapon]]
 modId = "touhou_little_maid"
 type = "required"
 versionRange = "[1.5.3,)"

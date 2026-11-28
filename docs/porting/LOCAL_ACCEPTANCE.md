@@ -1,10 +1,10 @@
 # 本地开发验收（非正式游玩版）
 
-本轮构建仍是 `maid_weapon_port_probe`，不是完整移植包。不要放入正式旧存档，也不要与 Forge 1.20.1 JAR 混装。
+本轮构建使用正式 `maid_weapon` ID，但仍不是完整移植包；测试物品隔离在 `maid_weapon_port_probe`。不要放入正式旧存档，也不要与 Forge 1.20.1 JAR 混装。
 
 ## NeoForge
 
-建立全新实例：Minecraft 1.21.1、Java 21、NeoForge 21.1.219、Touhou Little Maid `1.5.3-neoforge+mc1.21.1`，将 `contract-blade-1.21.1-PORT-PROBE-NOT-FOR-PLAY-0.0.0-port-dev.jar` 放入 mods。它只提供开发入口；不存在正式缔结台、黑狐/赤月/万华完整技能或内部空间。
+建立全新实例：Minecraft 1.21.1、Java 21、NeoForge 21.1.219、Touhou Little Maid `1.5.3-neoforge+mc1.21.1`，将 `contract-blade-1.21.1-DEV-INCOMPLETE-0.0.0-port-dev.jar` 放入 mods。普通契约已有正式缔结台与 GUI；黑狐/赤月/万华完整技能、装备投影和内部空间尚未实现。
 
 源码验证：
 
@@ -16,9 +16,13 @@ python tools/porting/smoke_server.py
 ./gradlew --no-daemon runClient
 ```
 
-smoke 脚本只创建 `run/port-smoke-server` 的一次性世界，通过本地 RCON 执行真实 TLM 生命周期与重启夹具，不读取正式玩家存档。不要手工在该目录存放有价值的世界。完整测试列表与断言见脚本及 `NativeTlmRoundTripCommand`；管理指令仅用于隔离夹具，不是正式玩法入口。
+smoke 脚本只创建 `run/native-gameplay-server` 的一次性世界，通过本地 RCON 执行真实 TLM 生命周期与重启夹具，不读取正式玩家存档。不要手工在该目录存放有价值的世界。完整测试列表与断言见脚本及 `NativeTlmRoundTripCommand`；管理指令仅用于隔离夹具，不是正式玩法入口。
 
-客户端验收先检查主菜单的 Mods 中是否加载 NeoForge、TLM 和 port probe。开发载体支持对自有女仆捕获、对方块显现、显现后右键空气归刃、潜行右键循环封存通道；O 键为开发完全显现入口。开发水晶不能代表正式白狐觉醒。任何未亲自执行的行为都不能标为实机通过。
+客户端验收先检查主菜单的 Mods 中是否加载 NeoForge、TLM 和 Contract Blade。
+
+普通入口：按原配方用木剑和 TLM 空魂符合成契约之刃；用 TLM 魂符捕获自己的女仆，在契约台放入武器与魂符并点击缔结。取出武器，右键空气显现/归刃；潜行右键切换封存通道。普通契约迁居：在台上放入已归刃的武器和空魂符，提取后可重绑到空契约剑；直接使用迁居魂符则安全释放女仆。不要复制物品作为“备份恢复”，旧票会被拒绝。
+
+以下仅为夹具：开发载体支持对自有女仆捕获、对方块显现、显现后右键空气归刃、潜行右键循环封存通道；O 键为开发完全显现入口。开发水晶不能代表正式白狐觉醒。任何未亲自执行的行为都不能标为实机通过。
 
 ## Forge
 

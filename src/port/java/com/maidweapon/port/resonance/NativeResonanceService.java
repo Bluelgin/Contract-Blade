@@ -45,7 +45,7 @@ public final class NativeResonanceService {
         return journalAllows(server,v.maid()) ? new Identity(v.maid(),v.owner(),v.binding()) : null;
     }
     private static int current(MinecraftServer server,Identity i) {
-        return i==null ? -1 : NativeResonanceSavedData.get(server).current(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT);
+        return i==null ? -1 : NativeResonanceSavedData.get(server).current(i.maid,i.owner,i.binding,com.maidweapon.port.config.NativeRules.resonance());
     }
     public static int currentStored(MinecraftServer server,UUID owner,ItemStack stack) {
         try{return current(server,stored(server,owner,stack));}catch(RuntimeException rejected){return -1;}
@@ -57,7 +57,7 @@ public final class NativeResonanceService {
         if(i==null || attempt==null) return Payment.UNAUTHORIZED;
         if(attempt.completed) return Payment.ALREADY_PAID;
         if(cost<0) return Payment.INVALID_COST;
-        Payment p=NativeResonanceSavedData.get(server).pay(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,cost,waived);
+        Payment p=NativeResonanceSavedData.get(server).pay(i.maid,i.owner,i.binding,com.maidweapon.port.config.NativeRules.resonance(),cost,waived);
         if(p==Payment.PAID || p==Payment.WAIVED) attempt.completed=true;
         return p;
     }
@@ -85,13 +85,13 @@ public final class NativeResonanceService {
     public static int recoverStored(MinecraftServer server,UUID owner,ItemStack stack,int amount) {
         try {
             Identity i=stored(server,owner,stack);
-            return i==null || amount<0 || com.maidweapon.port.oath.NativeOathService.burning(server,i.owner,i.maid,i.binding) ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
+            return i==null || amount<0 || com.maidweapon.port.oath.NativeOathService.burning(server,i.owner,i.maid,i.binding) ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,com.maidweapon.port.config.NativeRules.resonance(),amount);
         } catch(RuntimeException rejected){return -1;}
     }
     public static int recoverLive(MinecraftServer server,UUID owner,EntityMaid maid,int amount) {
         try {
             Identity i=live(server,owner,maid);
-            return i==null || amount<0 ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,ResonanceRules.DEFAULT,amount);
+            return i==null || amount<0 ? -1 : NativeResonanceSavedData.get(server).recover(i.maid,i.owner,i.binding,com.maidweapon.port.config.NativeRules.resonance(),amount);
         }catch(RuntimeException rejected){return -1;}
     }
     private NativeResonanceService(){}

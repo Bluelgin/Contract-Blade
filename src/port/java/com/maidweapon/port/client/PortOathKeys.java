@@ -1,5 +1,5 @@
 package com.maidweapon.port.client;
-import com.maidweapon.port.PortProbeMod;
+import com.maidweapon.port.ContractBladeMod;
 import com.maidweapon.port.network.PortStatusNetwork;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
@@ -11,11 +11,11 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
-@EventBusSubscriber(modid=PortProbeMod.ID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid=ContractBladeMod.ID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.MOD)
 public final class PortOathKeys{
-    private static final KeyMapping TOGGLE=new KeyMapping("key.maid_weapon_port_probe.oath",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_O,"key.categories.maid_weapon_port_probe");
+    private static final KeyMapping TOGGLE=new KeyMapping("key.maid_weapon.oath",InputConstants.Type.KEYSYM,GLFW.GLFW_KEY_O,"key.categories.maid_weapon");
     @SubscribeEvent public static void register(RegisterKeyMappingsEvent e){e.register(TOGGLE);}
-    @EventBusSubscriber(modid=PortProbeMod.ID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
+    @EventBusSubscriber(modid=ContractBladeMod.ID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
     public static final class Input{
         @SubscribeEvent public static void tick(ClientTickEvent.Post e){
             var mc=Minecraft.getInstance();

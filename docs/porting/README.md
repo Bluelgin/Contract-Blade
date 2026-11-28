@@ -1,7 +1,6 @@
 # Contract Blade — NeoForge 1.21.1 port
 
-> **IN PROGRESS / NOT FOR PLAY.** The current branch builds an isolated
-> platform/API probe, **not** a replacement for the 1.20.1 Forge mod.
+> **IN PROGRESS / NOT FOR PLAY.** The current branch builds an incomplete native gameplay adapter, **not** a replacement for the 1.20.1 Forge mod.
 
 ## Branch and toolchain contract
 
@@ -19,9 +18,9 @@ and src/main/resources. The NEW Gradle build selects only src/port/java and
 src/port/resources. This deliberately preserves the old code for comparison
 while compiling a small modern NeoForge + TLM API probe.
 
-The probe has its own temporary mod id: maid_weapon_port_probe.
+The mod now uses maid_weapon for implemented formal content. Test-only items remain in maid_weapon_port_probe.
 It must NEVER be distributed as a gameplay mod or used to upgrade a world.
-No legacy registries, contracts, skills or other feature parity is claimed.
+The normal contract-table flow is now implemented; full feature parity is not claimed. See [current delivery and evidence](NATIVE_GAMEPLAY_DELIVERY.md).
 
 Current native architecture: see [NATIVE_ARCHITECTURE.md](NATIVE_ARCHITECTURE.md). The current lifecycle uses native component references and world snapshots; the following older experiments are retained as migration fixtures.
 
@@ -49,7 +48,7 @@ M1: full registry parity, all stored contract keys, true old NBT codec,
 M2: TLM capture/manifest/recall/soul-talisman, identity ledger and equipment.
 M3: Resonance, oath, black/white fox, Akatsuki, Manka, interiors and client.
 M4: Optional integrations, dedicated server, client, multiplayer, golden worlds.
-M5: Restore maid_weapon mod ID only after full parity and data safety passes;
+M5: Finish formal registry parity and data safety gates;
     publish beta with explicit save migration status.
 
 See SAVE_COMPATIBILITY.md, ACCEPTANCE.md and MAINTENANCE.md.

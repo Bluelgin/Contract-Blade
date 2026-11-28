@@ -24,8 +24,8 @@ public final class NativeBaubleCapabilities {
         if(slots.getSlots()>64)return Ultimate.NONE;
         for(int i=0;i<slots.getSlots();i++){
             var s=slots.getStackInSlot(i);
-            if(s.is(ProbeItems.OATH_RING.get()))return Ultimate.OATH;
-            if(s.is(ProbeItems.ENDLESS_CONTRACT.get()))return Ultimate.ENDLESS;
+            if((s.is(ProbeItems.OATH_RING.get())||s.is(com.maidweapon.port.content.NativeContent.OATH_RING.get())))return Ultimate.OATH;
+            if((s.is(ProbeItems.ENDLESS_CONTRACT.get())||s.is(com.maidweapon.port.content.NativeContent.ENDLESS.get())))return Ultimate.ENDLESS;
         }
         return Ultimate.NONE;
     }

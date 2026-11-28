@@ -93,6 +93,7 @@ public final class NativeTlmRoundTripCommand {
             verifyChannelLifecycle(context.getLevel());
             verifyUltimateBaubles(context.getLevel());
             verifyCarrierInteraction(context.getLevel());
+            NativeGameplayVerification.run(context.getLevel());
             prepareRestartFixture(context.getLevel());
             require(com.maidweapon.port.recovery.NativeCheckpointService.checkpoint(context.getServer())>0,"No sealed checkpoints persisted");
             LOGGER.info("PORT_NATIVE_TLM_WORLD_TRANSFER_PASS: real spawn, capture, manifest, UUID, inventory and duplicate-carrier block");
@@ -358,7 +359,7 @@ public final class NativeTlmRoundTripCommand {
         var maid=new EntityMaid(level);maid.setOwnerUUID(OWNER);maid.moveTo(pos,0,0);
         maid.getMaidInv().setStackInSlot(0,new ItemStack(Items.DIAMOND,29));
         maid.setExperience(53);
-        var carrier=new ItemStack(ProbeItems.CONTRACT_CARRIER.get());
+        var carrier=new ItemStack(com.maidweapon.port.content.NativeContent.SWORD.get());
         try{
             require(level.addFreshEntity(maid),"Restart fixture spawn failed");
             require(PortContractLifecycleTrial.capture(level,maid,OWNER,"ProbeOwner",carrier),"Restart capture failed");

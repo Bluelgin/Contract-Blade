@@ -1,6 +1,6 @@
 package com.maidweapon.port.init;
 
-import com.maidweapon.port.PortProbeMod;
+import com.maidweapon.port.ContractBladeMod;
 import com.maidweapon.port.item.ProbeContractCarrierItem;
 import com.maidweapon.port.item.ProbeSpiritVeinItem;
 import net.minecraft.world.item.Item;
@@ -12,7 +12,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
  * maid_weapon registry ID before every original item has been ported.
  */
 public final class ProbeItems {
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(PortProbeMod.ID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(ContractBladeMod.FIXTURE_ID);
     public static final DeferredItem<Item> CONTRACT_BAUBLE =
         ITEMS.registerSimpleItem("contract_bauble", new Item.Properties().stacksTo(1));
     public static final DeferredItem<ProbeContractCarrierItem> CONTRACT_CARRIER =

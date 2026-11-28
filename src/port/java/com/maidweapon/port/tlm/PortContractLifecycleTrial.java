@@ -34,7 +34,7 @@ public final class PortContractLifecycleTrial {
             if (live.level() != level || live.isRemoved() || !live.isAlive()
                     || level.getEntity(live.getUUID()) != live || !owner.equals(live.getOwnerUUID())
                     || !validCarrier(carrier) || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
-                    || !ContractStackDataAccess.readContract(carrier).isEmpty()) return false;
+                    || ContractStackDataAccess.hasOwnedData(carrier)) return false;
             store = NativeContractStore.get(level.getServer());
             UUID maid = live.getUUID();
             var journal = NativeTransferJournal.get(level.getServer());
@@ -61,7 +61,7 @@ public final class PortContractLifecycleTrial {
             if (live.isRemoved() || level.getEntity(maid) != live || !owner.equals(live.getOwnerUUID())
                     || !validCarrier(carrier)
                     || carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())
-                    || !ContractStackDataAccess.readContract(carrier).isEmpty()
+                    || ContractStackDataAccess.hasOwnedData(carrier)
                     || !Objects.equals(priorChannels,carrier.get(PortDataTypes.CONTRACT_CHANNELS.get()))
                     || (priorChannels!=null && NativeChannelService.recall(level.getServer(),owner,carrier,maid)==null)) return false;
             ref = store.beginCapture(maid, owner, binding, op, snapshot);
@@ -106,7 +106,7 @@ public final class PortContractLifecycleTrial {
             ContractChannels channels = carrier.get(PortDataTypes.CONTRACT_CHANNELS.get());
             ref = NativeChannelService.selected(level.getServer(),owner,carrier);
             if (ref == null || !owner.equals(ref.owner())
-                    || !ContractStackDataAccess.readContract(carrier).isEmpty()) return null;
+                    || ContractStackDataAccess.hasOwnedData(carrier)) return null;
             if (!level.getWorldBorder().isWithinBounds(destination) || !level.hasChunkAt(destination)
                     || !level.getBlockState(destination).isAir()
                     || !level.getBlockState(destination.above()).isAir()) return null;
@@ -116,21 +116,23 @@ public final class PortContractLifecycleTrial {
             var journal = NativeTransferJournal.get(level.getServer());
             if (!journal.permits(ref.maid())) return null;
             CompoundTag snapshot = store.readStored(ref);
-            store.beginManifest(ref, op);
-            began = true;
-            journal.writeIntent(ref, op, NativeTransferJournal.Kind.MANIFEST, snapshot);
             candidate = TlmNativeTransformBridge.prepareManifestCandidate(level, carrier.copy(),
                 snapshot, owner, ref.maid());
             if (!candidate.hasData(PortDataTypes.MAID_BINDING)
                     || !ref.binding().equals(candidate.getData(PortDataTypes.MAID_BINDING)))
                 throw new IllegalStateException("Native snapshot binding attachment lost or changed");
             candidate.moveTo(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5, 0, 0);
-            if (!validCarrier(carrier) || !ContractStackDataAccess.readContract(carrier).isEmpty()
+            if (!validCarrier(carrier) || ContractStackDataAccess.hasOwnedData(carrier)
                 || !Objects.equals(channels,carrier.get(PortDataTypes.CONTRACT_CHANNELS.get()))
                 || (channels==null && !ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))
                 || (channels!=null && carrier.has(PortDataTypes.CONTRACT_REFERENCE.get())))
                 throw new IllegalStateException("Carrier changed during transform");
             if (!level.noCollision(candidate)) throw new IllegalStateException("Manifestation collision");
+            // Ordinary collision/transform validation must not replace a good CAPTURE
+            // checkpoint with an unpublishable MANIFEST intent.
+            store.beginManifest(ref, op);
+            began = true;
+            journal.writeIntent(ref, op, NativeTransferJournal.Kind.MANIFEST, snapshot);
             publicationAttempted = true;
             if (!level.addFreshEntity(candidate) || level.getEntity(ref.maid()) != candidate)
                 throw new IllegalStateException("World publication rejected");
@@ -156,7 +158,7 @@ public final class PortContractLifecycleTrial {
 
     private static boolean validCarrier(ItemStack stack) {
         return stack != null && !stack.isEmpty() && stack.getCount() == 1
-                && stack.is(ProbeItems.CONTRACT_CARRIER.get())
+                && com.maidweapon.port.item.NativeCarriers.accepts(stack)
                 && !(stack.has(PortDataTypes.CONTRACT_CHANNELS.get()) && stack.has(PortDataTypes.CONTRACT_REFERENCE.get()));
     }
     private PortContractLifecycleTrial() {}

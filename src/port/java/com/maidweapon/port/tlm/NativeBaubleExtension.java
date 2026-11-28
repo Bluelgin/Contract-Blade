@@ -8,6 +8,8 @@ import com.maidweapon.port.init.ProbeItems;
 @LittleMaidExtension
 public final class NativeBaubleExtension implements ILittleMaid{
     @Override public void bindMaidBauble(BaubleManager manager){
+        manager.bind(com.maidweapon.port.content.NativeContent.OATH_RING.get(),new IMaidBauble(){});
+        manager.bind(com.maidweapon.port.content.NativeContent.ENDLESS.get(),new IMaidBauble(){});
         manager.bind(ProbeItems.OATH_RING.get(),new IMaidBauble(){});
         manager.bind(ProbeItems.ENDLESS_CONTRACT.get(),new IMaidBauble(){});
     }

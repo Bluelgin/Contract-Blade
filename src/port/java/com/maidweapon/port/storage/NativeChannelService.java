@@ -14,8 +14,8 @@ import net.minecraft.world.item.ItemStack;
 public final class NativeChannelService {
     private static boolean valid(MinecraftServer server,UUID owner,ItemStack stack) {
         return server!=null && server.isSameThread() && owner!=null && stack!=null
-            && stack.getCount()==1 && stack.is(ProbeItems.CONTRACT_CARRIER.get())
-            && ContractStackDataAccess.readContract(stack).isEmpty();
+            && stack.getCount()==1 && com.maidweapon.port.item.NativeCarriers.accepts(stack)
+            && !ContractStackDataAccess.hasOwnedData(stack);
     }
     private static boolean sealed(MinecraftServer server,UUID owner,ContractReference ref,Optional<ResourceLocation> origin) throws java.io.IOException {
         if(ref==null || !owner.equals(ref.owner())) return false;

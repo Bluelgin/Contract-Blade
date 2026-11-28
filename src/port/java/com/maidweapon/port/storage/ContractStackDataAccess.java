@@ -32,6 +32,11 @@ public final class ContractStackDataAccess {
     public static CompoundTag readContract(ItemStack stack) {
         return extractOwned(readRoot(stack));
     }
+    /** Cheap read-only rejection in combat/UI hot paths; never copy unrelated third-party data. */
+    public static boolean hasOwnedData(ItemStack stack) {
+        var data=stack.get(DataComponents.CUSTOM_DATA);
+        return data!=null&&OWNED_KEYS.stream().anyMatch(data::contains);
+    }
 
     public static CompoundTag extractOwned(CompoundTag original) {
         Objects.requireNonNull(original, "original");

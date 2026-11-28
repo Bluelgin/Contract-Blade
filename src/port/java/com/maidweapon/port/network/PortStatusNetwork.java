@@ -1,6 +1,6 @@
 package com.maidweapon.port.network;
 
-import com.maidweapon.port.PortProbeMod;
+import com.maidweapon.port.ContractBladeMod;
 import com.maidweapon.port.domain.resonance.ResonanceRules;
 import com.maidweapon.port.resonance.NativeResonanceService;
 import com.maidweapon.port.storage.NativeChannelService;
@@ -19,17 +19,17 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 /** Read-only server status, correlated by opaque selected ticket, never a client-supplied identity. */
 public final class PortStatusNetwork {
     public record Request() implements CustomPacketPayload {
-        public static final Type<Request> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"status_request"));
+        public static final Type<Request> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(ContractBladeMod.ID,"status_request"));
         public static final StreamCodec<ByteBuf,Request> CODEC=StreamCodec.of((b,v)->{},b->new Request());
         @Override public Type<Request> type(){return TYPE;}
     }
     public record OathToggle() implements CustomPacketPayload {
-        public static final Type<OathToggle> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"oath_toggle"));
+        public static final Type<OathToggle> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(ContractBladeMod.ID,"oath_toggle"));
         public static final StreamCodec<ByteBuf,OathToggle> CODEC=StreamCodec.of((b,v)->{},b->new OathToggle());
         @Override public Type<OathToggle> type(){return TYPE;}
     }
     public record Status(boolean authorized,boolean manifested,int current,int maximum,UUID ticket) implements CustomPacketPayload {
-        public static final Type<Status> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(PortProbeMod.ID,"status"));
+        public static final Type<Status> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath(ContractBladeMod.ID,"status"));
         public Status {
             if(maximum<1 || maximum>1_000_000 || current<0 || current>maximum
                 || authorized!=(ticket!=null) || (!authorized&&(current!=0||manifested)))
@@ -73,7 +73,7 @@ public final class PortStatusNetwork {
         if(live!=null)current=NativeResonanceService.currentLive(server,owner,live);
         var ref=NativeChannelService.displayReference(stack);
         boolean ok=current>=0&&ref!=null;
-        context.reply(new Status(ok,ok&&live!=null,ok?current:0,ResonanceRules.DEFAULT.maximum(),ok?ref.ticket():null));
+        context.reply(new Status(ok,ok&&live!=null,ok?current:0,com.maidweapon.port.config.NativeRules.resonance().maximum(),ok?ref.ticket():null));
     }
     private static void receive(Status status,IPayloadContext context) {
         Player player=context.player();

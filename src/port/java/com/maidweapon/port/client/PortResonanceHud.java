@@ -1,6 +1,6 @@
 package com.maidweapon.port.client;
 
-import com.maidweapon.port.PortProbeMod;
+import com.maidweapon.port.ContractBladeMod;
 import com.maidweapon.port.network.PortStatusNetwork;
 import com.maidweapon.port.storage.NativeChannelService;
 import net.minecraft.client.Minecraft;
@@ -13,7 +13,7 @@ import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Physical-client-only display. Does not calculate authority or predict balances. */
-@EventBusSubscriber(modid=PortProbeMod.ID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid=ContractBladeMod.ID,value=Dist.CLIENT,bus=EventBusSubscriber.Bus.GAME)
 public final class PortResonanceHud {
     private static int ticks;
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
@@ -32,7 +32,7 @@ public final class PortResonanceHud {
         g.fill(x-1,y-1,x+w+1,y+7,0xB0000000);
         g.fill(x,y,x+w,y+6,0xFF2B2635);
         g.fill(x,y,x+(int)((long)w*s.current()/s.maximum()),y+6,0xFFAB76E7);
-        g.drawCenteredString(mc.font,Component.translatable(s.manifested()?"maid_weapon_port_probe.hud.live":"maid_weapon_port_probe.hud.stored",
+        g.drawCenteredString(mc.font,Component.translatable(s.manifested()?"maid_weapon.native.hud.live":"maid_weapon.native.hud.stored",
             s.current(),s.maximum()),x+w/2,y-11,0xFFFFFFFF);
     }
 }

@@ -121,6 +121,26 @@ public final class NativeContractStore extends SavedData {
         e.putString("phase", Phase.LIVE.name());
         put(maid, e);
     }
+    /** First import of a native TLM soul slab. No fictitious LIVE entity is registered. */
+    public ContractReference beginSlabImport(UUID maid,UUID owner,UUID binding,UUID operation,CompoundTag snapshot) throws IOException {
+        if(inspect(maid)!=null)throw new IllegalStateException("Maid already registered");
+        VerifiedTlmSnapshot.requireIdentity(snapshot,owner,maid);
+        ContractNbtBoundsGuard.validate(snapshot);
+        var ticket=UUID.randomUUID();var e=new CompoundTag();
+        e.putUUID("owner",owner);e.putUUID("binding",binding);e.putUUID("ticket",ticket);
+        e.putUUID("operation",operation);e.putString("phase",Phase.CAPTURING.name());
+        e.put("snapshot",snapshot.copy());put(maid,e);
+        return new ContractReference(maid,owner,binding,ticket);
+    }
+    /** Move a sealed ordinary contract to another carrier, invalidating every old copy. */
+    public ContractReference beginCarrierTransfer(ContractReference ref,UUID operation) throws IOException {
+        require(ref,Phase.STORED);
+        if(!originMatches(ref.maid(),java.util.Optional.empty()))throw new IllegalStateException("Intrinsic origin cannot become a native soul slab");
+        var snapshot=readStored(ref);var next=entry(ref.maid()).copy();var ticket=UUID.randomUUID();
+        next.putUUID("ticket",ticket);next.putUUID("operation",operation);
+        next.putString("phase",Phase.CAPTURING.name());next.put("snapshot",snapshot);
+        put(ref.maid(),next);return new ContractReference(ref.maid(),ref.owner(),ref.binding(),ticket);
+    }
     private void put(UUID maid, CompoundTag e) {
         records.put(maid.toString(), e);
         setDirty();

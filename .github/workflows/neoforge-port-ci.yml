@@ -1,4 +1,4 @@
-name: Contract Blade 1.21.1 NeoForge port probe
+name: Contract Blade 1.21.1 native development
 on:
   push:
     branches:
@@ -32,7 +32,7 @@ jobs:
           python3 tools/porting/check_shared.py
           python3 tools/porting/test_shared_patch.py
           python3 tools/porting/audit_legacy.py
-      - name: Compile NeoForge/TLM probe and run unit tests
+      - name: Build native gameplay adapter and run unit tests
         run: ./gradlew --no-daemon build --stacktrace
       - name: Upload diagnostics (NEVER publish as a gameplay release)
         if: always()
@@ -42,8 +42,11 @@ jobs:
           path: |
             build/reports/tests/
             build/test-results/
-            build/libs/*PORT-PROBE*
+            build/libs/*DEV-INCOMPLETE*
             docs/porting/evidence/2026-11-27/
+            docs/porting/evidence/2026-11-28-native/
+            docs/porting/NATIVE_GAMEPLAY_DELIVERY.md
+            docs/porting/NATIVE_RESOURCE_INTEGRATION.csv
             docs/porting/audit-2026-11-28/
           retention-days: 7
           if-no-files-found: warn
@@ -69,7 +72,7 @@ jobs:
         with:
           name: neoforge-port-native-smoke-logs
           path: |
-            run/port-smoke-server/logs/
-            run/port-smoke-server/crash-reports/
+            run/native-gameplay-server/logs/
+            run/native-gameplay-server/crash-reports/
           retention-days: 7
           if-no-files-found: warn
