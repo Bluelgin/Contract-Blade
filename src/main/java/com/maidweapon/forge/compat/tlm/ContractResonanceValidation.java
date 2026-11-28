@@ -26,6 +26,17 @@ public final class ContractResonanceValidation {
     @SubscribeEvent public static void started(ServerStartedEvent event) {
         if (!Boolean.getBoolean("contractblade.resonance.validation")) return;
         try {
+            // This fixture mutates server config values rapidly. NightConfig's
+            // asynchronous autosave/reload can read an older write between set()
+            // and the assertion. Disable only this disposable world's rules watch;
+            // keep the real Forge spec, native slots and all gameplay assertions.
+            for (var config : net.minecraftforge.fml.config.ConfigTracker.INSTANCE
+                    .configSets().get(net.minecraftforge.fml.config.ModConfig.Type.SERVER)) {
+                if (config.getSpec() == com.maidweapon.common.ContractRulesConfig.SPEC) {
+                    com.electronwill.nightconfig.core.file.FileWatcher.defaultInstance()
+                            .removeWatch(config.getFullPath());
+                }
+            }
             run(event);
             if (!Boolean.getBoolean("contractblade.resonance.resume")) {
                 OathValidation.run(event.getServer());

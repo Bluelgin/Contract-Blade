@@ -56,6 +56,11 @@ jobs:
             "https://edge.forgecdn.net/files/8055/552/tacz-1.20.1-1.1.8-release.jar" \
             -o libs/tacz-1.20.1-1.1.8-release.jar
 
+      - name: Java 17 shared boundary and synchronization regression
+        run: |
+          python tools/porting/check_shared.py
+          python tools/porting/test_shared_patch.py
+
       - name: Damage observer MixinExtras overload regression
         run: python tools/run_damage_mixin_fixture.py --java-home "$JAVA_HOME" --output /tmp/cb-damage-mixin
 
@@ -151,6 +156,8 @@ jobs:
             build/test-results/test/*.xml
             /tmp/cb-damage-mixin*/**/transform.log
             /tmp/contract-stage-three-*/*.log
+            /tmp/contract-stage-three-*/**/logs/latest.log
+            /tmp/contract-stage-three-*/**/crash-reports/
             /tmp/contract-soul-*/server.log
             /tmp/contract-manka-native/server.log
           retention-days: 14

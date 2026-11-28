@@ -53,9 +53,7 @@ public final class ResonancePoolSavedData extends SavedData {
     }
     /** Full or empty legacy pools remain full or empty after conversion. */
     public static int convertLegacy(int old, int oldMaximum, int newMaximum) {
-        if (oldMaximum <= 0 || newMaximum <= 0) throw new IllegalArgumentException("Invalid resonance maximum");
-        long bounded = Math.max(0L, Math.min((long) old, (long) oldMaximum));
-        return (int) Math.min(newMaximum, (bounded * newMaximum + oldMaximum / 2L) / oldMaximum);
+        return com.maidweapon.port.domain.resonance.ResonanceRules.convertLegacy(old, oldMaximum, newMaximum);
     }
     private CompoundTag resolve(ResonanceContract context) {
         if (!writable(context)) return null;

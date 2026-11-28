@@ -153,6 +153,10 @@ minecraft {
 
 // 将生成的资源目录加入资源集
 sourceSets.main.resources { srcDir 'src/generated/resources' }
+// Shared Java 17 domain; native Forge adapters and validation remain separate.
+sourceSets.main.java.srcDir 'src/shared/java'
+sourceSets.main.resources.srcDir 'src/shared/resources'
+sourceSets.test.java.srcDir 'src/sharedTest/java'
 
 // Native fixtures stay available to Forge development runs, never in a player JAR.
 def validationSources = ['**/*Validation.java', '**/AkatsukiVisualCapture.java',

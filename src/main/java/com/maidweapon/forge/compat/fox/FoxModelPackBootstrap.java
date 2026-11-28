@@ -67,6 +67,9 @@ public final class FoxModelPackBootstrap {
             LogUtils.getLogger().warn("[MaidWeapon] Existing managed fox pack was not overwritten; inspect it if models are missing");
             return;
         }
+        // A current managed pack is already the desired result. Rewriting it
+        // on every boot creates identical backups without an actual upgrade.
+        if (upgrade && bundledMatches(target)) return;
         Path temporary = Files.createTempFile(directory, ".contract-fox-", ".tmp");
         try (var source = FoxModelPackBootstrap.class.getResourceAsStream(RESOURCE)) {
             if (source == null) throw new IOException("Missing bundled fox model archive");
@@ -91,7 +94,17 @@ public final class FoxModelPackBootstrap {
         }
     }
 
+    private static boolean bundledMatches(Path target) throws IOException {
+        try (var source = FoxModelPackBootstrap.class.getResourceAsStream(RESOURCE)) {
+            if (source == null) throw new IOException("Missing bundled fox model archive");
+            byte[] bundled = source.readAllBytes();
+            return Files.size(target) == bundled.length
+                    && java.util.Arrays.equals(bundled, Files.readAllBytes(target));
+        }
+    }
+
     private static boolean isManagedOriginal(Path path) throws IOException {
+        if (Files.size(path) > 16L * 1024 * 1024) return false; // None of the known managed originals exceeds this.
         try {
             return Set.of(ORIGINAL_SHA256, "2d4563d5afd573e1ee85fedffaf28184bd70890bfc2f629374cabacd08ee6289",
                     "a369393325c064bc9f8cb40ffc73f9f27b134696dc69d616ad8f7dc28cdb4e90",
