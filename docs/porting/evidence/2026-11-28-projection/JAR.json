@@ -1,0 +1,16 @@
+{
+  "jar": "contract-blade-1.21.1-DEV-INCOMPLETE-0.0.0-port-dev.jar",
+  "sha256": "54b02ea5b8cbc49a655e3e887fcce977b132bd2847d6fb668dca2455c6bb2450",
+  "source_base": "18468da3633fcddaa614822b2ed52a7a1e6b8f49",
+  "source_increment": "native companion, projection, guard and exact-ticket live reconciliation, committed with this receipt",
+  "runtime": "NeoForge 21.1.219; MC1.21.1; TLM1.5.3-neoforge; JDK21",
+  "loaded_from": "Gradle transformed development classes for these native smoke/client runs; not a production launcher install",
+  "packaged_server_validation": {
+    "installed_sha256": "54b02ea5b8cbc49a655e3e887fcce977b132bd2847d6fb668dca2455c6bb2450",
+    "matches_built_jar": true,
+    "class_origin": "union:/.../native-gameplay-packaged-server/mods/contract-blade-1.21.1-DEV-INCOMPLETE-0.0.0-port-dev.jar",
+    "excluded_own_classes_and_resources": true,
+    "results": "actual JAR first-boot native lifecycle/projection/guard/config tests and actual second-boot STORED/LIVE restart passed",
+    "limitation": "NeoForge DevLaunch libraries with real packaged mod; not an independently installed production launcher client"
+  }
+}

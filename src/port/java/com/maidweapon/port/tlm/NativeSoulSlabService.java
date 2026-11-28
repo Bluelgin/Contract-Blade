@@ -17,7 +17,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 public final class NativeSoulSlabService {
     public static boolean filled(ItemStack s){return s.getCount()==1&&BuiltInRegistries.ITEM.getKey(s.getItem()).toString().equals("touhou_little_maid:smart_slab_has_maid")&&s.has(InitDataComponent.MAID_INFO.get());}
     public static boolean empty(ItemStack s){return s.getCount()==1&&BuiltInRegistries.ITEM.getKey(s.getItem()).toString().equals("touhou_little_maid:smart_slab_empty");}
-    public static boolean blankWeapon(ItemStack s){return s.getCount()==1&&s.getItem() instanceof NativeContractSwordItem&&!s.has(PortDataTypes.CONTRACT_REFERENCE.get())&&!s.has(PortDataTypes.CONTRACT_CHANNELS.get())&&!ContractStackDataAccess.hasOwnedData(s);}
+    public static boolean blankWeapon(ItemStack s){return s.getCount()==1&&!com.maidweapon.port.projection.NativeProjection.isCopy(s)&&s.getItem() instanceof NativeContractSwordItem&&!s.has(PortDataTypes.CONTRACT_REFERENCE.get())&&!s.has(PortDataTypes.CONTRACT_CHANNELS.get())&&!ContractStackDataAccess.hasOwnedData(s);}
 
     public static boolean importInto(ServerPlayer player,ItemStack weapon,ItemStack slab){
         if(player==null||!player.isAlive()||player.isSpectator()||!player.getServer().isSameThread()||!blankWeapon(weapon)||!filled(slab))return false;

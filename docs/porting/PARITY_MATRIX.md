@@ -11,25 +11,25 @@ Forge 列表示正式源码的实际实现，不代表本轮已经重新验证�
 | 功能 | Forge 1.20.1 实现证据 | NeoForge 1.21.1 状态与验收缺口 |
 |---|---|---|
 | 契约缔结台及 GUI | `init/ModBlocks`, `ModMenus`, 配方序列化器与 shrine 模块 | **部分**；正式 `maid_weapon:maid_injector` block/menu/recipe 与原四槽 GUI 已接入；真实客户端已缔结，原生服务端覆盖迁居/重绑；剑灵特殊注入仍缺 |
-| 普通女仆捕获/显现/归刃 | `system/contract/ContractLifecycleService` | **部分**；正式武器配方→TLM 原生魂符捕获→契约台→武器显现/空气归刃已真实客户端操作；原生夹具覆盖身份、物品与余额；完整异常恢复仍缺 |
+| 普通女仆捕获/显现/归刃 | `system/contract/ContractLifecycleService` | **部分**；正式武器配方→TLM 原生魂符捕获→契约台→基础交互早期已实机；当前恢复原 `]` 显现/32 格内归刃，右键交给 TLM GUI；原生夹具覆盖身份、物品与余额；完整异常恢复仍缺 |
 | UUID、主人与账本权威 | `ContractCarrierData`, `ContractRecoveryJournal` | **部分**；`storage/NativeContractStore`、组件/附件/日志已通过原生生命周期、旧票拒绝与正常重启夹具；完整异常退出/多世界/正式入口验收未完 |
 | 多契约通道 | `ContractChannelStorage`, `IntrinsicSpiritOriginData` | **部分**；`NativeChannelService` 支持封存选择和开发物品循环；显现中拒绝切换，缺正式 UI |
 | 内置剑灵来源 | `IntrinsicSpiritOriginData`、白狐/黑狐祭坛获得路径 | **部分**；确定性 grant 账本与开发预设；水晶不是正式获得方式 |
 | 解绑/重新绑定/魂符迁居 | `ContractInteractionService`, transfer 服务 | **部分**；普通契约由正式契约台导出原生魂符、旋转票据、重绑、正常释放/再次原生捕获已执行服务端负向夹具；内置剑灵迁居仍缺 |
 | 紧急恢复/遗失武器/女仆重生 | `ContractAnomalyRecoveryService`, `ContractCarrierLossService`, rebirth 服务 | **部分**；诊断、检查点、已加载实体协调；未确认状态保持隔离，尚无完整恢复玩法 |
-| 正常停服/重启 | Forge 原生恢复夹具 | **部分**；原生双次启动持久化夹具通过；普通正式玩家存档/客户端停止后重进已实机；迁居提取/重绑保留 UUID/binding 及原外观；非检查点事务保持隔离 |
+| 正常停服/重启 | Forge 原生恢复夹具 | **部分**；原生双次启动持久化夹具通过；普通正式玩家存档/客户端停止后重进已实机；迁居提取/重绑保留 UUID/binding 及原外观；显现中重启通过已有唯一实体+附件+账本+精确 live ticket+原 MANIFEST 日志作本会话实证授权，不生成实体；无证据、未知 Schema 和未完成事务保持隔离 |
 | 掉线/死亡/跨维度 | deployment、companion 与 oath 事件 | **部分**；NeoForge oath/白狐清理存在；完整生命周期与多人验收缺失 |
-| 装备投影和恢复 | `system/deployment/ContractProjectionMode`、投影服务 | **未移植**；必须对真实 TLM 装备槽验收 |
-| 随行/战斗协同/工作与任务路由 | `ContractCompanionService`, `ContractCombatTaskRouter`, `MaidCareTaskSystem` | **未移植**完整行为；直接显现 TLM 实体不能代表完成 |
-| 安全喂食/护主/安全回收 | companion、`ContractGuardPolicy`、TLM 饰品权限 | **未移植**正式护主链 |
+| 装备投影和恢复 | `system/deployment/ContractProjectionMode`、投影服务 | **部分**；三种正式投影饰品及原配方、实际 TLM 手/护甲槽、首投影/首终极独立判定、原件返还与保护已实现；原生和真实 GUI 证据见 NATIVE_PROJECTION_DELIVERY.md；可选武器/魔法适配未完成 |
+| 随行/战斗协同/工作与任务路由 | `ContractCompanionService`, `ContractCombatTaskRouter`, `MaidCareTaskSystem` | **部分**；原 `]`/`O` 按键、手动随行、32 格召回、原特效/问候、TLM 驻留/名额、自存载体救回和非驻留退出回收已接入；保留原任务/作息，不启用现行正式版已关闭的自动工作策略；Attack 手动选择跨归刃保留、真实女仆近战及自存载体救回已有实机；遗失和全任务交接未完 |
+| 安全喂食/护主/安全回收 | companion、`ContractGuardPolicy`、TLM 饰品权限 | **部分**；正式护主结/配方、真实伤害 Pre/Post 与下一 Tick 扣血确认、用户配置/饰品权限、冷却和安全定时归刃已有原生实际执行回归；TLM 真实进食继续，归刃恢复借用副手；全部护主/工作/可选联动仍待验收 |
 | 独立共鸣池/重复支付防护 | `system/resonance/ResonanceService`, `ResonancePoolSavedData` | **部分**；`NativeResonanceService`、独立 SavedData 与 attempt 收据已有原生支付/恢复与重启夹具；全部正式技能与自定义配置未完 |
 | 共鸣恢复/战斗状态/击杀协同 | `ResonanceRecoveryEvents`, activity tracker | **部分**；原生 recovery tick 与直接攻击 credit；远程/第三方归因不完整 |
 | 初醒/流转/无尽灵脉 | `ResonanceProgressService`, 升级物品 | **部分**；正式原 ID、原动态图标/配方已接入，使用用户配置倍率；仍需完整三阶段实机成长验收 |
-| 无尽契约饰品与槽权限 | `ContractBaubleEffects`、TLM 原生槽注册 | **部分**；正式 `endless_contract`/`oath_ring` 已绑定真实 TLM 权限；原生配置和槽判定已有夹具；前置饰品/全部合成与投影仍缺，不能宣称正常获得闭环 |
+| 无尽契约饰品与槽权限 | `ContractBaubleEffects`、TLM 原生槽注册 | **部分**；正式 `endless_contract`/`oath_ring` 已绑定真实 TLM 权限；原生配置和槽判定已有夹具；三种投影前置已接入；全部祭坛合成及可选投影适配仍缺，不能宣称正常获得闭环 |
 | 配置数值兼容 | `MaidWeaponConfig`, `ContractRulesConfig`、各专用 config | **部分**；三份原版声明配置已适配 NeoForge；共鸣上限/单位/恢复、击杀奖励/成长定制、oath 燃烧/反噬与快照限制使用加载值，原生自定义配置夹具通过；其余配置及调用方仍缺 |
 | 成长等级/技能数据重载 | `ContractMasteryData`, ability registry/reload | **部分**；`NativeMasteryData`, typed progression、bounded JSON reload；三份共享成长数据不等于三套技能执行器 |
-| 同契之证/护主结/并契之环 | mastery/support baubles 与 `OathService` | **部分**；开发 oath/endless 饰品；正式辅助饰品和完整交互未完成 |
-| O 键完全显现/燃烧/休整/反噬 | `system/oath` 与客户端按键/同步 | **部分**；`NativeOathService`, `NativeOathData`, O 键 payload 存在；需真实客户端、多女仆与数值验收 |
+| 同契之证/护主结/并契之环 | mastery/support baubles 与 `OathService` | **部分**；开发 oath/endless 饰品；正式护主结已接入并验证核心执行；同契之证的伤害链与完整交互未完成 |
+| O 键完全显现/燃烧/休整/反噬 | `system/oath` 与客户端按键/同步 | **部分**；`NativeOathService`, `NativeOathData`, O 键 payload 存在；默认 O 激活/燃烧/再次 O 结束、期间 ] 不召回已真实客户端执行；完整演出、剑灵联动、多女仆与耗尽反噬实机仍缺 |
 | 白狐获得/觉醒/驻留/黑狐协同 | `system/fox` 与祭坛、原居逻辑 | **未移植**正式获得；临时 white crystal 仅用于夹具 |
 | 白狐守护/净化/治疗/护盾/机动 | `WhiteFoxBlessingService` 与成长数据 | **部分**；`fox/NativeWhiteFoxService` 有真实执行；仍缺完整演出、原生验收与阶段区别核对 |
 | 白狐誓约/免死/冷却 | `WhiteFoxBlessingCooldownData`, blessing service | **部分**；独立原生冷却 SavedData、免死执行存在；伤害吸收顺序与专用客户端效果需验收 |
@@ -46,7 +46,7 @@ Forge 列表示正式源码的实际实现，不代表本轮已经重新验证�
 | 居民/活动/家具/装饰/权限/区块 | interior/home life 服务与持久化 | **未移植**；尚无 NeoForge 实例和加载策略 |
 | 共鸣 HUD/契约显示 | Forge network/HUD | **部分**；真实客户端正式剑显现/归刃分别显示 Manifested/Stored 与 1000/1000；完整成长/技能 UI 未完成 |
 | 网络安全及专用服务端隔离 | Forge `SimpleChannel` 与客户端隔离 | **部分**；原生 bounded payload、服务端费用与权限；完整消息集未迁移 |
-| Items/Blocks/BlockEntities/Menus/Recipes | `init/ModItems`, `ModBlocks`, `ModMenus`, `ModRecipeSerializers` | **部分**；正式 mod ID 恢复为 `maid_weapon`；三把契约剑、契约台、灵脉/水晶与两饰品已有原生注册，八条已适配配方；未实现物品不注册空壳；旧 probe 只作隔离夹具 |
+| Items/Blocks/BlockEntities/Menus/Recipes | `init/ModItems`, `ModBlocks`, `ModMenus`, `ModRecipeSerializers` | **部分**；正式 mod ID 恢复为 `maid_weapon`；三把契约剑、契约台、灵脉/水晶、五投影/终极饰品与护主结已有原生注册，十四条原配方适配加载，祭坛实际合成仍待验收；未实现物品不注册空壳；旧 probe 只作隔离夹具 |
 | Entities/Effects/Sounds/Particles/Tabs | `ModSoulEntities` 与其他实际注册点 | **未移植**正式完整集合 |
 | Data Components/Attachments | Forge NBT/Capabilities | **部分**；原生 typed components/attachment 已接入开发流程；不是 ForgeCaps 的自动转换 |
 | 模型/贴图/动画/GUI/声音/粒子/Shader | `assets/maid_weapon/*`、TLM ZIP 内部和 Java 程序化视觉；见逐文件清单 | **部分**；当前分发 assets/许可/双狐 ZIP 纳入开发 JAR，普通女仆原双狐模型、正式剑与原粉色 GUI 已实机显示；技能程序化视觉/实体动画控制、Shader 生产接线与音频试听仍缺；撤下内容不恢复 |
@@ -67,4 +67,4 @@ Forge 列表示正式源码的实际实现，不代表本轮已经重新验证�
 
 本轮检查到的旧 CI：#38 编译重载歧义；#39 共鸣夹具完成 OATH_NATIVE_PASS 后在辅助饰品 `disabled overrides accessory` 失败，伴随 NightConfig 文件监听重载。费用/恢复断言已走过不等于完整夹具通过。最终结果应以交付报告和新 HEAD 的运行记录为准。
 
-**当前不满足正式游玩验收条件。** 正式 ID 已用于有真实执行的基础内容，必须继续补齐全部剑灵执行器、装备/随行、内部空间、完整客户端与资源；禁止将开发构建标记为完整产品。无实机截图、未执行和跳过的测试均不得写成通过。
+**当前不满足正式游玩验收条件。** 正式 ID 已用于有真实执行的基础内容，必须继续补齐全部剑灵执行器、完整装备/随行与联动、内部空间、完整客户端与资源；禁止将开发构建标记为完整产品。无实机截图、未执行和跳过的测试均不得写成通过。

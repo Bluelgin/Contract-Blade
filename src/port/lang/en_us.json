@@ -20,9 +20,9 @@
   "key.maid_weapon.oath": "Complete Manifestation",
   "key.categories.maid_weapon": "Contract Blade",
   "maid_weapon.native.mastery.upgraded": "Contract mastery level %s",
-  "maid_weapon.native.tip.toggle": "Right-click to manifest or recall. Sneak-right-click to switch channels.",
   "maid_weapon.native.tip.transfer": "Use a soul slab at a Contract Binding Table to move the ordinary contract.",
   "button.maid_weapon.inject": "Bind",
   "button.maid_weapon.extract": "Extract",
-  "gui.maid_weapon.film_recipe": "Weapon + soul spell"
+  "gui.maid_weapon.film_recipe": "Weapon + soul spell",
+  "maid_weapon.native.tip.projection": "Projection · Cannot be taken or bound."
 }

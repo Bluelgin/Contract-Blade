@@ -1,0 +1,3 @@
+Teleported Dev to -0.278279, 5.000000, -21.507057
+
+Dev has the following entity data: 20.0f

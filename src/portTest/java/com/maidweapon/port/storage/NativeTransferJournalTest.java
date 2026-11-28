@@ -36,9 +36,11 @@ class NativeTransferJournalTest {
         a.writeIntent(ref,UUID.randomUUID(),NativeTransferJournal.Kind.MANIFEST,s);
         var b=new NativeTransferJournal(dir,UUID.randomUUID());
         assertFalse(b.permits(maid));
-        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.STORED,ref.ticket(),null)));
-        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,UUID.randomUUID(),NativeContractStore.Phase.LIVE,null,null)));
-        assertTrue(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.LIVE,null,null)));
+        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.STORED,ref.ticket(),null),ref));
+        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,UUID.randomUUID(),NativeContractStore.Phase.LIVE,null,null),ref));
+        assertFalse(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.LIVE,null,null),
+            new ContractReference(maid,owner,binding,UUID.randomUUID())));
+        assertTrue(b.acknowledgeObservedLive(new NativeContractStore.View(maid,owner,binding,NativeContractStore.Phase.LIVE,null,null),ref));
         assertTrue(b.permits(maid));
         assertFalse(new NativeTransferJournal(dir,UUID.randomUUID()).permits(maid));
     }

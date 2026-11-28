@@ -1,6 +1,8 @@
 modLoader = "javafml"
 loaderVersion = "[4,)"
 license = "MIT (code); bundled assets retain their own licenses"
+[[mixins]]
+config = "maid_weapon.native.mixins.json"
 [[mods]]
 modId = "maid_weapon"
 version = "0.0.0-port-dev"

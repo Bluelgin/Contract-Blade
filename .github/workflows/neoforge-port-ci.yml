@@ -49,7 +49,9 @@ jobs:
             build/libs/*DEV-INCOMPLETE*
             docs/porting/evidence/2026-11-27/
             docs/porting/evidence/2026-11-28-native/
+            docs/porting/evidence/2026-11-28-projection/
             docs/porting/NATIVE_GAMEPLAY_DELIVERY.md
+            docs/porting/NATIVE_PROJECTION_DELIVERY.md
             docs/porting/NATIVE_RESOURCE_INTEGRATION.csv
             docs/porting/audit-2026-11-28/
           retention-days: 7
@@ -61,7 +63,7 @@ jobs:
         with:
           name: neoforge-port-native-smoke-logs
           path: |
-            run/native-gameplay-server/logs/
-            run/native-gameplay-server/crash-reports/
+            run/native-gameplay-ci-server/logs/
+            run/native-gameplay-ci-server/crash-reports/
           retention-days: 7
           if-no-files-found: warn

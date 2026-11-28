@@ -4,7 +4,7 @@
 
 ## NeoForge
 
-建立全新实例：Minecraft 1.21.1、Java 21、NeoForge 21.1.219、Touhou Little Maid `1.5.3-neoforge+mc1.21.1`，将 `contract-blade-1.21.1-DEV-INCOMPLETE-0.0.0-port-dev.jar` 放入 mods。普通契约已有正式缔结台与 GUI；黑狐/赤月/万华完整技能、装备投影和内部空间尚未实现。
+建立全新实例：Minecraft 1.21.1、Java 21、NeoForge 21.1.219、Touhou Little Maid `1.5.3-neoforge+mc1.21.1`，将 `contract-blade-1.21.1-DEV-INCOMPLETE-0.0.0-port-dev.jar` 放入 mods。普通契约已有正式缔结台与 GUI；黑狐/赤月/万华完整技能和内部空间尚未实现；通用装备投影已接入，完整可选武器适配仍缺。
 
 源码验证：
 
@@ -16,11 +16,11 @@ python tools/porting/smoke_server.py
 ./gradlew --no-daemon runClient
 ```
 
-smoke 脚本只创建 `run/native-gameplay-server` 的一次性世界，通过本地 RCON 执行真实 TLM 生命周期与重启夹具，不读取正式玩家存档。不要手工在该目录存放有价值的世界。完整测试列表与断言见脚本及 `NativeTlmRoundTripCommand`；管理指令仅用于隔离夹具，不是正式玩法入口。
+smoke 脚本只创建 `run/native-gameplay-ci-server` 的一次性世界，通过本地 RCON 执行真实 TLM 生命周期与重启夹具，不读取正式玩家存档。不要手工在该目录存放有价值的世界。完整测试列表与断言见脚本及 `NativeTlmRoundTripCommand`；管理指令仅用于隔离夹具，不是正式玩法入口。
 
 客户端验收先检查主菜单的 Mods 中是否加载 NeoForge、TLM 和 Contract Blade。
 
-普通入口：按原配方用木剑和 TLM 空魂符合成契约之刃；用 TLM 魂符捕获自己的女仆，在契约台放入武器与魂符并点击缔结。取出武器，右键空气显现/归刃；潜行右键切换封存通道。普通契约迁居：在台上放入已归刃的武器和空魂符，提取后可重绑到空契约剑；直接使用迁居魂符则安全释放女仆。不要复制物品作为“备份恢复”，旧票会被拒绝。
+普通入口：按原配方用木剑和 TLM 空魂符合成契约之刃；用 TLM 魂符捕获自己的女仆，在契约台放入武器与魂符并点击缔结。取出武器，主手持有按 `]` 显现/32 格内归刃；`O` 为完全显现。正式多通道选择 UI 尚未完成，不把开发物品的潜行右键当成正式入口。普通契约迁居：在台上放入已归刃的武器和空魂符，提取后可重绑到空契约剑；直接使用迁居魂符则安全释放女仆。不要复制物品作为“备份恢复”，旧票会被拒绝。
 
 以下仅为夹具：开发载体支持对自有女仆捕获、对方块显现、显现后右键空气归刃、潜行右键循环封存通道；O 键为开发完全显现入口。开发水晶不能代表正式白狐觉醒。任何未亲自执行的行为都不能标为实机通过。
 
@@ -40,3 +40,7 @@ resonance 夹具必须同时有共鸣、完全显现、辅助饰品三项 PASS�
 没有已验证的 1.20.1 → 1.21.1 正式世界导入工具。旧 ForgeCaps、嵌套第三方物品及内部空间不能自动升级。完整未完成项见 `PARITY_MATRIX.md`；第三方已发布版本与实际联动分开记录于 `COMPATIBILITY_1_21_1.md`。本轮不得发布 Release 或替换正式分支。
 
 普通载体首次显现时会经服务端账本校验升级为通道载体；显现期间保留引用，HUD 可显示 live 余额。归刃只回收当前选中、已加载且属于该主人的女仆，不强制加载区块；跨维度实体仍由生命周期校验拒绝。新增 `PORT_NATIVE_PLAYER_CARRIER_PASS` 必须通过真实物品入口验证这条路径与旧副本拒绝。
+
+普通交互客户端与手动 runServer 使用 `run/native-gameplay-server`；自动烟雾验证另用 `run/native-gameplay-ci-server`，避免手动实验的待重启记录混入验收。原件返还沿用旧版：先背包，满包余量掉落女仆脚边；不要删除她的投影恢复记录。详见 NATIVE_PROJECTION_DELIVERY.md。
+
+双端开发调试先完整执行 `./gradlew build` 并确认通过，再启动服务端并等待 Done，最后启动客户端。同一检出避免并行增量编译；本轮在已验证构建之后，两端启动使用 `-x compileJava -x processResources -x generateNativeResources` 复用已完成输出。修改源码后必须先重新完成构建。此启动方式不代替构建、业务测试或原生验收；普通本地玩家优先按上文将测试 JAR 放入独立 NeoForge 实例。

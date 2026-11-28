@@ -21,7 +21,7 @@ public final class NativeMaidInjectorMenu extends AbstractContainerMenu {
     public NativeMaidInjectorMenu(int id,Inventory inv,RegistryFriendlyByteBuf data){this(id,inv,data.readBlockPos());}
     public NativeMaidInjectorMenu(int id,Inventory inv,BlockPos pos){
         super(NativeContent.INJECTOR_MENU.get(),id);owner=inv.player;access=ContainerLevelAccess.create(owner.level(),pos);
-        addSlot(new Slot(contents,0,35,35){@Override public boolean mayPlace(ItemStack s){return s.getItem() instanceof com.maidweapon.port.item.NativeContractSwordItem;}@Override public int getMaxStackSize(){return 1;}});
+        addSlot(new Slot(contents,0,35,35){@Override public boolean mayPlace(ItemStack s){return s.getItem() instanceof com.maidweapon.port.item.NativeContractSwordItem&&com.maidweapon.port.item.NativeCarriers.accepts(s);}@Override public int getMaxStackSize(){return 1;}});
         addSlot(new Slot(contents,1,71,35){@Override public boolean mayPlace(ItemStack s){return NativeSoulSlabService.filled(s)||NativeSoulSlabService.empty(s);}@Override public int getMaxStackSize(){return 1;}});
         addSlot(new Slot(contents,2,116,35){@Override public boolean mayPlace(ItemStack s){return false;}});
         addSlot(new Slot(contents,3,142,35){@Override public boolean mayPlace(ItemStack s){return false;}});

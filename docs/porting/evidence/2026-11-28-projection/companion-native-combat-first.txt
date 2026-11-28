@@ -1,0 +1,7 @@
+Dev has the following entity data: 19.4375f
+
+Native Contract Maid has the following entity data: "touhou_little_maid:attack"
+
+Native Contract Maid has the following entity data: {MaidWeaponCompanion: {Mode: "GUARD", Until: 98974L}, maid_weapon_projection: {schema: 1, owner: [I; 940439953, -167562164, -1601161573, -1389718966], binding: [I; 606058255, -1448982125, -1434739498, -1015686521], slots: {head: {}, feet: {count: 1, id: "minecraft:iron_boots"}, chest: {count: 1, id: "minecraft:iron_chestplate"}, legs: {}}}}
+
+No entity was found

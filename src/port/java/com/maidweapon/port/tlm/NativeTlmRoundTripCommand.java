@@ -366,6 +366,15 @@ public final class NativeTlmRoundTripCommand {
             require(NativeChannelService.convertExternal(server,OWNER,carrier),"Restart channel conversion failed");
             require(NativeResonanceService.payStored(server,OWNER,carrier,137,NativeResonanceService.newAttempt())==Payment.PAID,"Restart pool payment failed");
             var root=new CompoundTag();root.put("carrier",carrier.save(level.registryAccess()));root.putUUID("maid",maid.getUUID());
+            var follower=new EntityMaid(level);follower.setOwnerUUID(OWNER);follower.moveTo(pos.offset(3,0,0),0,0);
+            require(level.addFreshEntity(follower),"Live restart fixture spawn");
+            var liveCarrier=new ItemStack(com.maidweapon.port.content.NativeContent.SWORD.get());
+            require(PortContractLifecycleTrial.capture(level,follower,OWNER,"ProbeOwner",liveCarrier),"Live restart capture");
+            require(NativeChannelService.convertExternal(server,OWNER,liveCarrier),"Live restart channels");
+            follower=PortContractLifecycleTrial.manifest(level,pos.offset(3,0,0),OWNER,liveCarrier);
+            require(follower!=null,"Live restart manifestation");
+            follower.setNoAi(true);follower.setNoGravity(true); // Keep the real published fixture in the loaded spawn chunk across boots.
+            root.put("live_carrier",liveCarrier.save(level.registryAccess()));root.putUUID("live_maid",follower.getUUID());
             net.minecraft.nbt.NbtIo.writeCompressed(root,path);
             LOGGER.info("PORT_NATIVE_RESTART_FIXTURE_PREPARED: saved carrier, 29 diamonds, 53 XP, 863 resonance");
         }finally{if(!maid.isRemoved())maid.discard();}
@@ -387,8 +396,19 @@ public final class NativeTlmRoundTripCommand {
             require(PortContractLifecycleTrial.capture(level,live,OWNER,"ProbeOwner",carrier),"Restart recall failed");
             require(NativeChannelService.selected(server,OWNER,stale)==null,"Pre-restart ticket survived recall");
             require(NativeResonanceService.currentStored(server,OWNER,carrier)==863,"Restart recall reset pool");
+            var liveCarrier=ItemStack.parse(level.registryAccess(),tag.getCompound("live_carrier")).orElseThrow();
+            var liveRef=NativeChannelService.displayReference(liveCarrier);
+            require(liveRef!=null&&liveRef.maid().equals(tag.getUUID("live_maid")),"Saved live carrier identity");
+            var forged=liveCarrier.copy();
+            var channels=forged.get(com.maidweapon.port.init.PortDataTypes.CONTRACT_CHANNELS.get());
+            forged.set(com.maidweapon.port.init.PortDataTypes.CONTRACT_CHANNELS.get(),channels.replaceSelected(new com.maidweapon.port.storage.ContractReference(liveRef.maid(),OWNER,liveRef.binding(),UUID.randomUUID())));
+            require(NativeChannelService.selectedLive(server,OWNER,forged)==null,"Foreign live ticket reauthorized after restart");
+            var observed=NativeChannelService.selectedLive(server,OWNER,liveCarrier);
+            require(observed!=null&&observed==level.getEntity(liveRef.maid()),"Actual saved LIVE entity failed evidence reauthorization");
+            require(PortContractLifecycleTrial.capture(level,observed,OWNER,"ProbeOwner",liveCarrier),"Reauthorized LIVE entity recall");
+            require(NativeChannelService.selectedLive(server,OWNER,forged)==null,"Stale live carrier revived after recall");
             java.nio.file.Files.delete(path);
-            LOGGER.info("PORT_NATIVE_RESTART_PASS: actual second boot, item and ledger reload, native inventory and pool, recall and stale ticket");
+            LOGGER.info("PORT_NATIVE_RESTART_PASS: actual second boot, item and ledger reload, native inventory and pool, recall and stale ticket; saved LIVE entity reauthorization with exact journal/ledger/attachment/lease evidence");
             return 1;
         }catch(Throwable failure){
             LOGGER.error("PORT_NATIVE_RESTART_FAIL",failure);return 0;

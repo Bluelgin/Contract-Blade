@@ -24,6 +24,10 @@ public final class PortDataTypes {
         COMPONENTS.registerComponentType("contract_channels", builder -> builder
             .persistent(ContractChannels.CODEC).networkSynchronized(ContractChannels.STREAM_CODEC));
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> PROJECTION =
+        COMPONENTS.registerComponentType("equipment_projection", builder -> builder
+            .persistent(com.mojang.serialization.Codec.BOOL).networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.BOOL));
+
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
         DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, ContractBladeMod.ID);
     // Access only after hasData; the default is never valid authority.

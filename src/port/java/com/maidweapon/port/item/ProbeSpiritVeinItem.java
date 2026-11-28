@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.Level;
 
-/** Stage-specific, probe-only upgrade; preserves the old sequential consumption rule. */
+/** Stage-specific native upgrade used by formal items and isolated fixtures; preserves the old sequential consumption rule. */
 public final class ProbeSpiritVeinItem extends Item {
     private final int stage;
     public ProbeSpiritVeinItem(int stage){
@@ -20,6 +20,7 @@ public final class ProbeSpiritVeinItem extends Item {
         if(stage<1 || stage>SpiritVeinRules.maxStage())throw new IllegalArgumentException("Invalid stage");
         this.stage=stage;
     }
+    public int stage(){return stage;}
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         ItemStack stack=player.getItemInHand(hand);
         if(level.isClientSide)return InteractionResultHolder.success(stack);

@@ -36,7 +36,7 @@ neoForge {
         }
         server {
             server()
-            gameDirectory = project.file('run/native-gameplay-server')
+            gameDirectory = project.file(project.findProperty('nativeServerDirectory') ?: 'run/native-gameplay-server')
             programArgument '--nogui'
         }
         gameTestServer { type = 'gameTestServer' }
@@ -79,7 +79,7 @@ tasks.register('generateNativeResources') {
             output.parentFile.mkdirs()
             output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(new TreeMap(text))) + '\n'
         }
-        ['maid_sword','maid_injector','maid_heavy','maid_fast','altar/spirit_crystal','altar/awakening_vein','altar/flowing_vein','altar/endless_vein'].each { name ->
+        ['maid_sword','maid_injector','maid_heavy','maid_fast','altar/spirit_crystal','altar/awakening_vein','altar/flowing_vein','altar/endless_vein','altar/resonance_sword_tassel','altar/guardian_ribbon','altar/heartbound_knot','altar/endless_contract','altar/oath_ring','altar/guard_knot'].each { name ->
             def recipe = new groovy.json.JsonSlurper().parse(file("src/main/resources/data/maid_weapon/recipes/${name}.json"))
             if (recipe.type == 'touhou_little_maid:altar_crafting') {
                 recipe = [type:'touhou_little_maid:altar_recipe_serializers',category:'misc',entity:'minecraft:item',group:'altar_recipe',ingredients:recipe.ingredients,power:recipe.power,lang:'jei.touhou_little_maid.altar_craft.item_craft.result',result:[id:recipe.output.nbt.Item.id,count:recipe.output.nbt.Item.Count]]

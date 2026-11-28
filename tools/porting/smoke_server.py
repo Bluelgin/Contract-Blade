@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-WORLD = ROOT / "run" / "native-gameplay-server"
+WORLD = ROOT / "run" / "native-gameplay-ci-server"
 WORLD.mkdir(parents=True, exist_ok=True)
 # Keep RCON on the local disposable CI server; never expose or log credentials.
 with socket.socket() as reserved:
@@ -82,7 +82,7 @@ def rcon_command(command):
 def boot_and_verify(command, markers):
     output = queue.Queue()
     print(f"Launching isolated NeoForge + TLM: {command}", flush=True)
-    proc = subprocess.Popen(["./gradlew", "--no-daemon", "runServer"], cwd=ROOT,
+    proc = subprocess.Popen(["./gradlew", "--no-daemon", "runServer", "-PnativeServerDirectory=run/native-gameplay-ci-server"], cwd=ROOT,
         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, bufsize=1, start_new_session=True)
 
@@ -159,7 +159,7 @@ boot_and_verify("contractportverify", {
     "PORT_NATIVE_TLM_WORLD_TRANSFER_PASS",
     "PORT_NATIVE_CHANNEL_LIFECYCLE_PASS",
     "PORT_NATIVE_ULTIMATE_BAUBLES_PASS",
-    "PORT_NATIVE_PLAYER_CARRIER_PASS", "NATIVE_FORMAL_ALTAR_PASS", "NATIVE_CONFIGURATION_PASS",
+    "PORT_NATIVE_PLAYER_CARRIER_PASS", "NATIVE_FORMAL_ALTAR_PASS", "NATIVE_CONFIGURATION_PASS", "NATIVE_PROJECTION_PASS", "NATIVE_GUARD_PASS",
     "PORT_NATIVE_RESTART_FIXTURE_PREPARED",
 })
 boot_and_verify("contractportverifyrestart", {"PORT_NATIVE_RESTART_PASS"})

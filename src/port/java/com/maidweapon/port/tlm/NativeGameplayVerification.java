@@ -13,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.phys.*;
@@ -22,7 +23,11 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 /** Opt-in disposable native fixture; never invoked during normal gameplay. */
 final class NativeGameplayVerification {
  static void run(ServerLevel level)throws Exception{
-  var p=FakePlayerFactory.get(level,new com.mojang.authlib.GameProfile(UUID.randomUUID(),"NativeAltarFixture"));
+  // Standard FakePlayer is unconditionally invulnerable. This disposable subclass
+  // uses the actual native hurt pipeline so health-loss regression is meaningful.
+  var p=new net.neoforged.neoforge.common.util.FakePlayer(level,new com.mojang.authlib.GameProfile(UUID.randomUUID(),"NativeAltarFixture")){
+   @Override public boolean isInvulnerableTo(net.minecraft.world.damagesource.DamageSource source){return false;}
+  };
   p.getInventory().clearContent();p.getInventory().selected=0;
   var pos=level.getSharedSpawnPos().above(24);level.getChunkAt(pos);p.moveTo(pos.getX()+.5,pos.getY(),pos.getZ()+1.5,0,0);
   level.setBlockAndUpdate(pos,NativeContent.INJECTOR.get().defaultBlockState());
@@ -80,14 +85,20 @@ final class NativeGameplayVerification {
   p.setItemInHand(InteractionHand.MAIN_HAND,rebound);
   var place=pos.offset(2,1,0);level.getChunkAt(place);
   var target=new BlockHitResult(Vec3.atCenterOf(place.below()),Direction.UP,place.below(),false);
-  check(rebound.getItem().useOn(new net.minecraft.world.item.context.UseOnContext(p,InteractionHand.MAIN_HAND,target)).consumesAction(),"formal sword manifestation");
+  check(rebound.getItem().useOn(new net.minecraft.world.item.context.UseOnContext(p,InteractionHand.MAIN_HAND,target))==InteractionResult.PASS
+    &&rebound.getItem().use(level,p,InteractionHand.MAIN_HAND).getResult()==InteractionResult.PASS
+    &&NativeChannelService.selected(level.getServer(),p.getUUID(),rebound)!=null,"right click bypassed maintained companion input");
+  check(com.maidweapon.port.companion.NativeCompanionService.manifestRequested(p,rebound),"formal companion manifestation");
   var live=NativeChannelService.selectedLive(level.getServer(),p.getUUID(),rebound);
   check(live!=null&&live.getUUID().equals(id)&&live.getMaidInv().getStackInSlot(0).getCount()==19&&live.getExperience()==47&&live.getModelId().equals("contract_fox:fox_white"),"formal live inventory, model or XP changed");
+  live=com.maidweapon.port.projection.NativeProjectionVerification.run(p,live,rebound);
+  live=com.maidweapon.port.companion.NativeGuardVerification.run(p,live,rebound);
   var illegalSlab=new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:smart_slab_empty")));
   var steal=new com.github.tartaricacid.touhoulittlemaid.api.event.InteractMaidEvent(p,live,illegalSlab);
   net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(steal);
   check(steal.isCanceled()&&!live.isRemoved()&&level.getEntity(id)==live,"native TLM slab capture bypassed live lease");
-  check(rebound.getItem().use(level,p,InteractionHand.MAIN_HAND).getResult().consumesAction(),"formal air recall");
+  check(rebound.getItem().interactLivingEntity(rebound,p,live,InteractionHand.MAIN_HAND)==InteractionResult.PASS,"bound blade intercepted native maid GUI");
+  check(com.maidweapon.port.companion.NativeCompanionService.recallRequested(p,rebound,live),"formal companion recall");
   check(level.getEntity(id)==null&&NativeResonanceService.currentStored(level.getServer(),p.getUUID(),rebound)==875,"formal recall lost entity identity or balance");
   var releaseInput=new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.parse("touhou_little_maid:smart_slab_empty")));
   var releasedSlab=NativeSoulSlabService.extract(p,rebound,releaseInput);check(!releasedSlab.isEmpty(),"release slab extraction");
@@ -108,7 +119,7 @@ final class NativeGameplayVerification {
   NativeConfigurationVerification.run(p,finalWeapon);
   menu.removed(p);check(menu.slots.subList(0,4).stream().noneMatch(s->s.hasItem()),"closing menu did not clear/return contents");
   p.getInventory().clearContent();level.removeBlock(pos,false);
-  com.mojang.logging.LogUtils.getLogger().info("NATIVE_FORMAL_ALTAR_PASS: native TLM slab, distance/replay denial, upgrade components, transfer/rebind, 19 diamonds, 47 XP, 875 resonance, formal manifestation and air recall");
+  com.mojang.logging.LogUtils.getLogger().info("NATIVE_FORMAL_ALTAR_PASS: native TLM slab, distance/replay denial, upgrade components, transfer/rebind, 19 diamonds, 47 XP, 875 resonance, formal companion deployment, native GUI pass-through and recall");
  }
  private static void check(boolean value,String message){if(!value)throw new IllegalStateException("Formal gameplay fixture: "+message);}
 }

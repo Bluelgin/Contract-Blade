@@ -56,6 +56,8 @@ public final class PortContractLifecycleTrial {
                 binding = v.binding();
             }
             if(com.maidweapon.port.oath.NativeOathService.burning(level.getServer(),owner,maid,binding))return false;
+            NativeMealLifecycle.prepareForStorage(live);
+            if (!com.maidweapon.port.projection.NativeProjectionService.clear(live)) return false;
             // Events receive a staged copy; foreign carrier modifications are not committed by this probe.
             CompoundTag snapshot = TlmNativeTransformBridge.captureSnapshot(live, carrier.copy());
             if (live.isRemoved() || level.getEntity(maid) != live || !owner.equals(live.getOwnerUUID())
@@ -94,7 +96,12 @@ public final class PortContractLifecycleTrial {
     }
 
     public static EntityMaid manifest(ServerLevel level, BlockPos destination, UUID owner, ItemStack carrier) {
-        if (level == null || destination == null || owner == null || !level.getServer().isSameThread()
+        return destination==null?null:manifest(level,net.minecraft.world.phys.Vec3.atBottomCenterOf(destination),owner,carrier,maid->{});
+    }
+    public static EntityMaid manifest(ServerLevel level, net.minecraft.world.phys.Vec3 destination, UUID owner, ItemStack carrier,
+                                      java.util.function.Consumer<EntityMaid> beforeSpawn) {
+        if (level == null || destination == null || !Double.isFinite(destination.x) || !Double.isFinite(destination.y)
+                || !Double.isFinite(destination.z) || beforeSpawn==null || owner == null || !level.getServer().isSameThread()
                 || !validCarrier(carrier)) return null;
         ContractReference ref = null;
         NativeContractStore store = null;
@@ -107,9 +114,8 @@ public final class PortContractLifecycleTrial {
             ref = NativeChannelService.selected(level.getServer(),owner,carrier);
             if (ref == null || !owner.equals(ref.owner())
                     || ContractStackDataAccess.hasOwnedData(carrier)) return null;
-            if (!level.getWorldBorder().isWithinBounds(destination) || !level.hasChunkAt(destination)
-                    || !level.getBlockState(destination).isAir()
-                    || !level.getBlockState(destination.above()).isAir()) return null;
+            var blockPosition=BlockPos.containing(destination);
+            if (!level.getWorldBorder().isWithinBounds(blockPosition) || !level.hasChunkAt(blockPosition)) return null;
             for (ServerLevel world : level.getServer().getAllLevels())
                 if (world.getEntity(ref.maid()) != null) return null;
             store = NativeContractStore.get(level.getServer());
@@ -121,7 +127,11 @@ public final class PortContractLifecycleTrial {
             if (!candidate.hasData(PortDataTypes.MAID_BINDING)
                     || !ref.binding().equals(candidate.getData(PortDataTypes.MAID_BINDING)))
                 throw new IllegalStateException("Native snapshot binding attachment lost or changed");
-            candidate.moveTo(destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5, 0, 0);
+            candidate.setPos(destination);
+            beforeSpawn.accept(candidate);
+            if(!ref.maid().equals(candidate.getUUID())||!owner.equals(candidate.getOwnerUUID())
+                ||!candidate.hasData(PortDataTypes.MAID_BINDING)||!ref.binding().equals(candidate.getData(PortDataTypes.MAID_BINDING)))
+                throw new IllegalStateException("Manifest callback changed identity");
             if (!validCarrier(carrier) || ContractStackDataAccess.hasOwnedData(carrier)
                 || !Objects.equals(channels,carrier.get(PortDataTypes.CONTRACT_CHANNELS.get()))
                 || (channels==null && !ref.equals(carrier.get(PortDataTypes.CONTRACT_REFERENCE.get())))

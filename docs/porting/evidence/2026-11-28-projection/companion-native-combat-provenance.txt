@@ -1,0 +1,52 @@
+Summoned new Zombie
+
+
+Observation 0
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 1
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 2
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 3
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 4
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 5
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 6
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 7
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 8
+Zombie has the following entity data: 20.0f
+
+
+
+Observation 9
+Zombie has the following entity data: 13.224f
+
+Native Contract Maid has the following entity data: [I; 1073329287, -2003284189, -1444728630, -519556051]

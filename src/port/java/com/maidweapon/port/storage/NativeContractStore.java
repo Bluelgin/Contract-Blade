@@ -85,6 +85,27 @@ public final class NativeContractStore extends SavedData {
         return v!=null && v.phase()==Phase.LIVE && v.owner().equals(ref.owner()) && v.binding().equals(ref.binding())
             && entry(ref.maid()).hasUUID("live_ticket") && entry(ref.maid()).getUUID("live_ticket").equals(ref.ticket());
     }
+    public ContractReference liveReference(UUID maid){
+        var view=inspect(maid);
+        return view!=null&&view.phase()==Phase.LIVE&&entry(maid).hasUUID("live_ticket")
+            ?new ContractReference(maid,view.owner(),view.binding(),entry(maid).getUUID("live_ticket")):null;
+    }
+    /** Small live intent metadata; never copies an entity snapshot on a maintenance tick. */
+    public java.util.List<ContractReference> liveLeases(UUID owner) {
+        writable();var result=new java.util.ArrayList<ContractReference>();
+        for (String key:records.getAllKeys()) {
+            UUID maid=UUID.fromString(key);var view=inspect(maid);
+            if(view.phase()==Phase.LIVE&&view.owner().equals(owner)&&entry(maid).hasUUID("live_ticket"))
+                result.add(new ContractReference(maid,owner,view.binding(),entry(maid).getUUID("live_ticket")));
+        }
+        return java.util.List.copyOf(result);
+    }
+    public boolean resident(ContractReference reference){return matchesLiveLease(reference)&&entry(reference.maid()).getBoolean("resident");}
+    public void resident(ContractReference reference,boolean value){
+        if(!matchesLiveLease(reference))throw new IllegalStateException("Stale companion intent");
+        var record=entry(reference.maid());
+        if(record.getBoolean("resident")!=value){record.putBoolean("resident",value);setDirty();}
+    }
     /** Intrinsic origin lives in the ledger, never inferred from item channel text. */
     public boolean originMatches(UUID maid,java.util.Optional<net.minecraft.resources.ResourceLocation> id){
         if(inspect(maid)==null)return false;
@@ -222,7 +243,7 @@ public final class NativeContractStore extends SavedData {
         CompoundTag next = entry(ref.maid()).copy();
         next.putString("phase", nextPhase.name());
         next.remove("operation");
-        if (nextPhase == Phase.STORED) next.remove("live_ticket");
+        if (nextPhase == Phase.STORED) { next.remove("live_ticket"); next.remove("resident"); }
         if (nextPhase == Phase.LIVE) {
             next.remove("ticket");
             next.remove("snapshot");

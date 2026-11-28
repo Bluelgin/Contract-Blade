@@ -76,7 +76,11 @@ public final class NativeChannelService {
         MinecraftServer server,UUID owner,ItemStack stack) {
         if(!valid(server,owner,stack)||stack.has(PortDataTypes.CONTRACT_REFERENCE.get()))return null;
         var ref=displayReference(stack);
-        if(ref==null||recall(server,owner,stack,ref.maid())==null)return null;
+        if(ref==null)return null;
+        if(recall(server,owner,stack,ref.maid())==null){
+            if(!com.maidweapon.port.recovery.NativeLiveReconciliation.acknowledge(server,owner,stack)
+                ||recall(server,owner,stack,ref.maid())==null)return null;
+        }
         com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid found=null;
         for(var level:server.getAllLevels()){
             var entity=level.getEntity(ref.maid());

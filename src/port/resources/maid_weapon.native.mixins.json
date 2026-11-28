@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.maidweapon.port.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["ProjectionMenuMixin", "ProjectionSlotMixin", "ProjectionHandlerMixin", "ProjectionEquipmentMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

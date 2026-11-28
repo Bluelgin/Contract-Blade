@@ -78,12 +78,13 @@ public final class NativeTransferJournal {
      * and a committed LIVE ledger entry. No entity is spawned, deleted or deserialized.
      * A recovered authorization is session-local; next restart requires fresh evidence.
      */
-    public boolean acknowledgeObservedLive(NativeContractStore.View live) throws IOException {
-        if(live==null || live.phase()!=NativeContractStore.Phase.LIVE) return false;
+    public boolean acknowledgeObservedLive(NativeContractStore.View live, ContractReference lease) throws IOException {
+        if(live==null || live.phase()!=NativeContractStore.Phase.LIVE || lease==null
+            ||!live.maid().equals(lease.maid())||!live.owner().equals(lease.owner())||!live.binding().equals(lease.binding())) return false;
         CompoundTag tag=read(live.maid());
         if(!Kind.MANIFEST.name().equals(tag.getString("kind"))
             || !live.owner().equals(tag.getUUID("owner")) || !live.binding().equals(tag.getUUID("binding"))
-            || session.equals(tag.getUUID("session"))) return false;
+            || !lease.ticket().equals(tag.getUUID("ticket")) || session.equals(tag.getUUID("session"))) return false;
         recoveredLive.add(live.maid());
         denied.remove(live.maid());
         return true;
