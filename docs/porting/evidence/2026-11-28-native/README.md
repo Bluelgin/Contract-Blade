@@ -22,10 +22,16 @@
 
 ## 构建与服务端
 
-- `neoforge-build.log`：Java 21 build，59 tests，零失败/错误/跳过。
-- `forge-build.log`：Java 17 build，184 tests，零失败/错误/跳过；仅模型包安装幂等/用户编辑保留修复，旧正式分支未改动。
-- `native-smoke.log`：真实专用服务器两次独立启动；全部必要标记实际通过，包括 NATIVE_FORMAL_ALTAR_PASS、NATIVE_CONFIGURATION_PASS、PORT_NATIVE_RESTART_PASS、PORT_NATIVE_ROUNDTRIP_READY。19 钻石/47 XP/875 共鸣、旧载体/魂符拒绝、距离/重复按钮、升级组件保留、真实 TLM 捕获和释放、用户配置均有断言。
-- `client.log`、`client-server.log`：最终编译输出的客户端启动/连接与服务器运行；`JAR.json`：实际构建文件名、SHA256 与依赖版本。
+- `neoforge-build.log.gz`：Java 21 build，59 tests，零失败/错误/跳过。
+- `forge-build.log.gz`：Java 17 build，184 tests，零失败/错误/跳过；仅模型包安装幂等/用户编辑保留修复，旧正式分支未改动。
+- `native-smoke.log.gz`：真实专用服务器两次独立启动；全部必要标记实际通过，包括 NATIVE_FORMAL_ALTAR_PASS、NATIVE_CONFIGURATION_PASS、PORT_NATIVE_RESTART_PASS、PORT_NATIVE_ROUNDTRIP_READY。19 钻石/47 XP/875 共鸣、旧载体/魂符拒绝、距离/重复按钮、升级组件保留、真实 TLM 捕获和释放、用户配置均有断言。
+- `client.log.gz`、`client-server.log.gz`：最终编译输出的客户端启动/连接与服务器运行；`JAR.json`：实际构建文件名、SHA256 与依赖版本。
 - 客户端 OpenAL 设备不可用，因此**音效未试听**。Mojang 公钥和 TLM 在线列表网络请求失败，未阻止本地模型包加载/隔离离线服务器流程；不称在线账户联机验收。未完成全部渲染/动作/Shader/技能演出验证。
 
 正常退出证明范围仅为可观察的正常保存和再次加载；不等于任意崩溃安全。完整缺口见两级功能矩阵和 NATIVE_GAMEPLAY_DELIVERY.md。
+
+## 实际 JAR 加载补验
+
+随后移除启动 classpath 中本 Mod 的 build/classes 与 build/resources，移除 fml.modFolders 开发覆盖，将 `JAR.json` 对应文件放入一次性世界的 mods/。沿用已安装的 NeoForge 开发启动器/原生服务器库（并非另装完整生产启动器），真实启动并执行 contractportverify，全部必要普通链路与配置断言通过；正常停服。`jar-class-provenance.txt` 是 JDK 类加载来源原文节选，确认本 Mod 类来自 mods/ 内 JAR；`packaged-server.log.gz` 保存完整服务端运行。客户端截图仍来自上述 ModDev 正常源集运行，不能把此服务端 JAR 补验说成生产启动器的客户端安装验收。
+
+压缩日志只做无损 gzip，保留错误/告警与未通过边界，没有删去失败输出。
