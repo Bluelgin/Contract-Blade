@@ -1,398 +1,100 @@
 plugins {
+    id 'java-library'
     id 'eclipse'
     id 'idea'
-    id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'net.neoforged.moddev' version '2.0.95'
 }
-
-
-version = mod_version
 group = mod_group_id
-
-// 1.2.0 ships the complete feature set. The historical flag now only isolates output.
-def stableRelease = providers.gradleProperty('stableRelease').map { it.toBoolean() }.orElse(false).get()
-if (stableRelease) {
-    layout.buildDirectory.set(file('build/stable-release'))
-}
-
-def compatTestMode = providers.gradleProperty('compatTest').orElse('vanilla').get()
-def compatWorld = providers.gradleProperty('compatWorld').orNull
-def tlmTestMode = providers.gradleProperty('tlmTest').orElse('latest').get()
-def compatRunDir = providers.gradleProperty('compatRunDir').orNull
-def homeLifeTestMode = providers.gradleProperty('homeLifeTest').map { it.toBoolean() }.orElse(false).get()
-
-def ciMode = providers.gradleProperty('ci').map { it.toBoolean() }.orElse(false).get()
-def galleryPreviewMode = providers.gradleProperty('galleryPreview')
-        .map { it.toBoolean() }
-        .orElse(false)
-        .get()
-
-repositories {
-    flatDir {
-        dirs 'libs', 'tmp/compat-test', 'tmp/compat-old'
-    }
-    // Canonical repositories avoid dynamic-version metadata failures through regional mirrors.
-    mavenCentral()
-    maven { url = "https://libraries.minecraft.net" }
-    maven {
-        name = "CurseMaven"
-        url = "https://www.cursemaven.com"
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    // 本地库
-}
-
-base {
-    // Public project name used by distribution sites. Keep mod_id unchanged so
-    // existing worlds and registry names remain compatible.
-    archivesName = "contract-blade-forge-${minecraft_version}"
-}
-
-tasks.named('jar', Jar).configure {
-    from('LICENSE') {
-        rename { "LICENSE_${mod_id}" }
-    }
-    from('ASSET_SOURCES.md')
-}
-
-// Java 编译版本设置为 17（MC 1.20.1 要求）
-// ForgeGradle 需要 toolchain 来正确处理映射
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-// 关键：设置编译和资源处理的UTF-8编码，防止中文乱码
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-tasks.withType(ProcessResources).configureEach {
-    filteringCharset = 'UTF-8'
-}
-
-minecraft {
-    // 映射通道和版本（使用官方映射）
-    mappings channel: 'official', version: minecraft_version
-
-    // 运行配置
-    runs {
-        configureEach {
-            workingDirectory project.file(compatRunDir ?: 'run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'contractblade.home.validation', galleryPreviewMode.toString()
-            property 'contractblade.home.nativeValidation', homeLifeTestMode.toString()
-            property 'contractblade.stress.validation', providers.gradleProperty('contractStressTest').orElse('false').get()
-            property 'contractblade.epicfight.validation', providers.gradleProperty('epicFightTest').orElse('false').get()
-            property 'contractblade.resonance.resume', providers.gradleProperty('resonanceResume').orElse('false').get()
-            property 'contractblade.resonance.validation', providers.gradleProperty('resonanceTest').orElse('false').get()
-            property 'contractblade.projection.validation', providers.gradleProperty('projectionTest').orElse('false').get()
-            property 'contractblade.companion.validation', providers.gradleProperty('companionTest').orElse('false').get()
-            property 'contractblade.rebirth.validation', providers.gradleProperty('contractRebirthTest').orElse('false').get()
-            property 'contractblade.architecture.validation', providers.gradleProperty('architectureTest').orElse('false').get()
-            property 'contractblade.stageThree.validation', providers.gradleProperty('stageThreeTest').orElse('false').get()
-            property 'contractblade.whiteBlessing.validation', providers.gradleProperty('whiteBlessingTest').orElse('false').get()
-            property 'contractblade.whiteBlessing.resume', providers.gradleProperty('whiteBlessingResume').orElse('false').get()
-            property 'contractblade.stageThree.resume', providers.gradleProperty('stageThreeResume').orElse('false').get()
-            property 'contractblade.performance.validation', providers.gradleProperty('contractPerfTest').orElse('false').get()
-            property 'contractblade.performance.label', providers.gradleProperty('contractPerfLabel').orElse('after').get()
-            property 'contractblade.swordCore.validation', providers.gradleProperty('swordCoreTest').orElse('false').get()
-            property 'contractblade.mastery.foxValidation', providers.gradleProperty('masteryFoxTest').orElse('false').get()
-            property 'contractblade.mastery.resume', providers.gradleProperty('masteryResume').orElse('false').get()
-            property 'contractblade.mastery.validation', providers.gradleProperty('masteryTest').orElse('false').get()
-            property 'contractblade.fox.validation', providers.gradleProperty('foxTest').orElse('false').get()
-            property 'contractblade.soulVisual.validation', providers.gradleProperty('soulVisualTest').orElse('false').get()
-            property 'contractblade.soul.validation', providers.gradleProperty('soulTest').orElse('false').get()
-            property 'contractblade.soul.mowzieValidation', providers.gradleProperty('soulMowzieTest').orElse('false').get()
-            property 'contractblade.akatsuki.validation', providers.gradleProperty('akatsukiTest').orElse('false').get()
-            property 'contractblade.akatsukiVisual.validation', providers.gradleProperty('akatsukiVisualTest').orElse('false').get()
-            property 'contractblade.akatsukiRain.validation', providers.gradleProperty('akatsukiRainTest').orElse('false').get()
-            property 'contractblade.akatsukiDomain.resume', providers.gradleProperty('akatsukiDomainResume').orElse('false').get()
-            property 'contractblade.akatsukiDomain.validation', providers.gradleProperty('akatsukiDomainTest').orElse('false').get()
-            property 'contractblade.whiteFoxSe.validation', providers.gradleProperty('whiteFoxSeTest').orElse('false').get()
-            property 'contractblade.foxChallenge.validation', providers.gradleProperty('foxChallengeTest').orElse('false').get()
-            property 'contractblade.blackFox.validation', providers.gradleProperty('blackFoxTest').orElse('false').get()
-            property 'contractblade.blackFox.guardValidation', providers.gradleProperty('blackFoxGuardTest').orElse('false').get()
-            property 'contractblade.blackFox.defenseValidation', providers.gradleProperty('blackFoxDefenseTest').orElse('false').get()
-            property 'contractblade.blackFox.clientValidation', providers.gradleProperty('blackFoxClientTest').orElse('false').get()
-            property 'forge.logging.console.level', 'debug'
-            // Remap mixin refmaps from external 1.20.1 libraries in the userdev runtime.
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            args '--mixin', 'maid_weapon.mixins.json'
-            args '--mixin', 'maid_weapon.slashblade.mixins.json'
-            args '--mixin', 'maid_weapon.soul-boss.mixins.json'
-            args '--mixin', 'maid_weapon.tacz.mixins.json'
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        client {
-            if (providers.gradleProperty('akatsukiVisualWorld').isPresent()) {
-                args '--quickPlaySingleplayer', providers.gradleProperty('akatsukiVisualWorld').get()
-            }
-            property 'forge.enabledGameTestNamespaces', mod_id
-            jvmArgs '-Xms384m', compatTestMode == 'epicfight' ? '-Xmx3072m' : '-Xmx1280m'
-        }
-
-        server {
-            property 'forge.enabledGameTestNamespaces', mod_id
-            jvmArgs '-Xms256m', '-Xmx1024m'
-            args '--nogui'
-            if (compatWorld) {
-                args '--world', compatWorld
-            }
-        }
-
-        data {
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-        }
-    }
-}
-
-// 将生成的资源目录加入资源集
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-// Native fixtures stay available to Forge development runs, never in a player JAR.
-def validationSources = ['**/*Validation.java', '**/AkatsukiVisualCapture.java',
-        '**/MankaClientMetrics.java', '**/MankaServerMetrics.java',
-        '**/MankaAcceptanceCommands.java',
-        '**/DevelopmentValidationBootstrap.java', '**/ContractInteriorValidationCommands.java']
+version = mod_version
+base { archivesName = 'contract-blade-1.21.1-DEV-INCOMPLETE' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 sourceSets {
-    main.java { validationSources.each { exclude it } }
-    validation {
-        java {
-            srcDir 'src/main/java'
-            validationSources.each { include it }
-        }
-        resources {
-            srcDir 'src/main/resources'
-            include 'modelpacks/contract-fox-1.0.0.zip'
-        }
-        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
-        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    main {
+        java.setSrcDirs(['src/port/java', 'src/shared/java'])
+        resources.setSrcDirs(['src/port/resources', 'src/shared/resources'])
+    }
+    test { java.setSrcDirs(['src/portTest/java', 'src/sharedTest/java']) }
+}
+repositories {
+    mavenCentral()
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
     }
 }
-tasks.named('check').configure { dependsOn tasks.named('compileValidationJava') }
-minecraft.runs.configureEach {
-    mods { "${mod_id}" { source sourceSets.validation } }
+neoForge {
+    version = project.neo_version
+    runs {
+        client {
+            client()
+            if (project.hasProperty('nativeQuickJoin')) {
+                programArgument '--quickPlayMultiplayer'
+                programArgument project.property('nativeQuickJoin').toString()
+            }
+        }
+        server {
+            server()
+            gameDirectory = project.file(project.findProperty('nativeServerDirectory') ?: 'run/native-gameplay-server')
+            programArgument '--nogui'
+        }
+        gameTestServer { type = 'gameTestServer' }
+    }
+    mods { maid_weapon { sourceSet sourceSets.main } }
+    // ModDevGradle does not put transformed Minecraft on plain Gradle test classpath.
+    unitTest {
+        enable()
+        testedMod = mods.maid_weapon
+    }
 }
-
-
-// 依赖配置
-jarJar.enable()
-tasks.named('jar').configure { archiveClassifier = 'slim' }
-tasks.named('jarJar').configure { archiveClassifier = ''; finalizedBy 'reobfJarJar' }
-
 dependencies {
-    implementation 'io.github.llamalad7:mixinextras-common:0.5.3'
-    annotationProcessor 'io.github.llamalad7:mixinextras-common:0.5.3'
-    runtimeOnly 'io.github.llamalad7:mixinextras-forge:0.5.3'
-    jarJar('io.github.llamalad7:mixinextras-forge:0.5.3') { jarJar.ranged(it, '[0.5.3,0.6)') }
-
-    // Optional local play-test UI only; remap the published jar rather than loading SRG names from run/mods.
-    if (providers.gradleProperty('configScreens').map { it.toBoolean() }.orElse(false).get()) {
-        runtimeOnly fg.deobf("local:configured:1.20.1-2.2.3")
-    }
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
-    // Minecraft Forge
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    // Only the native extension API is linked. TLM itself is never bundled.
-    if (ciMode && !file("libs/touhoulittlemaid-1.5.3-forge+mc1.20.1.jar").exists()) {
-        compileOnly fg.deobf("curse.maven:touhou-little-maid-355044:8061847")
-    } else {
-        compileOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
-    }
-
-    // Native bauble extension compiles against the public TLM API. Runtime-only
-    // launch profiles use the local jar; other integrations stay version-tolerant.
-    if (!ciMode || homeLifeTestMode || providers.gradleProperty('tlmRuntimeTest').orElse('false').get().toBoolean()) {
-        if (tlmTestMode == 'old') {
-            runtimeOnly fg.deobf("compat:touhoulittlemaid:1.20.1-release-1.1.7")
-        } else if (tlmTestMode == 'pack') {
-            runtimeOnly fg.deobf("compat:touhoulittlemaid:1.5.2-forge+mc1.20.1")
-        } else {
-            runtimeOnly fg.deobf("local:touhoulittlemaid:1.5.3-forge+mc1.20.1")
-        }
-    }
-
-    // Compile against TACZ without bundling it. Local development keeps the
-    // ForgeGradle deobf path; clean CI uses the public CurseMaven jar directly
-    // because only TACZ's stable API types are required at compile time.
-    def localTacz = file('libs/tacz-1.20.1-1.1.8-release.jar').exists()
-    def taczDependency = localTacz
-            ? "local:tacz:1.20.1-1.1.8-release"
-            : "curse.maven:timeless-and-classics-zero-1028108:8055552"
-    if (ciMode && !localTacz) {
-        compileOnly taczDependency
-    } else {
-        compileOnly fg.deobf(taczDependency)
-    }
-    if (compatTestMode == 'tacz') {
-        runtimeOnly fg.deobf(taczDependency)
-    }
-
-    // Optional local launch matrix. These are runtime-only and never bundled.
-    if (providers.gradleProperty('torchesTest').map { it.toBoolean() }.orElse(false).get()) {
-        runtimeOnly fg.deobf("curse.maven:gathering-torches-become-sunlight-1115278:8549179")
-        runtimeOnly fg.deobf("curse.maven:geckolib-388172:8285794")
-        runtimeOnly fg.deobf("curse.maven:curios-309927:6418456")
-    }
-    if (providers.gradleProperty('handbookTest').orElse('false').get().toBoolean() && !ciMode) {
-        runtimeOnly fg.deobf("compat:Patchouli:1.20.1-85-FORGE")
-    }
-    if (compatTestMode == 'epicfight' && !ciMode) {
-        runtimeOnly fg.deobf("compat:epic-fight:20.14.17-mc1.20.1-forge")
-        runtimeOnly fg.deobf("compat:EpicFight_TouhouLittleMaid:1.20.1-1.3.4")
-        runtimeOnly fg.deobf("compat:epic-fight-avalon:7619938")
-    }
-    if (compatTestMode in ['goety', 'both', 'maidspell-goety', 'maidspell-both']) {
-        runtimeOnly fg.deobf("compat:goety:2.5.55.4")
-        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
-    }
-    if (compatTestMode in ['irons', 'both', 'maidspell-irons', 'maidspell-both']) {
-        runtimeOnly fg.deobf("compat:irons_spellbooks:1.20.1-3.16.2")
-        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
-        runtimeOnly fg.deobf("compat:geckolib-forge-1.20.1:4.8.4")
-        runtimeOnly fg.deobf("compat:player-animation-lib-forge:1.0.2-rc1+1.20")
-        runtimeOnly fg.deobf("compat:irons_lib:1.20.1-2.1.0")
-    }
-    if (compatTestMode in ['maidspell-goety', 'maidspell-irons', 'maidspell-both']) {
-        runtimeOnly fg.deobf("compat:touhou_little_maid_spell:1.8.0.1-forge+mc1.20.1")
-    }
-    if (compatTestMode in ['old-goety', 'old-both']) {
-        runtimeOnly fg.deobf("compat:goety:2.5.1.2")
-        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
-    }
-    if (compatTestMode in ['old-irons', 'old-both']) {
-        runtimeOnly fg.deobf("compat:irons_spellbooks:1.20.1-1.2.1")
-        runtimeOnly fg.deobf("compat:curios-forge:5.14.1+1.20.1")
-        runtimeOnly fg.deobf("compat:geckolib-forge-1.20.1:4.8.4")
-        runtimeOnly fg.deobf("compat:player-animation-lib-forge:1.0.2-rc1+1.20")
-        runtimeOnly fg.deobf("compat:caelus-forge:3.2.0+1.20.1")
-    }
-    if (compatTestMode == 'patchouli') {
-        // Development-only validation profile. Patchouli remains optional for shipped builds.
-        runtimeOnly fg.deobf("compat:Patchouli:1.20.1-85-FORGE")
-    }
-    if (compatTestMode in ['slashblade', 'true-power', 'native-power']) {
-        // Development-only validation profile. SlashBlade remains optional for shipped builds.
-        runtimeOnly fg.deobf("compat:SlashBladeResharped:1.20.1-1.9.65")
-    }
-    if (providers.gradleProperty('foxBladeTetraTest').map { it.toBoolean() }.orElse(false).get()) {
-        // Isolated fox-story verification only; never bundle these mod JARs.
-        runtimeOnly fg.deobf("compat:SlashBladeResharped:1.20.1-1.9.65")
-        def bladeTetraTestVersion = providers.gradleProperty('foxBladeTetraVersion').orElse('1.5.9').get()
-        runtimeOnly fg.deobf("compat:blade_tetra:${bladeTetraTestVersion}")
-        runtimeOnly fg.deobf("compat:tetra:6.3.0")
-        runtimeOnly fg.deobf("compat:mutil:1.20.1-6.2.0")
-    }
-    if (providers.gradleProperty('tetraContainerTest').map { it.toBoolean() }.orElse(false).get()) {
-        runtimeOnly fg.deobf("compat:tetra:6.3.0")
-        runtimeOnly fg.deobf("compat:mutil:1.20.1-6.2.0")
-    }
-    if (compatTestMode == 'true-power') {
-        // Full optional stack used to validate the dedicated maid task and soul baubles.
-        runtimeOnly fg.deobf("compat:mrqxs_Slashblade_Core:1.20.1-1.4.1")
-        runtimeOnly fg.deobf("compat:True_POWER:1.20.1-1.2.1-hotfix1")
-        runtimeOnly fg.deobf("compat:True_POWER_of_Maid:1.20.1-1.2.3")
-    }
-    if (compatTestMode == 'native-power') {
-        // Native POWER is the dependency-light fork of TLM: True POWER.
-        def nativePowerDependency = file('tmp/compat-test/Native_POWER_of_Maid-1.20.1-1.0.1.jar').exists()
-                ? "compat:Native_POWER_of_Maid:1.20.1-1.0.1"
-                : "curse.maven:tlm-native-power-1404371:7384912"
-        runtimeOnly fg.deobf("compat:mrqxs_Slashblade_Core:1.20.1-1.4.1")
-        runtimeOnly fg.deobf(nativePowerDependency)
-    }
-    // Explicit development-only boss fixture jars, never runtime dependencies of the release.
-    if (providers.gradleProperty('soulMowzieTest').orElse('false').get().toBoolean()) {
-        runtimeOnly fg.deobf('compat:mowziesmobs:1.8.2')
-        runtimeOnly fg.deobf('compat:geckolib-forge-1.20.1:4.8.4')
-    }
-    if (providers.gradleProperty('soulBossTest').orElse('false').get().toBoolean()) {
-        ['cataclysm-soul-test', 'legendary-soul-test', 'lionfish-soul-test', 'curios-soul-test'].each { name ->
-            runtimeOnly fg.deobf("compat:${name}:1")
-        }
-    }
-    if (providers.gradleProperty('soulGoetyOnlyTest').orElse('false').get().toBoolean()) {
-        ['goety-soul-test','curios-soul-test'].each { name -> runtimeOnly fg.deobf("compat:${name}:1") }
-    }
-    if (providers.gradleProperty('soulGoetyTest').orElse('false').get().toBoolean()) {
-        ['goety-soul-test', 'revelation-soul-test', 'ending-soul-test', 'curios-soul-test'].each { name ->
-            runtimeOnly fg.deobf("compat:${name}:1")
-        }
-    }
-    // ========================================
-    // Touhou Little Maid（车万女仆）依赖
-    // TLM 使用反射，不需要编译期依赖
-    // ========================================
-
-    // JEI（Just Enough Items）- 可选，用于配方查看
-    // implementation fg.deobf("mezz.jei:jei-1.20.1-forge:15.x.x.x")
+    implementation 'maven.modrinth:touhou-little-maid:1.5.3-neoforge+mc1.21.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
-
-// 资源处理 - 替换 mods.toml 和 pack.mcmeta 中的占位符
-// 关键：设置 UTF-8 编码，防止中文变乱码
-tasks.named('processResources', ProcessResources).configure {
-    // Preserve unfinished authoring archives in the repository, not in the published mod.
-    exclude 'modelpacks/contract-akatsuki-1.0.0.zip'
-    exclude 'modelpacks/contract-fox-1.0.0.zip'
-    exclude 'assets/maid_weapon/sounds/black_fox/epicbattle_j_*.ogg'
-    exclude 'licenses/black_fox_music/**'
-    var replaceProperties = [
-            minecraft_version   : minecraft_version,
-            minecraft_version_range: minecraft_version_range,
-            forge_version       : forge_version,
-            forge_version_range : forge_version_range,
-            loader_version_range: loader_version_range,
-            mod_id              : mod_id,
-            mod_name            : mod_name,
-            mod_license         : mod_license,
-            mod_version         : mod_version,
-            mod_authors         : mod_authors,
-            mod_description     : mod_description,
-            tlm_mandatory       : galleryPreviewMode ? 'false' : 'true'
-    ]
-    inputs.properties replaceProperties
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
-}
-
-// Jar 配置
-jar {
+tasks.withType(Test).configureEach { useJUnitPlatform() }
+tasks.named('jar', Jar).configure {
+    from('LICENSE') { rename { 'LICENSE_maid_weapon' } }
     manifest {
-        attributes([
-                'Specification-Title'   : mod_id,
-                'Specification-Vendor'  : mod_authors,
-                'Specification-Version' : '1',
-                'Implementation-Title'  : project.name,
-                'Implementation-Version': project.jar.archiveVersion,
-                'Implementation-Vendor' : mod_authors,
-                'MixinConfigs'         : 'maid_weapon.mixins.json,maid_weapon.slashblade.mixins.json,maid_weapon.soul-boss.mixins.json,maid_weapon.tacz.mixins.json',
-        ])
-    }
-    finalizedBy 'reobfJar'
-}
-
-// 发布配置
-publishing {
-    publications {
-        register('mavenJava', MavenPublication) {
-            groupId = mod_group_id
-            artifactId = mod_id
-            version = mod_version
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
+        attributes('Implementation-Title': 'Contract Blade native development, incomplete migration')
     }
 }
 
-tasks.named("test", Test).configure { useJUnitPlatform() }
+// Reuse current runtime art from its maintained source. Historical packs/music stay excluded.
+def nativeGeneratedResources = layout.buildDirectory.dir('generated/nativeResources')
+tasks.register('generateNativeResources') {
+    inputs.dir('src/main/resources/assets/maid_weapon/lang')
+    inputs.dir('src/main/resources/data/maid_weapon/recipes')
+    inputs.dir('src/port/lang')
+    outputs.dir(nativeGeneratedResources)
+    doLast {
+        def destination = nativeGeneratedResources.get().asFile
+        delete(destination)
+        ['en_us','zh_cn'].each { language ->
+            def text = new groovy.json.JsonSlurper().parse(file("src/main/resources/assets/maid_weapon/lang/${language}.json"))
+            def overlay = file("src/port/lang/${language}.json")
+            if (overlay.exists()) text.putAll(new groovy.json.JsonSlurper().parse(overlay))
+            def output = new File(destination,"assets/maid_weapon/lang/${language}.json")
+            output.parentFile.mkdirs()
+            output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(new TreeMap(text))) + '\n'
+        }
+        ['maid_sword','maid_injector','maid_heavy','maid_fast','altar/spirit_crystal','altar/awakening_vein','altar/flowing_vein','altar/endless_vein','altar/resonance_sword_tassel','altar/guardian_ribbon','altar/heartbound_knot','altar/endless_contract','altar/oath_ring','altar/guard_knot'].each { name ->
+            def recipe = new groovy.json.JsonSlurper().parse(file("src/main/resources/data/maid_weapon/recipes/${name}.json"))
+            if (recipe.type == 'touhou_little_maid:altar_crafting') {
+                recipe = [type:'touhou_little_maid:altar_recipe_serializers',category:'misc',entity:'minecraft:item',group:'altar_recipe',ingredients:recipe.ingredients,power:recipe.power,lang:'jei.touhou_little_maid.altar_craft.item_craft.result',result:[id:recipe.output.nbt.Item.id,count:recipe.output.nbt.Item.Count]]
+            } else { recipe.result.id=recipe.result.remove('item') }
+            def output = new File(destination,"data/maid_weapon/recipe/${name}.json")
+            output.parentFile.mkdirs()
+            output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(recipe)) + '\n'
+        }
+    }
+}
+tasks.named('processResources', ProcessResources).configure {
+    dependsOn('generateNativeResources')
+    from(nativeGeneratedResources)
+    from('src/main/resources') {
+        include 'assets/maid_weapon/**', 'licenses/**', 'modelpacks/contract-fox-1.0.1.zip'
+        exclude 'assets/maid_weapon/lang/**', 'assets/maid_weapon/sounds/black_fox/epicbattle_j_*.ogg', 'licenses/black_fox_music/**'
+    }
+}

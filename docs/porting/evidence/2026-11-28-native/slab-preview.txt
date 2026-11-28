@@ -1,0 +1,4 @@
+Dev has the following entity data: {components: {"touhou_little_maid:maid_info": {YsmModelId: "", Owner: [I; 940439953, -167562164, -1601161573, -1389718966], CustomName: '"Native Contract Maid"', YsmModelTexture: "", IsYsmModel: 0b, YsmModelName: '""', model_id: "contract_fox:fox_white", UUID: [I; 1073329287, -2003284189, -1444728630, -519556051]}, "maid_weapon:contract_reference": {owner: [I; 940439953, -167562164, -1601161573, -1389718966], ticket: [I; 1264859277, 736381698, -1390397311, -1914573637], binding: [I; 606058255, -1448982125, -1434739498, -1015686521], maid: [I; 1073329287, -2003284189, -1444728630, -519556051]}}, count: 1, id: "touhou_little_maid:smart_slab_has_maid"}
+
+No entity was found
+

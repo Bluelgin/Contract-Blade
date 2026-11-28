@@ -1,0 +1,3 @@
+Native Contract Maid has the following entity data: "touhou_little_maid:attack"
+
+Gamerule naturalRegeneration is now set to: false

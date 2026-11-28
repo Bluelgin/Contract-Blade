@@ -1,0 +1,4 @@
+Native Contract Maid has the following entity data: [I; 1073329287, -2003284189, -1444728630, -519556051]
+
+Dev has the following entity data: {components: {"maid_weapon:contract_channels": {external: {owner: [I; 940439953, -167562164, -1601161573, -1389718966], ticket: [I; 696307099, -1761654513, -1764955060, 1026079292], binding: [I; 606058255, -1448982125, -1434739498, -1015686521], maid: [I; 1073329287, -2003284189, -1444728630, -519556051]}, intrinsic: []}}, count: 1, id: "maid_weapon:maid_sword"}
+

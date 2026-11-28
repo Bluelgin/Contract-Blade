@@ -1,0 +1,5 @@
+Value of attribute Armor for entity Native Contract Maid is 20.0
+
+Native Contract Maid has the following entity data: [{components: {"maid_weapon:equipment_projection": 1b}, count: 1, id: "maid_weapon:maid_sword"}, {}]
+
+Native Contract Maid has the following entity data: [{components: {"maid_weapon:equipment_projection": 1b}, count: 1, id: "minecraft:diamond_boots"}, {components: {"maid_weapon:equipment_projection": 1b}, count: 1, id: "minecraft:diamond_leggings"}, {components: {"maid_weapon:equipment_projection": 1b}, count: 1, id: "minecraft:diamond_chestplate"}, {components: {"maid_weapon:equipment_projection": 1b}, count: 1, id: "minecraft:diamond_helmet"}]

@@ -1,0 +1,84 @@
+package com.maidweapon.port.config;
+
+import java.util.List;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.common.ModConfigSpec;
+
+/** World-scoped gameplay rules, automatically synchronized by Forge to clients. */
+public final class ContractRulesConfig {
+    public static final ModConfigSpec SPEC;
+    public static final ModConfigSpec.BooleanValue AUTO_MANIFEST, AUTO_COMBAT, AUTO_FEED;
+    public static final ModConfigSpec.ConfigValue<String> AUTO_MANIFEST_MODE;
+    public static final ModConfigSpec.IntValue GROWTH_HIT_WINDOW;
+    public static final ModConfigSpec.IntValue HURT_COOLDOWN, HURT_MIN_RESONANCE, MAX_RESONANCE, POOL_MAX_RESONANCE, KILL_REWARD, MAX_FOLLOWERS;
+    public static final LevelRule[] LEVELS = new LevelRule[11];
+
+    public record LevelRule(ModConfigSpec.ConfigValue<String> mode,
+                            ModConfigSpec.IntValue tier, ModConfigSpec.IntValue kills,
+                            ModConfigSpec.ConfigValue<List<? extends String>> entities,
+                            ModConfigSpec.DoubleValue damage) {
+        public boolean custom() { return !mode.get().equals("legacy"); }
+        public boolean matches(int defeatedTier, String entityId) {
+            return mode.get().equals("entities") ? entities.get().contains(entityId) : defeatedTier >= tier.get();
+        }
+    }
+
+    static {
+        var b = new ModConfigSpec.Builder();
+        b.push("Manifestation");
+        MAX_FOLLOWERS = b.comment("同时跟随的契约女仆上限；家模式/待命不计入。超限时拒绝召唤或恢复驻留。")
+                .defineInRange("maxFollowingMaids", 1, 1, 8);
+        AUTO_MANIFEST = b.comment("旧版自动护主开关；仅在 autoManifestMode=migrate 时用于迁移，true 保留无需饰品护主。")
+                .define("autoManifestWhenHurt", false);
+        AUTO_MANIFEST_MODE = b.comment("自动护主：disabled 关闭 / bauble 需要护主结 / always 无需饰品。",
+                "默认 migrate：旧 autoManifestWhenHurt=true 保留无需饰品；否则采用 bauble。显式选择前三项后忽略旧开关。")
+                .define("autoManifestMode", "migrate", value -> value instanceof String s && List.of("migrate", "disabled", "bauble", "always").contains(s));
+        HURT_COOLDOWN = b.comment("自动显现冷却，单位 tick（20 tick = 1 秒）。")
+                .defineInRange("hurtCooldownTicks", 200, 0, 72000);
+        HURT_MIN_RESONANCE = b.comment("自动显现所需最低共鸣；仍须满足正常显现条件。")
+                .defineInRange("hurtMinimumResonance", 1, 0, 1000000);
+        b.pop().push("AutomaticWork");
+        AUTO_COMBAT = b.comment("Legacy compatibility key; ignored since 1.2.0. Projection baubles never select work or schedules.")
+                .define("combatTask", false);
+        AUTO_FEED = b.comment("Legacy compatibility key; ignored since 1.2.0. Choose feeding work manually in the maid UI.")
+                .define("feedingTask", false);
+        b.pop().push("Resonance");
+        MAX_RESONANCE = b.comment("共鸣上限。提高上限不会补满已有契约；旧存档缺失字段仍按 200 处理。",
+                "恢复/消耗倍率继续使用 config/maid_weapon-common.toml 的 ContractResonance 配置。")
+                .defineInRange("maximum", 200, 1, 1000000);
+        POOL_MAX_RESONANCE = b.comment("Server-owned maid resonance pool maximum. Legacy maximum remains unchanged for migration.")
+                 .defineInRange("poolMaximum", 1000, 1, 1000000);
+         KILL_REWARD = b.comment("契约武器合格击杀后的共鸣恢复量；0 关闭击杀恢复。")
+                .defineInRange("killRecovery", 5, 0, 1000000);
+        b.pop().push("Growth");
+        GROWTH_HIT_WINDOW = b.comment("同契之证对同一目标的额外伤害结算间隔，单位 tick；防止多段/霰弹每段获得完整加成。")
+                .defineInRange("baubleHitWindowTicks", 10, 1, 200);
+        for (int level = 1; level <= 10; level++) {
+            b.push("level" + level);
+            var mode = b.comment("升到本级的规则：legacy 原规则 / tier 强度等级 / entities 列表任意一种实体。level1 不使用升级规则。")
+                    .define("mode", "legacy", value -> value instanceof String s
+                            && List.of("legacy", "tier", "entities").contains(s));
+            var tier = b.defineInRange("requiredTier", Math.min(5, Math.max(1, level - 1)), 0, 5);
+            var kills = b.comment("自定义规则需要的合格击杀次数，仅计算当前等级的击杀。")
+                    .defineInRange("requiredKills", 1, 1, 1000000);
+            var ids = b.comment("entities 模式使用实体注册 ID，例如 minecraft:wither；空列表不会升级。")
+                    .defineListAllowEmpty("entityIds", List.<String>of(), value -> value instanceof String s
+                            && ResourceLocation.tryParse(s) != null);
+            var damage = b.comment("本级额外攻击力；-1 使用原 common 配置的等级公式。不是原武器总伤害。")
+                    .defineInRange("damageBonus", -1.0, -1.0, 10000.0);
+            LEVELS[level] = new LevelRule(mode, tier, kills, ids, damage);
+            b.pop();
+        }
+        b.pop();
+        SPEC = b.build();
+    }
+
+    public static int maximumResonance() {
+        return SPEC.isLoaded() ? POOL_MAX_RESONANCE.get() : 1000;
+    }
+    public static String autoManifestMode() {
+        String mode = AUTO_MANIFEST_MODE.get();
+        return mode.equals("migrate") ? AUTO_MANIFEST.get() ? "always" : "bauble" : mode;
+    }
+    private ContractRulesConfig() { }
+}

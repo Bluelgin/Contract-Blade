@@ -1,0 +1,5 @@
+Value of attribute Armor for entity Native Contract Maid is 8.0
+
+Native Contract Maid has the following entity data: [{count: 1, id: "minecraft:iron_sword"}, {}]
+
+Native Contract Maid has the following entity data: [{count: 1, id: "minecraft:iron_boots"}, {}, {count: 1, id: "minecraft:iron_chestplate"}, {}]

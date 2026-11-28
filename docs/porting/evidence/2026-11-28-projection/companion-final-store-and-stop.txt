@@ -1,0 +1,7 @@
+Dev has the following entity data: {components: {"maid_weapon:contract_channels": {external: {owner: [I; 940439953, -167562164, -1601161573, -1389718966], ticket: [I; -1018076880, 1229803034, -2070927682, 1962062189], binding: [I; 606058255, -1448982125, -1434739498, -1015686521], maid: [I; 1073329287, -2003284189, -1444728630, -519556051]}, intrinsic: []}}, count: 1, id: "maid_weapon:maid_sword"}
+
+
+Saving the game (this may take a moment!)
+Saved the game
+
+Stopping the server
